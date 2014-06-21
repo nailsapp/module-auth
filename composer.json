@@ -1,0 +1,31 @@
+{
+	"name": "nailsapp/module-auth",
+	"keywords": ["Nails","Shed Collective","CodeIgniter", "Auth Module"],
+	"homepage": "http://nailsapp.co.uk/modules/auth",
+	"description": "This the \"Auth\" module for Nails.",
+	"license":"MIT",
+	"authors": [
+		{
+			"name": "Pablo de la Pena",
+			"email": "p@shedcollective.org",
+			"homepage": "http://shedcollective.org",
+			"role": "Developer"
+		},
+		{
+			"name": "Gary Duncan",
+			"email": "g@shedcollective.org",
+			"homepage": "http://shedcollective.org",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"email": "hello@shedcollective.org"
+	},
+	"require":
+	{
+		"php": ">=5.4.0",
+		"nailsapp/common" : "dev-master",
+		"facebook/php-sdk": "v3.2.2",
+		"jublonet/codebird-php": "~2.4.1"
+	}
+}
