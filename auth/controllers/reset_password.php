@@ -87,7 +87,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 					//	Validated, update user and login.
 					$_data['forgotten_password_code']	= NULL;
-					$_data['temp_pw']					= NULL;
+					$_data['temp_pw']					= FALSE;
 					$_data['password']					= $this->input->post( 'new_password' );
 
 					$_remember							= (bool) $this->input->get( 'remember' );
