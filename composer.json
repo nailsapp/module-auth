@@ -25,6 +25,7 @@
 	{
 		"php": ">=5.4.0",
 		"nailsapp/common" : "dev-develop",
+		"nailsapp/module-curl" : "dev-develop",
 		"facebook/php-sdk": "v3.2.2",
 		"jublonet/codebird-php": "~2.4.1"
 	}

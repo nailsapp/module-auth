@@ -32,7 +32,7 @@ class NAILS_Tw extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	Ensure the sub-module is enabled
-		if ( app_setting( 'social_signin_tw_enabled' ) ) :
+		if ( ! app_setting( 'social_signin_tw_enabled' ) ) :
 
 			show_404();
 
@@ -760,8 +760,6 @@ class NAILS_Tw extends NAILS_Auth_Controller
 					// --------------------------------------------------------------------------
 
 					//	Send the user the welcome email (that is, if there is one)
-					$this->load->library( 'emailer' );
-
 					$_email					= new stdClass();
 					$_email->type			= 'new_user_' . $_group->id;
 					$_email->to_id			= $_new_user->id;

@@ -26,7 +26,7 @@ class NAILS_Li extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	Ensure the sub-module is enabled
-		if ( app_setting( 'social_signin_li_enabled' ) ) :
+		if ( ! app_setting( 'social_signin_li_enabled' ) ) :
 
 			show_404();
 
@@ -367,12 +367,12 @@ class NAILS_Li extends NAILS_Auth_Controller
 				//	is already regsitered to an account and that they need to log in and link the
 				//	account from their settings page, if one is defined.
 
-				$_settings = $this->config->load( 'linkedin' );
+				$_settings = app_setting( 'social_signin_li_app_settings_page' );
 
-				if ( ! empty( $_settings['settings_url'] ) ) :
+				if ( ! empty( $_settings ) ) :
 
 					$this->session->set_flashdata( 'message', lang( 'auth_social_email_in_use', array( 'LinkedIn', APP_NAME ) ) );
-					$this->_redirect( 'auth/login?return_to=' . urlencode( $_settings['settings_url'] ) );
+					$this->_redirect( 'auth/login?return_to=' . urlencode( $_settings ) );
 
 				else :
 
@@ -747,8 +747,6 @@ class NAILS_Li extends NAILS_Auth_Controller
 
 			//	Send the user the welcome email (that is, if there is one)
 			if ( $_new_user->email ) :
-
-				$this->load->library( 'emailer' );
 
 				$_email					= new stdClass();
 				$_email->type			= 'new_user_' . $_group->id;

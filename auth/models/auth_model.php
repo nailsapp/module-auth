@@ -110,8 +110,6 @@ class NAILS_Auth_model extends NAILS_Model
 			case 'BOTH' :
 			default :
 
-				$this->load->helper( 'email' );
-
 				if ( valid_email( $identifier ) ) :
 
 					$_user = $this->user_model->get_by_email( $identifier );

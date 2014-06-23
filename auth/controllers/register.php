@@ -270,15 +270,8 @@ class NAILS_Register extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	All good, resend now
-
-		//	Load up emailer
-		$this->load->library( 'emailer' );
-
-		// --------------------------------------------------------------------------
-
-		//	Send user their welcome email
-
 		//	Initialise vars
+
 		$_data = new StdClass();
 		$_data->data = array();
 

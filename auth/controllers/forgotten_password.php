@@ -130,11 +130,7 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 				//	Attempt to reset password
 				if ( $this->user_password_model->set_token( $_identifier ) ) :
 
-					//	Send email to user; load library
-					$this->load->library( 'emailer' );
-
-					// --------------------------------------------------------------------------
-
+					//	Send email to user
 					//	Define basic email data
 					switch( APP_NATIVE_LOGIN_USING ) :
 
@@ -164,8 +160,6 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 
 						case 'BOTH' :
 						default:
-
-							$this->load->helper( 'email' );
 
 							if ( valid_email( $_identifier ) ) :
 
