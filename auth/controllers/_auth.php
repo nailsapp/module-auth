@@ -17,17 +17,17 @@ class NAILS_Auth_Controller extends NAILS_Controller
 		// --------------------------------------------------------------------------
 
 		//	Load config
-		$this->config->load( 'auth' );
+		$this->config->load( 'auth/auth' );
 
 		// --------------------------------------------------------------------------
 
 		//	Load language file
-		$this->lang->load( 'auth' );
+		$this->lang->load( 'auth/auth' );
 
 		// --------------------------------------------------------------------------
 
 		//	Load model
-		$this->load->model( 'auth_model' );
+		$this->load->model( 'auth/auth_model' );
 	}
 }
 

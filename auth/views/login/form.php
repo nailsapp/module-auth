@@ -8,36 +8,21 @@
 		<!--	SOCIAL NETWORK BUTTONS	-->
 		<?php
 
-			if ( app_setting( 'social_signin_enabled' ) ) :
+			if ( $social_signon_enabled ) :
 
 				echo '<p class="text-center" style="margin:1em 0 2em 0;">';
 					echo 'Sign in using your preferred social network.';
 				echo '</p>';
 
-				echo '<div class="row" style="margin-top:1em;">';
+				echo '<div class="row text-center" style="margin-top:1em;">';
 
 					$_buttons = array();
 
-					//	FACEBOOK
-					if ( app_setting( 'social_signin_fb_enabled' ) ) :
+					foreach ( $social_signon_providers AS $provider ) :
 
-						$_buttons[] = array( 'auth/fb/connect' . $_return_to, 'Facebook' );
+						$_buttons[] = array( 'auth/login/' . $provider['slug'] . $_return_to, $provider['label'] );
 
-					endif;
-
-					//	TWITTER
-					if ( app_setting( 'social_signin_tw_enabled' ) ) :
-
-						$_buttons[] = array( 'auth/tw/connect' . $_return_to, 'Twitter' );
-
-					endif;
-
-					//	LINKEDIN
-					if ( app_setting( 'social_signin_li_enabled' ) ) :
-
-						$_buttons[] = array( 'auth/li/connect' . $_return_to, 'LinkedIn' );
-
-					endif;
+					endforeach;
 
 					// --------------------------------------------------------------------------
 

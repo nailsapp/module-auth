@@ -58,6 +58,10 @@ class NAILS_Logout extends NAILS_Auth_Controller
 		//	Log user out
 		$this->auth_model->logout();
 
+		//	Log social media out, too
+		$this->load->library( 'auth/social_signon' );
+		$this->social_signon->logout();
+
 		// --------------------------------------------------------------------------
 
 		//	Redirect via helper method

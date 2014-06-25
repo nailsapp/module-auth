@@ -34,6 +34,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 		//	Load libraries
 		$this->load->library( 'form_validation' );
+		$this->load->library( 'auth/social_signon' );
 
 		// --------------------------------------------------------------------------
 
@@ -258,6 +259,11 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 		// --------------------------------------------------------------------------
 
+		$this->data['social_signon_enabled']	= $this->social_signon->is_enabled();
+		$this->data['social_signon_providers']	= $this->social_signon->get_providers( 'ENABLED' );
+
+		// --------------------------------------------------------------------------
+
 		//	Load the views
 		$this->load->view( 'structure/header',	$this->data );
 		$this->load->view( 'auth/login/form',	$this->data );
@@ -399,6 +405,49 @@ class NAILS_Login extends NAILS_Auth_Controller
 			//	Bad lookup, invalid hash.
 			$this->session->set_flashdata( 'error', lang( 'auth_with_hashes_autologin_fail' ) );
 			redirect( $this->data['return_to'] );
+
+		endif;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	protected function _social_signon( $provider )
+	{
+		$_adapter		= $this->social_signon->authenticate( $provider );
+		$_social_user	= $_adapter->getUserProfile();
+		$_session		= $this->social_signon->get_session_data();
+
+		//	See if we already know about this user, react accordingly.
+		dump($_social_user);
+		dump($_session);
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function _remap()
+	{
+		$_method = $this->uri->segment( 3 ) ? $this->uri->segment( 3 ) : 'index';
+
+		if ( method_exists( $this, $_method ) ) :
+
+			$this->{$_method}();
+
+		else :
+
+			//	Assume the 3rd segment is a login provider supported by Hybrid Auth
+			if ( $this->social_signon->is_valid_provider( $_method ) ) :
+
+				$this->_social_signon( $_method );
+
+			else :
+
+				show_404();
+
+			endif;
 
 		endif;
 	}

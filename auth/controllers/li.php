@@ -539,7 +539,7 @@ class NAILS_Li extends NAILS_Auth_Controller
 	protected function _login_user( $access_token, $user )
 	{
 		//	Load the auth lang file
-		$this->lang->load( 'auth', 'english' );
+		$this->lang->load( 'auth/auth' );
 
 		// --------------------------------------------------------------------------
 
