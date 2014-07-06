@@ -54,7 +54,7 @@ class Linkedin_connect
 		//	Sanity check
 		if ( ! $this->_settings['api_key'] || ! $this->_settings['api_secret'] ) :
 
-			if ( ENVIRONMENT === 'production' ) :
+			if ( strtoupper( ENVIRONMENT ) === 'PRODUCTION' ) :
 
 				show_fatal_error( 'LinkedIn has not been configured correctly', 'The LinkedIn App ID and secret must be specified in Admin under Site Settings.' );
 

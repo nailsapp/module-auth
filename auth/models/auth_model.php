@@ -71,7 +71,7 @@ class NAILS_Auth_model extends NAILS_Model
 	public function login( $identifier, $password, $remember = FALSE )
 	{
 		//	Delay execution for a moment (reduces brute force efficiently)
-		if ( ENVIRONMENT !== 'development' ) :
+		if ( strtoupper( ENVIRONMENT ) !== 'DEVELOPMENT' ) :
 
 			usleep( $this->brute_force_protection['delay'] );
 

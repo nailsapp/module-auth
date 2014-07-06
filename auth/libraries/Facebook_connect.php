@@ -56,7 +56,7 @@ class Facebook_Connect
 		//	Sanity check
 		if ( ! $this->_settings['appId'] || ! $this->_settings['secret'] ) :
 
-			if ( ENVIRONMENT === 'production' ) :
+			if ( strtoupper( ENVIRONMENT ) === 'PRODUCTION' ) :
 
 				show_fatal_error( 'Facebook has not been configured correctly', 'The Facebook App ID and secret must be specified in Admin under Site Settings.' );
 

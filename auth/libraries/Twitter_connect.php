@@ -44,7 +44,7 @@ class Twitter_Connect
 		//	Sanity check
 		if ( ! $this->_settings['consumer_key'] || ! $this->_settings['consumer_secret'] ) :
 
-			if ( ENVIRONMENT === 'production' ) :
+			if ( strtoupper( ENVIRONMENT ) === 'PRODUCTION' ) :
 
 				show_fatal_error( 'Twitter has not been configured correctly', 'The Twitter App ID and secret must be specified in Admin under Site Settings.' );
 
