@@ -3,46 +3,21 @@
 		<!--	SOCIAL NETWORK BUTTONS	-->
 		<?php
 
-			if ( app_setting( 'social_signin_enabled' ) ) :
+			if ( $social_signon_enabled ) :
 
 				echo '<p class="text-center" style="margin:1em 0 2em 0;">';
 					echo 'Register using your preferred social network.';
 				echo '</p>';
 
-				echo '<div class="row" style="margin-top:1em;">';
-
-					//	This is technically not needed for the default group, but left here by
-					//	way of an example
-
-					$_token				= array();
-					$_token['nonce']	= time();
-					$_token['ip']		= $this->input->ip_address();
-					$_token['group']	= $this->user_group_model->get_default_group_id();
-
-					$_token = urlencode( $this->encrypt->encode( serialize($_token) . '|' . $_token['ip'] . '|' . $_token['nonce'], APP_PRIVATE_KEY ) );
+				echo '<div class="row text-center" style="margin-top:1em;">';
 
 					$_buttons = array();
 
-					//	FACEBOOK
-					if ( app_setting( 'social_signin_fb_enabled' ) ) :
+					foreach ( $social_signon_providers AS $provider ) :
 
-						$_buttons[] = array( 'auth/fb/connect?token=' . $_token, 'Facebook' );
+						$_buttons[] = array( 'auth/login/' . $provider['slug'] . '/register', $provider['label'] );
 
-					endif;
-
-					//	TWITTER
-					if ( app_setting( 'social_signin_tw_enabled' ) ) :
-
-						$_buttons[] = array( 'auth/tw/connect?token=' . $_token, 'Twitter' );
-
-					endif;
-
-					//	LINKEDIN
-					if ( app_setting( 'social_signin_li_enabled' ) ) :
-
-						$_buttons[] = array( 'auth/li/connect?token=' . $_token, 'LinkedIn' );
-
-					endif;
+					endforeach;
 
 					// --------------------------------------------------------------------------
 
@@ -68,20 +43,19 @@
 
 						case 'EMAIL' :
 
-							echo 'Or register using your email address.';
+							echo 'Or sign in using your email address and password.';
 
 						break;
 
 						case 'USERNAME' :
 
-							echo 'Or register using a username.';
+							echo 'Or sign in using your username and password.';
 
 						break;
 
-						case 'BOTH' :
 						default :
 
-							echo 'Or register using your email address and username.';
+							echo 'Or sign in using your email address or username and password.';
 
 						break;
 
@@ -97,7 +71,7 @@
 
 			// --------------------------------------------------------------------------
 
-			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING == 'BOTH' ) :
+			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME' ) :
 
 				$_field			= 'email';
 				$_label			= lang( 'form_label_email' );
@@ -115,7 +89,7 @@
 
 			endif;
 
-			if ( APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING == 'BOTH' ) :
+			if ( APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL' ) :
 
 				$_field			= 'username';
 				$_label			= lang( 'form_label_username' );

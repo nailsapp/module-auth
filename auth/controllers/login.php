@@ -40,23 +40,32 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 		//	Where are we returning user to?
 		$_return_to = $this->input->get( 'return_to' );
-		$_return_to = preg_match( '#^(http|https)\://#', $_return_to ) ? $_return_to : site_url( $_return_to );
-		$_return_to = parse_url( $_return_to );
 
-		//	urlencode the query if there is one
-		if ( ! empty( $_return_to['query'] ) ) :
+		if ( $_return_to ) :
 
-			//	Break it apart and glue it together (urlencoded)
-			$_query = parse_str( $_return_to['query'], $_query_ar );
-			$_return_to['query'] = http_build_query( $_query_ar );
+			$_return_to = preg_match( '#^(http|https)\://#', $_return_to ) ? $_return_to : site_url( $_return_to );
+			$_return_to = parse_url( $_return_to );
+
+			//	urlencode the query if there is one
+			if ( ! empty( $_return_to['query'] ) ) :
+
+				//	Break it apart and glue it together (urlencoded)
+				$_query = parse_str( $_return_to['query'], $_query_ar );
+				$_return_to['query'] = http_build_query( $_query_ar );
+
+			endif;
+
+			$this->data['return_to']  = '';
+			$this->data['return_to'] .= ! empty( $_return_to['scheme'] )	? $_return_to['scheme'] . '://'	: 'http://';
+			$this->data['return_to'] .= ! empty( $_return_to['host'] )		? $_return_to['host']			: site_url();
+			$this->data['return_to'] .= ! empty( $_return_to['path'] )		? $_return_to['path']			: '';
+			$this->data['return_to'] .= ! empty( $_return_to['query'] )		? '?' . $_return_to['query']	: '';
+
+		else :
+
+			$this->data['return_to'] = '';
 
 		endif;
-
-		$this->data['return_to']  = '';
-		$this->data['return_to'] .= ! empty( $_return_to['scheme'] )	? $_return_to['scheme'] . '://'	: 'http://';
-		$this->data['return_to'] .= ! empty( $_return_to['host'] )		? $_return_to['host']			: site_url();
-		$this->data['return_to'] .= ! empty( $_return_to['path'] )		? $_return_to['path']			: '';
-		$this->data['return_to'] .= ! empty( $_return_to['query'] )		? '?' . $_return_to['query']	: '';
 
 		// --------------------------------------------------------------------------
 
@@ -111,7 +120,6 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 				// --------------------------------------------------------------------------
 
-				case 'BOTH' :
 				default:
 
 					$this->form_validation->set_rules( 'identifier',	'Username or Email',	'xss_clean|trim' );
@@ -122,7 +130,6 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 			//	Password is always required, obviously.
 			$this->form_validation->set_rules( 'password',	'Password',	'required|xss_clean' );
-
 			$this->form_validation->set_message( 'required',	lang( 'fv_required' ) );
 			$this->form_validation->set_message( 'valid_email',	lang( 'fv_valid_email' ) );
 
@@ -133,114 +140,11 @@ class NAILS_Login extends NAILS_Auth_Controller
 				$_password		= $this->input->post( 'password' );
 				$_remember		= (bool) $this->input->post( 'remember' );
 
-				$_login = $this->auth_model->login( $_identifier, $_password, $_remember );
+				$_user = $this->auth_model->login( $_identifier, $_password, $_remember );
 
-				if ( $_login ) :
+				if ( $_user ) :
 
-					/**
-					 * User was recognised and permitted to log in. Final check to
-					 * determine whether they are using a temporary password or not.
-					 *
-					 * $login will be an array containing the keys first_name, last_login, homepage;
-					 * the key temp_pw will be present if they are using a temporary password.
-					 *
-					 **/
-
-					if ( isset( $_login['temp_pw'] ) ) :
-
-						/**
-						 * Temporary password detected, log user out and redirect to
-						 * temp password reset page.
-						 *
-						 * temp_pw will be an array containing the user's ID and hash
-						 *
-						 **/
-
-						$_query	= array();
-
-						if ( $this->data['return_to'] ) :
-
-							$_query['return_to'] = $this->data['return_to'];
-
-						endif;
-
-						//	Log the user out and remove the 'remember me' cookie - if we don't do this then the password reset
-						//	page will see a logged in user and go nuts (i.e error).
-
-						if ( $_remember ) :
-
-							$_query['remember'] = TRUE;
-
-						endif;
-
-						$_query = $_query ? '?' . http_build_query( $_query ) : '';
-
-						$this->auth_model->logout();
-
-						redirect( 'auth/reset_password/' . $_login['temp_pw']['id'] . '/' . $_login['temp_pw']['hash'] . $_query );
-						return;
-
-					elseif ( $this->config->item( 'auth_two_factor_enable' ) ) :
-
-						$_query	= array();
-
-						if ( $this->data['return_to'] ) :
-
-							$_query['return_to'] = $this->data['return_to'];
-
-						endif;
-
-						if ( $_remember ) :
-
-							$_query['remember'] = TRUE;
-
-						endif;
-
-						$_query = $_query ? '?' . http_build_query( $_query ) : '';
-
-						//	Login was successful, redirect to the security questions page
-						redirect( 'auth/security_questions/' . $_login['user_id'] . '/' . $_login['two_factor_auth']['salt'] . '/' . $_login['two_factor_auth']['token'] . $_query );
-
-					else :
-
-						//	Finally! Send this user on their merry way...
-						$_first_name = $_login['first_name'];
-
-						if ( $_login['last_login'] ) :
-
-							$this->load->helper( 'date' );
-
-							$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_login['last_login'] ) ) : user_datetime( $_login['last_login'] );
-
-							if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
-
-								$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_first_name, $_last_login, $_login['last_ip'] ) ) );
-
-							else :
-
-								$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_first_name, $_last_login ) ) );
-
-							endif;
-
-						else :
-
-							$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_first_name ) ) );
-
-						endif;
-
-						$_redirect = $this->data['return_to'] != site_url() ? $this->data['return_to'] : $_login['homepage'];
-
-						// --------------------------------------------------------------------------
-
-						//	Generate an event for this log in
-						create_event( 'did_log_in', $_login['user_id'], 0, NULL, array( 'method' => 'native' ) );
-
-						// --------------------------------------------------------------------------
-
-						redirect( $_redirect );
-						return;
-
-					endif;
+					$this->_login( $_user, $_remember );
 
 				else :
 
@@ -268,6 +172,119 @@ class NAILS_Login extends NAILS_Auth_Controller
 		$this->load->view( 'structure/header',	$this->data );
 		$this->load->view( 'auth/login/form',	$this->data );
 		$this->load->view( 'structure/footer',	$this->data );
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	protected function _login( $user, $remember = FALSE, $provider = 'native' )
+	{
+		if ( $user->is_suspended ) :
+
+			$this->data['error'] = lang( 'auth_login_fail_suspended' );
+			return FALSE;
+
+		elseif ( ! empty( $user->temp_pw ) ) :
+
+			/**
+			 * Temporary password detected, log user out and redirect to
+			 * temp password reset page.
+			 *
+			 * temp_pw will be an array containing the user's ID and hash
+			 *
+			 **/
+
+			$_query	= array();
+
+			if ( $this->data['return_to'] ) :
+
+				$_query['return_to'] = $this->data['return_to'];
+
+			endif;
+
+			//	Log the user out and remove the 'remember me' cookie - if we don't do this then the password reset
+			//	page will see a logged in user and go nuts (i.e error).
+
+			if ( $remember ) :
+
+				$_query['remember'] = TRUE;
+
+			endif;
+
+			$_query = $_query ? '?' . http_build_query( $_query ) : '';
+
+			$this->auth_model->logout();
+
+			redirect( 'auth/reset_password/' . $user->id . '/' . md5( $user->salt ) . $_query );
+
+		elseif ( $this->config->item( 'auth_two_factor_enable' ) ) :
+
+			//	Generate token
+			$_two_factor_auth = $this->generate_two_factor_token( $user->id );
+
+			if ( ! $_two_factor_auth ) :
+
+				show_fatal_error( 'Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.' );
+
+			endif;
+
+			$_query	= array();
+
+			if ( $this->data['return_to'] ) :
+
+				$_query['return_to'] = $this->data['return_to'];
+
+			endif;
+
+			if ( $remember ) :
+
+				$_query['remember'] = TRUE;
+
+			endif;
+
+			$_query = $_query ? '?' . http_build_query( $_query ) : '';
+
+			//	Login was successful, redirect to the security questions page
+			redirect( 'auth/security_questions/' . $user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query );
+
+		else :
+
+			//	Finally! Send this user on their merry way...
+			if ( $user->last_login ) :
+
+				$this->load->helper( 'date' );
+
+				$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $user->last_login ) ) : user_datetime( $user->last_login );
+
+				if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
+
+					$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $user->first_name, $_last_login, $user->last_ip ) ) );
+
+				else :
+
+					$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $user->first_name, $_last_login ) ) );
+
+				endif;
+
+			else :
+
+				$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $user->first_name ) ) );
+
+			endif;
+
+			$_redirect = $this->data['return_to'] ? $this->data['return_to'] : $user->group_homepage;
+
+			// --------------------------------------------------------------------------
+
+			//	Generate an event for this log in
+			create_event( 'did_log_in', $user->id, 0, NULL, array( 'provider' => $provider ) );
+
+			// --------------------------------------------------------------------------
+
+			redirect( $_redirect );
+
+		endif;
 	}
 
 
@@ -333,8 +350,6 @@ class NAILS_Login extends NAILS_Auth_Controller
 				redirect( preg_replace( '/^\//', '', $_SERVER['REQUEST_URI'] ) );
 
 			endif;
-
-			return;
 
 		endif;
 
@@ -415,13 +430,569 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 	protected function _social_signon( $provider )
 	{
-		$_adapter		= $this->social_signon->authenticate( $provider );
-		$_social_user	= $_adapter->getUserProfile();
-		$_session		= $this->social_signon->get_session_data();
+		//	Get the adapter, HybridAuth will handle the redirect
+		$_adapter	= $this->social_signon->authenticate( $provider );
+		$_provider	= $this->social_signon->get_provider( $provider );
 
-		//	See if we already know about this user, react accordingly.
-		dump($_social_user);
-		dump($_session);
+		// --------------------------------------------------------------------------
+
+		//	Fetch the user's social profile and, if one exists, the local profile.
+		try
+		{
+			$_social_user = $_adapter->getUserProfile();
+		}
+		catch( Exception $e)
+		{
+			//	Failed to fetch from the provider, something must have gone wrong
+			log_message( 'error', 'HybridAuth failed to fetch data from provider.' );
+			log_message( 'error', 'Error Code: ' . $e->getCode() );
+			log_message( 'error', 'Error Message: ' . $e->getMessage() );
+
+			if ( empty( $_provider ) ) :
+
+				$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> there was a problem communicating with the network.' );
+
+			else :
+
+				$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> there was a problem communicating with ' . $_provider['label'] . '.' );
+
+			endif;
+
+			if ( $this->uri->segment( 4 ) == 'register' ) :
+
+				$_redirect = 'auth/register';
+
+			else :
+
+				$_redirect = 'auth/login';
+
+			endif;
+
+			if ( $this->data['return_to'] ) :
+
+				$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
+
+			endif;
+
+			redirect( $_redirect );
+		}
+
+		$_user = $this->social_signon->get_user_by_provider_identifier( $provider, $_social_user->identifier );
+
+		// --------------------------------------------------------------------------
+
+		/**
+		 * See if we already know about this user, react accordingly.
+		 * If a user already exists for this provder/identifier then it's logical
+		 * to spok them in, I mean, log them in - provided of course they aren't
+		 * already logged in, if they are then silly user. If no user is recognised
+		 * then we need to register them, providing, of course that registration is
+		 * enabled and that no one else on the system has their email address.
+		 * On that note, we need to respect APP_NATIVE_LOGIN_USING; if the provider
+		 * cannot satisfy this then we'll need to interrupt registration and ask them
+		 * for either a username or an email (or both).
+		 **/
+
+		if ( $_user ) :
+
+			if ( $this->user_model->is_logged_in() && active_user( 'id' ) == $_user->id ) :
+
+				//	Logged in user is already logged in and is the social user.
+				//	Silly user, just redirect them to where they need to go.
+
+				$this->session->set_flashdata( 'message', lang( 'auth_social_already_linked', $_provider['label'] ) );
+
+				if ( $this->data['return_to'] ) :
+
+					redirect( $this->data['return_to'] );
+
+				else :
+
+					redirect( $_user->group_homepage );
+
+				endif;
+
+			elseif ( $this->user_model->is_logged_in() && active_user( 'id' ) != $_user->id ) :
+
+				//	Hmm, a user was found for this Provider ID, but it's not the
+				//	actively logged in user. This means that this provider account
+				//	is already registered with us
+
+				$this->session->set_flashdata( 'error', lang( 'auth_social_account_in_use', array( $_provider['label'], APP_NAME ) ) );
+
+				if ( $this->data['return_to'] ) :
+
+					redirect( $this->data['return_to'] );
+
+				else :
+
+					redirect( $_user->group_homepage );
+
+				endif;
+
+			else :
+
+				//	Fab, user exists, try to log them in
+				$this->user_model->set_login_data( $_user->id );
+				$this->social_signon->save_session( $_user->id );
+
+				if ( ! $this->_login( $_user ) ) :
+
+					$this->session->set_flashdata( 'error', $this->data['error'] );
+
+					$_redirect = 'auth/login';
+
+					if ( $this->data['return_to'] ) :
+
+						$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
+
+					endif;
+
+					redirect( $_redirect );
+
+				endif;
+
+			endif;
+
+		elseif ( $this->user->is_logged_in() ) :
+
+			//	User is logged in and it look's like the provider isn't being used by anyone
+			//	else. Go ahead and link the two accounts together.
+
+			if ( $this->social_signon->save_session( active_user( 'id' ), $provider ) ) :
+
+				create_event( 'did_link_fb', active_user( 'id' ) );
+				$this->session->set_flashdata( 'success', lang( 'auth_social_linked_ok', $_provider['label'] ) );
+
+			else :
+
+				$this->session->set_flashdata( 'error', lang( 'auth_social_linked_ok', $_provider['label'] ) );
+
+			endif;
+
+			redirect( $this->data['return_to'] );
+
+		else :
+
+			/**
+			 * Didn't find a user and the active user isn't logged in, assume they want
+			 * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
+			 */
+
+			if ( app_setting( 'user_registration_enabled', 'app' ) ) :
+
+				$_required_data = array();
+				$_optional_data = array();
+
+				//	Fetch required data
+				switch( APP_NATIVE_LOGIN_USING ) :
+
+					case 'EMAIL' :
+
+						$_required_data['email'] = trim( $_social_user->email );
+
+					break;
+
+					case 'USERNAME' :
+
+						$_required_data['username'] = ! empty( $_social_user->username ) ? trim( $_social_user->username ) : '';
+
+					break;
+
+					default :
+
+						$_required_data['email']	= trim( $_social_user->email );
+						$_required_data['username'] = ! empty( $_social_user->username ) ? trim( $_social_user->username ) : '';
+
+					break;
+
+				endswitch;
+
+				$_required_data['first_name']	= trim( $_social_user->firstName );
+				$_required_data['last_name']	= trim( $_social_user->lastName );
+
+				//	And any optional data
+				if ( checkdate( $_social_user->birthMonth, $_social_user->birthDay, $_social_user->birthYear ) ) :
+
+					$_optional_data['dob']			= array();
+					$_optional_data['dob']['year']	= trim( $_social_user->birthYear );
+					$_optional_data['dob']['month']	= str_pad( trim( $_social_user->birthMonth ), 2, 0, STR_PAD_LEFT );
+					$_optional_data['dob']['day']	= str_pad( trim( $_social_user->birthDay ), 2, 0, STR_PAD_LEFT );
+					$_optional_data['dob']			= implode( '-', $_optional_data['dob'] );
+
+				endif;
+
+				switch( $_social_user->gender ) :
+
+					case 'male' :
+
+						$_optional_data['gender'] = 'MALE';
+
+					break;
+
+					case 'female' :
+
+						$_optional_data['gender'] = 'FEMALE';
+
+					break;
+
+				endswitch;
+
+				// --------------------------------------------------------------------------
+
+				//	If any required fields are missing then we need to interrupt the
+				//	registration flow and ask for them
+
+				if ( count( $_required_data ) !== count( array_filter( $_required_data ) ) ) :
+
+					//	TODO: One day work out a way of doing this so that we don't need to
+					//	call the API again etc, uses unnessecary calls. Then again, maybe it
+					//	*is* necessary.
+
+					$this->_request_data( $_required_data, $provider );
+
+				else :
+
+					//	We have everything we need to create the user account
+					//	However, first we need to make sure that our data is valid
+					//	and not in use.At this point it's not the user's fault so
+					//	don't throw an error.
+
+					//	Check email
+					if ( isset( $_required_data['email'] ) ) :
+
+						$_check = $this->user_model->get_by_email( $_required_data['email'] );
+
+						if ( $_check ) :
+
+							$_required_data['email'] = '';
+							$_request_data			= TRUE;
+
+						endif;
+
+					endif;
+
+					// --------------------------------------------------------------------------
+
+					if ( isset( $_required_data['username'] ) ) :
+
+						//	Username was set using provider provided username, check it's valid
+						//	if not, then request one. At this point it's not the user's fault so
+						//	don't throw an error.
+
+						$_check = $this->user_model->get_by_username( $_required_data['username'] );
+
+						if ( $_check ) :
+
+							$_required_data['username']	= '';
+							$_request_data				= TRUE;
+
+						endif;
+
+					else :
+
+						//	No username, make one up for them, try to use the social_user
+						//	username (as it might not have been set above), failing that
+						//	use the user's name, failing THAT use a random string
+
+						if ( ! empty( $_social_user->username ) ) :
+
+							$_username = $_social_user->username;
+
+						elseif( $_required_data['first_name'] || $_required_data['last_name'] ) :
+
+							$_username = $_required_data['first_name'] . ' ' . $_required_data['last_name'];
+
+						else :
+
+							$_username = 'user' . date( 'YmdHis' );
+
+						endif;
+
+						$_basename = url_title( $_username, '-', TRUE );
+						$_required_data['username'] = $_basename;
+
+						$_user = $this->user_model->get_by_username( $_required_data['username'] );
+
+						while ( $_user ) :
+
+							$_required_data['username']  = increment_string( $_basename, '' );
+							$_user = $this->user_model->get_by_username( $_required_data['username'] );
+
+						endwhile;
+
+					endif;
+
+					// --------------------------------------------------------------------------
+
+					//	Request data?
+					if ( ! empty( $_request_data ) ) :
+
+						$this->_request_data( $_required_data, $provider );
+
+					endif;
+
+					// --------------------------------------------------------------------------
+
+					//	Handle referrals
+					if ( $this->session->userdata( 'referred_by' ) ) :
+
+						$_optional_data['referred_by'] = $this->session->userdata( 'referred_by' );
+
+					endif;
+
+					// --------------------------------------------------------------------------
+
+					//	Merge data arrays
+					$_data = array_merge( $_required_data, $_optional_data );
+
+					// --------------------------------------------------------------------------
+
+					//	Create user
+					$_new_user = $this->user_model->create( $_data );
+
+					if ( $_new_user ) :
+
+						//	Welcome aboard, matey
+						//	Save provider details
+						//	Upload profile image if available
+
+						$this->social_signon->save_session( $_new_user->id, $provider );
+
+						if ( ! empty( $_social_user->photoURL ) ) :
+
+							//	Has profile image
+							$_img_url = $_social_user->photoURL;
+
+						elseif ( ! empty( $_new_user->email ) ) :
+
+							//	Attempt gravatar
+							$_img_url = 'http://www.gravatar.com/avatar/' . md5( $_new_user->email ) . '?d=404&s=2048&r=pg';
+
+						endif;
+
+						if ( ! empty( $_img_url ) ) :
+
+							//	Fetch the image
+							$_ch = curl_init();
+							curl_setopt( $_ch, CURLOPT_RETURNTRANSFER, TRUE );
+							curl_setopt( $_ch, CURLOPT_FOLLOWLOCATION, TRUE );
+							curl_setopt( $_ch, CURLOPT_URL, $_img_url );
+							$_img_data = curl_exec( $_ch );
+
+							if ( curl_getinfo( $_ch, CURLINFO_HTTP_CODE ) === 200 ) :
+
+								//	Attempt upload
+								$this->load->library( 'cdn/cdn' );
+
+								//	Save file to cache
+								$_cache_file = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $_new_user->id;
+
+								if ( @file_put_contents( $_cache_file, $_img_data ) ) :
+
+									$_upload = $this->cdn->object_create( $_cache_file, 'profile-images', array() );
+
+									if ( $_upload ) :
+
+										$_data					= array();
+										$_data['profile_img']	= $_upload->id;
+
+										$this->user_model->update( $_new_user->id, $_data );
+
+									else :
+
+										log_message( 'debug', 'Failed to uload user\'s profile image' );
+										log_message( 'debug', $this->cdn->last_error() );
+
+									endif;
+
+								endif;
+
+							endif;
+
+						endif;
+
+						// --------------------------------------------------------------------------
+
+						//	Aint that swell, all registered! Redirect!
+						$this->user_model->set_login_data( $_new_user->id );
+
+						// --------------------------------------------------------------------------
+
+						//	Create an event for this event
+						create_event( 'did_register', $_new_user->id, 0, NULL, array( 'method' => $provider ) );
+
+						// --------------------------------------------------------------------------
+
+						//	Redirect
+						$this->session->set_flashdata( 'success', lang( 'auth_social_register_ok', $_new_user->first_name ) );
+
+						//	Registrations will be forced to the registration redirect, regardless of
+						//	what else has been set
+
+						$_group		= $this->user_group_model->get_by_id( $_new_user->group_id );
+						$_redirect	= $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
+
+						redirect( $_redirect );
+
+					else :
+
+						//	Oh dear, something went wrong
+						$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> Something went wrong and your account could not be created.' );
+
+						$_redirect = 'auth/login';
+
+						if ( $this->data['return_to'] ) :
+
+							$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
+
+						endif;
+
+						redirect( $_redirect );
+
+					endif;
+
+				endif;
+
+			else :
+
+				//	How unfortunate, registration is disabled. Redrect back to the login page
+				$this->session->set_flashdata( 'error', lang( 'auth_social_register_disabled' ) );
+
+				$_redirect = 'auth/login';
+
+				if ( $this->data['return_to'] ) :
+
+					$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
+
+				endif;
+
+				redirect( $_redirect );
+
+			endif;
+
+		endif;
+
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	protected function _request_data( &$required_data, $provider )
+	{
+		if ( $this->input->post() ) :
+
+			if ( isset( $required_data['email'] ) ) :
+
+				$this->form_validation->set_rules( 'email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
+
+			endif;
+
+			if ( isset( $required_data['username'] ) ) :
+
+				$this->form_validation->set_rules( 'username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]' );
+
+			endif;
+
+			if ( empty( $required_data['first_name'] ) ) :
+
+				$this->form_validation->set_rules( 'first_name', '', 'xss_clean|trim|required' );
+
+			endif;
+
+			if ( empty( $required_data['last_name'] ) ) :
+
+				$this->form_validation->set_rules( 'last_name', '', 'xss_clean|trim|required' );
+
+			endif;
+
+			$this->form_validation->set_message( 'required',	lang( 'fv_required' ) );
+			$this->form_validation->set_message( 'valid_email',	lang( 'fv_valid_email' ) );
+
+			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' ) :
+
+				$this->form_validation->set_message( 'is_unique',	lang( 'fv_email_already_registered', site_url( 'auth/forgotten_password' ) ) );
+
+			elseif ( APP_NATIVE_LOGIN_USING == 'USERNAME' ) :
+
+				$this->form_validation->set_message( 'is_unique',	lang( 'fv_username_already_registered', site_url( 'auth/forgotten_password' ) ) );
+
+			else :
+
+				$this->form_validation->set_message( 'is_unique',	lang( 'fv_identity_already_registered', site_url( 'auth/forgotten_password' ) ) );
+
+			endif;
+
+			$this->load->library( 'form_validation' );
+
+			if ( $this->form_validation->run() ) :
+
+				//	Valid! Ensure required data is set correctly then allow system to move on.
+				if ( isset( $required_data['email'] ) ) :
+
+					$required_data['email'] = $this->input->post( 'email' );
+
+				endif;
+
+				if ( isset( $required_data['username'] ) ) :
+
+					$required_data['username'] = $this->input->post( 'username' );
+
+				endif;
+
+				if ( empty( $required_data['first_name'] ) ) :
+
+					$required_data['first_name'] = $this->input->post( 'first_name' );
+
+				endif;
+
+				if ( empty( $required_data['last_name'] ) ) :
+
+					$required_data['last_name'] = $this->input->post( 'last_name' );
+
+				endif;
+
+			else :
+
+				$this->data['error'] = lang( 'fv_there_were_errors' );
+				$this->_required_data_form( $required_data, $provider );
+
+			endif;
+
+		else :
+
+			$this->_required_data_form( $required_data, $provider );
+
+		endif;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	protected function _required_data_form( &$required_data, $provider )
+	{
+		$this->data['required_data']	= $required_data;
+		$this->data['form_url']			= 'auth/login/' . $provider;
+
+		if ( $this->uri->segment( 4 ) == 'register' ) :
+
+			$this->data['form_url'] .= '/register';
+
+		endif;
+
+		if ( $this->data['return_to'] ) :
+
+			$this->data['form_url'] .= '?return_to=' . urlencode( $this->data['return_to'] );
+
+		endif;
+
+		$this->load->view( 'structure/header',					$this->data );
+		$this->load->view( 'auth/register/social_request_data',	$this->data );
+		$this->load->view( 'structure/footer',					$this->data );
+		echo $this->output->get_output();
+		exit();
 	}
 
 

@@ -3,6 +3,7 @@
 class Social_signon
 {
 	protected $_ci;
+	protected $db;
 	protected $_providers;
 	protected $_hybrid;
 
@@ -11,6 +12,7 @@ class Social_signon
 	public function __construct()
 	{
 		$this->_ci			=& get_instance();
+		$this->db			=& $this->_ci->db;
 		$this->_providers	= array( 'all' => array(), 'enabled' => array(), 'disabled' => array() );
 
 		//	Set up Providers
@@ -77,7 +79,7 @@ class Social_signon
 			$_config['providers'][$provider['slug']] = $_temp;
 
 		endforeach;
-//dumpanddie($_config);
+
 		$this->_hybrid = new Hybrid_Auth( $_config );
 	}
 
@@ -115,9 +117,18 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	public function get_provider( $provider )
+	{
+		return isset( $this->_providers['all'][$provider] ) ? $this->_providers['all'][$provider] : FALSE;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
 	public function is_valid_provider( $provider )
 	{
-		return ! empty( $this->_providers['enabled'][$provider]['slug'] );
+		return ! empty( $this->_providers['enabled'][$provider] );
 	}
 
 
@@ -142,18 +153,376 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
-	public function get_session_data()
+	public function get_user_by_provider_identifier( $provider, $identifier, $extended = NULL )
 	{
-		return $this->_hybrid->getSessionData();
+		$this->db->select( 'user_id' );
+		$this->db->where( 'provider',		$provider );
+		$this->db->where( 'identifier',	$identifier );
+		$_user = $this->db->get( NAILS_DB_PREFIX . 'user_social' )->row();
+
+		if ( empty( $_user ) ) :
+
+			return FALSE;
+
+		endif;
+
+		return $this->_ci->user_model->get_by_id( $_user->user_id, $extended );
 	}
 
 
 	// --------------------------------------------------------------------------
 
 
-	public function set_session_data( $data = NULL )
+	public function save_session( $user_id = NULL, $provider = array() )
 	{
-		return $this->_hybrid->setSessionData( $data );
+		if ( empty( $user_id ) ) :
+
+			$user_id = active_user( 'id' );
+
+		endif;
+
+		if ( empty( $user_id ) ) :
+
+			$this->_set_error( 'Must specify which user ID\'s session to save.' );
+			return FALSE;
+
+		endif;
+
+		$_user = $this->_ci->user_model->get_by_id( $user_id );
+
+		if ( ! $_user ) :
+
+			$this->_set_error( 'Invalid User ID' );
+			return FALSE;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		if ( ! is_array( $provider ) ) :
+
+			$_provider = (array) $provider;
+			$_provider = array_unique( $_provider );
+			$_provider = array_filter( $_provider );
+
+		else :
+
+			$_provider = $provider;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		$_session		= $this->_hybrid->getSessionData();
+		$_session		= unserialize( $_session );
+		$_save			= array();
+		$_identifiers	= array();
+
+		//	Now we sort the session into individual providers
+		foreach( $_session AS $key => $value ) :
+
+			//	Get the bits
+			list( $hauth, $provider ) = explode( '.', $key, 3 );
+
+			if ( ! isset( $_save[$provider] ) ) :
+
+				$_save[$provider] = array();
+
+			endif;
+
+			$_save[$provider][$key] = $value;
+
+		endforeach;
+
+		// --------------------------------------------------------------------------
+
+		//	Prune any which aren't worth saving
+		foreach( $_save AS $provider => $values ) :
+
+			//	Are we only interested in a particular provider?
+			if ( ! empty( $_provider ) ) :
+
+				if ( array_search( $provider, $_provider ) === FALSE ) :
+
+					unset( $_save[$provider] );
+					continue;
+
+				endif;
+
+			endif;
+
+			//	Conencted?
+			if ( ! $this->is_connected_with( $provider ) ) :
+
+				unset( $_save[$provider] );
+				continue;
+
+			endif;
+
+			//	Got an identifier?
+			try
+			{
+				$_adapter = $this->_hybrid->getAdapter( $provider );
+				$_profile = $_adapter->getUserProfile();
+
+				if ( ! empty( $_profile->identifier ) ) :
+
+					$_identifiers[$provider] = $_profile->identifier;
+
+				endif;
+
+			}
+			catch( Exception $e )
+			{
+				unset( $_save[$provider] );
+				continue;
+			}
+
+		endforeach;
+
+		// --------------------------------------------------------------------------
+
+		//	Get the user's existing data, so we know whether we're inserting or
+		//	updating their data
+
+		$this->db->where( 'user_id',	$user_id );
+		$_existing	= $this->db->get( NAILS_DB_PREFIX . 'user_social' )->result();
+		$_exists	= array();
+
+		foreach ( $_existing AS $existing ) :
+
+			$_exists[$existing->provider] = $existing->id;
+
+		endforeach;
+
+		// --------------------------------------------------------------------------
+
+		//	Save data
+		$this->db->trans_begin();
+
+		foreach ( $_save AS $provider => $keys ) :
+
+			if ( isset( $_exists[$provider] ) ) :
+
+				//	Update
+				$_data					= array();
+				$_data['identifier']	= $_identifiers[$provider];
+				$_data['session_data']	= serialize( $keys );
+				$_data['modified']		= date( 'Y-m-d H:i:s' );
+
+				$this->db->set( $_data );
+				$this->db->where( 'id',  $_exists[$provider] );
+				$this->db->update( NAILS_DB_PREFIX . 'user_social' );
+
+			else :
+
+				//	Insert
+				$_data					= array();
+				$_data['user_id']		= (int) $user_id;
+				$_data['provider']		= $provider;
+				$_data['identifier']	= $_identifiers[$provider];
+				$_data['session_data']	= serialize( $keys );
+				$_data['created']		= date( 'Y-m-d H:i:s' );
+				$_data['modified']		= $_data['created'];
+
+				$this->db->set( $_data );
+				$this->db->insert( NAILS_DB_PREFIX . 'user_social' );
+
+			endif;
+
+		endforeach;
+
+		// --------------------------------------------------------------------------
+
+		if ( $this->db->trans_status() === FALSE ) :
+
+			$this->db->trans_rollback();
+			return FALSE;
+
+		else :
+
+			$this->db->trans_commit();
+			return TRUE;
+
+		endif;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function restore_session( $user_id = NULL )
+	{
+		if ( empty( $user_id ) ) :
+
+			$user_id = active_user( 'id' );
+
+		endif;
+
+		if ( empty( $user_id ) ) :
+
+			$this->_set_error( 'Must specify which user ID\'s session to restore.' );
+			return FALSE;
+
+		endif;
+
+		$_user = $this->_ci->user_model->get_by_id( $user_id );
+
+		if ( ! $_user ) :
+
+			$this->_set_error( 'Invalid User ID' );
+			return FALSE;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		//	Clean slate
+		$this->_hybrid->logoutAllProviders();
+
+		// --------------------------------------------------------------------------
+
+		$this->db->where( 'user_id', $_user->id );
+		$_sessions	= $this->db->get( NAILS_DB_PREFIX . 'user_social' )->result();
+		$_restore	= array();
+
+		foreach ( $_sessions AS $session ) :
+
+			$session->session_data = unserialize( $session->session_data );
+			$_restore = array_merge( $_restore, $session->session_data );
+
+		endforeach;
+
+		return $this->_hybrid->restoreSessionData( serialize( $_restore ) );
+	}
+
+	// --------------------------------------------------------------------------
+
+
+	public function is_connected_with( $provider )
+	{
+		return $this->_hybrid->isConnectedWith( $provider );
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function get_connected_providers()
+	{
+		return $this->_hybrid->getConnectedProviders();
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function api( $provider, $call = '' )
+	{
+		if ( ! 	$this->is_connected_with( $provider ) ) :
+
+			$this->_set_error( 'Not connected with provider "' . $provider . '"' );
+			return FALSE;
+
+		endif;
+
+		try
+		{
+			$_provider = $this->_hybrid->getAdapter( $provider );
+			return $_provider->api()->api( $call );
+		}
+		catch( Exception $e )
+		{
+			$this->_set_error( 'Provider Error: ' . $e->getMessage() );
+			return FALSE;
+		}
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	/**
+	 * --------------------------------------------------------------------------
+	 *
+	 * ERROR METHODS
+	 * These methods provide a consistent interface for setting and retrieving
+	 * errors which are generated.
+	 *
+	 * --------------------------------------------------------------------------
+	 **/
+
+
+	/**
+	 * Set a generic error
+	 *
+	 * @access	protected
+	 * @param	string	$error	The error message
+	 * @return void
+	 **/
+	protected function _set_error( $error )
+	{
+		$this->_errors[] = $error;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	/**
+	 * Get any errors
+	 *
+	 * @access	public
+	 * @return array
+	 **/
+	public function get_errors()
+	{
+		return $this->_errors;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	/**
+	 * Get last error
+	 *
+	 * @access	public
+	 * @return mixed
+	 **/
+	public function last_error()
+	{
+		return end( $this->_errors );
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	/**
+	 * Clear the last error
+	 *
+	 * @access	public
+	 * @return mixed
+	 **/
+	public function clear_last_error()
+	{
+		return array_pop( $this->_errors );
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	/**
+	 * Clears all errors
+	 *
+	 * @access	public
+	 * @return mixed
+	 **/
+	public function clear_errors()
+	{
+		$this->_errors = array();
 	}
 }
 

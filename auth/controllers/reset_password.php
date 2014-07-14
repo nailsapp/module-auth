@@ -114,7 +114,6 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							// --------------------------------------------------------------------------
 
-							case 'BOTH' :
 							default :
 
 								$_login = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );

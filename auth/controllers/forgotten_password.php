@@ -101,7 +101,6 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 
 				// --------------------------------------------------------------------------
 
-				case 'BOTH' :
 				default:
 
 					$this->form_validation->set_rules( 'identifier',	'Username or Email',	'xss_clean|trim' );
@@ -158,7 +157,6 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 
 						// --------------------------------------------------------------------------
 
-						case 'BOTH' :
 						default:
 
 							if ( valid_email( $_identifier ) ) :
@@ -269,7 +267,6 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 
 						// --------------------------------------------------------------------------
 
-						case 'BOTH' :
 						default:
 
 							$this->data['error'] = lang( 'auth_forgot_code_not_set' );

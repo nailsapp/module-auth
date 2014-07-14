@@ -58,7 +58,6 @@
 
 						break;
 
-						case 'BOTH' :
 						default :
 
 							echo 'Or sign in using your email address or username and password.';
@@ -70,9 +69,11 @@
 
 			endif;
 
-		?>
-		<?=form_open( site_url( 'auth/login' . $_return_to ), 'class="form form-horizontal"' )?>
-			<?php
+			// --------------------------------------------------------------------------
+
+			echo form_open( site_url( 'auth/login' . $_return_to ), 'class="form form-horizontal"' );
+
+			// --------------------------------------------------------------------------
 
 				switch ( APP_NATIVE_LOGIN_USING ) :
 
@@ -92,7 +93,6 @@
 
 					break;
 
-					case 'BOTH' :
 					default :
 
 						$_label			= lang( 'auth_login_both' );

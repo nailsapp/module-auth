@@ -66,9 +66,6 @@
 	$lang['auth_login_fail_suspended']					= '<strong>This account has been suspended;</strong> if you feel you have received this message in error then please contact us.';
 	$lang['auth_login_fail_blocked']					= '<strong>This account has been temporarily blocked due to repeated failed logins.</strong><br />Please wait %s minutes before trying again (each failed login resets the block). ';
 	$lang['auth_login_fail_social']						= '<strong>This account was created using a social network</strong><br />Either login via the appropriate button or <a href="%s">click here to set a password</a> using the Forgotten Password tool.';
-	$lang['auth_login_fail_social_fb']					= '<strong>This account was created using Facebook.</strong><br />Either login via the Facebook button or <a href="%s">click here to set a password</a> using the Forgotten Password tool.';
-	$lang['auth_login_fail_social_tw']					= '<strong>This account was created using Twitter.</strong><br />Either login via the Twitter button or <a href="%s">click here to set a password</a> using the Forgotten Password tool.';
-	$lang['auth_login_fail_social_li']					= '<strong>This account was created using LinkedIn.</strong><br />Either login via the LinkedIn button or <a href="%s">click here to set a password</a> using the Forgotten Password tool.';
 
 	//	Two-factor auth strings
 	$lang['auth_twofactor_token_could_not_generate']	= 'Unable to generate two factor auth token.';
@@ -100,6 +97,7 @@
 	$lang['auth_social_email_in_use']					= '<strong>You\'ve been here before?</strong> We noticed that the email associated with your %1$s account is already registered with %2$s. In order to use %1$s to sign in you\'ll need to link your accounts via your Settings page. Log in below using your email address and we\'ll get you started.';
 	$lang['auth_social_email_in_use_no_settings']		= '<strong>You\'ve been here before?</strong> We noticed that the email associated with your %1$s account is already registered with %2$s. Please sign in using your email address and password. <a href="%3$s">Forgotten your password</a>?';
 	$lang['auth_social_linked_ok']						= '<strong>Success</strong>, your %s account is now linked.';
+	$lang['auth_social_linked_fail']					= '<strong>Sorry,</strong>, we failed to link your %s account.';
 	$lang['auth_social_register_ok']					= '<strong>Hi, %s!</strong> Your account has been set up and is ready to be used.';
 	$lang['auth_social_register_disabled']				= '<strong>Sorry,</strong> new registrations are not permitted.';
 	$lang['auth_social_disconnect_ok']					= '<strong>Success!</strong> Your %s account was successfully disconnected.';
@@ -135,7 +133,7 @@
 	$lang['auth_register_social_register']				= 'Register with %s';
 
 	//	Extra info
-	$lang['auth_register_extra_message']				= 'In order to complete setting up your account we need a little more information from you.';
+	$lang['auth_register_extra_message']				= 'In order to complete setting up your account we need a little more information.';
 
 	//	Wait for activation email
 	$lang['auth_register_wait_message']					= 'An email with a link to verify your email address has been sent to:';

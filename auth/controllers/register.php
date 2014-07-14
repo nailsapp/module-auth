@@ -43,6 +43,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 		//	Load libraries
 		$this->load->library( 'form_validation' );
+		$this->load->library( 'auth/social_signon' );
 
 		// --------------------------------------------------------------------------
 
@@ -101,7 +102,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 				endif;
 
-			elseif ( APP_NATIVE_LOGIN_USING == 'BOTH' ) :
+			else :
 
 				$this->form_validation->set_rules( 'email',		'',	'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
 				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]' );
@@ -122,7 +123,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 				$this->form_validation->set_message( 'is_unique',			lang( 'auth_register_username_is_unique', site_url( 'auth/forgotten_password' ) ) );
 
-			elseif ( APP_NATIVE_LOGIN_USING == 'BOTH' ) :
+			else :
 
 				$this->form_validation->set_message( 'is_unique',			lang( 'auth_register_identity_is_unique', site_url( 'auth/forgotten_password' ) ) );
 
@@ -196,6 +197,11 @@ class NAILS_Register extends NAILS_Auth_Controller
 			endif;
 
 		endif;
+
+		// --------------------------------------------------------------------------
+
+		$this->data['social_signon_enabled']	= $this->social_signon->is_enabled();
+		$this->data['social_signon_providers']	= $this->social_signon->get_providers( 'ENABLED' );
 
 		// --------------------------------------------------------------------------
 

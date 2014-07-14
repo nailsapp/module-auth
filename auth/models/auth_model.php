@@ -107,7 +107,6 @@ class NAILS_Auth_model extends NAILS_Model
 
 			// --------------------------------------------------------------------------
 
-			case 'BOTH' :
 			default :
 
 				if ( valid_email( $identifier ) ) :
@@ -133,14 +132,6 @@ class NAILS_Auth_model extends NAILS_Model
 			if ( $this->user_password_model->is_correct( $_user->id, $password ) ) :
 
 				//	Password accepted! Final checks...
-
-				//	Suspended user?
-				if ( $_user->is_suspended ) :
-
-					$this->_set_error( 'auth_login_fail_suspended' );
-					return FALSE;
-
-				endif;
 
 				//	Exceeded login count, temporarily blocked
 				if ( $_user->failed_login_count >= $this->brute_force_protection['limit'] ) :
@@ -179,34 +170,9 @@ class NAILS_Auth_model extends NAILS_Model
 
 				endif;
 
-				// Return some helpful data
-				$_return = array(
-					'user_id'		=> $_user->id,
-					'first_name'	=> $_user->first_name,
-					'last_login'	=> $_user->last_login,
-					'last_ip'		=> $_user->last_ip,
-					'homepage'		=> $_user->group_homepage,
-					'remember'		=> $remember
-				);
+				// --------------------------------------------------------------------------
 
-				//	Two factor auth?
-				if (  $this->config->item( 'auth_two_factor_enable' ) ) :
-
-					//	Generate token
-					$_return['two_factor_auth'] = $this->generate_two_factor_token( $_user->id );
-
-				endif;
-
-				//	Temporary password?
-				if ( $_user->temp_pw ) :
-
-					$_return['temp_pw']			= array();
-					$_return['temp_pw']['id']	= $_user->id;
-					$_return['temp_pw']['hash']	= md5( $_user->salt );
-
-				endif;
-
-				return $_return;
+				return $_user;
 
 			// --------------------------------------------------------------------------
 
@@ -231,7 +197,6 @@ class NAILS_Auth_model extends NAILS_Model
 
 					// --------------------------------------------------------------------------
 
-					case 'BOTH' :
 					default :
 
 						$_identifier = $_user->email;
@@ -240,23 +205,9 @@ class NAILS_Auth_model extends NAILS_Model
 
 				endswitch;
 
-				switch( $user->auth_method_id ) :
+				$this->_set_error( 'auth_login_fail_social', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
 
-					//	Facebook Connect
-					case '2':		$this->_set_error( 'auth_login_fail_social_fb', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
-
-					//	Twitter
-					case '3':		$this->_set_error( 'auth_login_fail_social_tw', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
-
-					//	LinkedIn
-					case '5':		$this->_set_error( 'auth_login_fail_social_li', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
-
-					//	Other
-					default:		$this->_set_error( 'auth_login_fail_social', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
-
-				endswitch;
 				return FALSE;
-
 
 			// --------------------------------------------------------------------------
 

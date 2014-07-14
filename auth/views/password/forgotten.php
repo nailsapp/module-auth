@@ -28,7 +28,6 @@
 
 					break;
 
-					case 'BOTH' :
 					default :
 
 						$_label			= lang( 'auth_forgot_both' );
