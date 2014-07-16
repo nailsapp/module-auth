@@ -100,7 +100,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							case 'EMAIL' :
 
-								$_login = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
 
 							break;
 
@@ -108,7 +108,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							case 'USERNAME' :
 
-								$_login = $this->auth_model->login( $_user->username, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login( $_user->username, $this->input->post( 'new_password' ), $_remember );
 
 							break;
 
@@ -116,15 +116,24 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							default :
 
-								$_login = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
 
 							break;
 
 						endswitch;
 
-						if ( $_login ) :
+						if ( $_login_user ) :
 
 							if ( $this->config->item( 'auth_two_factor_enable' ) ) :
+
+								//	Generate token
+								$_two_factor_auth = $this->auth_model->generate_two_factor_token( $_login_user->id );
+
+								if ( ! $_two_factor_auth ) :
+
+									show_fatal_error( 'Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.' );
+
+								endif;
 
 								$_query	= array();
 
@@ -143,30 +152,30 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 								$_query = $_query ? '?' . http_build_query( $_query ) : '';
 
 								//	Login was successful, redirect to the security questions page
-								redirect( 'auth/security_questions/' . $_login['user_id'] . '/' . $_login['two_factor_auth']['salt'] . '/' . $_login['two_factor_auth']['token'] . $_query );
+								redirect( 'auth/security_questions/' . $_login_user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query );
 
 							else :
 
 								//	Say hello
-								if ( $_login['last_login'] ) :
+								if ( $_login_user->last_login ) :
 
 									$this->load->helper( 'date' );
 
-									$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_login['last_login'] ) ) : user_datetime( $_login['last_login'] );
+									$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_login_user->last_login ) ) : user_datetime( $_login_user->last_login );
 
 									if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
 
-										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_login['first_name'], $_last_login, $_login['last_ip'] ) ) );
+										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_login_user->first_name, $_last_login, $_login_user->last_ip ) ) );
 
 									else :
 
-										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_login['first_name'], $_last_login ) ) );
+										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_login_user->first_name, $_last_login ) ) );
 
 									endif;
 
 								else :
 
-									$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_login['first_name'] ) ) );
+									$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_login_user->first_name ) ) );
 
 								endif;
 
@@ -174,17 +183,14 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 								if ( $this->input->get( 'return_to' ) ):
 
 									redirect( $this->input->get( 'return_to' ) );
-									return;
 
 								elseif ( $_user->group_homepage ) :
 
 									redirect( $_user->group_homepage );
-									return;
 
 								else :
 
 									redirect( '/' );
-									return;
 
 								endif;
 

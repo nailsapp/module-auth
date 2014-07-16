@@ -221,7 +221,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 		elseif ( $this->config->item( 'auth_two_factor_enable' ) ) :
 
 			//	Generate token
-			$_two_factor_auth = $this->generate_two_factor_token( $user->id );
+			$_two_factor_auth = $this->auth_model->generate_two_factor_token( $user->id );
 
 			if ( ! $_two_factor_auth ) :
 
