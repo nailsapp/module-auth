@@ -27,13 +27,13 @@
 					// --------------------------------------------------------------------------
 
 					//	Render the buttons
+					$_min_cols	= APP_BOOTSTRAP_GRID / 3;
 					$_cols_each = floor( APP_BOOTSTRAP_GRID / count( $_buttons ) );
+					$_cols_each = $_cols_each < $_min_cols ? $_min_cols : $_cols_each;
 
 					foreach ( $_buttons AS $btn ) :
 
-						$_class = $_cols_each == ( APP_BOOTSTRAP_GRID / 3 ) ? 'md' : 'sm';
-
-						echo '<div class="col-' . $_class . '-' . $_cols_each . ' text-center" style="margin-bottom:1em;">';
+						echo '<div class="col-md-' . $_cols_each . ' text-center" style="margin-bottom:1em;">';
 							echo anchor( $btn[0], $btn[1], 'class="btn btn-primary btn-lg btn-block"' );
 						echo '</div>';
 
