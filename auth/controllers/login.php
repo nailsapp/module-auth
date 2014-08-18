@@ -651,160 +651,158 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 					$this->_request_data( $_required_data, $provider );
 
-				else :
+				endif;
 
-					//	We have everything we need to create the user account
-					//	However, first we need to make sure that our data is valid
-					//	and not in use.At this point it's not the user's fault so
-					//	don't throw an error.
+				//	We have everything we need to create the user account
+				//	However, first we need to make sure that our data is valid
+				//	and not in use.At this point it's not the user's fault so
+				//	don't throw an error.
 
-					//	Check email
-					if ( isset( $_required_data['email'] ) ) :
+				//	Check email
+				if ( isset( $_required_data['email'] ) ) :
 
-						$_check = $this->user_model->get_by_email( $_required_data['email'] );
+					$_check = $this->user_model->get_by_email( $_required_data['email'] );
 
-						if ( $_check ) :
+					if ( $_check ) :
 
-							$_required_data['email'] = '';
-							$_request_data			= TRUE;
-
-						endif;
+						$_required_data['email'] = '';
+						$_request_data			= TRUE;
 
 					endif;
 
-					// --------------------------------------------------------------------------
+				endif;
 
-					if ( isset( $_required_data['username'] ) ) :
+				// --------------------------------------------------------------------------
 
-						//	Username was set using provider provided username, check it's valid
-						//	if not, then request one. At this point it's not the user's fault so
-						//	don't throw an error.
+				if ( isset( $_required_data['username'] ) ) :
 
-						$_check = $this->user_model->get_by_username( $_required_data['username'] );
+					//	Username was set using provider provided username, check it's valid
+					//	if not, then request one. At this point it's not the user's fault so
+					//	don't throw an error.
 
-						if ( $_check ) :
+					$_check = $this->user_model->get_by_username( $_required_data['username'] );
 
-							$_required_data['username']	= '';
-							$_request_data				= TRUE;
+					if ( $_check ) :
 
-						endif;
+						$_required_data['username']	= '';
+						$_request_data				= TRUE;
+
+					endif;
+
+				else :
+
+					//	No username, make one up for them, try to use the social_user
+					//	username (as it might not have been set above), failing that
+					//	use the user's name, failing THAT use a random string
+
+					if ( ! empty( $_social_user->username ) ) :
+
+						$_username = $_social_user->username;
+
+					elseif( $_required_data['first_name'] || $_required_data['last_name'] ) :
+
+						$_username = $_required_data['first_name'] . ' ' . $_required_data['last_name'];
 
 					else :
 
-						//	No username, make one up for them, try to use the social_user
-						//	username (as it might not have been set above), failing that
-						//	use the user's name, failing THAT use a random string
+						$_username = 'user' . date( 'YmdHis' );
 
-						if ( ! empty( $_social_user->username ) ) :
+					endif;
 
-							$_username = $_social_user->username;
+					$_basename = url_title( $_username, '-', TRUE );
+					$_required_data['username'] = $_basename;
 
-						elseif( $_required_data['first_name'] || $_required_data['last_name'] ) :
+					$_user = $this->user_model->get_by_username( $_required_data['username'] );
 
-							$_username = $_required_data['first_name'] . ' ' . $_required_data['last_name'];
+					while ( $_user ) :
 
-						else :
-
-							$_username = 'user' . date( 'YmdHis' );
-
-						endif;
-
-						$_basename = url_title( $_username, '-', TRUE );
-						$_required_data['username'] = $_basename;
-
+						$_required_data['username']  = increment_string( $_basename, '' );
 						$_user = $this->user_model->get_by_username( $_required_data['username'] );
 
-						while ( $_user ) :
+					endwhile;
 
-							$_required_data['username']  = increment_string( $_basename, '' );
-							$_user = $this->user_model->get_by_username( $_required_data['username'] );
+				endif;
 
-						endwhile;
+				// --------------------------------------------------------------------------
+
+				//	Request data?
+				if ( ! empty( $_request_data ) ) :
+
+					$this->_request_data( $_required_data, $provider );
+
+				endif;
+
+				// --------------------------------------------------------------------------
+
+				//	Handle referrals
+				if ( $this->session->userdata( 'referred_by' ) ) :
+
+					$_optional_data['referred_by'] = $this->session->userdata( 'referred_by' );
+
+				endif;
+
+				// --------------------------------------------------------------------------
+
+				//	Merge data arrays
+				$_data = array_merge( $_required_data, $_optional_data );
+
+				// --------------------------------------------------------------------------
+
+				//	Create user
+				$_new_user = $this->user_model->create( $_data );
+
+				if ( $_new_user ) :
+
+					//	Welcome aboard, matey
+					//	Save provider details
+					//	Upload profile image if available
+
+					$this->social_signon->save_session( $_new_user->id, $provider );
+
+					if ( ! empty( $_social_user->photoURL ) ) :
+
+						//	Has profile image
+						$_img_url = $_social_user->photoURL;
+
+					elseif ( ! empty( $_new_user->email ) ) :
+
+						//	Attempt gravatar
+						$_img_url = 'http://www.gravatar.com/avatar/' . md5( $_new_user->email ) . '?d=404&s=2048&r=pg';
 
 					endif;
 
-					// --------------------------------------------------------------------------
+					if ( ! empty( $_img_url ) ) :
 
-					//	Request data?
-					if ( ! empty( $_request_data ) ) :
+						//	Fetch the image
+						$_ch = curl_init();
+						curl_setopt( $_ch, CURLOPT_RETURNTRANSFER, TRUE );
+						curl_setopt( $_ch, CURLOPT_FOLLOWLOCATION, TRUE );
+						curl_setopt( $_ch, CURLOPT_URL, $_img_url );
+						$_img_data = curl_exec( $_ch );
 
-						$this->_request_data( $_required_data, $provider );
+						if ( curl_getinfo( $_ch, CURLINFO_HTTP_CODE ) === 200 ) :
 
-					endif;
+							//	Attempt upload
+							$this->load->library( 'cdn/cdn' );
 
-					// --------------------------------------------------------------------------
+							//	Save file to cache
+							$_cache_file = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $_new_user->id;
 
-					//	Handle referrals
-					if ( $this->session->userdata( 'referred_by' ) ) :
+							if ( @file_put_contents( $_cache_file, $_img_data ) ) :
 
-						$_optional_data['referred_by'] = $this->session->userdata( 'referred_by' );
+								$_upload = $this->cdn->object_create( $_cache_file, 'profile-images', array() );
 
-					endif;
+								if ( $_upload ) :
 
-					// --------------------------------------------------------------------------
+									$_data					= array();
+									$_data['profile_img']	= $_upload->id;
 
-					//	Merge data arrays
-					$_data = array_merge( $_required_data, $_optional_data );
+									$this->user_model->update( $_new_user->id, $_data );
 
-					// --------------------------------------------------------------------------
+								else :
 
-					//	Create user
-					$_new_user = $this->user_model->create( $_data );
-
-					if ( $_new_user ) :
-
-						//	Welcome aboard, matey
-						//	Save provider details
-						//	Upload profile image if available
-
-						$this->social_signon->save_session( $_new_user->id, $provider );
-
-						if ( ! empty( $_social_user->photoURL ) ) :
-
-							//	Has profile image
-							$_img_url = $_social_user->photoURL;
-
-						elseif ( ! empty( $_new_user->email ) ) :
-
-							//	Attempt gravatar
-							$_img_url = 'http://www.gravatar.com/avatar/' . md5( $_new_user->email ) . '?d=404&s=2048&r=pg';
-
-						endif;
-
-						if ( ! empty( $_img_url ) ) :
-
-							//	Fetch the image
-							$_ch = curl_init();
-							curl_setopt( $_ch, CURLOPT_RETURNTRANSFER, TRUE );
-							curl_setopt( $_ch, CURLOPT_FOLLOWLOCATION, TRUE );
-							curl_setopt( $_ch, CURLOPT_URL, $_img_url );
-							$_img_data = curl_exec( $_ch );
-
-							if ( curl_getinfo( $_ch, CURLINFO_HTTP_CODE ) === 200 ) :
-
-								//	Attempt upload
-								$this->load->library( 'cdn/cdn' );
-
-								//	Save file to cache
-								$_cache_file = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $_new_user->id;
-
-								if ( @file_put_contents( $_cache_file, $_img_data ) ) :
-
-									$_upload = $this->cdn->object_create( $_cache_file, 'profile-images', array() );
-
-									if ( $_upload ) :
-
-										$_data					= array();
-										$_data['profile_img']	= $_upload->id;
-
-										$this->user_model->update( $_new_user->id, $_data );
-
-									else :
-
-										log_message( 'debug', 'Failed to uload user\'s profile image' );
-										log_message( 'debug', $this->cdn->last_error() );
-
-									endif;
+									log_message( 'debug', 'Failed to uload user\'s profile image' );
+									log_message( 'debug', $this->cdn->last_error() );
 
 								endif;
 
@@ -812,45 +810,45 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 						endif;
 
-						// --------------------------------------------------------------------------
+					endif;
 
-						//	Aint that swell, all registered! Redirect!
-						$this->user_model->set_login_data( $_new_user->id );
+					// --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+					//	Aint that swell, all registered! Redirect!
+					$this->user_model->set_login_data( $_new_user->id );
 
-						//	Create an event for this event
-						create_event( 'did_register', $_new_user->id, 0, NULL, array( 'method' => $provider ) );
+					// --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+					//	Create an event for this event
+					create_event( 'did_register', $_new_user->id, 0, NULL, array( 'method' => $provider ) );
 
-						//	Redirect
-						$this->session->set_flashdata( 'success', lang( 'auth_social_register_ok', $_new_user->first_name ) );
+					// --------------------------------------------------------------------------
 
-						//	Registrations will be forced to the registration redirect, regardless of
-						//	what else has been set
+					//	Redirect
+					$this->session->set_flashdata( 'success', lang( 'auth_social_register_ok', $_new_user->first_name ) );
 
-						$_group		= $this->user_group_model->get_by_id( $_new_user->group_id );
-						$_redirect	= $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
+					//	Registrations will be forced to the registration redirect, regardless of
+					//	what else has been set
 
-						redirect( $_redirect );
+					$_group		= $this->user_group_model->get_by_id( $_new_user->group_id );
+					$_redirect	= $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
 
-					else :
+					redirect( $_redirect );
 
-						//	Oh dear, something went wrong
-						$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> Something went wrong and your account could not be created.' );
+				else :
 
-						$_redirect = 'auth/login';
+					//	Oh dear, something went wrong
+					$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> Something went wrong and your account could not be created.' );
 
-						if ( $this->data['return_to'] ) :
+					$_redirect = 'auth/login';
 
-							$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
+					if ( $this->data['return_to'] ) :
 
-						endif;
-
-						redirect( $_redirect );
+						$_redirect .= '?return_to=' . urlencode( $this->data['return_to'] );
 
 					endif;
+
+					redirect( $_redirect );
 
 				endif;
 

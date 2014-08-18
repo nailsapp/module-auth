@@ -26,12 +26,12 @@
 
 			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME' ) :
 
-				if ( empty( $required_data['email'] ) ) :
+				if ( isset( $required_data['email'] ) ) :
 
 					$_field			= 'email';
 					$_label			= lang( 'form_label_email' );
 					$_placeholder	= lang( 'auth_register_email_placeholder' );
-					$_default		= '';
+					$_default		= $required_data['email'];
 
 					?>
 					<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
@@ -51,12 +51,12 @@
 
 			if ( APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL' ) :
 
-				if ( empty( $required_data['username'] ) ) :
+				if ( isset( $required_data['username'] ) ) :
 
 					$_field			= 'username';
 					$_label			= lang( 'form_label_username' );
 					$_placeholder	= lang( 'auth_register_username_placeholder' );
-					$_default		= '';
+					$_default		= $required_data['username'];
 
 					?>
 					<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
