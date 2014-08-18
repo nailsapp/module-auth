@@ -139,6 +139,24 @@ class Social_signon
 	{
 		return $this->_hybrid->authenticate( $provider, $params );
 	}
+	
+	
+	// --------------------------------------------------------------------------
+	
+	
+	public function get_user_profile( $provider )
+	{
+		$_adapter	= $this->authenticate( $provider );
+		try
+		{
+			return $_adapter->getUserProfile();
+		}
+		catch( Exception $e)
+		{
+            $this->_set_error( 'Provider Error: ' . $e->getMessage() );
+			return FALSE;
+		}
+	}
 
 
 	// --------------------------------------------------------------------------
