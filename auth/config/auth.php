@@ -91,49 +91,61 @@ $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'facebook',
 	'label'		=> 'Facebook',
 	'fields'	=> array(
-		'id'		=> 'App ID',
-		'secret'	=> 'Secret',
-		'scope'		=> 'Scope'
+		'keys'	=> array(
+			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		),
+		'scope'	=> array( 'label' => 'Scope', 'required' => FALSE )
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'twitter',
 	'label'		=> 'Twitter',
 	'fields'	=> array(
-		'key'		=> 'Key',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'key'		=> array( 'label' => 'Key', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'linkedin',
 	'label'		=> 'LinkedIn',
 	'fields'	=> array(
-		'key'		=> 'Key',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'key'		=> array( 'label' => 'Key', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'foursquare',
 	'label'		=> 'FourSquare',
 	'fields'	=> array(
-		'id'		=> 'App ID',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'google',
 	'label'		=> 'Google',
 	'fields'	=> array(
-		'id'		=> 'App ID',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'instagram',
 	'label'		=> 'Instagram',
 	'fields'	=> array(
-		'id'		=> 'ID',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	),
 	'wrapper'	=> array(
 		'class'	=> 'Hybrid_Providers_Instagram',
@@ -144,8 +156,10 @@ $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'github',
 	'label'		=> 'Github',
 	'fields'	=> array(
-		'id'		=> 'ID',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	),
 	'wrapper'	=> array(
 		'class'	=> 'Hybrid_Providers_GitHub',
@@ -156,8 +170,10 @@ $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> '500px',
 	'label'		=> '500px',
 	'fields'	=> array(
-		'key'		=> 'Key',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'key'		=> array( 'label' => 'Key', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	),
 	'wrapper'	=> array(
 		'class'	=> 'Hybrid_Providers_px500',
@@ -168,8 +184,10 @@ $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'tumblr',
 	'label'		=> 'Tumblr',
 	'fields'	=> array(
-		'key'		=> 'Key',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'key'		=> array( 'label' => 'Key', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	),
 	'wrapper'	=> array(
 		'class'	=> 'Hybrid_Providers_Tumblr',
@@ -180,8 +198,10 @@ $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'vimeo',
 	'label'		=> 'Vimeo',
 	'fields'	=> array(
-		'key'		=> 'Key',
-		'secret'	=> 'Secret'
+		'keys'	=> array(
+			'key'		=> array( 'label' => 'Key', 'required' => TRUE ),
+			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
+		)
 	),
 	'wrapper'	=> array(
 		'class'	=> 'Hybrid_Providers_Vimeo',

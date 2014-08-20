@@ -55,16 +55,27 @@ class Social_signon
 		foreach ( $this->_providers['enabled'] AS $provider ) :
 
 			$_temp				= array();
-			$_temp				= array();
 			$_temp['enabled']	= TRUE;
 
 			if ( $provider['fields'] ) :
 
-				$_temp['keys'] = array();
-
 				foreach ( $provider['fields'] AS $key => $label ) :
 
-					$_temp['keys'][$key] = app_setting( 'auth_social_signon_' . $provider['slug'] . '_' . $key );
+					if ( is_array( $label ) && ! isset( $label['label'] )  ) :
+
+						$_temp[$key] = array();
+
+						foreach ( $label AS $key1 => $label1 ) :
+
+							$_temp[$key][$key1] = app_setting( 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1 );
+
+						endforeach;
+
+					else :
+
+						$_temp[$key] = app_setting( 'auth_social_signon_' . $provider['slug'] . '_' . $key );
+
+					endif;
 
 				endforeach;
 
@@ -139,11 +150,11 @@ class Social_signon
 	{
 		return $this->_hybrid->authenticate( $provider, $params );
 	}
-	
-	
+
+
 	// --------------------------------------------------------------------------
-	
-	
+
+
 	public function get_user_profile( $provider )
 	{
 		$_adapter	= $this->authenticate( $provider );
@@ -153,7 +164,7 @@ class Social_signon
 		}
 		catch( Exception $e)
 		{
-            $this->_set_error( 'Provider Error: ' . $e->getMessage() );
+			$this->_set_error( 'Provider Error: ' . $e->getMessage() );
 			return FALSE;
 		}
 	}
