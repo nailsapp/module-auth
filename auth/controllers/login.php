@@ -1001,7 +1001,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 	{
 		$_method = $this->uri->segment( 3 ) ? $this->uri->segment( 3 ) : 'index';
 
-		if ( method_exists( $this, $_method ) ) :
+		if ( method_exists( $this, $_method ) && substr( $_method, 0, 1 ) != '_' ) :
 
 			$this->{$_method}();
 
