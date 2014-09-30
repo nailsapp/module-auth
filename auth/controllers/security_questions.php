@@ -35,12 +35,10 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 				if ( $_return_to ):
 
 					redirect( 'auth/login?return_to=' . $_return_to );
-					return;
 
 				else :
 
 					redirect( 'auth/login' );
-					return;
 
 				endif;
 
@@ -145,7 +143,6 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 						$_redirect = $_return_to != site_url() ? $_return_to : $_user->group_homepage;
 
 						redirect( $_redirect );
-						return;
 
 					else :
 
@@ -336,7 +333,6 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 
 										$_redirect = $_return_to != site_url() ? $_return_to : $_user->group_homepage;
 										redirect( $_redirect );
-										return;
 
 									else :
 

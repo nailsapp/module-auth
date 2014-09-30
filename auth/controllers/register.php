@@ -182,7 +182,6 @@ class NAILS_Register extends NAILS_Auth_Controller
 					$_redirect = $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
 
 					redirect( $_redirect );
-					return;
 
 				else :
 
@@ -234,7 +233,6 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
 			redirect( '/' );
-			return;
 
 		endif;
 
@@ -247,7 +245,6 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
 			redirect( '/' );
-			return;
 
 		endif;
 
@@ -258,7 +255,6 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 			$this->session->set_flashdata( 'message', lang( 'auth_register_resend_already_active', site_url( 'auth/login' ) ) );
 			redirect( 'auth/login' );
-			return;
 
 		endif;
 
@@ -269,7 +265,6 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
 			redirect( '/' );
-			return;
 
 		endif;
 

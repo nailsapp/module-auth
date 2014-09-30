@@ -87,7 +87,6 @@ class NAILS_Override extends NAILS_Auth_Controller
 
 					$this->session->set_flashdata( 'error', lang( 'auth_override_fail_nopermission' ) );
 					redirect( 'admin/dashboard' );
-					return;
 
 				elseif ( $_cloning ) :
 
