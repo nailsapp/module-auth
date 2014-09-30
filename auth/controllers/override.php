@@ -68,12 +68,14 @@ class NAILS_Override extends NAILS_Auth_Controller
 
 		// --------------------------------------------------------------------------
 
-		//	Check sign-in permissions; ignore if recovering.
-		//	Users cannot:
-		//	- Sign in as themselves
-		//	- Sign in as superusers (unless they are a superuser)
+		/**
+		 * Check sign-in permissions; ignore if recovering.
+		 * Users cannot:
+		 * - Sign in as themselves
+		 * - Sign in as superusers (unless they are a superuser)
+		 */
 
-		if ( ! $this->session->userdata( 'admin_recovery' ) ) :
+		if ( ! $this->user_model->was_admin() ) :
 
 			$_permission	= user_has_permission( 'admin.accounts:0.can_login_as' );
 			$_cloning		= active_user( 'id' ) == $_u->id ? TRUE : FALSE;
@@ -121,14 +123,16 @@ class NAILS_Override extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	Unset our admin recovery session data if we're recovering
-		if ( $this->session->userdata( 'admin_recovery' ) ) :
+		if ( $this->user_model->was_admin() ) :
 
 			//	Where we sending the user back to? If not set go to the group homepage
 			$_redirect = $this->session->userdata( 'admin_recovery' )->now_where_was_i;
-			$_redirect = ( $_redirect ) ? $_redirect : $_u->group_homepage;
+			$_redirect = $_redirect ? $_redirect : $_u->group_homepage;
 
-			//	Are we logging back in as the original admin? If so, unset the admin recovery,
-			//	if not, leave it as it is so they can log back in in the future.
+			/**
+			 * Are we logging back in as the original admin? If so, unset the admin recovery,
+			 * if not, leave it as it is so they can log back in in the future.
+			 */
 
 			$_original_admin = $this->session->userdata( 'admin_recovery' );
 
@@ -138,8 +142,10 @@ class NAILS_Override extends NAILS_Auth_Controller
 
 			else :
 
-				//	We're logging in as someone else, update the recovery data
-				//	to reflect the new user
+				/**
+				 * We're logging in as someone else, update the recovery data
+				 * to reflect the new user
+				 */
 
 				$_recovery_data = $this->session->userdata( 'admin_recovery' );
 				$_recovery_data->logged_in_as = $_u->id;
