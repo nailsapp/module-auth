@@ -157,7 +157,7 @@ class Social_signon
 
 	public function get_user_profile( $provider )
 	{
-		$_adapter	= $this->authenticate( $provider );
+		$_adapter = $this->authenticate( $provider );
 		try
 		{
 			return $_adapter->getUserProfile();
@@ -185,7 +185,7 @@ class Social_signon
 	public function get_user_by_provider_identifier( $provider, $identifier, $extended = NULL )
 	{
 		$this->db->select( 'user_id' );
-		$this->db->where( 'provider',		$provider );
+		$this->db->where( 'provider',	$provider );
 		$this->db->where( 'identifier',	$identifier );
 		$_user = $this->db->get( NAILS_DB_PREFIX . 'user_social' )->row();
 
@@ -468,9 +468,6 @@ class Social_signon
 	}
 
 
-	// --------------------------------------------------------------------------
-
-
 	/**
 	 * --------------------------------------------------------------------------
 	 *
@@ -484,11 +481,8 @@ class Social_signon
 
 	/**
 	 * Set a generic error
-	 *
-	 * @access	protected
-	 * @param	string	$error	The error message
-	 * @return void
-	 **/
+	 * @param string $error The error message
+	 */
 	protected function _set_error( $error )
 	{
 		$this->_errors[] = $error;
@@ -499,11 +493,9 @@ class Social_signon
 
 
 	/**
-	 * Get any errors
-	 *
-	 * @access	public
+	 * Return the error array
 	 * @return array
-	 **/
+	 */
 	public function get_errors()
 	{
 		return $this->_errors;
@@ -514,11 +506,9 @@ class Social_signon
 
 
 	/**
-	 * Get last error
-	 *
-	 * @access	public
-	 * @return mixed
-	 **/
+	 * Returns the last error
+	 * @return string
+	 */
 	public function last_error()
 	{
 		return end( $this->_errors );
@@ -529,11 +519,9 @@ class Social_signon
 
 
 	/**
-	 * Clear the last error
-	 *
-	 * @access	public
+	 * Clears the last error
 	 * @return mixed
-	 **/
+	 */
 	public function clear_last_error()
 	{
 		return array_pop( $this->_errors );
@@ -545,10 +533,8 @@ class Social_signon
 
 	/**
 	 * Clears all errors
-	 *
-	 * @access	public
-	 * @return mixed
-	 **/
+	 * @return void
+	 */
 	public function clear_errors()
 	{
 		$this->_errors = array();
