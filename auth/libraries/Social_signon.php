@@ -2,6 +2,10 @@
 
 class Social_signon
 {
+	//	Class traits
+	use NAILS_COMMON_TRAIT_ERROR_HANDLING;
+	use NAILS_COMMON_TRAIT_CACHING;
+
 	protected $_ci;
 	protected $db;
 	protected $_providers;
@@ -465,79 +469,6 @@ class Social_signon
 			$this->_set_error( 'Provider Error: ' . $e->getMessage() );
 			return FALSE;
 		}
-	}
-
-
-	/**
-	 * --------------------------------------------------------------------------
-	 *
-	 * ERROR METHODS
-	 * These methods provide a consistent interface for setting and retrieving
-	 * errors which are generated.
-	 *
-	 * --------------------------------------------------------------------------
-	 **/
-
-
-	/**
-	 * Set a generic error
-	 * @param string $error The error message
-	 */
-	protected function _set_error( $error )
-	{
-		$this->_errors[] = $error;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Return the error array
-	 * @return array
-	 */
-	public function get_errors()
-	{
-		return $this->_errors;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Returns the last error
-	 * @return string
-	 */
-	public function last_error()
-	{
-		return end( $this->_errors );
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Clears the last error
-	 * @return mixed
-	 */
-	public function clear_last_error()
-	{
-		return array_pop( $this->_errors );
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Clears all errors
-	 * @return void
-	 */
-	public function clear_errors()
-	{
-		$this->_errors = array();
 	}
 }
 
