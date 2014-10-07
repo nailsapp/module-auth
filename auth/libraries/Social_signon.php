@@ -13,6 +13,9 @@ class Social_signon
 
 	// --------------------------------------------------------------------------
 
+	/**
+	 * Cosntructs the class
+	 */
 	public function __construct()
 	{
 		$this->_ci			=& get_instance();
@@ -27,15 +30,15 @@ class Social_signon
 
 			foreach( $_config AS $provider ) :
 
-				$this->_providers['all'][$provider['slug']] = $provider;
+				$this->_providers['all'][strtolower( $provider['slug'] )] = $provider;
 
 				if ( app_setting( 'auth_social_signon_' . $provider['slug'] . '_enabled' )  ) :
 
-					$this->_providers['enabled'][$provider['slug']] = $provider;
+					$this->_providers['enabled'][strtolower( $provider['slug'] )] = $provider;
 
 				else :
 
-					$this->_providers['disabled'][$provider['slug']] = $provider;
+					$this->_providers['disabled'][strtolower( $provider['slug'] )] = $provider;
 
 				endif;
 
@@ -102,6 +105,10 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Determines whether social sign on is enabled or not
+	 * @return boolean
+	 */
 	public function is_enabled()
 	{
 		return app_setting( 'auth_social_signon_enabled' ) && $this->get_providers( 'ENABLED' );
@@ -111,6 +118,11 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Returns a list of providers, optionally filtered by availability
+	 * @param  string $status The filter to apply
+	 * @return array
+	 */
 	public function get_providers( $status = NULL )
 	{
 		if ( $status == 'ENABLED' ) :
@@ -132,15 +144,25 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Returns the details of a particular provider
+	 * @param  string $provider The provider to return
+	 * @return mixed            Array on success, FALSE on failure
+	 */
 	public function get_provider( $provider )
 	{
-		return isset( $this->_providers['all'][$provider] ) ? $this->_providers['all'][$provider] : FALSE;
+		return isset( $this->_providers['all'][strtolower( $provider )] ) ? $this->_providers['all'][strtolower( $provider )] : FALSE;
 	}
 
 
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Returns the correct casing for a provider
+	 * @param  string $provider The provider to return
+	 * @return mixed            String on success, NULL on failure
+	 */
 	protected function _get_provider_class( $provider )
 	{
 		$_providers = $this->get_providers();
@@ -151,15 +173,26 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Determines whether a provider is valid and enabled
+	 * @param  string  $provider The provider to check
+	 * @return boolean
+	 */
 	public function is_valid_provider( $provider )
 	{
-		return ! empty( $this->_providers['enabled'][$provider] );
+		return ! empty( $this->_providers['enabled'][strtolower( $provider )] );
 	}
 
 
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Authenticates a user using Hybrid Auth's authenticate method
+	 * @param  string $provider The provider to authenticate against
+	 * @param  mixed $params    Additional parameters to pass to the Provider
+	 * @return Hybrid_Provider_Adapter
+	 */
 	public function authenticate( $provider, $params = NULL )
 	{
 		$_provider = $this->_get_provider_class( $provider );
@@ -170,6 +203,11 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Returns the user's profile for a particular provider.
+	 * @param  sting $provider The name of the provider.
+	 * @return mixed           Hybrid_User_Profile on success, FALSE on failure
+	 */
 	public function get_user_profile( $provider )
 	{
 		$_adapter = $this->authenticate( $provider );
@@ -178,7 +216,7 @@ class Social_signon
 		{
 			return $_adapter->getUserProfile();
 		}
-		catch( Exception $e)
+		catch( Exception $e )
 		{
 			$this->_set_error( 'Provider Error: ' . $e->getMessage() );
 			return FALSE;
@@ -189,6 +227,10 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Logs out all provideers
+	 * @return void
+	 */
 	public function logout()
 	{
 		$this->_hybrid->logoutAllProviders();
@@ -198,6 +240,13 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Fetches a local user profile via a provider and provider ID
+	 * @param  string  $provider   The provider to use
+	 * @param  string  $identifier The provider's user ID
+	 * @param  boolean $extended   Whether or not to include extended data
+	 * @return mixed               stdClass on success, FALSE on failure
+	 */
 	public function get_user_by_provider_identifier( $provider, $identifier, $extended = NULL )
 	{
 		$this->db->select( 'user_id' );
@@ -218,6 +267,12 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Saves the social session data to the user's account
+	 * @param  mixed  $user_id  The User's ID (if NULL, then the active user ID is used)
+	 * @param  string $provider The providers to save
+	 * @return boolean
+	 */
 	public function save_session( $user_id = NULL, $provider = array() )
 	{
 		if ( empty( $user_id ) ) :
@@ -398,6 +453,11 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Restores a user's social session
+	 * @param  mixed $user_id The User's ID (if NULL, then the active user ID is used)
+	 * @return boolean
+	 */
 	public function restore_session( $user_id = NULL )
 	{
 		if ( empty( $user_id ) ) :
@@ -446,6 +506,11 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Determines whether the active user is connected with $provider
+	 * @param  string  $provider the provider to test for
+	 * @return boolean
+	 */
 	public function is_connected_with( $provider )
 	{
 		$_provider = $this->_get_provider_class( $provider );
@@ -456,6 +521,10 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Returns an array of connected providers (for the active user)
+	 * @return array
+	 */
 	public function get_connected_providers()
 	{
 		return $this->_hybrid->getConnectedProviders();
@@ -465,6 +534,12 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	/**
+	 * Abstraction to a provider's API
+	 * @param  string $provider The provider whose API you wish to call
+	 * @param  string $call     The API call
+	 * @return mixed
+	 */
 	public function api( $provider, $call = '' )
 	{
 		if ( ! 	$this->is_connected_with( $provider ) ) :
