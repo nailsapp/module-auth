@@ -91,7 +91,7 @@ class Social_signon
 
 			endif;
 
-			$_config['providers'][$provider['slug']] = $_temp;
+			$_config['providers'][$provider['class']] = $_temp;
 
 		endforeach;
 
@@ -141,6 +141,16 @@ class Social_signon
 	// --------------------------------------------------------------------------
 
 
+	protected function _get_provider_class( $provider )
+	{
+		$_providers = $this->get_providers();
+		return isset( $_providers[strtolower($provider)]['class'] ) ? $_providers[strtolower($provider)]['class'] : NULL;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
 	public function is_valid_provider( $provider )
 	{
 		return ! empty( $this->_providers['enabled'][$provider] );
@@ -152,7 +162,8 @@ class Social_signon
 
 	public function authenticate( $provider, $params = NULL )
 	{
-		return $this->_hybrid->authenticate( $provider, $params );
+		$_provider = $this->_get_provider_class( $provider );
+		return $this->_hybrid->authenticate( $_provider, $params );
 	}
 
 
@@ -162,6 +173,7 @@ class Social_signon
 	public function get_user_profile( $provider )
 	{
 		$_adapter = $this->authenticate( $provider );
+
 		try
 		{
 			return $_adapter->getUserProfile();
@@ -315,8 +327,10 @@ class Social_signon
 
 		// --------------------------------------------------------------------------
 
-		//	Get the user's existing data, so we know whether we're inserting or
-		//	updating their data
+		/**
+		 * Get the user's existing data, so we know whether we're inserting or
+		 * updating their data
+		 */
 
 		$this->db->where( 'user_id',	$user_id );
 		$_existing	= $this->db->get( NAILS_DB_PREFIX . 'user_social' )->result();
@@ -434,7 +448,8 @@ class Social_signon
 
 	public function is_connected_with( $provider )
 	{
-		return $this->_hybrid->isConnectedWith( $provider );
+		$_provider = $this->_get_provider_class( $provider );
+		return $this->_hybrid->isConnectedWith( $_provider );
 	}
 
 
@@ -461,7 +476,8 @@ class Social_signon
 
 		try
 		{
-			$_provider = $this->_hybrid->getAdapter( $provider );
+			$_provider = $this->_get_provider_class( $provider );
+			$_provider = $this->_hybrid->getAdapter( $_provider );
 			return $_provider->api()->api( $call );
 		}
 		catch( Exception $e )

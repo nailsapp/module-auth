@@ -68,10 +68,12 @@ $config['auth_password_rules']['min_length']	= 6;
 //	Maximum password length, 0 means unlimited length
 $config['auth_password_rules']['max_length']	= 0;
 
-//	Define sets of characters which a password must contain
-//	symbol, lower_alpha, upper_alpha and number are special
-//	strings and will render the charset for you. Any other
-//	string will be treated as a charset itself.
+/**
+ * Define sets of characters which a password must contain
+ * symbol, lower_alpha, upper_alpha and number are special
+ * strings and will render the charset for you. Any other
+ * string will be treated as a charset itself.
+ */
 
 $config['auth_password_rules']['contains']		= array();
 $config['auth_password_rules']['contains'][]	= 'symbol';
@@ -84,11 +86,15 @@ $config['auth_password_rules']['is_not']		= array();
 $config['auth_password_rules']['is_not'][]		= 'password';
 $config['auth_password_rules']['is_not'][]		= '123456789';
 
-//	Define which providers to use (as supported by HybridAuth)
-//	http://hybridauth.sourceforge.net/userguide.html
+/**
+ * Define which providers to use (as supported by HybridAuth)
+ * http://hybridauth.sourceforge.net/userguide.html
+ */
+
 $config['auth_social_signon_providers']		= array();
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'facebook',
+	'class'		=> 'Facebook',
 	'label'		=> 'Facebook',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -100,6 +106,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'twitter',
+	'class'		=> 'Twitter',
 	'label'		=> 'Twitter',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -110,6 +117,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'linkedin',
+	'class'		=> 'LinkedIn',
 	'label'		=> 'LinkedIn',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -120,6 +128,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'foursquare',
+	'class'		=> 'Foursquare',
 	'label'		=> 'FourSquare',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -130,6 +139,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'google',
+	'class'		=> 'Google',
 	'label'		=> 'Google',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -140,6 +150,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'instagram',
+	'class'		=> 'Instagram',
 	'label'		=> 'Instagram',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -154,6 +165,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'github',
+	'class'		=> 'GitHub',
 	'label'		=> 'Github',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -168,6 +180,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> '500px',
+	'class'		=> 'px500',
 	'label'		=> '500px',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -182,6 +195,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'tumblr',
+	'class'		=> 'Tumblr',
 	'label'		=> 'Tumblr',
 	'fields'	=> array(
 		'keys'	=> array(
@@ -196,6 +210,7 @@ $config['auth_social_signon_providers'][]	= array(
 );
 $config['auth_social_signon_providers'][]	= array(
 	'slug'		=> 'vimeo',
+	'class'		=> 'Vimeo',
 	'label'		=> 'Vimeo',
 	'fields'	=> array(
 		'keys'	=> array(
