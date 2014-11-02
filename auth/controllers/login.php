@@ -278,7 +278,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 			// --------------------------------------------------------------------------
 
 			//	Generate an event for this log in
-			create_event( 'did_log_in', $user->id, 0, NULL, array( 'provider' => $provider ) );
+			create_event('did_log_in', array('provider' => $provider), $user->id);
 
 			// --------------------------------------------------------------------------
 
@@ -561,12 +561,12 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 			if ( $this->social_signon->save_session( active_user( 'id' ), $provider ) ) :
 
-				create_event( 'did_link_fb', active_user( 'id' ) );
+				create_event('did_link_provider',array('provider' => $provider));
 				$this->session->set_flashdata( 'success', lang( 'auth_social_linked_ok', $_provider['label'] ) );
 
 			else :
 
-				$this->session->set_flashdata( 'error', lang( 'auth_social_linked_ok', $_provider['label'] ) );
+				$this->session->set_flashdata( 'error', lang( 'auth_social_linked_fail', $_provider['label'] ) );
 
 			endif;
 
@@ -820,7 +820,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 					// --------------------------------------------------------------------------
 
 					//	Create an event for this event
-					create_event( 'did_register', $_new_user->id, 0, NULL, array( 'method' => $provider ) );
+					create_event('did_register', array('method' => $provider),$_new_user->id);
 
 					// --------------------------------------------------------------------------
 

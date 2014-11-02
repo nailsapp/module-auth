@@ -106,7 +106,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 						// --------------------------------------------------------------------------
 
 						//	Generate an event for this log in
-						create_event( 'did_log_in', $_user->id, 0, NULL, array( 'method' => $_login_method ) );
+						create_event('did_log_in', array('method' => $_login_method), $_user->id);
 
 						// --------------------------------------------------------------------------
 
@@ -297,7 +297,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 										// --------------------------------------------------------------------------
 
 										//	Generate an event for this log in
-										create_event( 'did_log_in', $_user->id, 0, NULL, array( 'method' => $_login_method ) );
+										create_event( 'did_log_in', $_user->id, array( 'method' => $_login_method ) );
 
 										// --------------------------------------------------------------------------
 

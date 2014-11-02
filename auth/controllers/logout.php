@@ -51,7 +51,7 @@ class NAILS_Logout extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	Generate an event for this log in
-		create_event( 'did_log_out', active_user( 'id' ) );
+		create_event('did_log_out');
 
 		// --------------------------------------------------------------------------
 

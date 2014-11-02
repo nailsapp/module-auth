@@ -170,7 +170,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 					// --------------------------------------------------------------------------
 
 					//	Create an event for this event
-					create_event( 'did_register', $_new_user->id, 0, NULL, array( 'method' => 'native' ) );
+					create_event('did_register', array('method' => 'native'), $_new_user->id);
 
 					// --------------------------------------------------------------------------
 
