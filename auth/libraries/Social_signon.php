@@ -98,7 +98,35 @@ class Social_signon
 
 		endforeach;
 
-		$this->_hybrid = new Hybrid_Auth( $_config );
+		try {
+
+			$this->_hybrid = new Hybrid_Auth($_config);
+
+		} catch(Exception $e) {
+
+			/**
+			 * An exception occurred during instantiation, this is probably a result
+			 * of the user denying the authentication request. If we reinit the Hybrid_Auth
+			 * things work again, but it's as if nothing ever happened and the user may be
+			 * redirected back to the authentication screen (which is annoying). The
+			 * alternative is to bail out with an error; this informs the user that something
+			 * *did* happened but results in an unfriendly error screen and potential drop off.
+			 */
+
+			switch($this->_ci->config->item( 'auth_social_signon_init_fail_behaviour' )) {
+
+				case 'reinit':
+
+					$this->_hybrid = new Hybrid_Auth($_config);
+					break;
+
+				case 'error':
+				default:
+
+					_NAILS_ERROR($e->getMessage());
+					break;
+			}
+		}
 	}
 
 
@@ -195,8 +223,14 @@ class Social_signon
 	 */
 	public function authenticate( $provider, $params = NULL )
 	{
-		$_provider = $this->_get_provider_class( $provider );
-		return $this->_hybrid->authenticate( $_provider, $params );
+		try {
+
+			$_provider = $this->_get_provider_class( $provider );
+			return $this->_hybrid->authenticate( $_provider, $params );
+
+		} catch(Exception $e) {
+			dumpanddie('cock');
+		}
 	}
 
 

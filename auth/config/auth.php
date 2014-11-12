@@ -86,6 +86,17 @@ $config['auth_password_rules']['is_not']		= array();
 $config['auth_password_rules']['is_not'][]		= 'password';
 $config['auth_password_rules']['is_not'][]		= '123456789';
 
+// --------------------------------------------------------------------------
+
+//	Social Signon
+
+/**
+ * Define how exceptions thrown at init stage are handled
+ * This can be either "error", or "reinit"
+ */
+
+$config['auth_social_signon_init_fail_behaviour'] = 'error';
+
 /**
  * Define which providers to use (as supported by HybridAuth)
  * http://hybridauth.sourceforge.net/userguide.html
@@ -101,7 +112,8 @@ $config['auth_social_signon_providers'][]	= array(
 			'id'		=> array( 'label' => 'App ID', 'required' => TRUE ),
 			'secret'	=> array( 'label' => 'Secret', 'required' => TRUE, 'encrypted' => TRUE )
 		),
-		'scope'	=> array( 'label' => 'Scope', 'required' => FALSE )
+		'scope'	=> array( 'label' => 'Scope', 'required' => FALSE ),
+		'page'	=> array( 'label' => 'Page', 'required' => FALSE )
 	)
 );
 $config['auth_social_signon_providers'][]	= array(
