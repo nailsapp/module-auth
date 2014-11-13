@@ -229,7 +229,8 @@ class Social_signon
 			return $this->_hybrid->authenticate( $_provider, $params );
 
 		} catch(Exception $e) {
-			dumpanddie('cock');
+			$this->_set_error( 'Provider Error: ' . $e->getMessage() );
+			return FALSE;
 		}
 	}
 
