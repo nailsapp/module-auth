@@ -54,7 +54,7 @@ class Social_signon
 
 		//	Set up Hybrid Auth
 		$_config				= array();
-		$_config['base_url']	= site_url( 'vendor/hybridauth/hybridauth/hybridauth' ). '/';	//	Trailing slash fixes Facebook
+		$_config['base_url']	= site_url( 'vendor/hybridauth/hybridauth/hybridauth/index.php' );
 		$_config['providers']	= array();
 		$_config['debug_mode']	= strtoupper( ENVIRONMENT ) !== 'PRODUCTION';
 		$_config['debug_file']	= DEPLOY_LOG_DIR .  'log-hybrid-auth-' . date( 'Y-m-d' ) . '.php';
