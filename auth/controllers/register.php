@@ -201,6 +201,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 		$this->data['social_signon_enabled']	= $this->social_signon->is_enabled();
 		$this->data['social_signon_providers']	= $this->social_signon->get_providers( 'ENABLED' );
+		$this->data['passwordRulesAsString']	= $this->user_password_model->getRulesAsString();
 
 		// --------------------------------------------------------------------------
 

@@ -118,8 +118,21 @@
 		<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
 			<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
 			<div class="<?=BS_COL_SM_9?>">
-				<?=form_password( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
-				<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
+			<?php
+
+				echo form_password($_field, set_value($_field), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "');
+
+                if (!empty($passwordRulesAsString)) {
+
+                    echo '<p class="help-block">';
+                    	echo '<small>' . $passwordRulesAsString . '</small>';
+                    echo '</p>';
+
+                }
+
+                echo form_error($_field, '<p class="help-block">', '</p>');
+
+			?>
 			</div>
 		</div>
 		<?php
