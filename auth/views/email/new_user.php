@@ -16,13 +16,14 @@
 </p>
 <?php endif; ?>
 <p>
-	You can <?=anchor( 'auth/login', 'log in here' )?>.
+	<?=anchor( 'auth/login', 'Click here to log in', 'class="button large"' )?>
 </p>
 <?php if ( ! empty( $verification_code ) ) : ?>
+<hr />
 <p>
-	Additionally, we would appreciate it if you could verify your email address by clicking the link below, we do this to maintain the integrity of our database.
+	Additionally, we would appreciate it if you could verify your email address by clicking the button below, we do this to maintain the integrity of our database.
 </p>
 <p>
-	<?=anchor( 'email/verify/' . $sent_to->id . '/' . $verification_code, 'Verify Email' )?>
+	<?=anchor( 'email/verify/' . $sent_to->id . '/' . $verification_code, 'Verify Email', 'class="button small"' )?>
 </p>
 <?php endif; ?>
