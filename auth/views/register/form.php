@@ -100,6 +100,11 @@
 					<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
 					<div class="<?=BS_COL_SM_9?>">
 						<?=form_input( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
+						<p class="help-block">
+							<small>
+								Usernames can only contain alpha numeric characters, underscores, periods and dashes (no spaces).
+							</small>
+						</p>
 						<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 					</div>
 				</div>

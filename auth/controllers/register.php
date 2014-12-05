@@ -88,13 +88,13 @@ class NAILS_Register extends NAILS_Auth_Controller
 
 				if ( $this->input->post( 'username' ) ) :
 
-					$this->form_validation->set_rules( 'email',	'',	'xss_clean|is_unique[' . NAILS_DB_PREFIX . 'user.username]' );
+					$this->form_validation->set_rules( 'email',	'',	'xss_clean' );
 
 				endif;
 
 			elseif ( APP_NATIVE_LOGIN_USING == 'USERNAME' ) :
 
-				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]' );
+				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required' );
 
 				if ( $this->input->post( 'email' ) ) :
 
@@ -105,7 +105,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 			else :
 
 				$this->form_validation->set_rules( 'email',		'',	'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
-				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]' );
+				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required' );
 
 			endif;
 
