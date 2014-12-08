@@ -838,7 +838,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 				else :
 
 					//	Oh dear, something went wrong
-					$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> Something went wrong and your account could not be created.' );
+					$this->session->set_flashdata( 'error', '<strong>Sorry,</strong> something went wrong and your account could not be created.' );
 
 					$_redirect = 'auth/login';
 
