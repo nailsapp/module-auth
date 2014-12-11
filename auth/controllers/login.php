@@ -225,7 +225,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 			if ( ! $_two_factor_auth ) :
 
-				show_fatal_error( 'Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.' );
+				showFatalError('Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.');
 
 			endif;
 

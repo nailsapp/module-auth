@@ -181,7 +181,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 
 						if ( $this->data['num_questions'] + $this->data['num_custom_questions'] <= 0 ) :
 
-							show_fatal_error( 'Two-factor auth is enabled, but no questions available', 'A user tried to set security questions but there are no questions available for them to choose. Please ensure auth.php is configured correctly.' );
+							showFatalError('Two-factor auth is enabled, but no questions available', 'A user tried to set security questions but there are no questions available for them to choose. Please ensure auth.php is configured correctly.');
 
 						endif;
 

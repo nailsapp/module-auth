@@ -46,7 +46,7 @@ class Social_signon
 
 		else :
 
-			show_fatal_error( 'No providers are configured', 'No providers for HybridAuth have been specified or the configuration array is empty.' );
+			showFatalError('No providers are configured', 'No providers for HybridAuth have been specified or the configuration array is empty.');
 
 		endif;
 
