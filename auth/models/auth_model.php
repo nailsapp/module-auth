@@ -129,7 +129,7 @@ class NAILS_Auth_model extends NAILS_Model
 
 			//	User was recognised; validate credentials
 
-			if ( $this->user_password_model->is_correct( $_user->id, $password ) ) :
+			if ( $this->user_password_model->isCorrect( $_user->id, $password ) ) :
 
 				//	Password accepted! Final checks...
 
@@ -320,7 +320,7 @@ class NAILS_Auth_model extends NAILS_Model
 
 	public function generate_two_factor_token( $user_id )
 	{
-		$_salt		= $this->user_password_model->salt();
+		$_salt		= NAILS_User_password_model::salt();
 		$_ip		= $this->input->ip_address();
 		$_created	= date( 'Y-m-d H:i:s' );
 		$_expires	= date( 'Y-m-d H:i:s', strtotime( '+10 MINS' ) );
