@@ -1,7 +1,13 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Define event types for this module.
+ * This config file defines event types for this module.
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Config
+ * @author      Nails Dev Team
+ * @link
  */
 
 $config['event_types'] = array();
@@ -29,6 +35,3 @@ $config['event_types'][3]->slug				= 'did_link_provider';
 $config['event_types'][3]->label			= '';
 $config['event_types'][3]->description		= '';
 $config['event_types'][3]->hooks			= array();
-
-/* End of file event_types.php */
-/* Location: ./module-auth/auth/config/event_types.php */

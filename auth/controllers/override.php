@@ -1,22 +1,17 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
-/**
-* Name:			Override
-*
-* Description:	Allows admins to log in as another user
-*
-*/
-
-/**
- * OVERLOADING NAILS' AUTH MODULE
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
-
+//  Include NAILS_Auth_Controller; executes common Auth functionality.
 require_once '_auth.php';
 
+/**
+ * This class allows administrators with the "can_login_as_others" permission to login as other users.
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Controller
+ * @author      Nails Dev Team
+ * @link
+ */
 class NAILS_Override extends NAILS_Auth_Controller
 {
 	/**
@@ -211,6 +206,3 @@ if ( ! defined( 'NAILS_ALLOW_EXTENSION' ) ) :
 	}
 
 endif;
-
-/* End of file reset_password.php */
-/* Location: ./application/modules/auth/controllers/reset_password.php */

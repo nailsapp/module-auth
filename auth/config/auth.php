@@ -1,4 +1,14 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * Auth config
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Config
+ * @author      Nails Dev Team
+ * @link
+ */
 
 /*
 | -------------------------------------------------------------------------

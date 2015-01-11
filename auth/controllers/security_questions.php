@@ -1,22 +1,17 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
-/**
- * Name:		Auth [security questions]
- *
- * Description:	This controller handles two factor authentication
- *
- **/
-
-/**
- * OVERLOADING NAILS' AUTH MODULE
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
-
+//  Include NAILS_Auth_Controller; executes common Auth functionality.
 require_once '_auth.php';
 
+/**
+ * Security Questions/Two-factor auth facility
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Controller
+ * @author      Nails Dev Team
+ * @link
+ */
 class NAILS_Security_questions extends NAILS_Auth_Controller
 {
 	public function _remap()
@@ -432,6 +427,3 @@ if ( ! defined( 'NAILS_ALLOW_EXTENSION_SECURITY_QUESTIONS' ) ) :
 	}
 
 endif;
-
-/* End of file security_questions.php */
-/* Location: ./application/modules/auth/controllers/security_questions.php */

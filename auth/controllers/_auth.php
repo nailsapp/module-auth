@@ -1,13 +1,14 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Name:		NAILS_Auth_Controller
+ * This class provides some common Auth controller functionality
  *
- * Description:	This controller executes various bits of common admin Auth functionality
- *
- **/
-
-
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Controller
+ * @author      Nails Dev Team
+ * @link
+ */
 class NAILS_Auth_Controller extends NAILS_Controller
 {
 	public function __construct()
@@ -17,19 +18,16 @@ class NAILS_Auth_Controller extends NAILS_Controller
 		// --------------------------------------------------------------------------
 
 		//	Load config
-		$this->config->load( 'auth/auth' );
+		$this->config->load('auth/auth');
 
 		// --------------------------------------------------------------------------
 
 		//	Load language file
-		$this->lang->load( 'auth/auth' );
+		$this->lang->load('auth/auth');
 
 		// --------------------------------------------------------------------------
 
 		//	Load model
-		$this->load->model( 'auth/auth_model' );
+		$this->load->model('auth/auth_model');
 	}
 }
-
-/* End of file _auth.php */
-/* Location: ./application/modules/auth/controllers/_auth.php */

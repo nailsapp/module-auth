@@ -1,7 +1,13 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Define email types for this module.
+ * This config file defines email types for this module.
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Config
+ * @author      Nails Dev Team
+ * @link
  */
 
 $config['email_types'] = array();
@@ -41,6 +47,3 @@ $config['email_types'][3]->template_header	= '';
 $config['email_types'][3]->template_body	= 'auth/email/password_updated';
 $config['email_types'][3]->template_footer	= '';
 $config['email_types'][3]->default_subject	= 'Your Password Has Been Updated';
-
-/* End of file email_types.php */
-/* Location: ./module-auth/auth/config/email_types.php */
