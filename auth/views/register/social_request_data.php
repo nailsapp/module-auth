@@ -16,7 +16,7 @@
 	//	Write the HTML for the register form
 ?>
 <div class="row">
-	<div class="well well-lg <?=BS_COL_SM_6?> <?=BS_COL_SM_OFFSET_3?>">
+	<div class="well well-lg col-sm-6 col-sm-offset-3">
 		<?=form_open( $form_url, 'class="form form-horizontal"'  )?>
 		<p>
 			<?=lang( 'auth_register_extra_message' )?>
@@ -35,8 +35,8 @@
 
 					?>
 					<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-						<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-						<div class="<?=BS_COL_SM_9?>">
+						<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+						<div class="col-sm-9">
 							<?=form_input( $_field, set_value( $_field, $_default ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 							<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 						</div>
@@ -60,8 +60,8 @@
 
 					?>
 					<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-						<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-						<div class="<?=BS_COL_SM_9?>">
+						<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+						<div class="col-sm-9">
 							<?=form_input( $_field, set_value( $_field, $_default ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 							<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 						</div>
@@ -83,8 +83,8 @@
 
 				?>
 				<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-					<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-					<div class="<?=BS_COL_SM_9?>">
+					<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+					<div class="col-sm-9">
 						<?=form_input( $_field, set_value( $_field, $_default ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 						<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 					</div>
@@ -100,8 +100,8 @@
 
 				?>
 				<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-					<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-					<div class="<?=BS_COL_SM_9?>">
+					<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+					<div class="col-sm-9">
 						<?=form_input( $_field, set_value( $_field, $_default ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 						<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 					</div>
@@ -113,7 +113,7 @@
 		?>
 		<hr />
 		<div class="form-group">
-			<div class="<?=BS_COL_SM_OFFSET_3?> <?=BS_COL_SM_9?>">
+			<div class="col-sm-offset-3 col-sm-9">
 				<button type="submit" class="btn btn-primary"><?=lang( 'action_continue' )?></button>
 			</div>
 		</div>

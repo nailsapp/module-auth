@@ -1,5 +1,5 @@
 <div class="row">
-	<div class="well well-lg <?=BS_COL_SM_6?> <?=BS_COL_SM_OFFSET_3?>">
+	<div class="well well-lg col-sm-6 col-sm-offset-3">
 		<!--	SOCIAL NETWORK BUTTONS	-->
 		<?php
 
@@ -22,8 +22,8 @@
 					// --------------------------------------------------------------------------
 
 					//	Render the buttons
-					$_min_cols	= APP_BOOTSTRAP_GRID / 3;
-					$_cols_each = floor( APP_BOOTSTRAP_GRID / count( $_buttons ) );
+					$_min_cols	= 12 / 3;
+					$_cols_each = floor( 12 / count( $_buttons ) );
 					$_cols_each = $_cols_each < $_min_cols ? $_min_cols : $_cols_each;
 
 					foreach ( $_buttons AS $btn ) :
@@ -79,8 +79,8 @@
 
 				?>
 				<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-					<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-					<div class="<?=BS_COL_SM_9?>">
+					<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+					<div class="col-sm-9">
 						<?=form_email( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 						<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 					</div>
@@ -97,8 +97,8 @@
 
 				?>
 				<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-					<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-					<div class="<?=BS_COL_SM_9?>">
+					<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+					<div class="col-sm-9">
 						<?=form_input( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 						<p class="help-block">
 							<small>
@@ -121,8 +121,8 @@
 
 		?>
 		<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-			<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-			<div class="<?=BS_COL_SM_9?>">
+			<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+			<div class="col-sm-9">
 			<?php
 
 				echo form_password($_field, set_value($_field), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "');
@@ -149,8 +149,8 @@
 
 		?>
 		<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-			<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-			<div class="<?=BS_COL_SM_9?>">
+			<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+			<div class="col-sm-9">
 				<?=form_input( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 				<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 			</div>
@@ -164,14 +164,14 @@
 
 		?>
 		<div class="form-group <?=form_error( $_field ) ? 'has-error' : ''?>">
-			<label class="<?=BS_COL_SM_3?> control-label" for="input-<?=$_field?>"><?=$_label?></label>
-			<div class="<?=BS_COL_SM_9?>">
+			<label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+			<div class="col-sm-9">
 				<?=form_input( $_field, set_value( $_field ), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "' )?>
 				<?=form_error( $_field, '<p class="help-block">', '</p>' )?>
 			</div>
 		</div>
 		<div class="form-group">
-			<div class="<?=BS_COL_SM_OFFSET_3?> <?=BS_COL_SM_9?>">
+			<div class="col-sm-offset-3 col-sm-9">
 				<button type="submit" class="btn btn-primary"><?=lang( 'action_register' )?></button>
 			</div>
 		</div>
