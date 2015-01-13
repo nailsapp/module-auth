@@ -28,7 +28,7 @@ class Social_signon
 
 		if ( is_array( $_config ) && ! empty( $_config ) ) :
 
-			foreach( $_config AS $provider ) :
+			foreach ( $_config AS $provider ) :
 
 				$this->_providers['all'][strtolower( $provider['slug'] )] = $provider;
 
@@ -354,7 +354,7 @@ class Social_signon
 		$_identifiers	= array();
 
 		//	Now we sort the session into individual providers
-		foreach( $_session AS $key => $value ) :
+		foreach ( $_session AS $key => $value ) :
 
 			//	Get the bits
 			list( $hauth, $provider ) = explode( '.', $key, 3 );
@@ -372,7 +372,7 @@ class Social_signon
 		// --------------------------------------------------------------------------
 
 		//	Prune any which aren't worth saving
-		foreach( $_save AS $provider => $values ) :
+		foreach ( $_save AS $provider => $values ) :
 
 			//	Are we only interested in a particular provider?
 			if ( ! empty( $_provider ) ) :

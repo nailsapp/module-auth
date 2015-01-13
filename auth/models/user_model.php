@@ -608,7 +608,7 @@ class NAILS_User_model extends NAILS_Model
 				//	Pull up a list of the user_meta tables
 				$q = $this->db->query("SHOW TABLES LIKE 'user_meta_%'")->result();
 
-				foreach($q AS $key => $table) :
+				foreach ($q AS $key => $table) :
 
 					$_tables[] = current((array) $table);
 
@@ -664,7 +664,7 @@ class NAILS_User_model extends NAILS_Model
 				$user->user_acl	= unserialize($user->user_acl);
 				$user->acl		= array();
 
-				foreach($user->group_acl AS $key => $value) :
+				foreach ($user->group_acl AS $key => $value) :
 
 					if (array_key_exists($key, $user->user_acl)) :
 
@@ -900,7 +900,7 @@ class NAILS_User_model extends NAILS_Model
 			if ($_specifics) :
 
 				//	We have some specifics
-				foreach($_specifics AS $specific) :
+				foreach ($_specifics AS $specific) :
 
 					if (is_array($specific['cols'])) :
 
@@ -926,7 +926,7 @@ class NAILS_User_model extends NAILS_Model
 				if (!empty($search[ 'columns' ])) :
 
 					//	We have some specifics
-					foreach($search[ 'columns' ] AS $col) :
+					foreach ($search[ 'columns' ] AS $col) :
 
 						if (is_array($col)) :
 
@@ -1025,7 +1025,7 @@ class NAILS_User_model extends NAILS_Model
 		//	Prefix all the values, if needed
 		if ($prefix) :
 
-			foreach($cols AS $key => &$value) :
+			foreach ($cols AS $key => &$value) :
 
 				$value = $prefix . '.' . $value;
 
@@ -1564,7 +1564,7 @@ class NAILS_User_model extends NAILS_Model
 
 			if ($data) :
 
-				foreach($data AS $key => $val) :
+				foreach ($data AS $key => $val) :
 
 					$this->_active_user->{$key} = $val;
 
@@ -2832,7 +2832,7 @@ class NAILS_User_model extends NAILS_Model
 		$_meta_cols = $this->_get_meta_columns();
 		$_meta_data	= array();
 
-		foreach($data AS $key => $val) :
+		foreach ($data AS $key => $val) :
 
 			if (array_search($key, $_meta_cols) !== false) :
 
@@ -3277,7 +3277,7 @@ class NAILS_User_model extends NAILS_Model
 			$out->user = $this->get_by_id($userId);
 			$out->merge = array();
 
-			foreach($mergeIds AS $mergeUserId) {
+			foreach ($mergeIds AS $mergeUserId) {
 
 				$out->merge[] = $this->get_by_id($mergeUserId);
 			}
@@ -3292,7 +3292,7 @@ class NAILS_User_model extends NAILS_Model
 			//	For each table update the user columns
 			for ($i=0; $i<count($tables); $i++) {
 
-				foreach($tables[$i]->columns as $column) {
+				foreach ($tables[$i]->columns as $column) {
 
 					//	Additional updates for certain tables
 					switch($tables[$i]->name) {
