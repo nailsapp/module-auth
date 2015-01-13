@@ -1006,7 +1006,7 @@ class NAILS_User_model extends NAILS_Model
 	protected function _get_meta_columns($prefix = '', $cols = array())
 	{
 		//	Module: shop
-		if (module_is_enabled('shop')) :
+		if (isModuleEnabled('shop')) :
 
 			$cols[] = 'shop_basket';
 			$cols[] = 'shop_currency';
