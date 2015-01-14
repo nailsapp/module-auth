@@ -1,62 +1,76 @@
 <div class="row">
-	<div class="well well-lg col-sm-6 col-sm-offset-3">
-		<?php
+    <div class="well well-lg col-sm-6 col-sm-offset-3">
+        <?php
 
-			$_query = array();
+            $query = array();
 
-			if ( $return_to ) :
+            if ($return_to) {
 
-				$_query['return_to'] = $return_to;
+                $query['return_to'] = $return_to;
+            }
 
-			endif;
+            if ($remember) {
 
-			if ( $remember ) :
+                $query['remember'] = $remember;
+            }
 
-				$_query['remember'] = $remember;
+            $query = $query ? '?' . http_build_query($query) : '';
 
-			endif;
+            echo form_open('auth/reset_password/' . $auth->id . '/' . $auth->hash . $query, 'class="form form-horizontal"');
 
-			$_query = $_query ? '?' . http_build_query( $_query ) : '';
+                $field       = 'new_password';
+                $label       = lang('form_label_password');
+                $placeholder = lang('auth_forgot_new_pass_placeholder');
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control "';
 
-			echo form_open( 'auth/reset_password/' . $auth->id . '/' . $auth->hash . $_query, 'class="form form-horizontal"' );
+            ?>
+            <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">
+                <label class="col-sm-3 control-label" for="input-<?=$field?>">
+                    <?=$label?>:
+                </label>
+                <div class="col-sm-9">
+                <?php
 
+                    echo form_password($field, set_value($field), $fieldAttr);
+                    if ($this->user_password_model->getRulesAsArray()) {
 
-				$field			= 'new_password';
-				$label			= lang( 'form_label_password' );
-				$placeholder	= lang( 'auth_forgot_new_pass_placeholder' );
+                        echo '<p class="help-block">';
+                            echo '<small>';
+                                echo $this->user_password_model->getRulesAsString();
+                            echo '</small>';
+                        echo '</p>';
+                    }
+                    echo form_error($field, '<p class="help-block">', '</p>');
 
-			?>
-			<div class="form-group <?=form_error( $field ) ? 'has-error' : ''?>">
-				<label class="col-sm-3 control-label" for="input-<?=$field?>"><?=$label?>:</label>
-				<div class="col-sm-9">
-					<?=form_password( $field, set_value( $field ), 'id="input-<?=$field?>" placeholder="' . $placeholder . '" class="form-control "' )?>
-					<?=form_error( $field, '<p class="help-block">', '</p>' )?>
-				</div>
-			</div>
+                ?>
+                </div>
+            </div>
+            <?php
 
-			<?php
+                $field       = 'confirm_pass';
+                $label       = lang('form_label_password_confirm');
+                $placeholder = lang('auth_forgot_new_pass_confirm_placeholder');
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control "';
 
-				$field			= 'confirm_pass';
-				$label			= lang( 'form_label_password_confirm' );
-				$placeholder	= lang( 'auth_forgot_new_pass_confirm_placeholder' );
+            ?>
+            <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">
+                <label class="col-sm-3 control-label" for="input-<?=$field?>"><?=$label?>:</label>
+                <div class="col-sm-9">
+                <?php
 
-			?>
-			<div class="form-group <?=form_error( $field ) ? 'has-error' : ''?>">
-				<label class="col-sm-3 control-label" for="input-<?=$field?>"><?=$label?>:</label>
-				<div class="col-sm-9">
-					<?=form_password( $field, set_value( $field ), 'id="input-<?=$field?>" placeholder="' . $placeholder . '" class="form-control "' )?>
-					<?=form_error( $field, '<p class="help-block">', '</p>' )?>
-				</div>
-			</div>
+                    echo form_password($field, set_value($field), $fieldAttr);
+                    echo form_error($field, '<p class="help-block">', '</p>');
 
-			<div class="form-group">
-				<div class="col-sm-offset-3 col-sm-9">
-					<button type="submit" class="btn btn-primary">
-						<?=lang( 'auth_forgot_action_reset_continue' )?>
-					</button>
-				</div>
-			</div>
-
-		<?=form_close()?>
-	</div>
+                ?>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button type="submit" class="btn btn-primary">
+                        <?=lang('auth_forgot_action_reset_continue')?>
+                    </button>
+                </div>
+            </div>
+        <?=form_close()?>
+    </div>
 </div>
