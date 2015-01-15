@@ -99,7 +99,7 @@ class NAILS_Logout extends NAILS_Auth_Controller
 		//	Set any other flashdata which might be needed
 		if ( is_array( $_get ) ) :
 
-			foreach ( $_get AS $key => $value ) :
+			foreach ( $_get as $key => $value ) :
 
 				if ( $value ) :
 

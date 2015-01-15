@@ -208,7 +208,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 								$_question			= (array) $this->input->post( 'question' );
 								$_error				= FALSE;
 
-								foreach ( $_question AS $q ) :
+								foreach ( $_question as $q ) :
 
 									if ( array_search( $q['question'], $_question_index ) === FALSE ) :
 
@@ -226,7 +226,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 								$_question_index	= array();
 								$_question			= (array) $this->input->post( 'custom_question' );
 
-								foreach ( $_question AS $q ) :
+								foreach ( $_question as $q ) :
 
 									if ( array_search( $q['question'], $_question_index ) === FALSE ) :
 
@@ -248,7 +248,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 
 									if ( $this->input->post( 'question' ) ) :
 
-										foreach ( $this->input->post( 'question' ) AS $q ) :
+										foreach ( $this->input->post( 'question' ) as $q ) :
 
 											$_temp				= new stdClass();
 											$_temp->question	= isset( $this->data['questions'][$q['question']-1] ) ? $this->data['questions'][$q['question']-1] : NULL;
@@ -262,7 +262,7 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
 
 									if ( $this->input->post( 'custom_question' ) ) :
 
-										foreach ( (array) $this->input->post( 'custom_question' ) AS $q ) :
+										foreach ( (array) $this->input->post( 'custom_question' ) as $q ) :
 
 											$_temp				= new stdClass();
 											$_temp->question	= trim( $q['question'] );

@@ -28,7 +28,7 @@ class Social_signon
 
 		if ( is_array( $_config ) && ! empty( $_config ) ) :
 
-			foreach ( $_config AS $provider ) :
+			foreach ( $_config as $provider ) :
 
 				$this->_providers['all'][strtolower( $provider['slug'] )] = $provider;
 
@@ -59,20 +59,20 @@ class Social_signon
 		$_config['debug_mode']	= strtoupper( ENVIRONMENT ) !== 'PRODUCTION';
 		$_config['debug_file']	= DEPLOY_LOG_DIR .  'log-hybrid-auth-' . date( 'Y-m-d' ) . '.php';
 
-		foreach ( $this->_providers['enabled'] AS $provider ) :
+		foreach ( $this->_providers['enabled'] as $provider ) :
 
 			$_temp				= array();
 			$_temp['enabled']	= TRUE;
 
 			if ( $provider['fields'] ) :
 
-				foreach ( $provider['fields'] AS $key => $label ) :
+				foreach ( $provider['fields'] as $key => $label ) :
 
 					if ( is_array( $label ) && ! isset( $label['label'] )  ) :
 
 						$_temp[$key] = array();
 
-						foreach ( $label AS $key1 => $label1 ) :
+						foreach ( $label as $key1 => $label1 ) :
 
 							$_temp[$key][$key1] = app_setting( 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1 );
 
@@ -354,7 +354,7 @@ class Social_signon
 		$_identifiers	= array();
 
 		//	Now we sort the session into individual providers
-		foreach ( $_session AS $key => $value ) :
+		foreach ( $_session as $key => $value ) :
 
 			//	Get the bits
 			list( $hauth, $provider ) = explode( '.', $key, 3 );
@@ -372,7 +372,7 @@ class Social_signon
 		// --------------------------------------------------------------------------
 
 		//	Prune any which aren't worth saving
-		foreach ( $_save AS $provider => $values ) :
+		foreach ( $_save as $provider => $values ) :
 
 			//	Are we only interested in a particular provider?
 			if ( ! empty( $_provider ) ) :
@@ -426,7 +426,7 @@ class Social_signon
 		$_existing	= $this->db->get( NAILS_DB_PREFIX . 'user_social' )->result();
 		$_exists	= array();
 
-		foreach ( $_existing AS $existing ) :
+		foreach ( $_existing as $existing ) :
 
 			$_exists[$existing->provider] = $existing->id;
 
@@ -437,7 +437,7 @@ class Social_signon
 		//	Save data
 		$this->db->trans_begin();
 
-		foreach ( $_save AS $provider => $keys ) :
+		foreach ( $_save as $provider => $keys ) :
 
 			if ( isset( $_exists[$provider] ) ) :
 
@@ -528,7 +528,7 @@ class Social_signon
 		$_sessions	= $this->db->get( NAILS_DB_PREFIX . 'user_social' )->result();
 		$_restore	= array();
 
-		foreach ( $_sessions AS $session ) :
+		foreach ( $_sessions as $session ) :
 
 			$session->session_data = unserialize( $session->session_data );
 			$_restore = array_merge( $_restore, $session->session_data );

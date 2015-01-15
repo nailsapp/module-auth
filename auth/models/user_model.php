@@ -181,7 +181,7 @@ class NAILS_User_model extends NAILS_Model
 		$keys = explode(',', $keys);
 		$_out = array();
 
-		foreach ($keys AS $key) :
+		foreach ($keys as $key) :
 
 			$_val = (isset($this->_active_user->{trim($key)})) ? $this->_active_user->{trim($key)} : false;
 
@@ -608,7 +608,7 @@ class NAILS_User_model extends NAILS_Model
 				//	Pull up a list of the user_meta tables
 				$q = $this->db->query("SHOW TABLES LIKE 'user_meta_%'")->result();
 
-				foreach ($q AS $key => $table) :
+				foreach ($q as $key => $table) :
 
 					$_tables[] = current((array) $table);
 
@@ -636,9 +636,9 @@ class NAILS_User_model extends NAILS_Model
 			if (isset($_tables)) :
 
 				//	Loop for each returned user
-				foreach ($_user AS $_u) :
+				foreach ($_user as $_u) :
 
-					foreach ($_tables AS $table) :
+					foreach ($_tables as $table) :
 
 						$this->db->where('user_id', $_u->id);
 						$_u->{trim($table)} = $this->db->get(trim($table))->result();
@@ -654,7 +654,7 @@ class NAILS_User_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	Determine the user's ACL
-		foreach ($_user AS $user) :
+		foreach ($_user as $user) :
 
 			$user->group_acl = unserialize($user->group_acl);
 
@@ -664,7 +664,7 @@ class NAILS_User_model extends NAILS_Model
 				$user->user_acl	= unserialize($user->user_acl);
 				$user->acl		= array();
 
-				foreach ($user->group_acl AS $key => $value) :
+				foreach ($user->group_acl as $key => $value) :
 
 					if (array_key_exists($key, $user->user_acl)) :
 
@@ -764,7 +764,7 @@ class NAILS_User_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	Determine the user's ACL
-		foreach ($_user AS $user) :
+		foreach ($_user as $user) :
 
 			//	Format the user object
 			$this->_format_user_object($user, true);
@@ -874,7 +874,7 @@ class NAILS_User_model extends NAILS_Model
 
 				$_temp = array();
 
-				foreach ($_specifics AS $col => $value) :
+				foreach ($_specifics as $col => $value) :
 
 					if (isset($search['columns'][ strtolower($col)])) :
 
@@ -900,7 +900,7 @@ class NAILS_User_model extends NAILS_Model
 			if ($_specifics) :
 
 				//	We have some specifics
-				foreach ($_specifics AS $specific) :
+				foreach ($_specifics as $specific) :
 
 					if (is_array($specific['cols'])) :
 
@@ -926,7 +926,7 @@ class NAILS_User_model extends NAILS_Model
 				if (!empty($search[ 'columns' ])) :
 
 					//	We have some specifics
-					foreach ($search[ 'columns' ] AS $col) :
+					foreach ($search[ 'columns' ] as $col) :
 
 						if (is_array($col)) :
 
@@ -1025,7 +1025,7 @@ class NAILS_User_model extends NAILS_Model
 		//	Prefix all the values, if needed
 		if ($prefix) :
 
-			foreach ($cols AS $key => &$value) :
+			foreach ($cols as $key => &$value) :
 
 				$value = $prefix . '.' . $value;
 
@@ -1353,7 +1353,7 @@ class NAILS_User_model extends NAILS_Model
 			$_data_username					= '';
 			$_data_reset_security_questions	= false;
 
-			foreach ($data AS $key => $val) :
+			foreach ($data as $key => $val) :
 
 				//	user or user_meta?
 				if (array_search($key, $_cols) !== false) :
@@ -1564,7 +1564,7 @@ class NAILS_User_model extends NAILS_Model
 
 			if ($data) :
 
-				foreach ($data AS $key => $val) :
+				foreach ($data as $key => $val) :
 
 					$this->_active_user->{$key} = $val;
 
@@ -2296,7 +2296,7 @@ class NAILS_User_model extends NAILS_Model
 	public function set_security_questions($user_id, $data, $clear_old = true)
 	{
 		//	Check input
-		foreach ($data AS $d) :
+		foreach ($data as $d) :
 
 			if (empty($d->question) || empty($d->answer)) :
 
@@ -2321,7 +2321,7 @@ class NAILS_User_model extends NAILS_Model
 		$_data		= array();
 		$_counter	= 0;
 
-		foreach ($data AS $d) :
+		foreach ($data as $d) :
 
 			$_data[$_counter]	= array();
 			$_data[$_counter]['user_id']	= $user_id;
@@ -2832,7 +2832,7 @@ class NAILS_User_model extends NAILS_Model
 		$_meta_cols = $this->_get_meta_columns();
 		$_meta_data	= array();
 
-		foreach ($data AS $key => $val) :
+		foreach ($data as $key => $val) :
 
 			if (array_search($key, $_meta_cols) !== false) :
 
@@ -3277,7 +3277,7 @@ class NAILS_User_model extends NAILS_Model
 			$out->user = $this->get_by_id($userId);
 			$out->merge = array();
 
-			foreach ($mergeIds AS $mergeUserId) {
+			foreach ($mergeIds as $mergeUserId) {
 
 				$out->merge[] = $this->get_by_id($mergeUserId);
 			}

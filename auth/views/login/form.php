@@ -18,7 +18,7 @@
 
 					$_buttons = array();
 
-					foreach ( $social_signon_providers AS $provider ) :
+					foreach ( $social_signon_providers as $provider ) :
 
 						$_buttons[] = array( 'auth/login/' . $provider['slug'] . $_return_to, $provider['label'] );
 
@@ -31,7 +31,7 @@
 					$_cols_each = floor( 12 / count( $_buttons ) );
 					$_cols_each = $_cols_each < $_min_cols ? $_min_cols : $_cols_each;
 
-					foreach ( $_buttons AS $btn ) :
+					foreach ( $_buttons as $btn ) :
 
 						echo '<div class="col-md-' . $_cols_each . ' text-center" style="margin-bottom:1em;">';
 							echo anchor( $btn[0], $btn[1], 'class="btn btn-primary btn-lg btn-block"' );
