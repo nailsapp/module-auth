@@ -1422,7 +1422,7 @@ class NAILS_User_model extends NAILS_Model
 			//	Resetting security questions?
 			$this->config->load('auth/auth');
 
-			if ($this->config->item('auth_two_factor_enable') && $_data_reset_security_questions) :
+			if ($this->config->item('authTwoFactorMode') == 'QUESTION' && $_data_reset_security_questions) :
 
 				$this->db->where('user_id', (int) $_uid);
 				if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) :

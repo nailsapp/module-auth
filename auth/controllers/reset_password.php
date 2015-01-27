@@ -28,10 +28,10 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	If user is logged in they shouldn't be accessing this method
-		if ( $this->user_model->is_logged_in() ) :
+		if ($this->user_model->is_logged_in()) :
 
-			$this->session->set_flashdata( 'error', lang( 'auth_no_access_already_logged_in', active_user( 'email' ) ) );
-			redirect( '/' );
+			$this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
+			redirect('/');
 
 		endif;
 	}
@@ -48,54 +48,54 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 	 * @param	strgin	hash	The hash to validate against
 	 * @return	void
 	 **/
-	private function _validate( $id, $hash )
+	private function _validate($id, $hash)
 	{
 		//	Check auth credentials
-		$_user = $this->user_model->get_by_id( $id );
+		$_user = $this->user_model->get_by_id($id);
 
 		// --------------------------------------------------------------------------
 
-		if ( $_user !== FALSE && isset( $_user->salt ) && $hash == md5( $_user->salt ) ) :
+		if ($_user !== FALSE && isset($_user->salt) && $hash == md5($_user->salt)) :
 
 			//	Valid combination
-			if ( $this->input->post() ) :
+			if ($this->input->post()) :
 
 				// Validate data
-				$this->load->library( 'form_validation' );
+				$this->load->library('form_validation');
 
 				// --------------------------------------------------------------------------
 
 				//	Define rules
-				$this->form_validation->set_rules( 'new_password',	'password',		'required|matches[confirm_pass]' );
-				$this->form_validation->set_rules( 'confirm_pass',	'confirmation',	'required' );
+				$this->form_validation->set_rules('new_password',	'password',		'required|matches[confirm_pass]');
+				$this->form_validation->set_rules('confirm_pass',	'confirmation',	'required');
 
 				// --------------------------------------------------------------------------
 
 				//	Set custom messages
-				$this->form_validation->set_message( 'required',	lang( 'fv_required' ) );
-				$this->form_validation->set_message( 'matches',		lang( 'fv_matches' ) );
+				$this->form_validation->set_message('required',	lang('fv_required'));
+				$this->form_validation->set_message('matches',		lang('fv_matches'));
 
 				// --------------------------------------------------------------------------
 
 				//	Run validation
-				if ( $this->form_validation->run() ) :
+				if ($this->form_validation->run()) :
 
 					//	Validated, update user and login.
 					$_data['forgotten_password_code']	= NULL;
 					$_data['temp_pw']					= FALSE;
-					$_data['password']					= $this->input->post( 'new_password' );
+					$_data['password']					= $this->input->post('new_password');
 
-					$_remember							= (bool) $this->input->get( 'remember' );
+					$_remember							= (bool) $this->input->get('remember');
 
 					//	Reset the password
-					if ( $this->user_model->update( $id, $_data ) ) :
+					if ($this->user_model->update($id, $_data)) :
 
 						//	Log the user in
-						switch( APP_NATIVE_LOGIN_USING ) :
+						switch(APP_NATIVE_LOGIN_USING) :
 
 							case 'EMAIL' :
 
-								$_login_user = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login($_user->email, $this->input->post('new_password'), $_remember);
 
 							break;
 
@@ -103,7 +103,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							case 'USERNAME' :
 
-								$_login_user = $this->auth_model->login( $_user->username, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login($_user->username, $this->input->post('new_password'), $_remember);
 
 							break;
 
@@ -111,20 +111,20 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 							default :
 
-								$_login_user = $this->auth_model->login( $_user->email, $this->input->post( 'new_password' ), $_remember );
+								$_login_user = $this->auth_model->login($_user->email, $this->input->post('new_password'), $_remember);
 
 							break;
 
 						endswitch;
 
-						if ( $_login_user ) :
+						if ($_login_user) :
 
-							if ( $this->config->item( 'auth_two_factor_enable' ) ) :
+							if ($this->config->item('authTwoFactorMode') == 'QUESTION') :
 
 								//	Generate token
-								$_two_factor_auth = $this->auth_model->generate_two_factor_token( $_login_user->id );
+								$_two_factor_auth = $this->auth_model->generate_two_factor_token($_login_user->id);
 
-								if ( ! $_two_factor_auth ) :
+								if (! $_two_factor_auth) :
 
 									showFatalError('Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.');
 
@@ -132,60 +132,64 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 								$_query	= array();
 
-								if ( $this->input->get( 'return_to' ) ) :
+								if ($this->input->get('return_to')) :
 
-									$_query['return_to'] = $this->input->get( 'return_to' );
+									$_query['return_to'] = $this->input->get('return_to');
 
 								endif;
 
-								if ( $_remember ) :
+								if ($_remember) :
 
 									$_query['remember'] = $_remember;
 
 								endif;
 
-								$_query = $_query ? '?' . http_build_query( $_query ) : '';
+								$_query = $_query ? '?' . http_build_query($_query) : '';
 
 								//	Login was successful, redirect to the security questions page
-								redirect( 'auth/security_questions/' . $_login_user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query );
+								redirect('auth/security_questions/' . $_login_user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query);
+
+							elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') :
+
+								// @TODO Support Device MFA
 
 							else :
 
 								//	Say hello
-								if ( $_login_user->last_login ) :
+								if ($_login_user->last_login) :
 
-									$this->load->helper( 'date' );
+									$this->load->helper('date');
 
-									$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_login_user->last_login ) ) : user_datetime( $_login_user->last_login );
+									$_last_login = $this->config->item('auth_show_nicetime_on_login') ? nice_time(strtotime($_login_user->last_login)) : user_datetime($_login_user->last_login);
 
-									if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
+									if ($this->config->item('auth_show_last_ip_on_login')) :
 
-										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_login_user->first_name, $_last_login, $_login_user->last_ip ) ) );
+										$this->session->set_flashdata('message', lang('auth_login_ok_welcome_with_ip', array($_login_user->first_name, $_last_login, $_login_user->last_ip)));
 
 									else :
 
-										$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_login_user->first_name, $_last_login ) ) );
+										$this->session->set_flashdata('message', lang('auth_login_ok_welcome', array($_login_user->first_name, $_last_login)));
 
 									endif;
 
 								else :
 
-									$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_login_user->first_name ) ) );
+									$this->session->set_flashdata('message', lang('auth_login_ok_welcome_notime', array($_login_user->first_name)));
 
 								endif;
 
 								//	Log user in and forward to wherever they need to go
-								if ( $this->input->get( 'return_to' ) ):
+								if ($this->input->get('return_to')):
 
-									redirect( $this->input->get( 'return_to' ) );
+									redirect($this->input->get('return_to'));
 
-								elseif ( $_user->group_homepage ) :
+								elseif ($_user->group_homepage) :
 
-									redirect( $_user->group_homepage );
+									redirect($_user->group_homepage);
 
 								else :
 
-									redirect( '/' );
+									redirect('/');
 
 								endif;
 
@@ -193,19 +197,19 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
 						else :
 
-							$this->data['error'] = lang( 'auth_forgot_reset_badlogin', site_url( 'auth/login' ) );
+							$this->data['error'] = lang('auth_forgot_reset_badlogin', site_url('auth/login'));
 
 						endif;
 
 					else :
 
-						$this->data['error'] = lang( 'auth_forgot_reset_badupdate', $this->user_model->last_error() );
+						$this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->last_error());
 
 					endif;
 
 				else:
 
-					$this->data['error'] = lang( 'fv_there_were_errors' );
+					$this->data['error'] = lang('fv_there_were_errors');
 
 				endif;
 
@@ -214,23 +218,23 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 			// --------------------------------------------------------------------------
 
 			//	Set data
-			$this->data['page']->title	= lang( 'auth_title_reset' );
+			$this->data['page']->title	= lang('auth_title_reset');
 
 			$this->data['auth']			= new stdClass();
 			$this->data['auth']->id		= $id;
 			$this->data['auth']->hash	= $hash;
 
-			$this->data['return_to']	= $this->input->get( 'return_to' );
-			$this->data['remember']		= $this->input->get( 'remember' );
+			$this->data['return_to']	= $this->input->get('return_to');
+			$this->data['remember']		= $this->input->get('remember');
 
-			$this->data['message']		= lang( 'auth_forgot_temp_message' );
+			$this->data['message']		= lang('auth_forgot_temp_message');
 
 			// --------------------------------------------------------------------------
 
 			//	Load the views
-			$this->load->view( 'structure/header',			$this->data );
-			$this->load->view( 'auth/password/change_temp',	$this->data );
-			$this->load->view( 'structure/footer',			$this->data );
+			$this->load->view('structure/header',			$this->data);
+			$this->load->view('auth/password/change_temp',	$this->data);
+			$this->load->view('structure/footer',			$this->data);
 
 			return;
 
@@ -252,9 +256,9 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 	 * @param	string	$id	the ID of the user to reset, as per the URL
 	 * @return	void
 	 **/
-	public function _remap( $id )
+	public function _remap($id)
 	{
-		$this->_validate( $id, $this->uri->segment( 4 ) );
+		$this->_validate($id, $this->uri->segment(4));
 	}
 }
 
@@ -286,7 +290,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION' ) ) :
+if (! defined('NAILS_ALLOW_EXTENSION')) :
 
 	class Reset_Password extends NAILS_Reset_Password
 	{

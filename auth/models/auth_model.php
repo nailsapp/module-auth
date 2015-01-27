@@ -1,4 +1,4 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * Name:		Auth_model
@@ -45,14 +45,14 @@ class NAILS_Auth_model extends NAILS_Model
 		$this->brute_force_protection['delay']	= 1500000;
 		$this->brute_force_protection['limit']	= 10;
 		$this->brute_force_protection['expire']	= 900;
-		$this->error_delimiter					= array( '<p>', '</p>' );
-		$this->message_delimiter				= array( '<p>', '</p>' );
+		$this->error_delimiter					= array('<p>', '</p>');
+		$this->message_delimiter				= array('<p>', '</p>');
 
 		// --------------------------------------------------------------------------
 
 		//	Load helpers
-		$this->load->helper( 'date' );
-		$this->load->helper( 'cookie' );
+		$this->load->helper('date');
+		$this->load->helper('cookie');
 	}
 
 
@@ -68,20 +68,20 @@ class NAILS_Auth_model extends NAILS_Model
 	 * @param	boolean $remember Whether to 'remember' the user or not
 	 * @return	object
 	 **/
-	public function login( $identifier, $password, $remember = FALSE )
+	public function login($identifier, $password, $remember = FALSE)
 	{
 		//	Delay execution for a moment (reduces brute force efficiently)
-		if ( strtoupper( ENVIRONMENT ) !== 'DEVELOPMENT' ) :
+		if (strtoupper(ENVIRONMENT) !== 'DEVELOPMENT') :
 
-			usleep( $this->brute_force_protection['delay'] );
+			usleep($this->brute_force_protection['delay']);
 
 		endif;
 
 		// --------------------------------------------------------------------------
 
-		if ( empty( $identifier ) || empty( $password ) ) :
+		if (empty($identifier) || empty($password)) :
 
-			$this->_set_error( 'auth_login_fail_missing_field' );
+			$this->_set_error('auth_login_fail_missing_field');
 			return FALSE;
 
 		endif;
@@ -89,11 +89,11 @@ class NAILS_Auth_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	Look up the user, how we do so depends on the login mode that the app is using
-		switch( APP_NATIVE_LOGIN_USING ) :
+		switch(APP_NATIVE_LOGIN_USING) :
 
 			case 'EMAIL' :
 
-				$_user = $this->user_model->get_by_email( $identifier );
+				$_user = $this->user_model->get_by_email($identifier);
 
 			break;
 
@@ -101,7 +101,7 @@ class NAILS_Auth_model extends NAILS_Model
 
 			case 'USERNAME' :
 
-				$_user = $this->user_model->get_by_username( $identifier );
+				$_user = $this->user_model->get_by_username($identifier);
 
 			break;
 
@@ -109,13 +109,13 @@ class NAILS_Auth_model extends NAILS_Model
 
 			default :
 
-				if ( valid_email( $identifier ) ) :
+				if (valid_email($identifier)) :
 
-					$_user = $this->user_model->get_by_email( $identifier );
+					$_user = $this->user_model->get_by_email($identifier);
 
 				else :
 
-					$_user = $this->user_model->get_by_username( $identifier );
+					$_user = $this->user_model->get_by_username($identifier);
 
 				endif;
 
@@ -125,22 +125,22 @@ class NAILS_Auth_model extends NAILS_Model
 
 		// --------------------------------------------------------------------------
 
-		if ( $_user ) :
+		if ($_user) :
 
 			//	User was recognised; validate credentials
 
-			if ( $this->user_password_model->isCorrect( $_user->id, $password ) ) :
+			if ($this->user_password_model->isCorrect($_user->id, $password)) :
 
-				//	Password accepted! Final checks...
+				//	Password accepted!Final checks...
 
 				//	Exceeded login count, temporarily blocked
-				if ( $_user->failed_login_count >= $this->brute_force_protection['limit'] ) :
+				if ($_user->failed_login_count >= $this->brute_force_protection['limit']) :
 
 					//	Check if the block has expired
-					if ( time() < strtotime( $_user->failed_login_expires ) ) :
+					if (time() < strtotime($_user->failed_login_expires)) :
 
-						$_block_time= ceil( $this->brute_force_protection['expire']/60 );
-						$this->_set_error( 'auth_login_fail_blocked', $_block_time );
+						$_block_time= ceil($this->brute_force_protection['expire']/60);
+						$this->_set_error('auth_login_fail_blocked', $_block_time);
 						return FALSE;
 
 					endif;
@@ -148,25 +148,25 @@ class NAILS_Auth_model extends NAILS_Model
 				endif;
 
 				//	Reset user's failed login counter and allow login
-				$this->user_model->reset_failed_login( $_user->id );
+				$this->user_model->reset_failed_login($_user->id);
 
 				//	If two factor auth is enabled then don't _actually_ set login data
 				//	the next process will confirm the login and set this.
 
-				if ( ! $this->config->item( 'auth_two_factor_enable' ) ) :
+				if (!$this->config->item('authTwoFactorMode')) :
 
 					//	Set login data for this user
-					$this->user_model->set_login_data( $_user->id );
+					$this->user_model->set_login_data($_user->id);
 
 					//	If we're remembering this user set a cookie
-					if ( $remember ) :
+					if ($remember) :
 
-						$this->user_model->set_remember_cookie( $_user->id, $_user->password, $_user->email );
+						$this->user_model->set_remember_cookie($_user->id, $_user->password, $_user->email);
 
 					endif;
 
 					//	Update their last login and increment their login count
-					$this->user_model->update_last_login( $_user->id );
+					$this->user_model->update_last_login($_user->id);
 
 				endif;
 
@@ -177,9 +177,9 @@ class NAILS_Auth_model extends NAILS_Model
 			// --------------------------------------------------------------------------
 
 			//	Is the password NULL? If so it means the account was created using an API of sorts
-			elseif ( $_user->password === NULL ) :
+			elseif ($_user->password === NULL) :
 
-				switch( APP_NATIVE_LOGIN_USING ) :
+				switch(APP_NATIVE_LOGIN_USING) :
 
 					case 'EMAIL' :
 
@@ -205,7 +205,7 @@ class NAILS_Auth_model extends NAILS_Model
 
 				endswitch;
 
-				$this->_set_error( 'auth_login_fail_social', site_url( 'auth/forgotten_password?identifier=' . $_identifier ) );	break;
+				$this->_set_error('auth_login_fail_social', site_url('auth/forgotten_password?identifier=' . $_identifier));	break;
 
 				return FALSE;
 
@@ -216,34 +216,34 @@ class NAILS_Auth_model extends NAILS_Model
 				//	User was recognised but the password was wrong
 
 				//	Increment the user's failed login count
-				$this->user_model->increment_failed_login( $_user->id, $this->brute_force_protection['expire'] );
+				$this->user_model->increment_failed_login($_user->id, $this->brute_force_protection['expire']);
 
 				//	Are we already blocked? Let them know...
-				if ( $_user->failed_login_count >= $this->brute_force_protection['limit'] ) :
+				if ($_user->failed_login_count >= $this->brute_force_protection['limit']) :
 
 					//	Check if the block has expired
-					if ( time() < strtotime( $_user->failed_login_expires ) ) :
+					if (time() < strtotime($_user->failed_login_expires)) :
 
-						$_block_time= ceil( $this->brute_force_protection['expire']/60 );
-						$this->_set_error( 'auth_login_fail_blocked', $_block_time );
+						$_block_time= ceil($this->brute_force_protection['expire']/60);
+						$this->_set_error('auth_login_fail_blocked', $_block_time);
 						return FALSE;
 
 					endif;
 
 					//	Block has expired, reset the counter
-					$this->user_model->reset_failed_login( $user->id );
+					$this->user_model->reset_failed_login($user->id);
 
 				endif;
 
 				//	Check if the password was changed recently
-				if ( $_user->password_changed ) :
+				if ($_user->password_changed) :
 
-					$_changed	= strtotime( $_user->password_changed );
-					$_recent	= strtotime( '-2 WEEKS' );
+					$_changed	= strtotime($_user->password_changed);
+					$_recent	= strtotime('-2 WEEKS');
 
-					if ( $_changed > $_recent ) :
+					if ($_changed > $_recent) :
 
-						$_changed_recently = nice_time( $_changed );
+						$_changed_recently = nice_time($_changed);
 
 					endif;
 
@@ -254,13 +254,13 @@ class NAILS_Auth_model extends NAILS_Model
 		endif;
 
 		//	Login failed
-		if ( empty( $_changed_recently ) ) :
+		if (empty($_changed_recently)) :
 
-			$this->_set_error( 'auth_login_fail_general' );
+			$this->_set_error('auth_login_fail_general');
 
 		else :
 
-			$this->_set_error( 'auth_login_fail_general_recent', $_changed_recently );
+			$this->_set_error('auth_login_fail_general_recent', $_changed_recently);
 
 		endif;
 
@@ -286,9 +286,9 @@ class NAILS_Auth_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	NULL the remember_code so that auto-logins stop
-		$this->db->set( 'remember_code', NULL );
-		$this->db->where( 'id', active_user( 'id' ) );
-		$this->db->update( NAILS_DB_PREFIX . 'user' );
+		$this->db->set('remember_code', NULL);
+		$this->db->where('id', active_user('id'));
+		$this->db->update(NAILS_DB_PREFIX . 'user');
 
 		// --------------------------------------------------------------------------
 
@@ -303,7 +303,7 @@ class NAILS_Auth_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	Destroy PHP session if it exists
-		if ( session_id() ) :
+		if (session_id()) :
 
 			session_destroy();
 
@@ -318,26 +318,26 @@ class NAILS_Auth_model extends NAILS_Model
 	// --------------------------------------------------------------------------
 
 
-	public function generate_two_factor_token( $user_id )
+	public function generate_two_factor_token($user_id)
 	{
 		$_salt		= NAILS_User_password_model::salt();
 		$_ip		= $this->input->ip_address();
-		$_created	= date( 'Y-m-d H:i:s' );
-		$_expires	= date( 'Y-m-d H:i:s', strtotime( '+10 MINS' ) );
+		$_created	= date('Y-m-d H:i:s');
+		$_expires	= date('Y-m-d H:i:s', strtotime('+10 MINS'));
 
 		$_token				= array();
-		$_token['token']	= sha1( sha1( APP_PRIVATE_KEY . $user_id . $_created . $_expires . $_ip ) . $_salt );
-		$_token['salt']		= md5( $_salt );
+		$_token['token']	= sha1(sha1(APP_PRIVATE_KEY . $user_id . $_created . $_expires . $_ip) . $_salt);
+		$_token['salt']		= md5($_salt);
 
 		//	Add this to the DB
-		$this->db->set( 'user_id',	$user_id );
-		$this->db->set( 'token',	$_token['token'] );
-		$this->db->set( 'salt',		$_token['salt'] );
-		$this->db->set( 'created',	$_created );
-		$this->db->set( 'expires',	$_expires );
-		$this->db->set( 'ip',		$_ip );
+		$this->db->set('user_id',	$user_id);
+		$this->db->set('token',	$_token['token']);
+		$this->db->set('salt',		$_token['salt']);
+		$this->db->set('created',	$_created);
+		$this->db->set('expires',	$_expires);
+		$this->db->set('ip',		$_ip);
 
-		if ( $this->db->insert( NAILS_DB_PREFIX . 'user_auth_two_factor_token' ) ) :
+		if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) :
 
 			$_token['id'] = $this->db->insert_id();
 
@@ -345,7 +345,7 @@ class NAILS_Auth_model extends NAILS_Model
 
 		else :
 
-			$this->_set_error( 'auth_twofactor_token_could_not_generate' );
+			$this->_set_error('auth_twofactor_token_could_not_generate');
 			return FALSE;
 
 		endif;
@@ -355,35 +355,35 @@ class NAILS_Auth_model extends NAILS_Model
 	// --------------------------------------------------------------------------
 
 
-	public function verify_two_factor_token( $user_id, $salt, $token, $ip )
+	public function verify_two_factor_token($user_id, $salt, $token, $ip)
 	{
-		$this->db->where( 'user_id',	$user_id );
-		$this->db->where( 'salt',		$salt );
-		$this->db->where( 'token',		$token );
+		$this->db->where('user_id',	$user_id);
+		$this->db->where('salt',		$salt);
+		$this->db->where('token',		$token);
 
-		$_token		= $this->db->get( NAILS_DB_PREFIX . 'user_auth_two_factor_token' )->row();
+		$_token		= $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
 		$_return	= TRUE;
 
-		if ( ! $_token ) :
+		if (!$_token) :
 
-			$this->_set_error( 'auth_twofactor_token_invalid' );
+			$this->_set_error('auth_twofactor_token_invalid');
 			return FALSE;
 
-		elseif ( strtotime( $_token->expires ) <= time() ) :
+		elseif (strtotime($_token->expires) <= time()) :
 
-			$this->_set_error( 'auth_twofactor_token_expired' );
+			$this->_set_error('auth_twofactor_token_expired');
 			$_return = FALSE;
 
-		elseif ( $_token->ip != $ip ) :
+		elseif ($_token->ip != $ip) :
 
-			$this->_set_error( 'auth_twofactor_token_bad_ip' );
+			$this->_set_error('auth_twofactor_token_bad_ip');
 			$_return = FALSE;
 
 		endif;
 
 		//	Delete the token
-		$this->db->where( 'id', $_token->id );
-		$this->db->delete( NAILS_DB_PREFIX . 'user_auth_two_factor_token' );
+		$this->db->where('id', $_token->id);
+		$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
 
 		return $_return;
 	}
@@ -392,10 +392,10 @@ class NAILS_Auth_model extends NAILS_Model
 	// --------------------------------------------------------------------------
 
 
-	public function delete_two_factor_token( $token_id )
+	public function delete_two_factor_token($token_id)
 	{
-		$this->db->where( 'id', $token_id );
-		$this->db->delete( NAILS_DB_PREFIX . 'user_auth_two_factor_token' );
+		$this->db->where('id', $token_id);
+		$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
 		return (bool) $this->db->affected_rows();
 	}
 
@@ -411,16 +411,16 @@ class NAILS_Auth_model extends NAILS_Model
 	 * @param	array	$vars	Variables to parse into the error string
 	 * @return	void
 	 **/
-	protected function _set_error( $error, $vars = NULL )
+	protected function _set_error($error, $vars = NULL)
 	{
-		if ( ! $vars ) :
+		if (!$vars) :
 
 			$this->_errors[] = $error;
 
 		else :
 
 			//	This var has variables in it
-			$this->_errors[]	= array( 'key' => $error, 'vars' => (array) $vars );
+			$this->_errors[]	= array('key' => $error, 'vars' => (array) $vars);
 
 		endif;
 	}
@@ -440,22 +440,22 @@ class NAILS_Auth_model extends NAILS_Model
 	{
 		$_output = '';
 
-		if ( ! is_array( $this->_errors ) ) :
+		if (!is_array($this->_errors)) :
 
 			return FALSE;
 
 		endif;
 
-		foreach ( $this->_errors as $error ) :
+		foreach ($this->_errors as $error) :
 
-			if ( ! is_array( $error ) ) :
+			if (!is_array($error)) :
 
-				$_error = lang( $error ) ? lang( $error ) : $error;
+				$_error = lang($error) ? lang($error) : $error;
 				$_output .= $this->_error_delimiter[0] . $_error . $this->_error_delimiter[1];
 
 			else :
 
-				$_output .= $this->_error_delimiter[0] . lang( $error['key'], $error['vars'] ) . $this->_error_delimiter[1];
+				$_output .= $this->_error_delimiter[0] . lang($error['key'], $error['vars']) . $this->_error_delimiter[1];
 
 
 			endif;
@@ -494,7 +494,7 @@ class NAILS_Auth_model extends NAILS_Model
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_AUTH_MODEL' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_AUTH_MODEL')) :
 
 	class Auth_model extends NAILS_Auth_model
 	{

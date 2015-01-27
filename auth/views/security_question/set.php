@@ -91,8 +91,8 @@
 
 						for ( $i = 0; $i < $num_custom_questions; $i++ ) :
 
-							$_field			= 'custom_question[' . $i . '][answer]';
-							$_name			= 'Answer ' . ( $i + 1 );
+							$_field			= 'custom_question[' . $i . '][question]';
+							$_name			= 'Question ' . ( $i + 1 );
 							$_error			= form_error( $_field ) ? 'has-error' : NULL;
 							$_placeholder	= 'Type your question here';
 

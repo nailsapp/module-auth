@@ -14,387 +14,484 @@ require_once '_auth.php';
  */
 class NAILS_Security_questions extends NAILS_Auth_Controller
 {
-	public function _remap()
-	{
-		if ( $this->config->item( 'auth_two_factor_enable' ) ) :
+    protected $authMfaMode;
+    protected $authMfaConfig;
 
-			$_return_to	= $this->input->get( 'return_to', TRUE );
-			$_remember	= $this->input->get( 'remember', TRUE );
-			$_user_id	= $this->uri->segment( 3 );
-			$_user		= $this->user_model->get_by_id( $_user_id );
+    // --------------------------------------------------------------------------
 
-			if ( ! $_user ) :
+    public function __construct()
+    {
+        parent::__construct();
 
-				$this->session->set_flashdata( 'error', lang( 'auth_twofactor_token_unverified' ) );
+        $this->authMfaMode = $this->config->item('authTwoFactorMode');
+        $config = $this->config->item('authTwoFactor');
+        $this->authMfaConfig = $config['QUESTION'];
+    }
 
-				if ( $_return_to ):
+    // --------------------------------------------------------------------------
 
-					redirect( 'auth/login?return_to=' . $_return_to );
+    public function _remap()
+    {
+        if ($this->authMfaMode == 'QUESTION') {
 
-				else :
+            $returnTo = $this->input->get('return_to', true);
+            $remember = $this->input->get('remember', true);
+            $userId   = $this->uri->segment(3);
+            $user     = $this->user_model->get_by_id($userId);
 
-					redirect( 'auth/login' );
+            if (!$user) {
 
-				endif;
+                $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
-			endif;
+                if ($returnTo) {
 
-			$_salt			= $this->uri->segment( 4 );
-			$_token			= $this->uri->segment( 5 );
-			$_ip			= $this->input->ip_address();
-			$_login_method	= $this->uri->segment( 6 ) ? $this->uri->segment( 6 ) : 'native';
+                    redirect('auth/login?return_to=' . $returnTo);
 
-			//	Safety first
-			switch( $_login_method ) :
+                } else {
 
-				case 'facebook' :
-				case 'twitter' :
-				case 'linkedin' :
-				case 'native' :
+                    redirect('auth/login');
+                }
+            }
 
-				//	All good, homies.
+            $sale        = $this->uri->segment(4);
+            $token       = $this->uri->segment(5);
+            $ipAddress   = $this->input->ip_address();
+            $loginMethod = $this->uri->segment(6) ? $this->uri->segment(6) : 'native';
 
-				break;
+            //  Safety first
+            switch(strtolower($loginMethod)) {
 
-				default :
+                case 'facebook':
+                case 'twitter':
+                case 'linkedin':
+                case 'native':
 
-					$_login_method = 'native';
+                    //  All good, homies.
+                    break;
 
-				break;
+                default:
 
-			endswitch;
+                    $loginMethod = 'native';
+                    break;
+            }
 
-			if ( $this->auth_model->verify_two_factor_token( $_user->id, $_salt, $_token, $_ip ) ) :
+            if ($this->auth_model->verify_two_factor_token($user->id, $sale, $token, $ipAddress)) {
 
-				//	Token is valid, generate a new one for the next request
-				$this->data['token'] = $this->auth_model->generate_two_factor_token( $_user->id );
+                //  Token is valid, generate a new one for the next request
+                $this->data['token'] = $this->auth_model->generate_two_factor_token($user->id);
 
-				//	Set data for the views
-				$this->data['user_id']		= $_user->id;
-				$this->data['login_method']	= $_login_method;
-				$this->data['return_to']	= $_return_to;
-				$this->data['remember']		= $_remember;
+                //  Set data for the views
+                $this->data['user_id']      = $user->id;
+                $this->data['login_method'] = $loginMethod;
+                $this->data['return_to']    = $returnTo;
+                $this->data['remember']     = $remember;
 
-				if ( $this->input->post( 'answer' ) ) :
+                if ($this->input->post('answer')) {
 
-					//	Validate the answer, if correct then log user in and forward, if not
-					//	then generate a new token and show errors
+                    /**
+                     * Validate the answer, if correct then log user in and forward, if
+                     * not then generate a new token and show errors
+                     */
 
-					$this->data['question'] = $this->user_model->get_security_question( $_user->id );
-					$_valid					= $this->user_model->validate_security_answer( $this->data['question']->id, $_user->id, $this->input->post( 'answer' ) );
+                    $this->data['question'] = $this->user_model->get_security_question($user->id);
+                    $isValid                = $this->user_model->validate_security_answer(
+                        $this->data['question']->id,
+                        $user->id,
+                        $this->input->post('answer')
+                    );
 
-					if ( $_valid ) :
+                    if ($isValid) {
 
-						//	Set login data for this user
-						$this->user_model->set_login_data( $_user->id );
+                        //  Set login data for this user
+                        $this->user_model->set_login_data($user->id);
 
-						//	If we're remembering this user set a cookie
-						if ( $_remember ) :
+                        //  If we're remembering this user set a cookie
+                        if ($remember) {
 
-							$this->user_model->set_remember_cookie( $_user->id, $_user->password, $_user->email );
+                            $this->user_model->set_remember_cookie($user->id, $user->password, $user->email);
+                        }
 
-						endif;
+                        //  Update their last login and increment their login count
+                        $this->user_model->update_last_login($user->id);
 
-						//	Update their last login and increment their login count
-						$this->user_model->update_last_login( $_user->id );
+                        // --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+                        //  Generate an event for this log in
+                        create_event('did_log_in', array('method' => $loginMethod), $user->id);
 
-						//	Generate an event for this log in
-						create_event('did_log_in', array('method' => $_login_method), $_user->id);
+                        // --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+                        //  Say hello
+                        if ($user->last_login) {
 
-						//	Say hello
-						if ( $_user->last_login ) :
+                            $this->load->helper('date');
 
-							$this->load->helper( 'date' );
+                            if ($this->config->item('auth_show_nicetime_on_login')) {
 
-							$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_user->last_login ) ) : user_datetime( $_user->last_login );
+                                $lastLogin = nice_time(strtotime($user->last_login));
 
-							if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
+                            } else {
 
-								$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_user->first_name, $_last_login, $_user->last_ip ) ) );
+                                $lastLogin = user_datetime($user->last_login);
+                            }
 
-							else :
+                            if ($this->config->item('auth_show_last_ip_on_login')) {
 
-								$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_user->first_name, $_last_login ) ) );
+                                $status  = 'message';
+                                $message = lang(
+                                    'auth_login_ok_welcome_with_ip',
+                                    array(
+                                        $user->first_name,
+                                        $lastLogin,
+                                        $user->last_ip
+                                    )
+                                );
 
-							endif;
+                            } else {
 
-						else :
+                                $status  = 'message';
+                                $message = lang(
+                                    'auth_login_ok_welcome',
+                                    array(
+                                        $user->first_name,
+                                        $lastLogin
+                                    )
+                                );
+                            }
 
-							$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_user->first_name ) ) );
+                        } else {
 
-						endif;
+                            $status  = 'message';
+                            $message = lang(
+                                'auth_login_ok_welcome_notime',
+                                array(
+                                    $user->first_name
+                                )
+                            );
+                        }
 
-						// --------------------------------------------------------------------------
+                        $this->session->set_flashdata($status, $message);
 
-						//	Delete the token we generated, its no needed, eh!
-						$this->auth_model->delete_two_factor_token( $this->data['token']['id'] );
+                        // --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+                        //  Delete the token we generated, its no needed, eh!
+                        $this->auth_model->delete_two_factor_token($this->data['token']['id']);
 
-						$_redirect = $_return_to != site_url() ? $_return_to : $_user->group_homepage;
+                        // --------------------------------------------------------------------------
 
-						redirect( $_redirect );
+                        $redirect = $returnTo != site_url() ? $returnTo : $user->group_homepage;
 
-					else :
+                        redirect($redirect);
 
-						$this->data['error'] = lang( 'auth_twofactor_answer_incorrect' );
+                    } else {
 
-						//	Ask away cap'n!
-						$this->data['page']->title = lang( 'auth_twofactor_answer_title' );
+                        $this->data['error'] = lang('auth_twofactor_answer_incorrect');
 
-						$this->load->view( 'structure/header',				$this->data );
-						$this->load->view( 'auth/security_question/ask',	$this->data );
-						$this->load->view( 'structure/footer',				$this->data );
+                        //  Ask away cap'n!
+                        $this->data['page']->title = lang('auth_twofactor_answer_title');
 
-					endif;
+                        $this->load->view('structure/header', $this->data);
+                        $this->load->view('auth/security_question/ask', $this->data);
+                        $this->load->view('structure/footer', $this->data);
+                    }
 
+                } else {
 
-				else :
+                    //  Determine whether the user has any security questions set
+                    $this->data['question'] = $this->user_model->get_security_question($user->id);
 
-					//	Determine whether the user has any security questions set
-					$this->data['question'] = $this->user_model->get_security_question( $_user->id );
+                    if ($this->data['question']) {
 
-					if ( $this->data['question'] ) :
+                        //  Ask away cap'n!
+                        $this->data['page']->title = 'Security Question';
 
-						//	Ask away cap'n!
-						$this->data['page']->title = 'Security Question';
+                        $this->load->view('structure/header', $this->data);
+                        $this->load->view('auth/security_question/ask', $this->data);
+                        $this->load->view('structure/footer', $this->data);
 
-						$this->load->view( 'structure/header',				$this->data );
-						$this->load->view( 'auth/security_question/ask',	$this->data );
-						$this->load->view( 'structure/footer',				$this->data );
+                    } else {
 
-					else :
+                        //  Fetch the security questions
+                        $this->data['questions'] = $this->authMfaConfig['questions'];
 
-						//	Auth config stuffz
-						$this->data['questions']			= $this->config->item( 'auth_two_factor_questions' );
-						$this->data['num_questions']		= count( $this->data['questions'] ) < $this->config->item( 'auth_two_factor_num_questions' ) ? count( $this->data['questions'] ) : $this->config->item( 'auth_two_factor_num_questions' );
-						$this->data['num_custom_questions']	= $this->config->item( 'auth_two_factor_num_custom_question' );
+                        /**
+                         * Determine how many questions a user must have, if the number of questions
+                         * is smaller than the number of questions available, use the smaller.
+                         */
 
-						if ( $this->data['num_questions'] + $this->data['num_custom_questions'] <= 0 ) :
+                        if (count($this->data['questions']) < $this->authMfaConfig['numQuestions']) {
 
-							showFatalError('Two-factor auth is enabled, but no questions available', 'A user tried to set security questions but there are no questions available for them to choose. Please ensure auth.php is configured correctly.');
+                            $this->data['num_questions'] = count($this->data['questions']);
 
-						endif;
+                        } else {
 
-						if ( $this->input->post() ) :
+                            $this->data['num_questions'] = count($this->authMfaConfig['numQuestions']);
+                        }
 
-							$this->load->library( 'form_validation' );
+                        //  The number of user generated questions a user must have
+                        $this->data['num_custom_questions'] = $this->authMfaConfig['numUserQuestions'];
 
-							for( $i = 0; $i < $this->data['num_questions']; $i++ ) :
+                        if ($this->data['num_questions'] + $this->data['num_custom_questions'] <= 0) {
 
-								$this->form_validation->set_rules( 'question[' . $i . '][question]',	'',	'xss_clean|required|is_natural_no_zero' );
-								$this->form_validation->set_rules( 'question[' . $i . '][answer]',		'',	'xss_clean|trim|required' );
+                            $subject  = 'Two-factor auth is enabled, but no questions available';
+                            $message  = 'A user tried to set security questions but there are no questions available ';
+                            $message .= 'for them to choose. Please ensure auth.twofactor.php is configured correctly.';
 
-							endfor;
+                            showFatalError($subject, $message);
+                        }
 
-							for( $i = 0; $i < $this->data['num_custom_questions']; $i++ ) :
+                        if ($this->input->post()) {
 
-								$this->form_validation->set_rules( 'custom_question[' . $i . '][question]',	'',	'xss_clean|trim|required' );
-								$this->form_validation->set_rules( 'custom_question[' . $i . '][answer]',		'',	'xss_clean|trim|required' );
+                            $this->load->library('form_validation');
 
-							endfor;
+                            for ($i = 0; $i < $this->data['num_questions']; $i++) {
 
-							$this->form_validation->set_message( 'required', lang( 'fv_required' ) );
-							$this->form_validation->set_message( 'is_natural_no_zero', lang( 'fv_required' ) );
+                                $this->form_validation->set_rules(
+                                    'question[' . $i . '][question]',
+                                    '',
+                                    'xss_clean|required|is_natural_no_zero'
+                                );
 
-							if ( $this->form_validation->run() ) :
+                                $this->form_validation->set_rules(
+                                    'question[' . $i . '][answer]',
+                                    '',
+                                    'xss_clean|trim|required'
+                                );
+                            }
 
-								//	Make sure that we have different questions
-								$_question_index	= array();
-								$_question			= (array) $this->input->post( 'question' );
-								$_error				= FALSE;
+                            for ($i = 0; $i < $this->data['num_custom_questions']; $i++) {
 
-								foreach ( $_question as $q ) :
+                                $this->form_validation->set_rules(
+                                    'custom_question[' . $i . '][question]',
+                                    '',
+                                    'xss_clean|trim|required'
+                                );
 
-									if ( array_search( $q['question'], $_question_index ) === FALSE ) :
+                                $this->form_validation->set_rules(
+                                    'custom_question[' . $i . '][answer]',
+                                    '',
+                                    'xss_clean|trim|required'
+                                );
+                            }
 
-										$_question_index[] = $q['question'];
+                            $this->form_validation->set_message('required', lang('fv_required'));
+                            $this->form_validation->set_message('is_natural_no_zero', lang('fv_required'));
 
-									else :
+                            if ($this->form_validation->run()) {
 
-										$_error = TRUE;
-										break;
+                                //  Make sure that we have different questions
+                                $questionIndex = array();
+                                $question      = (array) $this->input->post('question');
+                                $error         = false;
 
-									endif;
+                                foreach ($question as $q) {
 
-								endforeach;
+                                    if (array_search($q['question'], $questionIndex) === false) {
 
-								$_question_index	= array();
-								$_question			= (array) $this->input->post( 'custom_question' );
+                                        $questionIndex[] = $q['question'];
 
-								foreach ( $_question as $q ) :
+                                    } else {
 
-									if ( array_search( $q['question'], $_question_index ) === FALSE ) :
+                                        $error = true;
+                                        break;
+                                    }
+                                }
 
-										$_question_index[] = $q['question'];
+                                $questionIndex = array();
+                                $question      = (array) $this->input->post('custom_question');
 
-									else :
+                                foreach ($question as $q) {
 
-										$_error = TRUE;
-										break;
+                                    if (array_search($q['question'], $questionIndex) === false) {
 
-									endif;
+                                        $questionIndex[] = $q['question'];
 
-								endforeach;
+                                    } else {
 
-								if ( ! $_error ) :
+                                        $error = true;
+                                        break;
+                                    }
+                                }
 
-									//	Good arrows. Save questions
-									$_data = array();
+                                if (!$error) {
 
-									if ( $this->input->post( 'question' ) ) :
+                                    //  Good arrows. Save questions
+                                    $data = array();
 
-										foreach ( $this->input->post( 'question' ) as $q ) :
+                                    if ($this->input->post('question')) {
 
-											$_temp				= new stdClass();
-											$_temp->question	= isset( $this->data['questions'][$q['question']-1] ) ? $this->data['questions'][$q['question']-1] : NULL;
-											$_temp->answer		= $q['answer'];
+                                        foreach ($this->input->post('question') as $q) {
 
-											$_data[] = $_temp;
+                                            $temp = new stdClass();
 
-										endforeach;
+                                            if (isset($this->data['questions'][$q['question']-1])) {
 
-									endif;
+                                                $temp->question = $this->data['questions'][$q['question']-1];
 
-									if ( $this->input->post( 'custom_question' ) ) :
+                                            } else {
 
-										foreach ( (array) $this->input->post( 'custom_question' ) as $q ) :
+                                                $temp->question = null;
+                                            }
+                                            $temp->answer = $q['answer'];
 
-											$_temp				= new stdClass();
-											$_temp->question	= trim( $q['question'] );
-											$_temp->answer		= $q['answer'];
+                                            $data[] = $temp;
+                                        }
+                                    }
 
-											$_data[] = $_temp;
+                                    if ($this->input->post('custom_question')) {
 
-										endforeach;
+                                        foreach ((array) $this->input->post('custom_question') as $q) {
 
-									endif;
+                                            $temp           = new stdClass();
+                                            $temp->question = trim($q['question']);
+                                            $temp->answer   = $q['answer'];
 
-									if ( $this->user_model->set_security_questions( $_user->id, $_data ) ) :
+                                            $data[] = $temp;
+                                        }
+                                    }
 
-										//	Set login data for this user
-										$this->user_model->set_login_data( $_user->id );
+                                    if ($this->user_model->set_security_questions($user->id, $data)) {
 
-										//	If we're remembering this user set a cookie
-										if ( $_remember ) :
+                                        //  Set login data for this user
+                                        $this->user_model->set_login_data($user->id);
 
-											$this->user_model->set_remember_cookie( $_user->id, $_user->password, $_user->email );
+                                        //  If we're remembering this user set a cookie
+                                        if ($remember) {
 
-										endif;
+                                            $this->user_model->set_remember_cookie(
+                                                $user->id,
+                                                $user->password,
+                                                $user->email
+                                            );
+                                        }
 
-										//	Update their last login and increment their login count
-										$this->user_model->update_last_login( $_user->id );
+                                        //  Update their last login and increment their login count
+                                        $this->user_model->update_last_login($user->id);
 
-										// --------------------------------------------------------------------------
+                                        // --------------------------------------------------------------------------
 
-										//	Generate an event for this log in
-										create_event( 'did_log_in', $_user->id, array( 'method' => $_login_method ) );
+                                        //  Generate an event for this log in
+                                        create_event('did_log_in', array('method' => $loginMethod), $user->id);
 
-										// --------------------------------------------------------------------------
+                                        // --------------------------------------------------------------------------
 
-										//	Say hello
-										if ( $_user->last_login ) :
+                                        //  Say hello
+                                        if ($user->last_login) {
 
-											$this->load->helper( 'date' );
+                                            $this->load->helper('date');
 
-											$_last_login = $this->config->item( 'auth_show_nicetime_on_login' ) ? nice_time( strtotime( $_user->last_login ) ) : user_datetime( $_user->last_login );
+                                            if ($this->config->item('auth_show_nicetime_on_login')) {
 
-											if ( $this->config->item( 'auth_show_last_ip_on_login' ) ) :
+                                                $lastLogin = nice_time(strtotime($user->last_login));
 
-												$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_with_ip', array( $_user->first_name, $_last_login, $_user->last_ip ) ) );
+                                            } else {
 
-											else :
+                                                $lastLogin = user_datetime($user->last_login);
+                                            }
 
-												$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome', array( $_user->first_name, $_last_login ) ) );
+                                            if ($this->config->item('auth_show_last_ip_on_login')) {
 
-											endif;
+                                                $status  = 'message';
+                                                $message = lang(
+                                                    'auth_login_ok_welcome_with_ip',
+                                                    array(
+                                                        $user->first_name,
+                                                        $lastLogin,
+                                                        $user->last_ip
+                                                    )
+                                                );
 
-										else :
+                                            } else {
 
-											$this->session->set_flashdata( 'message', lang( 'auth_login_ok_welcome_notime', array( $_user->first_name ) ) );
+                                                $status  = 'message';
+                                                $message = lang(
+                                                    'auth_login_ok_welcome',
+                                                    array(
+                                                        $user->first_name,
+                                                        $lastLogin
+                                                    )
+                                                );
+                                            }
 
-										endif;
+                                        } else {
 
-										// --------------------------------------------------------------------------
+                                            $status  = 'message';
+                                            $message = lang(
+                                                'auth_login_ok_welcome_notime',
+                                                array(
+                                                    $user->first_name
+                                                )
+                                            );
+                                        }
 
-										//	Delete the token we generated, its no needed, eh!
-										$this->auth_model->delete_two_factor_token( $this->data['token']['id'] );
+                                        $this->session->set_flashdata($status, $message);
 
-										// --------------------------------------------------------------------------
+                                        // --------------------------------------------------------------------------
 
-										$_redirect = $_return_to != site_url() ? $_return_to : $_user->group_homepage;
-										redirect( $_redirect );
+                                        //  Delete the token we generated, its no needed, eh!
+                                        $this->auth_model->delete_two_factor_token($this->data['token']['id']);
 
-									else :
+                                        // --------------------------------------------------------------------------
 
-										$this->data['error'] = lang( 'auth_twofactor_question_set_fail' ) . ' ' . $this->user_model->last_error();
+                                        $redirect = $returnTo != site_url() ? $returnTo : $user->group_homepage;
+                                        redirect($redirect);
 
-									endif;
+                                    } else {
 
-								else :
+                                        $this->data['error']  = lang('auth_twofactor_question_set_fail');
+                                        $this->data['error'] .= ' ' . $this->user_model->last_error();
+                                    }
 
-									$this->data['error'] = lang( 'auth_twofactor_question_unique' );
+                                } else {
 
-								endif;
+                                    $this->data['error'] = lang('auth_twofactor_question_unique');
+                                }
 
-							else :
+                            } else {
 
-								$this->data['error'] = lang( 'fv_there_were_errors' );
+                                $this->data['error'] = lang('fv_there_were_errors');
+                            }
+                        }
 
-							endif;
+                        //  No questions, request they set them
+                        $this->data['page']->title = lang('auth_twofactor_question_set_title');
 
-						endif;
+                        $this->load->view('structure/header', $this->data);
+                        $this->load->view('auth/security_question/set', $this->data);
+                        $this->load->view('structure/footer', $this->data);
+                    }
+                }
 
-						//	No questions, request they set them
-						$this->data['page']->title = lang( 'auth_twofactor_question_set_title' );
+            } else {
 
-						$this->load->view( 'structure/header',				$this->data );
-						$this->load->view( 'auth/security_question/set',	$this->data );
-						$this->load->view( 'structure/footer',				$this->data );
+                $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
-					endif;
+                $query              = array();
+                $query['return_to'] = $returnTo;
+                $query['remember']  = $remember;
 
-				endif;
+                $query = array_filter($query);
 
-			else :
+                if ($query) {
 
-				$this->session->set_flashdata( 'error', lang( 'auth_twofactor_token_unverified' ) );
+                    $query = '?' . http_build_query($query);
 
-				$_query					= array();
-				$_query['return_to']	= $_return_to;
-				$_query['remember']		= $_remember;
+                } else {
 
-				$_query = array_filter( $_query );
+                    $query = '';
+                }
 
-				if ( $_query ) :
+                redirect('auth/login' . $query);
+            }
 
-					$_query = '?' . http_build_query( $_query );
+        } else {
 
-				else :
-
-					$_query = '';
-
-				endif;
-
-				redirect( 'auth/login' . $_query );
-
-			endif;
-
-		else :
-
-			show_404();
-
-		endif;
-	}
+            show_404();
+        }
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -420,10 +517,9 @@ class NAILS_Security_questions extends NAILS_Auth_Controller
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_SECURITY_QUESTIONS' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_SECURITY_QUESTIONS')) {
 
-	class Security_questions extends NAILS_Security_questions
-	{
-	}
-
-endif;
+    class Security_questions extends NAILS_Security_questions
+    {
+    }
+}
