@@ -14,257 +14,334 @@ require_once '_auth.php';
  */
 class NAILS_Reset_Password extends NAILS_Auth_Controller
 {
-	/**
-	 * Constructor
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Constructor
+     *
+     * @access  public
+     * @param   none
+     * @return  void
+     **/
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	If user is logged in they shouldn't be accessing this method
-		if ($this->user_model->is_logged_in()) :
+        //  If user is logged in they shouldn't be accessing this method
+        if ($this->user_model->is_logged_in()) {
 
-			$this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
-			redirect('/');
+            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
+            redirect('/');
+        }
+    }
 
-		endif;
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Validate the supplied assets and if valid present the user with a reset form
+     *
+     * @access  public
+     * @param   int     $id     The ID of the user to reset
+     * @param   strgin  hash    The hash to validate against
+     * @return  void
+     **/
+    protected function _validate($id, $hash)
+    {
+        //  Check auth credentials
+        $user = $this->user_model->get_by_id($id);
 
-	// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
+        if ($user !== false && isset($user->salt) && $hash == md5($user->salt)) {
 
-	/**
-	 * Validate the supplied assets and if valid present the user with a reset form
-	 *
-	 * @access	public
-	 * @param	int		$id		The ID fo the user to reset
-	 * @param	strgin	hash	The hash to validate against
-	 * @return	void
-	 **/
-	private function _validate($id, $hash)
-	{
-		//	Check auth credentials
-		$_user = $this->user_model->get_by_id($id);
+            //  Valid combination, is there MFA on the account?
+            if ($this->config->item('authTwoFactorMode')) {
 
-		// --------------------------------------------------------------------------
+                /**
+                 * This variable will stop the password resetting until we're confident
+                 * that MFA has been passed
+                 */
 
-		if ($_user !== FALSE && isset($_user->salt) && $hash == md5($_user->salt)) :
+                $mfaValid = false;
 
-			//	Valid combination
-			if ($this->input->post()) :
+                /**
+                 * Check the user's account to see if they have MFA enabled, if so
+                 * require that they pass that before allowing the password to be reset
+                 */
 
-				// Validate data
-				$this->load->library('form_validation');
+                switch ($this->config->item('authTwoFactorMode')) {
 
-				// --------------------------------------------------------------------------
+                    case 'QUESTION':
 
-				//	Define rules
-				$this->form_validation->set_rules('new_password',	'password',		'required|matches[confirm_pass]');
-				$this->form_validation->set_rules('confirm_pass',	'confirmation',	'required');
+                        $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($user->id);
 
-				// --------------------------------------------------------------------------
+                        if ($this->data['mfaQuestion']) {
 
-				//	Set custom messages
-				$this->form_validation->set_message('required',	lang('fv_required'));
-				$this->form_validation->set_message('matches',		lang('fv_matches'));
+                            if ($this->input->post()) {
 
-				// --------------------------------------------------------------------------
+                                //  Validate answer
+                                $isValid = $this->auth_model->mfaQuestionValidate(
+                                    $this->data['mfaQuestion']->id,
+                                    $user->id,
+                                    $this->input->post('mfaAnswer')
+                                );
 
-				//	Run validation
-				if ($this->form_validation->run()) :
+                                if ($isValid) {
 
-					//	Validated, update user and login.
-					$_data['forgotten_password_code']	= NULL;
-					$_data['temp_pw']					= FALSE;
-					$_data['password']					= $this->input->post('new_password');
+                                    $mfaValid = true;
 
-					$_remember							= (bool) $this->input->get('remember');
+                                } else {
 
-					//	Reset the password
-					if ($this->user_model->update($id, $_data)) :
+                                    $this->data['error']  = '<strong>Sorry,</strong> the answer to your security ';
+                                    $this->data['error'] .= 'question was incorrect.';
+                                }
+                            }
 
-						//	Log the user in
-						switch(APP_NATIVE_LOGIN_USING) :
+                        } else {
 
-							case 'EMAIL' :
+                            //  No questions set up, allow for now
+                            $mfaValid = true;
+                        }
 
-								$_login_user = $this->auth_model->login($_user->email, $this->input->post('new_password'), $_remember);
+                        break;
 
-							break;
+                    case 'DEVICE':
 
-							// --------------------------------------------------------------------------
+                        $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($user->id);
 
-							case 'USERNAME' :
+                        if ($this->data['mfaDevice']) {
 
-								$_login_user = $this->auth_model->login($_user->username, $this->input->post('new_password'), $_remember);
+                            if ($this->input->post()) {
 
-							break;
+                                //  Validate answer
+                                $isValid = $this->auth_model->mfaDeviceCodeValidate(
+                                    $user->id,
+                                    $this->input->post('mfaCode')
+                                );
 
-							// --------------------------------------------------------------------------
+                                if ($isValid) {
 
-							default :
+                                    $mfaValid = true;
 
-								$_login_user = $this->auth_model->login($_user->email, $this->input->post('new_password'), $_remember);
+                                } else {
 
-							break;
+                                    $this->data['error']  = '<strong>Sorry,</strong> that code could not be validated. ';
+                                    $this->data['error'] .= $this->auth_model->last_error();
+                                }
+                            }
 
-						endswitch;
+                        } else {
 
-						if ($_login_user) :
+                            //  No devices set up, allow for now
+                            $mfaValid = true;
+                        }
+                        break;
+                }
 
-							if ($this->config->item('authTwoFactorMode') == 'QUESTION') :
+            } else {
 
-								//	Generate token
-								$_two_factor_auth = $this->auth_model->generate_two_factor_token($_login_user->id);
+                //  No MFA so just set this to true
+                $mfaValid = true;
+            }
 
-								if (! $_two_factor_auth) :
+            // --------------------------------------------------------------------------
 
-									showFatalError('Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.');
+            // Only run if MFA has been passed and there's POST data
+            if ($mfaValid && $this->input->post()) {
 
-								endif;
+                // Validate data
+                $this->load->library('form_validation');
 
-								$_query	= array();
+                // --------------------------------------------------------------------------
 
-								if ($this->input->get('return_to')) :
+                //  Define rules
+                $this->form_validation->set_rules('new_password', '', 'required|matches[confirm_pass]');
+                $this->form_validation->set_rules('confirm_pass', '', 'required');
 
-									$_query['return_to'] = $this->input->get('return_to');
+                // --------------------------------------------------------------------------
 
-								endif;
+                //  Set custom messages
+                $this->form_validation->set_message('required', lang('fv_required'));
+                $this->form_validation->set_message('matches', lang('fv_matches'));
 
-								if ($_remember) :
+                // --------------------------------------------------------------------------
 
-									$_query['remember'] = $_remember;
+                //  Run validation
+                if ($this->form_validation->run()) {
 
-								endif;
+                    //  Validated, update user and login.
+                    $data                            = array();
+                    $data['forgotten_password_code'] = null;
+                    $data['temp_pw']                 = false;
+                    $data['password']                = $this->input->post('new_password');
+                    $remember                        = (bool) $this->input->get('remember');
 
-								$_query = $_query ? '?' . http_build_query($_query) : '';
+                    //  Reset the password
+                    if ($this->user_model->update($user->id, $data)) {
 
-								//	Login was successful, redirect to the security questions page
-								redirect('auth/security_questions/' . $_login_user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query);
+                        //  Log the user in
+                        switch (APP_NATIVE_LOGIN_USING) {
 
-							elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') :
+                            case 'EMAIL' :
 
-								// @TODO Support Device MFA
+                                $loginUser = $this->auth_model->login(
+                                    $user->email,
+                                    $this->input->post('new_password'),
+                                    $remember
+                                );
+                                break;
 
-							else :
+                            case 'USERNAME' :
 
-								//	Say hello
-								if ($_login_user->last_login) :
+                                $loginUser = $this->auth_model->login(
+                                    $user->username,
+                                    $this->input->post('new_password'),
+                                    $remember
+                                );
+                                break;
 
-									$this->load->helper('date');
+                            default :
 
-									$_last_login = $this->config->item('auth_show_nicetime_on_login') ? nice_time(strtotime($_login_user->last_login)) : user_datetime($_login_user->last_login);
+                                $loginUser = $this->auth_model->login(
+                                    $user->email,
+                                    $this->input->post('new_password'),
+                                    $remember
+                                );
+                                break;
+                        }
 
-									if ($this->config->item('auth_show_last_ip_on_login')) :
+                        if ($loginUser) {
 
-										$this->session->set_flashdata('message', lang('auth_login_ok_welcome_with_ip', array($_login_user->first_name, $_last_login, $_login_user->last_ip)));
+                            //  Say hello
+                            if ($loginUser->last_login) {
 
-									else :
+                                $this->load->helper('date');
 
-										$this->session->set_flashdata('message', lang('auth_login_ok_welcome', array($_login_user->first_name, $_last_login)));
+                                if ($this->config->item('auth_show_nicetime_on_login')) {
 
-									endif;
+                                    $lastLogin = nice_time(strtotime($loginUser->last_login));
 
-								else :
+                                } else {
 
-									$this->session->set_flashdata('message', lang('auth_login_ok_welcome_notime', array($_login_user->first_name)));
+                                    $lastLogin = user_datetime($loginUser->last_login);
+                                }
 
-								endif;
+                                if ($this->config->item('auth_show_last_ip_on_login')) {
 
-								//	Log user in and forward to wherever they need to go
-								if ($this->input->get('return_to')):
+                                    $status  = 'message';
+                                    $message = lang(
+                                        'auth_login_ok_welcome_with_ip',
+                                        array(
+                                            $loginUser->first_name,
+                                            $lastLogin,
+                                            $loginUser->last_ip
+                                        )
+                                    );
 
-									redirect($this->input->get('return_to'));
+                                } else {
 
-								elseif ($_user->group_homepage) :
+                                    $status  = 'message';
+                                    $message = lang(
+                                        'auth_login_ok_welcome',
+                                        array(
+                                            $loginUser->first_name,
+                                            $lastLogin
+                                        )
+                                    );
+                                }
 
-									redirect($_user->group_homepage);
+                            } else {
 
-								else :
+                                $status  = 'message';
+                                $message = lang(
+                                    'auth_login_ok_welcome_notime',
+                                    array(
+                                        $loginUser->first_name
+                                    )
+                                );
+                            }
 
-									redirect('/');
+                            $this->session->set_flashdata($status, $message);
 
-								endif;
+                            //  If MFA is setup then we'll need to set the user's session data
+                            if ($this->config->item('authTwoFactorMode')) {
 
-							endif;
+                                $this->user_model->set_login_data($user->id);
+                            }
 
-						else :
+                            //  Log user in and forward to wherever they need to go
+                            if ($this->input->get('return_to')){
 
-							$this->data['error'] = lang('auth_forgot_reset_badlogin', site_url('auth/login'));
+                                redirect($this->input->get('return_to'));
 
-						endif;
+                            } elseif ($user->group_homepage) {
 
-					else :
+                                redirect($user->group_homepage);
 
-						$this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->last_error());
+                            } else {
 
-					endif;
+                                redirect('/');
+                            }
 
-				else:
+                        } else {
 
-					$this->data['error'] = lang('fv_there_were_errors');
+                            $this->data['error'] = lang('auth_forgot_reset_badlogin', site_url('auth/login'));
+                        }
 
-				endif;
+                    } else {
 
-			endif;
+                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->last_error());
+                    }
 
-			// --------------------------------------------------------------------------
+                } else {
 
-			//	Set data
-			$this->data['page']->title	= lang('auth_title_reset');
+                    $this->data['error'] = lang('fv_there_were_errors');
+                }
+            }
 
-			$this->data['auth']			= new stdClass();
-			$this->data['auth']->id		= $id;
-			$this->data['auth']->hash	= $hash;
+            // --------------------------------------------------------------------------
 
-			$this->data['return_to']	= $this->input->get('return_to');
-			$this->data['remember']		= $this->input->get('remember');
+            //  Set data
+            $this->data['page']->title = lang('auth_title_reset');
 
-			$this->data['message']		= lang('auth_forgot_temp_message');
+            $this->data['auth']       = new stdClass();
+            $this->data['auth']->id   = $id;
+            $this->data['auth']->hash = $hash;
 
-			// --------------------------------------------------------------------------
+            $this->data['return_to'] = $this->input->get('return_to');
+            $this->data['remember']  = $this->input->get('remember');
 
-			//	Load the views
-			$this->load->view('structure/header',			$this->data);
-			$this->load->view('auth/password/change_temp',	$this->data);
-			$this->load->view('structure/footer',			$this->data);
+            $this->data['message'] = lang('auth_forgot_temp_message');
 
-			return;
+            // --------------------------------------------------------------------------
 
-		endif;
+            //  Load the views
+            $this->load->view('structure/header', $this->data);
+            $this->load->view('auth/password/change_temp', $this->data);
+            $this->load->view('structure/footer', $this->data);
 
-		// --------------------------------------------------------------------------
+            return;
+        }
 
-		show_404();
-	}
+        // --------------------------------------------------------------------------
 
+        show_404();
+    }
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-
-	/**
-	 * Route requests to the right method
-	 *
-	 * @access	public
-	 * @param	string	$id	the ID of the user to reset, as per the URL
-	 * @return	void
-	 **/
-	public function _remap($id)
-	{
-		$this->_validate($id, $this->uri->segment(4));
-	}
+    /**
+     * Route requests to the right method
+     * @param   string  $id The ID of the user to reset, as per the URL
+     * @return  void
+     **/
+    public function _remap($id)
+    {
+        $this->_validate($id, $this->uri->segment(4));
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -290,10 +367,9 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
  *
  **/
 
-if (! defined('NAILS_ALLOW_EXTENSION')) :
+if (!defined('NAILS_ALLOW_EXTENSION')) {
 
-	class Reset_Password extends NAILS_Reset_Password
-	{
-	}
-
-endif;
+    class Reset_Password extends NAILS_Reset_Password
+    {
+    }
+}

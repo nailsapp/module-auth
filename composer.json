@@ -34,6 +34,7 @@
 		"nailsapp/common": "dev-develop",
 		"nailsapp/module-curl": "dev-develop",
 		"nailsapp/module-cdn": "dev-develop",
-		"hybridauth/hybridauth": "dev-master"
+		"hybridauth/hybridauth": "~2.3.0",
+		"sonata-project/google-authenticator": "1.0.2"
 	}
 }

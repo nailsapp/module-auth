@@ -16,12 +16,77 @@
 
             $query = $query ? '?' . http_build_query($query) : '';
 
-            echo form_open('auth/reset_password/' . $auth->id . '/' . $auth->hash . $query, 'class="form form-horizontal"');
+            echo form_open(
+                'auth/reset_password/' . $auth->id . '/' . $auth->hash . $query,
+                'class="form form-horizontal"'
+            );
+
+            // --------------------------------------------------------------------------
+
+            if (!empty($mfaQuestion)) {
+
+                $field       = 'mfaAnswer';
+                $label       = 'Security Question';
+                $placeholder = 'Type your answer';
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control"';
+
+                ?>
+                <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">
+                    <label class="col-sm-3 control-label" for="input-<?=$field?>">
+                        <?=$label?>:
+                    </label>
+                    <div class="col-sm-9">
+                    <?php
+
+                        echo '<p><strong>' . $mfaQuestion->question . '</strong></p>';
+                        echo form_password($field, set_value($field), $fieldAttr);
+                        echo form_error($field, '<p class="help-block">', '</p>');
+
+                    ?>
+                    </div>
+                </div>
+                <hr />
+                <?php
+            }
+
+            // --------------------------------------------------------------------------
+
+            if (!empty($mfaDevice)) {
+
+                $field       = 'mfaCode';
+                $label       = 'Security Code';
+                $placeholder = 'Type your code';
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control"';
+
+                ?>
+                <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">
+                    <label class="col-sm-3 control-label" for="input-<?=$field?>">
+                        <?=$label?>:
+                    </label>
+                    <div class="col-sm-9">
+                    <?php
+
+                        echo form_input($field, set_value($field), $fieldAttr);
+                        echo '<p class="help-block">';
+                            echo '<small>';
+                                echo 'Use your device to generate a single use code.';
+                            echo '</small>';
+                        echo '</p>';
+                        echo form_error($field, '<p class="help-block">', '</p>');
+
+                    ?>
+                    </div>
+                </div>
+                <hr />
+                <?php
+            }
+
+            // --------------------------------------------------------------------------
 
                 $field       = 'new_password';
                 $label       = lang('form_label_password');
                 $placeholder = lang('auth_forgot_new_pass_placeholder');
-                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control "';
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control"';
 
             ?>
             <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">
@@ -50,7 +115,7 @@
                 $field       = 'confirm_pass';
                 $label       = lang('form_label_password_confirm');
                 $placeholder = lang('auth_forgot_new_pass_confirm_placeholder');
-                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control "';
+                $fieldAttr   = 'id="input-' . $field . '" placeholder="' . $placeholder . '" class="form-control"';
 
             ?>
             <div class="form-group <?=form_error($field) ? 'has-error' : ''?>">

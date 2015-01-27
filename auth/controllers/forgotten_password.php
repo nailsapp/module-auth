@@ -11,461 +11,491 @@ require_once '_auth.php';
  * @category    Controller
  * @author      Nails Dev Team
  * @link
+ * @todo  Refactor this class so that not so much code is being duplicated, especially re: MFA
  */
 class NAILS_Forgotten_Password extends NAILS_Auth_Controller
 {
-	/**
-	 * Constructor
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Constructor
+     * @return  void
+     **/
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Load libraries
-		$this->load->library('form_validation');
+        //  Load libraries
+        $this->load->library('form_validation');
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Specify a default title for this page
-		$this->data['page']->title = lang('auth_title_forgotten_password');
-	}
+        //  Specify a default title for this page
+        $this->data['page']->title = lang('auth_title_forgotten_password');
+    }
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Reset password form
+     * @return  void
+     **/
+    public function index()
+    {
+        //  If user is logged in they shouldn't be accessing this method
+        if ($this->user_model->is_logged_in()) {
 
+            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
+            redirect('/');
+        }
 
-	/**
-	 * Reset password form
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function index()
-	{
-		//	If user is logged in they shouldn't be accessing this method
-		if ($this->user_model->is_logged_in()) :
+        //  If there's POST data attempt to validate the user
+        if ($this->input->post() || $this->input->get('identifier')) {
 
-			$this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
-			redirect('/');
+            //  Define vars
+            $_identifier = $this->input->post('identifier');
 
-		endif;
+            /**
+             * Override with the $_GET variable if POST failed to return anything. Populate
+             * the $_POST var with some data so form validation continues as normal, feels
+             * hacky but works.
+             */
 
-		//	If there's POST data attempt to validate the user
-		if ($this->input->post() || $this->input->get('identifier')) :
+            if (!$_identifier && $this->input->get('identifier')) {
 
-			//	Define vars
-			$_identifier = $this->input->post('identifier');
+                $_POST['identifier'] = $this->input->get('identifier');
+                $_identifier         = $this->input->get('identifier');
+            }
 
-			//	Override with the $_GET variable if POST failed to return anything.
-			//	Populate the $_POST var with some data so form validation continues
-			//	as normal, feels hacky but works.
+            // --------------------------------------------------------------------------
 
-			if (! $_identifier && $this->input->get('identifier')) :
+            /**
+             * Set rules.
+             * The rules vary depending on what login method is enabled.
+             */
 
-				$_POST['identifier']	= $this->input->get('identifier');
-				$_identifier			= $this->input->get('identifier');
+            switch (APP_NATIVE_LOGIN_USING) {
 
-			endif;
+                case 'EMAIL' :
 
-			// --------------------------------------------------------------------------
+                    $this->form_validation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
+                    break;
 
-			//	Set rules
-			//	The rules vary depending on what login methods are enabled.
-			switch(APP_NATIVE_LOGIN_USING) :
+                case 'USERNAME' :
 
-				case 'EMAIL' :
+                    $this->form_validation->set_rules('identifier', '', 'required|xss_clean|trim');
+                    break;
 
-					$this->form_validation->set_rules('identifier',	'Email',	'required|xss_clean|trim|valid_email');
+                default:
 
-				break;
+                    $this->form_validation->set_rules('identifier', '', 'xss_clean|trim');
+                    break;
+            }
 
-				// --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-				case 'USERNAME' :
+            //  Override default messages
+            $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('valid_email',  lang('fv_valid_email'));
 
-					$this->form_validation->set_rules('identifier',	'Username',	'required|xss_clean|trim');
+            // --------------------------------------------------------------------------
 
-				break;
+            //  Run validation
+            if ($this->form_validation->run()) {
 
-				// --------------------------------------------------------------------------
+                /**
+                 * Some apps may want the forgotten password tool to always return as successfull,
+                 * even if it wasn't. Bad UX, if you ask me, but I'm not the client.
+                 */
 
-				default:
+                $alwaysSucceed = $this->config->item('auth_forgotten_pass_always_succeed');
 
-					$this->form_validation->set_rules('identifier',	'Username or Email',	'xss_clean|trim');
+                //  Attempt to reset password
+                if ($this->user_password_model->set_token($_identifier)) {
 
-				break;
+                    //  Send email to user
+                    switch (APP_NATIVE_LOGIN_USING) {
 
-			endswitch;
+                        case 'EMAIL' :
 
-			// --------------------------------------------------------------------------
+                            $this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
 
-			//	Override default messages
-			$this->form_validation->set_message('required',	lang('fv_required'));
-			$this->form_validation->set_message('valid_email',	lang('fv_valid_email'));
+                            //  User provided an email, send to that email
+                            $sendToEmail = $_identifier;
+                            break;
 
-			// --------------------------------------------------------------------------
+                        case 'USERNAME' :
 
-			//	Run validation
-			if ($this->form_validation->run()) :
+                            $this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
 
-				//	Some apps may want the forgotten password tool to always return
-				//	as successfull, even if it wasn't. Bad UX, if you ask me, but I'm
-				//	not the client.
+                            /**
+                             * Can't email a username, send to their ID and let the email library
+                             * handle the routing
+                             */
 
-				$_always_succeed = $this->config->item('auth_forgotten_pass_always_succeed');
+                            $sendToId = $this->data['reset_user']->id;
+                            break;
 
-				//	Attempt to reset password
-				if ($this->user_password_model->set_token($_identifier)) :
+                        default:
 
-					//	Send email to user
-					//	Define basic email data
-					switch(APP_NATIVE_LOGIN_USING) :
+                            if (valid_email($_identifier)) {
 
-						case 'EMAIL' :
+                                $this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
 
-							$this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
+                                //  User provided an email, send to that email
+                                $sendToEmail = $_identifier;
 
-							//	User provided an email, send to that email
-							$_send_to_email = $_identifier;
+                            } else {
 
-						break;
+                                $this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
 
-						// --------------------------------------------------------------------------
+                                /**
+                                 * Can't email a username, send to their ID and let the email library handle
+                                 * the routing
+                                 */
 
-						case 'USERNAME' :
+                                $sendToId = $this->data['reset_user']->id;
+                            }
+                            break;
+                    }
 
-							$this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
+                    // --------------------------------------------------------------------------
 
-							//	Can't email a username, send to their ID and let the email
-							//	library handle the routing
+                    if (!$alwaysSucceed && isset($sendToEmail) && !$sendToEmail) {
 
-							$_send_to_id = $this->data['reset_user']->id;
+                        //  If we're expecting an email, and none is available then we're kinda stuck
+                        $this->data['error'] = lang('auth_forgot_email_fail_no_email');
 
-						break;
+                    } elseif (!$alwaysSucceed && isset($sendToId) && !$sendToId) {
 
-						// --------------------------------------------------------------------------
+                        //  If we're expecting an ID and it's empty then we're stuck again
+                        $this->data['error'] = lang('auth_forgot_email_fail_no_id');
 
-						default:
+                    } elseif ($alwaysSucceed) {
 
-							if (valid_email($_identifier)) :
+                        //  Failed, but we always succeed so, yeah, succeed
+                        $this->data['success'] = lang('auth_forgot_success');
 
-								$this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
+                    } else {
 
-								//	User provided an email, send to that email
-								$_send_to_email = $_identifier;
+                        //  We've got something, go go go
+                        $_data       = new stdClass();
+                        $_data->type = 'forgotten_password';
 
-							else :
+                        if (isset($sendToEmail) && $sendToEmail) {
 
-								$this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
+                            $_data->to_email = $sendToEmail;
 
-								//	Can't email a username, send to their ID and let the email
-								//	library handle the routing
+                        } elseif (isset($sendToId) && $sendToId) {
 
-								$_send_to_id = $this->data['reset_user']->id;
+                            $_data->to_id = $sendToId;
+                        }
 
-							endif;
+                        // --------------------------------------------------------------------------
 
-						break;
+                        //  Add data for the email view
+                        $_code = explode(':', $this->data['reset_user']->forgotten_password_code);
 
-					endswitch;
+                        $_data->data                            = array();
+                        $_data->data['first_name']              = title_case($this->data['reset_user']->first_name);
+                        $_data->data['forgotten_password_code'] = $_code[1];
+                        $_data->data['identifier']              = $_identifier;
 
-					// --------------------------------------------------------------------------
+                        // --------------------------------------------------------------------------
 
-					if (! $_always_succeed && isset($_send_to_email) && ! $_send_to_email) :
+                        //  Send user the password reset email
+                        if ($this->emailer->send($_data)) {
 
-						//	If we're expecting an email, and none is available then we're kinda stuck
-						$this->data['error'] = lang('auth_forgot_email_fail_no_email');
+                            $this->data['success'] = lang('auth_forgot_success');
 
-					elseif (! $_always_succeed && isset($_send_to_id) && ! $_send_to_id) :
+                        } elseif ($alwaysSucceed) {
 
-						//	If we're expecting an ID and it's empty then we're stuck again
-						$this->data['error'] = lang('auth_forgot_email_fail_no_id');
+                            $this->data['success'] = lang('auth_forgot_success');
 
-					elseif ($_always_succeed) :
+                        } else {
 
-						//	Failed, but we always succeed so, yeah, succeed
-						$this->data['success'] = lang('auth_forgot_success');
+                            $this->data['error'] = lang('auth_forgot_email_fail');
+                        }
+                    }
 
-					else :
+                } elseif ($alwaysSucceed) {
 
-						//	We've got something, go go go
-						$_data			= new stdClass();
-						$_data->type	= 'forgotten_password';
+                    $this->data['success'] = lang('auth_forgot_success');
 
-						if (isset($_send_to_email) && $_send_to_email) :
+                } else {
 
-							$_data->to_email = $_send_to_email;
+                    switch (APP_NATIVE_LOGIN_USING) {
 
-						elseif (isset($_send_to_id) && $_send_to_id) :
+                        case 'EMAIL':
 
-							$_data->to_id = $_send_to_id;
+                            $this->data['error'] = lang('auth_forgot_code_not_set_email', $_identifier);
+                            break;
 
-						endif;
+                        // --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+                        case 'USERNAME':
 
-						//	Add data for the email view
-						$_code = explode(':', $this->data['reset_user']->forgotten_password_code);
+                            $this->data['error'] = lang('auth_forgot_code_not_set_username', $_identifier);
+                            break;
 
-						$_data->data							= array();
-						$_data->data['first_name']				= title_case($this->data['reset_user']->first_name);
-						$_data->data['forgotten_password_code']	= $_code[1];
-						$_data->data['identifier']				= $_identifier;
+                        // --------------------------------------------------------------------------
 
-						// --------------------------------------------------------------------------
+                        default:
 
-						//	Send user the password reset email
-						if ($this->emailer->send($_data)) :
+                            $this->data['error'] = lang('auth_forgot_code_not_set');
+                            break;
+                    }
+                }
 
-							$this->data['success'] = lang('auth_forgot_success');
+            } else {
 
-						elseif ($_always_succeed) :
+                $this->data['error'] = lang('fv_there_were_errors');
+            }
+        }
 
-							$this->data['success'] = lang('auth_forgot_success');
+        //  Load the views
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/password/forgotten', $this->data);
+        $this->load->view('structure/footer', $this->data);
+    }
 
-						else :
+    // --------------------------------------------------------------------------
 
-							$this->data['error'] = lang('auth_forgot_email_fail');
+    /**
+     * Validate a code
+     * @param   string  $code The code to validate
+     * @return  void
+     */
+    public function _validate($code)
+    {
+        /**
+         * Attempt to verify code, if two factor auth is enabled then don't generate a
+         * new password, we'll need the user to jump through some hoops first.
+         */
 
-						endif;
+        $generateNewPw = !$this->config->item('authTwoFactorMode');
 
-					endif;
+        $newPw = $this->user_password_model->validate_token($code, $generateNewPw);
 
-				elseif ($_always_succeed) :
+        // --------------------------------------------------------------------------
 
-					$this->data['success'] = lang('auth_forgot_success');
+        //  Determine outcome of validation
+        if ($newPw === 'EXPIRED') {
 
-				else :
+            //  Code has expired
+            $this->data['error'] = lang('auth_forgot_expired_code');
 
-					switch(APP_NATIVE_LOGIN_USING) :
+        } elseif ($newPw === false) {
 
-						case 'EMAIL' :
+            //  Code was invalid
+            $this->data['error'] = lang('auth_forgot_invalid_code');
 
-							$this->data['error'] = lang('auth_forgot_code_not_set_email', $_identifier);
+        } else {
 
-						break;
+            if ($this->config->item('authTwoFactorMode') == 'QUESTION') {
 
-						// --------------------------------------------------------------------------
+                //  Show them a security question
+                $this->data['question'] = $this->auth_model->mfaQuestionGet($newPw['user_id']);
 
-						case 'USERNAME' :
+                if ($this->data['question']) {
 
-							$this->data['error'] = lang('auth_forgot_code_not_set_username', $_identifier);
+                    if ($this->input->post()) {
 
-						break;
+                        $isValid = $this->auth_model->mfaQuestionValidate(
+                            $this->data['question']->id,
+                            $newPw['user_id'],
+                            $this->input->post('answer')
+                        );
 
-						// --------------------------------------------------------------------------
+                        if ($isValid) {
 
-						default:
+                            //  Correct answer, reset password and render views
+                            $newPw = $this->user_password_model->validate_token($code, true);
 
-							$this->data['error'] = lang('auth_forgot_code_not_set');
+                            $this->data['new_password'] = $newPw['password'];
 
-						break;
+                            // --------------------------------------------------------------------------
 
-					endswitch;
+                            //  Set some flashdata for the login page when they go to it; just a little reminder
+                            $status  = 'notice';
+                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-				endif;
+                            $this->session->set_flashdata($status, $message);
 
-			else :
+                            // --------------------------------------------------------------------------
 
-				$this->data['error'] = lang('fv_there_were_errors');
+                            //  Load the views
+                            $this->load->view('structure/header', $this->data);
+                            $this->load->view('auth/password/forgotten_reset', $this->data);
+                            $this->load->view('structure/footer', $this->data);
+                            return;
 
-			endif;
+                        } else {
 
-		endif;
+                            $this->data['error'] = lang('auth_twofactor_answer_incorrect');
+                        }
+                    }
 
-		// --------------------------------------------------------------------------
+                    $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-		//	Load the views
-		$this->load->view('structure/header',			$this->data);
-		$this->load->view('auth/password/forgotten',	$this->data);
-		$this->load->view('structure/footer',			$this->data);
-	}
+                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('auth/mfa/question/ask', $this->data);
+                    $this->load->view('structure/footer', $this->data);
 
+                } else {
 
-	// --------------------------------------------------------------------------
+                    //  No questions, reset and load views
+                    $newPw = $this->user_password_model->validate_token($code, true);
 
+                    $this->data['new_password'] = $newPw['password'];
 
-	/**
-	 * Validate a code
-	 *
-	 * @access	private
-	 * @param	string	$code	The code to validate
-	 * @return	void
-	 */
-	public function _validate($code)
-	{
-		/**
-		 * Attempt to verify code, if two factor auth is enabled then don't generate a
-		 * new password, we'll need the user to jump through some hoops first.
-		 */
+                    // --------------------------------------------------------------------------
 
-		$_generate_new_pw = !$this->config->item('authTwoFactorMode');
+                    //  Set some flashdata for the login page when they go to it; just a little reminder
+                    $status  = 'notice';
+                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-		$_new_pw = $this->user_password_model->validate_token($code, $_generate_new_pw);
+                    $this->session->set_flashdata($status, $message);
 
-		// --------------------------------------------------------------------------
+                    // --------------------------------------------------------------------------
 
-		//	Determine outcome of validation
-		if ($_new_pw === 'EXPIRED') :
+                    //  Load the views
+                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('auth/password/forgotten_reset', $this->data);
+                    $this->load->view('structure/footer', $this->data);
+                }
 
-			//	Code has expired
-			$this->data['error'] = lang('auth_forgot_expired_code');
+            } elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') {
 
-		elseif ($_new_pw === FALSE) :
+                $secret = $this->auth_model->mfaDeviceSecretGet($newPw['user_id']);
 
-			//	Code was invalid
-			$this->data['error'] = lang('auth_forgot_invalid_code');
+                if ($secret) {
 
-		else :
+                    if ($this->input->post()) {
 
-			if ($this->config->item('authTwoFactorMode') == 'QUESTION') :
+                        $mfaCode = $this->input->post('mfaCode');
 
-				//	Show them a security question
-				$this->data['question'] = $this->user_model->get_security_question($_new_pw['user_id']);
+                        //  Verify the inout
+                        if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
-				if ($this->data['question']) :
+                            //  Correct answer, reset password and render views
+                            $newPw = $this->user_password_model->validate_token($code, true);
 
-					if ($this->input->post('answer')) :
+                            $this->data['new_password'] = $newPw['password'];
 
-						$_valid = $this->user_model->validate_security_answer($this->data['question']->id, $_new_pw['user_id'], $this->input->post('answer'));
+                            // --------------------------------------------------------------------------
 
-						if ($_valid) :
+                            //  Set some flashdata for the login page when they go to it; just a little reminder
+                            $status  = 'notice';
+                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-							//	Correct answer, reset password and render views
-							$_new_pw = $this->user_password_model->validate_token($code, TRUE);
+                            $this->session->set_flashdata($status, $message);
 
-							$this->data['new_password'] = $_new_pw['password'];
+                            // --------------------------------------------------------------------------
 
-							// --------------------------------------------------------------------------
+                            //  Load the views
+                            $this->load->view('structure/header', $this->data);
+                            $this->load->view('auth/password/forgotten_reset', $this->data);
+                            $this->load->view('structure/footer', $this->data);
+                            return;
 
-							//	Set some flashdata for the login page when they go to it; just a little reminder
-							$this->session->set_flashdata('notice', lang('auth_forgot_reminder', htmlentities($_new_pw['password'])));
+                        } else {
 
-							// --------------------------------------------------------------------------
+                            $this->data['error']  = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
+                            $this->data['error'] .= $this->auth_model->last_error();
+                        }
+                    }
 
-							//	Load the views
-							$this->load->view('structure/header',				$this->data);
-							$this->load->view('auth/password/forgotten_reset',	$this->data);
-							$this->load->view('structure/footer',				$this->data);
+                    $this->data['page']->title = 'cock';
 
-							return;
+                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('auth/mfa/device/ask', $this->data);
+                    $this->load->view('structure/footer', $this->data);
 
-						else :
+                } else {
 
-							$this->data['error'] = lang('auth_twofactor_answer_incorrect');
+                    //  No devices, reset and load views
+                    $newPw = $this->user_password_model->validate_token($code, true);
 
-						endif;
+                    $this->data['new_password'] = $newPw['password'];
 
-					endif;
+                    // --------------------------------------------------------------------------
 
-					$this->data['page']->title = lang('auth_title_forgotten_password_security_question');
+                    //  Set some flashdata for the login page when they go to it; just a little reminder
+                    $status  = 'notice';
+                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-					$this->load->view('structure/header',							$this->data);
-					$this->load->view('auth/password/forgotten_security_question',	$this->data);
-					$this->load->view('structure/footer',							$this->data);
+                    $this->session->set_flashdata($status, $message);
 
-				else :
+                    // --------------------------------------------------------------------------
 
-					//	No questions, reset and load views
-					$_new_pw = $this->user_password_model->validate_token($code, TRUE);
+                    //  Load the views
+                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('auth/password/forgotten_reset', $this->data);
+                    $this->load->view('structure/footer', $this->data);
+                }
 
-					$this->data['new_password'] = $_new_pw['password'];
+            } else {
 
-					// --------------------------------------------------------------------------
+                //  Everything worked!
+                $this->data['new_password'] = $newPw['password'];
 
-					//	Set some flashdata for the login page when they go to it; just a little reminder
-					$this->session->set_flashdata('notice', lang('auth_forgot_reminder', htmlentities($_new_pw['password'])));
+                // --------------------------------------------------------------------------
 
-					// --------------------------------------------------------------------------
+                //  Set some flashdata for the login page when they go to it; just a little reminder
+                $status  = 'notice';
+                $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-					//	Load the views
-					$this->load->view('structure/header',				$this->data);
-					$this->load->view('auth/password/forgotten_reset',	$this->data);
-					$this->load->view('structure/footer',				$this->data);
+                $this->session->set_flashdata($status, $message);
 
+                // --------------------------------------------------------------------------
 
-				endif;
+                //  Load the views
+                $this->load->view('structure/header', $this->data);
+                $this->load->view('auth/password/forgotten_reset', $this->data);
+                $this->load->view('structure/footer', $this->data);
+            }
 
-			elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') :
+            return;
+        }
 
-				//	@TODO Support device MFA
+        // --------------------------------------------------------------------------
 
-			else :
+        //  Load the views
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/password/forgotten', $this->data);
+        $this->load->view('structure/footer', $this->data);
+    }
 
-				//	Everything worked!
-				$this->data['new_password'] = $_new_pw['password'];
+    // --------------------------------------------------------------------------
 
-				// --------------------------------------------------------------------------
+    /**
+     * Route requests to the right method
+     * @return  void
+     **/
+    public function _remap($method)
+    {
+        //  If you're logged in you shouldn't be accessing this method
+        if ($this->user_model->is_logged_in()) {
 
-				//	Set some flashdata for the login page when they go to it; just a little reminder
-				$this->session->set_flashdata('notice', lang('auth_forgot_reminder', htmlentities($_new_pw['password'])));
+            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
+            redirect('/');
+        }
 
-				// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-				//	Load the views
-				$this->load->view('structure/header',				$this->data);
-				$this->load->view('auth/password/forgotten_reset',	$this->data);
-				$this->load->view('structure/footer',				$this->data);
+        if ($method == 'index') {
 
-			endif;
+            $this->index();
 
-			return;
+        } else {
 
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Load the views
-		$this->load->view('structure/header',			$this->data);
-		$this->load->view('auth/password/forgotten',	$this->data);
-		$this->load->view('structure/footer',			$this->data);
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Route requests to the right method
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function _remap($method)
-	{
-		//	If you're logged in you shouldn't be accessing this method
-		if ($this->user_model->is_logged_in()) :
-
-			$this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
-			redirect('/');
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		if ($method == 'index') :
-
-			$this->index();
-
-		else :
-
-			$this->_validate($method);
-
-		endif;
-	}
+            $this->_validate($method);
+        }
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -491,13 +521,9 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
  *
  **/
 
-if (! defined('NAILS_ALLOW_EXTENSION')) :
+if (!defined('NAILS_ALLOW_EXTENSION')) {
 
-	class Forgotten_Password extends NAILS_Forgotten_Password
-	{
-	}
-
-endif;
-
-/* End of file forgotten_password.php */
-/* Location: ./application/modules/auth/controllers/forgotten_password.php */
+    class Forgotten_Password extends NAILS_Forgotten_Password
+    {
+    }
+}

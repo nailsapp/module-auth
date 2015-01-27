@@ -18,13 +18,14 @@
  * - 'DEVICE' to enable one-time codes from a device
  */
 
-$config['authTwoFactorMode'] = 'QUESTION';
+$config['authTwoFactorMode'] = 'DEVICE';
 
 $config['authTwoFactor'] = array(
 	'QUESTION' => array(),
 	'DEVICE'   => array()
 );
 
+// --------------------------------------------------------------------------
 
 /**
  * QUESTION
@@ -59,3 +60,12 @@ $config['authTwoFactor']['QUESTION']['questions'][] = 'In what city or town was 
 $config['authTwoFactor']['QUESTION']['questions'][] = 'What is the name of the place your wedding reception was held?';
 $config['authTwoFactor']['QUESTION']['questions'][] = 'What is the name of a college or university you applied to but didn\'t attend?';
 $config['authTwoFactor']['QUESTION']['questions'][] = 'Where were you when you first heard about 9/11?';
+
+// --------------------------------------------------------------------------
+
+/**
+ * DEVICE
+ * The following configurations apply only to the DEVICE MFA type
+ */
+
+$config['authTwoFactor']['DEVICE']['something'] = '';

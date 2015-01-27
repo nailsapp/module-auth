@@ -1347,11 +1347,12 @@ class NAILS_User_model extends NAILS_Model
 			endif;
 
 			//	Set the data
-			$_data_user						= array();
-			$_data_meta						= array();
-			$_data_email					= '';
-			$_data_username					= '';
-			$_data_reset_security_questions	= false;
+			$_data_user				= array();
+			$_data_meta				= array();
+			$_data_email			= '';
+			$_data_username			= '';
+			$dataResetMfaQuestion	= false;
+			$dataResetMfaDevice		= false;
 
 			foreach ($data as $key => $val) :
 
@@ -1383,9 +1384,13 @@ class NAILS_User_model extends NAILS_Model
 
 					$_data_username = strtolower(trim($val));
 
-				elseif ($key == 'reset_security_questions') :
+				elseif ($key == 'reset_mfa_question') :
 
-					$_data_reset_security_questions = $val;
+					$dataResetMfaQuestion = $val;
+
+				elseif ($key == 'reset_mfa_device') :
+
+					$dataResetMfaDevice = $val;
 
 				else :
 
@@ -1422,23 +1427,40 @@ class NAILS_User_model extends NAILS_Model
 			//	Resetting security questions?
 			$this->config->load('auth/auth');
 
-			if ($this->config->item('authTwoFactorMode') == 'QUESTION' && $_data_reset_security_questions) :
+			if ($this->config->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
 
 				$this->db->where('user_id', (int) $_uid);
-				if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) :
+				if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
 
-					//	Rollback immediately in case there's email or password changes which
-					//	might send an email.
+					/**
+					 * Rollback immediately in case there's email or password changes which
+					 * might send an email.
+					 */
 
 					$this->db->trans_rollback();
 
-					$this->_set_error('could not reset user\'s security questions.');
+					$this->_set_error('could not reset user\'s Multi Factor Authentication questions.');
 
 					return false;
+				}
 
-				endif;
+			} elseif ($this->config->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
 
-			endif;
+				$this->db->where('user_id', (int) $_uid);
+				if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+
+					/**
+					 * Rollback immediately in case there's email or password changes which
+					 * might send an email.
+					 */
+
+					$this->db->trans_rollback();
+
+					$this->_set_error('could not reset user\'s Multi Factor Authentication device.');
+
+					return false;
+				}
+			}
 
 			// --------------------------------------------------------------------------
 
@@ -2191,172 +2213,6 @@ class NAILS_User_model extends NAILS_Model
 
 		//	Update the flag
 		$this->_is_remembered = false;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Fetches a random security question for a specific user
-	 *
-	 * @access	public
-	 * @param $user_id int The user's ID
-	 * @return	stdClass
-	 **/
-	public function get_security_question($user_id)
-	{
-		$this->db->where('user_id', $user_id);
-		$this->db->order_by('last_requested', 'DESC');
-		$_questions = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
-
-		if (!$_questions) :
-
-			$this->_set_error('No security questions available for this user.');
-			return false;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Choose a question to return
-		if (count($_questions) == 1) :
-
-			//	No choice, just return the lonely question
-			$_out = $_questions[0];
-
-		elseif (count($_questions) > 1) :
-
-			//	Has the most recently asked question been asked in the last 10 minutes?
-			//	If so, return that one again (to make harvesting all the user's questions
-			//	a little more time consuming). If not randomly choose one.
-
-			if (strtotime($_questions[0]->last_requested) > strtotime('-10 MINS')) :
-
-				$_out = $_questions[0];
-
-			else :
-
-				$_out = $_questions[array_rand($_questions)];
-
-			endif;
-
-		else :
-
-			//	Derp.
-			$this->_set_error('Could not determine security question.');
-			return false;
-
-		endif;
-
-		//	Decode the question
-		$_out->question = $this->encrypt->decode($_out->question, APP_PRIVATE_KEY . $_out->salt);
-
-		$this->db->set('last_requested', 'NOW()', false);
-		$this->db->set('last_requested_ip', $this->input->ip_address());
-		$this->db->where('id', $_out->id);
-		$this->db->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
-
-		return $_out;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function validate_security_answer($question_id, $user_id, $answer)
-	{
-		$this->db->select('answer, salt');
-		$this->db->where('id', $question_id);
-		$this->db->where('user_id', $user_id);
-		$_question = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
-
-		if (!$_question) :
-
-			return false;
-
-		endif;
-
-		$_hash = sha1(sha1(strtolower($answer)) . APP_PRIVATE_KEY . $_question->salt);
-
-		return $_hash === $_question->answer;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Fetches a random security question for a specific user
-	 *
-	 * @access	public
-	 * @param $user_id int The user's ID
-	 * @return	stdClass
-	 **/
-	public function set_security_questions($user_id, $data, $clear_old = true)
-	{
-		//	Check input
-		foreach ($data as $d) :
-
-			if (empty($d->question) || empty($d->answer)) :
-
-				$this->_set_error('Malformed question/answer data.');
-				return false;
-
-			endif;
-
-		endforeach;
-
-		//	Begin transaction
-		$this->db->trans_begin();
-
-		//	Delete old questions?
-		if ($clear_old) :
-
-			$this->db->where('user_id', $user_id);
-			$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
-
-		endif;
-
-		$_data		= array();
-		$_counter	= 0;
-
-		foreach ($data as $d) :
-
-			$_data[$_counter]	= array();
-			$_data[$_counter]['user_id']	= $user_id;
-			$_data[$_counter]['salt']		= NAILS_User_password_model::salt();
-			$_data[$_counter]['question']	= $this->encrypt->encode($d->question, APP_PRIVATE_KEY . $_data[$_counter]['salt']);
-			$_data[$_counter]['answer']		= sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $_data[$_counter]['salt']);
-			$_data[$_counter]['created']	= date('Y-m-d H:i:s');
-
-			$_counter++;
-
-		endforeach;
-
-		if ($_data) :
-
-			$this->db->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $_data);
-
-			if ($this->db->trans_status() !== false) :
-
-				$this->db->trans_commit();
-				return true;
-
-			else :
-
-				$this->db->trans_rollback();
-				return false;
-
-			endif;
-
-		else :
-
-			$this->db->trans_rollback();
-			$this->_set_error('No data to save.');
-			return false;
-
-		endif;
 	}
 
 

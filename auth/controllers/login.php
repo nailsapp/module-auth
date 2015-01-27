@@ -42,7 +42,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 			$_return_to = parse_url($_return_to);
 
 			//	urlencode the query if there is one
-			if (! empty($_return_to['query'])) :
+			if (!empty($_return_to['query'])) :
 
 				//	Break it apart and glue it together (urlencoded)
 				$_query = parse_str($_return_to['query'], $_query_ar);
@@ -51,10 +51,10 @@ class NAILS_Login extends NAILS_Auth_Controller
 			endif;
 
 			$this->data['return_to']  = '';
-			$this->data['return_to'] .= ! empty($_return_to['scheme'])	? $_return_to['scheme'] . '://'	: 'http://';
-			$this->data['return_to'] .= ! empty($_return_to['host'])		? $_return_to['host']			: site_url();
-			$this->data['return_to'] .= ! empty($_return_to['path'])		? $_return_to['path']			: '';
-			$this->data['return_to'] .= ! empty($_return_to['query'])		? '?' . $_return_to['query']	: '';
+			$this->data['return_to'] .= !empty($_return_to['scheme'])	? $_return_to['scheme'] . '://'	: 'http://';
+			$this->data['return_to'] .= !empty($_return_to['host'])		? $_return_to['host']			: site_url();
+			$this->data['return_to'] .= !empty($_return_to['path'])		? $_return_to['path']			: '';
+			$this->data['return_to'] .= !empty($_return_to['query'])		? '?' . $_return_to['query']	: '';
 
 		else :
 
@@ -144,7 +144,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 				else :
 
 					//	Login failed
-					$this->data['error'] = $this->auth_model->get_errors();
+					$this->data['error'] = $this->auth_model->last_error();
 
 				endif;
 
@@ -180,7 +180,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 			$this->data['error'] = lang('auth_login_fail_suspended');
 			return FALSE;
 
-		elseif (! empty($user->temp_pw)) :
+		elseif (!empty($user->temp_pw)) :
 
 			/**
 			 * Temporary password detected, log user out and redirect to
@@ -213,39 +213,60 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 			redirect('auth/reset_password/' . $user->id . '/' . md5($user->salt) . $_query);
 
-		elseif ($this->config->item('authTwoFactorMode') == 'QUESTION') :
+		elseif ($this->config->item('authTwoFactorMode')) :
 
 			//	Generate token
-			$_two_factor_auth = $this->auth_model->generate_two_factor_token($user->id);
+			$twoFactorToken = $this->auth_model->mfaTokenGenerate($user->id);
 
-			if (! $_two_factor_auth) :
+			if (!$twoFactorToken) {
 
-				showFatalError('Failed to generate two-factor auth token', 'A user tried to login and the system failed to generate a two-factor auth token.');
+				$subject = 'Failed to generate two-factor auth token';
+				$message = 'A user tried to login and the system failed to generate a two-factor auth token.';
+				showFatalError($subject, $message);
+			}
 
-			endif;
+			//	Is there any query data?
+			$query	= array();
 
-			$_query	= array();
+			if ($this->data['return_to']) {
 
-			if ($this->data['return_to']) :
+				$query['return_to'] = $this->data['return_to'];
+			}
 
-				$_query['return_to'] = $this->data['return_to'];
+			if ($remember) {
 
-			endif;
+				$query['remember'] = true;
+			}
 
-			if ($remember) :
+			$query = $query ? '?' . http_build_query($query) : '';
 
-				$_query['remember'] = TRUE;
+			//	Where we sending the user?
+			switch ($this->config->item('authTwoFactorMode')) {
 
-			endif;
+				case 'QUESTION':
 
-			$_query = $_query ? '?' . http_build_query($_query) : '';
+					$controller = 'mfa_question';
+					break;
 
-			//	Login was successful, redirect to the security questions page
-			redirect('auth/security_questions/' . $user->id . '/' . $_two_factor_auth['salt'] . '/' . $_two_factor_auth['token'] . $_query);
+				case 'DEVICE':
 
-		elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') :
+					$controller = 'mfa_device';
+					break;
+			}
 
-			//	@TODO Support Device MFA
+			//	Compile the URL
+			$url = array(
+				'auth',
+				$controller,
+				$user->id,
+				$twoFactorToken['salt'],
+				$twoFactorToken['token']
+			);
+
+			$url = implode($url, '/') . $query;
+
+			//	Login was successful, redirect to the appropriate MFA page
+			redirect($url);
 
 		else :
 
@@ -300,7 +321,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 	 **/
 	public function with_hashes()
 	{
-		if (! $this->config->item('auth_enable_hashed_login')) :
+		if (!$this->config->item('auth_enable_hashed_login')) :
 
 			show_404();
 
@@ -535,7 +556,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 				$this->user_model->set_login_data($_user->id);
 				$this->social_signon->save_session($_user->id);
 
-				if (! $this->_login($_user)) :
+				if (!$this->_login($_user)) :
 
 					$this->session->set_flashdata('error', $this->data['error']);
 
@@ -594,14 +615,14 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 					case 'USERNAME' :
 
-						$_required_data['username'] = ! empty($_social_user->username) ? trim($_social_user->username) : '';
+						$_required_data['username'] = !empty($_social_user->username) ? trim($_social_user->username) : '';
 
 					break;
 
 					default :
 
 						$_required_data['email']	= trim($_social_user->email);
-						$_required_data['username'] = ! empty($_social_user->username) ? trim($_social_user->username) : '';
+						$_required_data['username'] = !empty($_social_user->username) ? trim($_social_user->username) : '';
 
 					break;
 
@@ -694,7 +715,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 					//	username (as it might not have been set above), failing that
 					//	use the user's name, failing THAT use a random string
 
-					if (! empty($_social_user->username)) :
+					if (!empty($_social_user->username)) :
 
 						$_username = $_social_user->username;
 
@@ -725,7 +746,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 				// --------------------------------------------------------------------------
 
 				//	Request data?
-				if (! empty($_request_data)) :
+				if (!empty($_request_data)) :
 
 					$this->_request_data($_required_data, $provider);
 
@@ -758,19 +779,19 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 					$this->social_signon->save_session($_new_user->id, $provider);
 
-					if (! empty($_social_user->photoURL)) :
+					if (!empty($_social_user->photoURL)) :
 
 						//	Has profile image
 						$_img_url = $_social_user->photoURL;
 
-					elseif (! empty($_new_user->email)) :
+					elseif (!empty($_new_user->email)) :
 
 						//	Attempt gravatar
 						$_img_url = 'http://www.gravatar.com/avatar/' . md5($_new_user->email) . '?d=404&s=2048&r=pg';
 
 					endif;
 
-					if (! empty($_img_url)) :
+					if (!empty($_img_url)) :
 
 						//	Fetch the image
 						$_ch = curl_init();
@@ -813,7 +834,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 					// --------------------------------------------------------------------------
 
-					//	Aint that swell, all registered! Redirect!
+					//	Aint that swell, all registered!Redirect!
 					$this->user_model->set_login_data($_new_user->id);
 
 					// --------------------------------------------------------------------------
@@ -925,7 +946,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 			if ($this->form_validation->run()) :
 
-				//	Valid! Ensure required data is set correctly then allow system to move on.
+				//	Valid!Ensure required data is set correctly then allow system to move on.
 				if (isset($required_data['email'])) :
 
 					$required_data['email'] = $this->input->post('email');
@@ -1049,7 +1070,7 @@ class NAILS_Login extends NAILS_Auth_Controller
  *
  **/
 
-if (! defined('NAILS_ALLOW_EXTENSION')) :
+if (!defined('NAILS_ALLOW_EXTENSION')) :
 
 	class Login extends NAILS_Login
 	{
