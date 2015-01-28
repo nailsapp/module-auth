@@ -18,7 +18,7 @@
  * - 'DEVICE' to enable one-time codes from a device
  */
 
-$config['authTwoFactorMode'] = 'DEVICE';
+$config['authTwoFactorMode'] = false;
 
 $config['authTwoFactor'] = array(
 	'QUESTION' => array(),
@@ -68,4 +68,4 @@ $config['authTwoFactor']['QUESTION']['questions'][] = 'Where were you when you f
  * The following configurations apply only to the DEVICE MFA type
  */
 
-$config['authTwoFactor']['DEVICE']['something'] = '';
+// $config['authTwoFactor']['DEVICE']['something'] = '';
