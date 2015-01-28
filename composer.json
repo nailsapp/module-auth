@@ -40,6 +40,7 @@
     {
         "nails" :
         {
+            "moduleName": "auth",
             "type": "module"
         }
     }
