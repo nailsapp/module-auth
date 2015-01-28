@@ -97,7 +97,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 			//	Validate input
 
 			//	The rules vary depending on what login methods are enabled.
-			switch(APP_NATIVE_LOGIN_USING) :
+			switch (APP_NATIVE_LOGIN_USING) :
 
 				case 'EMAIL' :
 
@@ -605,7 +605,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 				$_optional_data = array();
 
 				//	Fetch required data
-				switch(APP_NATIVE_LOGIN_USING) :
+				switch (APP_NATIVE_LOGIN_USING) :
 
 					case 'EMAIL' :
 
@@ -642,7 +642,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 				endif;
 
-				switch($_social_user->gender) :
+				switch ($_social_user->gender) :
 
 					case 'male' :
 

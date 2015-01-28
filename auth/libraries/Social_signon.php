@@ -113,7 +113,7 @@ class Social_signon
 			 * *did* happened but results in an unfriendly error screen and potential drop off.
 			 */
 
-			switch($this->_ci->config->item( 'auth_social_signon_init_fail_behaviour' )) {
+			switch ($this->_ci->config->item( 'auth_social_signon_init_fail_behaviour' )) {
 
 				case 'reinit':
 

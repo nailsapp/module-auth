@@ -13,7 +13,7 @@ If it was not you who made this change, or you didn't request it, please IMMEDIA
 
 <?php
 
-	switch( APP_NATIVE_LOGIN_USING ) :
+	switch ( APP_NATIVE_LOGIN_USING ) :
 
 		case 'EMAIL' :
 

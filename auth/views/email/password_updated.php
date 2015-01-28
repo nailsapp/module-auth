@@ -12,7 +12,7 @@
 </p>
 <?php
 
-	switch( APP_NATIVE_LOGIN_USING ) :
+	switch ( APP_NATIVE_LOGIN_USING ) :
 
 		case 'EMAIL' :
 

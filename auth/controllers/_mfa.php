@@ -64,7 +64,7 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
         $this->loginMethod = $this->uri->segment(6) ? $this->uri->segment(6) : 'native';
 
         //  Safety first
-        switch(strtolower($this->loginMethod)) {
+        switch (strtolower($this->loginMethod)) {
 
             case 'facebook':
             case 'twitter':

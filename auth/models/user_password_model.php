@@ -154,7 +154,7 @@ class NAILS_User_password_model extends CI_Model
 
             if (!$_is_valid) {
 
-                switch($slug) {
+                switch ($slug) {
 
                     case 'symbol':
 
@@ -367,7 +367,7 @@ class NAILS_User_password_model extends CI_Model
 
         foreach ($_pw_rules as $rule => $val) {
 
-            switch($rule) {
+            switch ($rule) {
 
                 case 'min_length':
 

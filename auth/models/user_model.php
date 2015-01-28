@@ -1360,7 +1360,7 @@ class NAILS_User_model extends NAILS_Model
 				if (array_search($key, $_cols) !== false) :
 
 					//	Careful now, some items cannot be blank and must be null
-					switch($key) :
+					switch ($key) :
 
 						case 'profile_img' :
 
@@ -3151,7 +3151,7 @@ class NAILS_User_model extends NAILS_Model
 				foreach ($tables[$i]->columns as $column) {
 
 					//	Additional updates for certain tables
-					switch($tables[$i]->name) {
+					switch ($tables[$i]->name) {
 
 						case NAILS_DB_PREFIX . 'user_email':
 
