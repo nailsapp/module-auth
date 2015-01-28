@@ -1,40 +1,46 @@
 {
-	"name": "nailsapp/module-auth",
-	"keywords":
-	[
-		"Nails",
-		"Shed Collective",
-		"CodeIgniter",
-		"Auth Module"
-	],
-	"homepage": "http://nailsapp.co.uk/modules/auth",
-	"description": "This the \"Auth\" module for Nails.",
-	"license": "MIT",
-	"authors":
-	[
-		{
-			"name": "Pablo de la Pena",
-			"email": "p@shedcollective.org",
-			"homepage": "http://shedcollective.org",
-			"role": "Developer"
-		},
-		{
-			"name": "Gary Duncan",
-			"email": "g@shedcollective.org",
-			"homepage": "http://shedcollective.org",
-			"role": "Developer"
-		}
-	],
-	"support":
-	{
-		"email": "hello@shedcollective.org"
-	},
-	"require":
-	{
-		"nailsapp/common": "dev-develop",
-		"nailsapp/module-curl": "dev-develop",
-		"nailsapp/module-cdn": "dev-develop",
-		"hybridauth/hybridauth": "~2.3.0",
-		"sonata-project/google-authenticator": "1.0.2"
-	}
+    "name": "nailsapp/module-auth",
+    "keywords":
+    [
+        "Nails",
+        "Shed Collective",
+        "CodeIgniter",
+        "Auth Module"
+    ],
+    "homepage": "http://nailsapp.co.uk/modules/auth",
+    "description": "This is the \"Auth\" module for Nails.",
+    "license": "MIT",
+    "authors":
+    [
+        {
+            "name": "Pablo de la Pena",
+            "email": "p@shedcollective.org",
+            "homepage": "http://shedcollective.org",
+            "role": "Developer"
+        },
+        {
+            "name": "Gary Duncan",
+            "email": "g@shedcollective.org",
+            "homepage": "http://shedcollective.org",
+            "role": "Developer"
+        }
+    ],
+    "support":
+    {
+        "email": "hello@shedcollective.org"
+    },
+    "require":
+    {
+        "nailsapp/module-curl": "dev-develop",
+        "nailsapp/module-cdn": "dev-develop",
+        "hybridauth/hybridauth": "~2.3.0",
+        "sonata-project/google-authenticator": "1.0.2"
+    },
+    "extra":
+    {
+        "nails" :
+        {
+            "type": "module"
+        }
+    }
 }
