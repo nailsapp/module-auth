@@ -3,11 +3,16 @@
 
         echo '<p>';
 
-            echo isset($page->description) ? $page->description : lang('accounts_index_intro');
+            if (isset($page->description)) {
+                echo $page->description;
+            } else {
+                echo 'This section lists all users registered on site. You can browse or search this ';
+                echo 'list using the search facility below.';
+            }
 
             if (user_has_permission('admin.accounts:0.can_create_user')) {
 
-                echo anchor('admin/auth/accounts/create', lang('accounts_nav_create'), 'class="awesome small green right"');
+                echo anchor('admin/auth/accounts/create', 'Create User', 'class="awesome small green right"');
             }
 
         echo '</p>';
@@ -19,9 +24,9 @@
     <table>
         <thead>
             <tr>
-                <th class="id"><?=lang('accounts_index_th_id')?></th>
-                <th class="details"><?=lang('accounts_index_th_user')?></th>
-                <th class="group"><?=lang('accounts_index_th_group')?></th>
+                <th class="id">User ID</th>
+                <th class="details">User</th>
+                <th class="group">Group</th>
                 <?php
 
                     foreach ($columns as $col) {
@@ -32,7 +37,7 @@
                     }
 
                 ?>
-                <th class="actions"><?=lang('accounts_index_th_actions')?></th>
+                <th class="actions">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -54,7 +59,7 @@
                     ?>
                     <tr>
                         <td colspan="<?=(4+count($columns))?>" class="no-data">
-                            <p><?=lang('accounts_index_no_users')?></p>
+                            <p>No Users Found</p>
                         </td>
                     </tr>
                     <?php
