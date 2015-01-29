@@ -12,6 +12,7 @@ require_once '_auth.php';
  * @author      Nails Dev Team
  * @link
  */
+
 class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
 {
     protected $authMfaMode;
