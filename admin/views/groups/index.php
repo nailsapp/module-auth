@@ -6,7 +6,7 @@
 		echo lang('accounts_groups_index_intro');
 		if (user_has_permission('admin.accounts:0.can_create_group')) :
 
-			echo anchor('admin/auth/accounts/groups/create', 'Create Group', 'class="awesome small green right"');
+			echo anchor('admin/auth/groups/create', 'Create Group', 'class="awesome small green right"');
 
 		endif;
 
@@ -48,19 +48,19 @@
 
 					if (user_has_permission('admin.accounts:0.can_edit_group')) :
 
-						echo anchor('admin/auth/accounts/groups/edit/' . $group->id, lang('action_edit'), 'class="awesome small"');
+						echo anchor('admin/auth/groups/edit/' . $group->id, lang('action_edit'), 'class="awesome small"');
 
 					endif;
 
 					if (user_has_permission('admin.accounts:0.can_delete_group')) :
 
-						echo anchor('admin/auth/accounts/groups/delete/' . $group->id, lang('action_delete'), 'class="awesome small red confirm" data-body="This action is also not undoable." data-title="Confirm Delete"');
+						echo anchor('admin/auth/groups/delete/' . $group->id, lang('action_delete'), 'class="awesome small red confirm" data-body="This action is also not undoable." data-title="Confirm Delete"');
 
 					endif;
 
 					if (user_has_permission('admin.accounts:0.can_set_default_group') && ! $group->is_default) :
 
-						echo anchor('admin/auth/accounts/groups/set_default/' . $group->id, lang('accounts_groups_index_action_set_default'), 'class="awesome green small"');
+						echo anchor('admin/auth/groups/set_default/' . $group->id, lang('accounts_groups_index_action_set_default'), 'class="awesome green small"');
 
 					endif;
 

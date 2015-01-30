@@ -60,9 +60,7 @@ class Groups extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/groups/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -81,7 +79,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to dynamically create groups is on the roadmap.');
-        redirect('admin/auth/accounts/groups');
+        redirect('admin/auth/groups');
     }
 
     // --------------------------------------------------------------------------
@@ -99,7 +97,7 @@ class Groups extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $gid = $this->uri->segment(6, null);
+        $gid = $this->uri->segment(5, null);
 
         $this->data['group'] = $this->user_group_model->get_by_id($gid);
 
@@ -146,7 +144,7 @@ class Groups extends \AdminController
                 if ($this->user_group_model->update($gid, $data)) {
 
                     $this->session->set_flashdata('success', '<strong>Huzzah!</strong> Group updated successfully!');
-                    redirect('admin/auth/accounts/groups');
+                    redirect('admin/auth/groups');
 
                 } else {
 
@@ -167,9 +165,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/groups/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -188,7 +184,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete groups is on the roadmap.');
-        redirect('admin/auth/accounts/groups');
+        redirect('admin/auth/groups');
     }
 
     // --------------------------------------------------------------------------
@@ -206,7 +202,7 @@ class Groups extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        if ($this->user_group_model->setAsDefault($this->uri->segment(6))) {
+        if ($this->user_group_model->setAsDefault($this->uri->segment(5))) {
 
             $this->session->set_flashdata('success', '<strong>Success!</strong> Group set as default successfully.');
 
@@ -215,6 +211,6 @@ class Groups extends \AdminController
             $this->session->set_flashdata('error', '<strong>Sorry,</strong> I could not set that group as the default user group. ' . $this->user_group_model->last_error());
         }
 
-        redirect('admin/auth/accounts/groups');
+        redirect('admin/auth/groups');
     }
 }

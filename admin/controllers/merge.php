@@ -40,8 +40,6 @@ class Merge extends \AdminController
 
             unauthorised();
         }
-
-        $this->lang->load('admin_merge');
     }
 
     // --------------------------------------------------------------------------
@@ -72,9 +70,7 @@ class Merge extends \AdminController
 
                         $this->data['mergeResult'] = $mergeResult;
 
-                        $this->load->view('structure/header', $this->data);
-                        $this->load->view('admin/accounts/merge/preview', $this->data);
-                        $this->load->view('structure/footer', $this->data);
+                        \Nails\Admin\Helper::loadView('preview');
                         return;
 
                     } else {
@@ -104,8 +100,6 @@ class Merge extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/merge/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 }

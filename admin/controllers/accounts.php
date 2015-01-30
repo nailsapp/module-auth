@@ -223,9 +223,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -395,9 +393,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/create/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('create/index');
     }
 
     // --------------------------------------------------------------------------
@@ -814,9 +810,7 @@ class Accounts extends \AdminController
             $this->data['footerOverride'] = 'structure/footerBlank';
         }
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/edit/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit/index');
     }
 
     // --------------------------------------------------------------------------
@@ -872,9 +866,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/accounts/change_group/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('changeGroup/index');
     }
 
     // --------------------------------------------------------------------------
