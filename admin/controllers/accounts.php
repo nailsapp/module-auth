@@ -28,9 +28,9 @@ class Accounts extends \AdminController
      */
     public static function announce()
     {
-        $d     = parent::announce();
-        $d[''] = array('Members', 'View All Members');
-        return $d;
+        $navGroup = new \Nails\Admin\Nav('Members');
+        $navGroup->addMethod('View All Members');
+        return $navGroup;
     }
 
     // --------------------------------------------------------------------------

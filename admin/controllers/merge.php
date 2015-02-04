@@ -20,12 +20,12 @@ class Merge extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.accounts:0.can_merge_users')) {
 
-            $d[''] = array('Members', 'Merge Users');
+            $navGroup = new \Nails\Admin\Nav('Members');
+            $navGroup->addMethod('Merge Users');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------

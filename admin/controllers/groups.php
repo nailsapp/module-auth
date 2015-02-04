@@ -20,12 +20,12 @@ class Groups extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.accounts:0.can_manage_groups')) {
 
-            $d[''] = array('Members', 'Manage User Groups');
+            $navGroup = new \Nails\Admin\Nav('Members');
+            $navGroup->addMethod('Manage User Groups');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------
