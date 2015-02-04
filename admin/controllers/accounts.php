@@ -235,7 +235,7 @@ class Accounts extends \AdminController
      */
     public function create()
     {
-        if (!user_has_permission('admin.accounts:0.can_create_user')) {
+        if (!userHasPermission('admin.accounts:0.can_create_user')) {
 
             unauthorised();
         }
@@ -404,7 +404,7 @@ class Accounts extends \AdminController
      */
     public function edit()
     {
-        if ($this->uri->segment(5) != active_user('id') && !user_has_permission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != active_user('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             unauthorised();
         }
@@ -425,7 +425,7 @@ class Accounts extends \AdminController
         }
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && user_has_permission('superuser', $user)) {
+        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -433,7 +433,7 @@ class Accounts extends \AdminController
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
-        if (active_user('id') != $user->id && !user_has_permission('admin.accounts:0.can_edit_others')) {
+        if (active_user('id') != $user->id && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -761,9 +761,9 @@ class Accounts extends \AdminController
 
         //  Get the groups, timezones and languages
         $this->data['groups']       = $this->user_group_model->get_all();
-        $this->data['timezones']    = $this->datetime_model->get_all_timezone();
-        $this->data['date_formats'] = $this->datetime_model->get_all_date_format();
-        $this->data['time_formats'] = $this->datetime_model->get_all_time_format();
+        $this->data['timezones']    = $this->datetime_model->getAllTimezone();
+        $this->data['date_formats'] = $this->datetime_model->getAllDateFormat();
+        $this->data['time_formats'] = $this->datetime_model->getAllTimeFormat();
         $this->data['languages']    = $this->language_model->get_all_enabled_flat();
 
         //  Fetch any user uploads
@@ -804,7 +804,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        if ($this->input->get('inline') || $this->input->get('is_fancybox')) {
+        if ($this->input->get('inline') || $this->input->get('isFancybox')) {
 
             $this->data['headerOverride'] = 'structure/headerBlank';
             $this->data['footerOverride'] = 'structure/footerBlank';
@@ -821,7 +821,7 @@ class Accounts extends \AdminController
      */
     public function change_group()
     {
-        if (!user_has_permission('admin.accounts:0.can_change_user_group')) {
+        if (!userHasPermission('admin.accounts:0.can_change_user_group')) {
 
             show_404();
         }
@@ -877,7 +877,7 @@ class Accounts extends \AdminController
      */
     public function suspend()
     {
-        if (!user_has_permission('admin.accounts:0.can_suspend_user')) {
+        if (!userHasPermission('admin.accounts:0.can_suspend_user')) {
 
             unauthorised();
         }
@@ -892,7 +892,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && user_has_permission('superuser', $user)) {
+        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -940,7 +940,7 @@ class Accounts extends \AdminController
      */
     public function unsuspend()
     {
-        if (!user_has_permission('admin.accounts:0.can_suspend_user')) {
+        if (!userHasPermission('admin.accounts:0.can_suspend_user')) {
 
             unauthorised();
         }
@@ -955,7 +955,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && user_has_permission('superuser', $user)) {
+        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -1003,7 +1003,7 @@ class Accounts extends \AdminController
      */
     public function delete()
     {
-        if (!user_has_permission('admin.accounts:0.can_delete_others')) {
+        if (!userHasPermission('admin.accounts:0.can_delete_others')) {
 
             unauthorised();
         }
@@ -1017,7 +1017,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && user_has_permission('superuser', $user)) {
+        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -1068,7 +1068,7 @@ class Accounts extends \AdminController
      */
     public function delete_profile_img()
     {
-        if ($this->uri->segment(5) != active_user('id') && !user_has_permission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != active_user('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             unauthorised();
         }
@@ -1089,7 +1089,7 @@ class Accounts extends \AdminController
         } else {
 
             //  Non-superusers editing superusers is not cool
-            if (!$this->user_model->is_superuser() && user_has_permission('superuser', $user)) {
+            if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
 
                 $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
                 redirect($return_to);
@@ -1241,7 +1241,7 @@ class Accounts extends \AdminController
      */
     public function groups()
     {
-        if (!user_has_permission('admin.accounts:0.can_manage_groups')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_groups')) {
 
             unauthorised();
         }

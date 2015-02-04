@@ -12,7 +12,7 @@
         <tbody>
             <tr>
                 <td class="userId"><?=number_format($mergeResult->user->id)?></td>
-                <?php $this->load->view('admin/_utilities/table-cell-user', $mergeResult->user); ?>
+                <?php echo \Nails\Admin\Helper::loadUserCell($mergeResult->user); ?>
             </tr>
         </tbody>
     </table>
@@ -67,7 +67,7 @@
 
                 echo '<tr>';
                     echo '<td class="userId">' . number_format($mergeUser->id) . '</td>';
-                    $this->load->view('admin/_utilities/table-cell-user', $mergeUser);
+                    echo \Nails\Admin\Helper::loadUserCell($mergeUser);
                 echo '</tr>';
             }
 

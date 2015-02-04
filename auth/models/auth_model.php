@@ -208,7 +208,7 @@ class NAILS_Auth_model extends NAILS_Model
 
                     if ($_changed > $_recent) {
 
-                        $_changed_recently = nice_time($_changed);
+                        $_changed_recently = niceTime($_changed);
                     }
                 }
             }

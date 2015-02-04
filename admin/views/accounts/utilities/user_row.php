@@ -57,7 +57,7 @@
             echo '<small>';
             if ($member->last_login) {
                 echo 'Last login: ';
-                echo '<span class="nice-time">' . user_datetime($member->last_login, 'Y-m-d', 'H:i:s') . '</span> ';
+                echo '<span class="nice-time">' . userMysqlDatetime($member->last_login) . '</span> ';
                 echo '(' . $member->login_count . 'logins)';
             } else {
                 echo 'Last login: Never Logged In';
@@ -83,7 +83,7 @@
         <?php
 
             //  Actions, only super users can do anything to other superusers
-            if (!$user->is_superuser() && user_has_permission('superuser', $member)) {
+            if (!$user->is_superuser() && userHasPermission('superuser', $member)) {
                 //  Member is a superuser and the admin is not a super user, no editing facility
                 echo '<span class="not-editable">';
                     echo 'You do not have permission to perform manipulations on this user.';
@@ -96,16 +96,16 @@
                 // --------------------------------------------------------------------------
 
                 //  Login as?
-                if ($member->id != active_user('id') && user_has_permission('admin.accounts:0.can_login_as')) {
+                if ($member->id != active_user('id') && userHasPermission('admin.accounts:0.can_login_as')) {
 
                     //  Generate the return string
                     $_url = uri_string();
 
                     if ($_GET) {
 
-                        //  Remove common problematic GET vars (for instance, we don't want is_fancybox when we return)
+                        //  Remove common problematic GET vars (for instance, we don't want isFancybox when we return)
                         $_get = $_GET;
-                        unset($_get['is_fancybox']);
+                        unset($_get['isFancybox']);
                         unset($_get['inline']);
 
                         if ($_get) {
@@ -125,9 +125,9 @@
                 // --------------------------------------------------------------------------
 
                 //  Edit
-                if (user_has_permission('admin.accounts:0.can_edit_others')) {
+                if (userHasPermission('admin.accounts:0.can_edit_others')) {
 
-                    if ($member->id == active_user('id') || user_has_permission('admin.accounts:0.can_edit_others')) {
+                    if ($member->id == active_user('id') || userHasPermission('admin.accounts:0.can_edit_others')) {
 
                         $_buttons[] = anchor(
                             'admin/auth/accounts/edit/' . $member->id . $_return,
@@ -141,7 +141,7 @@
 
                 //  Suspend user
                 if ($member->is_suspended) {
-                    if (user_has_permission('admin.accounts:0.can_suspend_user')) {
+                    if (userHasPermission('admin.accounts:0.can_suspend_user')) {
                         $_buttons[] = anchor(
                             'admin/auth/accounts/unsuspend/' . $member->id . $_return,
                             lang('action_unsuspend'),
@@ -149,7 +149,7 @@
                         );
                     }
                 } else {
-                    if (user_has_permission('admin.accounts:0.can_suspend_user')) {
+                    if (userHasPermission('admin.accounts:0.can_suspend_user')) {
                         $_buttons[] = anchor(
                             'admin/auth/accounts/suspend/' . $member->id . $_return,
                             lang('action_suspend'),
@@ -162,7 +162,7 @@
 
                 //  Delete user
                 if (
-                    user_has_permission('admin.accounts:0.can_delete_others')
+                    userHasPermission('admin.accounts:0.can_delete_others')
                     && $member->id != active_user('id')
                     && !$this->user_model->is_superuser($member->id)
                 ) {
@@ -176,7 +176,7 @@
                 // --------------------------------------------------------------------------
 
                 //  Update user's group
-                if (user_has_permission('admin.accounts:0.can_change_user_group')) {
+                if (userHasPermission('admin.accounts:0.can_change_user_group')) {
                     //  If this user us a super user and the current user is not a super user then don't allow this option
                     if ($this->user_model->is_superuser($member->id) && !$this->user_model->is_superuser()) {
                         //  Nothing

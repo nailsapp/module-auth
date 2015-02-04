@@ -20,7 +20,7 @@ class Merge extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.accounts:0.can_merge_users')) {
+        if (userHasPermission('admin.accounts:0.can_merge_users')) {
 
             $navGroup = new \Nails\Admin\Nav('Members');
             $navGroup->addMethod('Merge Users');
@@ -36,7 +36,7 @@ class Merge extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_merge_users')) {
+        if (!userHasPermission('admin.accounts:0.can_merge_users')) {
 
             unauthorised();
         }

@@ -275,7 +275,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 				$this->load->helper('date');
 
-				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? nice_time(strtotime($user->last_login)) : user_datetime($user->last_login);
+				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : userDatetime($user->last_login);
 
 				if ($this->config->item('auth_show_last_ip_on_login')) :
 
@@ -397,7 +397,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
 				$this->load->helper('date');
 
-				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? nice_time(strtotime($_user->last_login)) : user_datetime($_user->last_login);
+				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($_user->last_login)) : userDatetime($_user->last_login);
 
 				if ($this->config->item('auth_show_last_ip_on_login')) :
 

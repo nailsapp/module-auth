@@ -10,7 +10,7 @@
                 echo 'list using the search facility below.';
             }
 
-            if (user_has_permission('admin.accounts:0.can_create_user')) {
+            if (userHasPermission('admin.accounts:0.can_create_user')) {
 
                 echo anchor('admin/auth/accounts/create', 'Create User', 'class="awesome small green right"');
             }

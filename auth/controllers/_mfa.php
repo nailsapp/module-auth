@@ -149,11 +149,11 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
 
             if ($this->config->item('auth_show_nicetime_on_login')) {
 
-                $lastLogin = nice_time(strtotime($this->mfaUser->last_login));
+                $lastLogin = niceTime(strtotime($this->mfaUser->last_login));
 
             } else {
 
-                $lastLogin = user_datetime($this->mfaUser->last_login);
+                $lastLogin = userDatetime($this->mfaUser->last_login);
             }
 
             if ($this->config->item('auth_show_last_ip_on_login')) {

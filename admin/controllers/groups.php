@@ -20,7 +20,7 @@ class Groups extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.accounts:0.can_manage_groups')) {
+        if (userHasPermission('admin.accounts:0.can_manage_groups')) {
 
             $navGroup = new \Nails\Admin\Nav('Members');
             $navGroup->addMethod('Manage User Groups');
@@ -36,7 +36,7 @@ class Groups extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_manage_groups')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_groups')) {
 
             unauthorised();
         }
@@ -71,7 +71,7 @@ class Groups extends \AdminController
      */
     public function groupsCreate()
     {
-        if (!user_has_permission('admin.accounts:0.can_create_group')) {
+        if (!userHasPermission('admin.accounts:0.can_create_group')) {
 
             show_404();
         }
@@ -90,7 +90,7 @@ class Groups extends \AdminController
      */
     public function edit()
     {
-        if (!user_has_permission('admin.accounts:0.can_edit_group')) {
+        if (!userHasPermission('admin.accounts:0.can_edit_group')) {
 
             show_404();
         }
@@ -176,7 +176,7 @@ class Groups extends \AdminController
      */
     public function delete()
     {
-        if (!user_has_permission('admin.accounts:0.can_delete_group')) {
+        if (!userHasPermission('admin.accounts:0.can_delete_group')) {
 
             show_404();
         }
@@ -195,7 +195,7 @@ class Groups extends \AdminController
      */
     public function set_default()
     {
-        if (!user_has_permission('admin.accounts:0.can_set_default_group')) {
+        if (!userHasPermission('admin.accounts:0.can_set_default_group')) {
 
             show_404();
         }

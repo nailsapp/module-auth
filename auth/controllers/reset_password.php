@@ -219,11 +219,11 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
                                 if ($this->config->item('auth_show_nicetime_on_login')) {
 
-                                    $lastLogin = nice_time(strtotime($loginUser->last_login));
+                                    $lastLogin = niceTime(strtotime($loginUser->last_login));
 
                                 } else {
 
-                                    $lastLogin = user_datetime($loginUser->last_login);
+                                    $lastLogin = userDatetime($loginUser->last_login);
                                 }
 
                                 if ($this->config->item('auth_show_last_ip_on_login')) {

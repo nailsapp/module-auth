@@ -238,10 +238,10 @@ class NAILS_User_model extends NAILS_Model
 		// --------------------------------------------------------------------------
 
 		//	Set the user's date/time formats
-		$_format_date = active_user('pref_date_format') ? active_user('pref_date_format') : $this->datetime_model->get_date_format_default_slug();
-		$_format_time = active_user('pref_time_format') ? active_user('pref_time_format') : $this->datetime_model->get_time_format_default_slug();
+		$_format_date = active_user('pref_date_format') ? active_user('pref_date_format') : $this->datetime_model->getDateFormatDefaultSlug();
+		$_format_time = active_user('pref_time_format') ? active_user('pref_time_format') : $this->datetime_model->getTimeFormatDefaultSlug();
 
-		$this->datetime_model->set_formats($_format_date, $_format_time);
+		$this->datetime_model->setFormats($_format_date, $_format_time);
 	}
 
 
@@ -1599,19 +1599,19 @@ class NAILS_User_model extends NAILS_Model
 			//	Do we need to update any timezone/date/time preferences?
 			if (isset($data['timezone'])) :
 
-				$this->datetime_model->set_user_timezone($data['timezone']);
+				$this->datetime_model->setUserTimezone($data['timezone']);
 
 			endif;
 
 			if (isset($data['datetime_format_date'])) :
 
-				$this->datetime_model->set_date_format($data['datetime_format_date']);
+				$this->datetime_model->setDateFormat($data['datetime_format_date']);
 
 			endif;
 
 			if (isset($data['datetime_format_time'])) :
 
-				$this->datetime_model->set_time_format($data['datetime_format_time']);
+				$this->datetime_model->setTimeFormat($data['datetime_format_time']);
 
 			endif;
 

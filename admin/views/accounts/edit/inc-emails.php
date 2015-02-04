@@ -46,12 +46,12 @@
                         echo '</td>';
                     }
                     echo '<td class="dateAdded">';
-                        echo user_datetime($email->date_added);
+                        echo userDatetime($email->date_added);
                     echo '</td>';
                     echo '<td class="dateVerified">';
                         if ($email->is_verified) {
 
-                            echo user_datetime($email->date_added);
+                            echo userDatetime($email->date_added);
 
                         } else {
 

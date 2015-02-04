@@ -6,16 +6,16 @@
 	// --------------------------------------------------------------------------
 
 	//	Login as
-	if ( $user_edit->id != active_user( 'id' ) && user_has_permission( 'admin.accounts:0.can_login_as' ) ) :
+	if ( $user_edit->id != active_user( 'id' ) && userHasPermission( 'admin.accounts:0.can_login_as' ) ) :
 
 		//	Generate the return string
 		$_url = uri_string();
 
 		if ( $_GET ) :
 
-			//	Remove common problematic GET vars (for instance, we don't want is_fancybox when we return)
+			//	Remove common problematic GET vars (for instance, we don't want isFancybox when we return)
 			$_get = $_GET;
-			unset( $_get['is_fancybox'] );
+			unset( $_get['isFancybox'] );
 			unset( $_get['inline'] );
 
 			if ( $_get ) :
@@ -39,7 +39,7 @@
 	// --------------------------------------------------------------------------
 
 	//	Edit
-	if ( $user_edit->id != active_user( 'id' ) && user_has_permission( 'admin.accounts:0.delete' ) ) :
+	if ( $user_edit->id != active_user( 'id' ) && userHasPermission( 'admin.accounts:0.delete' ) ) :
 
 		$_buttons[] = anchor( 'admin/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode( 'admin/accounts' ), lang( 'action_delete' ), 'class="awesome red confirm" data-title="' . lang( 'admin_confirm_delete_title' ) . '" data-body="' . lang( 'admin_confirm_delete_body' ) . '"' );
 
@@ -50,7 +50,7 @@
 	//	Suspend
 	if ( $user_edit->is_suspended ) :
 
-		if ( active_user( 'id') != $user_edit->id && user_has_permission( 'admin.accounts:0.unsuspend' ) ) :
+		if ( active_user( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.unsuspend' ) ) :
 
 			$_buttons[] = anchor( 'admin/accounts/unsuspend/' . $user_edit->id . $return_string, lang( 'action_unsuspend' ), 'class="awesome"' );
 
@@ -58,7 +58,7 @@
 
 	else :
 
-		if ( active_user( 'id') != $user_edit->id && user_has_permission( 'admin.accounts:0.suspend' ) ) :
+		if ( active_user( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.suspend' ) ) :
 
 			$_buttons[] = anchor( 'admin/accounts/suspend/' . $user_edit->id . $return_string, lang( 'action_suspend' ), 'class="awesome red"' );
 
