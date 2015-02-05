@@ -153,7 +153,7 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
 
             } else {
 
-                $lastLogin = userDatetime($this->mfaUser->last_login);
+                $lastLogin = toUserDatetime($this->mfaUser->last_login);
             }
 
             if ($this->config->item('auth_show_last_ip_on_login')) {

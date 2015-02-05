@@ -4,7 +4,7 @@
 <p>
 <?php
 
-	echo 'The request was made at ' . userDatetime( $updated_at );
+	echo 'The request was made at ' . toUserDatetime( $updated_at );
 	echo ! empty( $updated_by['id'] ) && $updated_by['id'] != $sent_to->id ? ' by <strong>' . $updated_by['name'] . '</strong>': '';
 	echo ! empty( $ip_address ) ? ' from IP address ' . $ip_address: '';
 	echo '.';

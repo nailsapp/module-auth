@@ -3,12 +3,8 @@
 
         echo '<p>';
 
-            if (isset($page->description)) {
-                echo $page->description;
-            } else {
-                echo 'This section lists all users registered on site. You can browse or search this ';
-                echo 'list using the search facility below.';
-            }
+            echo 'This section lists all users registered on site. You can browse or search this ';
+            echo 'list using the search facility below.';
 
             if (userHasPermission('admin.accounts:0.can_create_user')) {
 
@@ -17,8 +13,8 @@
 
         echo '</p>';
 
-        $this->load->view('admin/accounts/utilities/search');
-        $this->load->view('admin/accounts/utilities/pagination');
+        echo \Nails\Admin\Helper::loadSearch($search);
+        echo \Nails\Admin\Helper::loadPagination($pagination);
 
     ?>
     <table>
@@ -29,12 +25,15 @@
                 <th class="group">Group</th>
                 <?php
 
+                if (!empty($columns)) {
+
                     foreach ($columns as $col) {
 
                         echo isset($col['class']) ? '<th class="' . $col['class'] . '">' : '<th>';
                         echo $col['label'];
                         echo '</th>';
                     }
+                }
 
                 ?>
                 <th class="actions">Actions</th>
@@ -43,9 +42,9 @@
         <tbody>
             <?php
 
-                if ($users->data) {
+                if ($users) {
 
-                    foreach ($users->data as $member) {
+                    foreach ($users as $member) {
 
                         $data = array(
                             'member' => &$member
@@ -56,9 +55,10 @@
 
                 } else {
 
+                    $colspan = !empty($columns) ? 4 + count($columns) : 4;
                     ?>
                     <tr>
-                        <td colspan="<?=(4+count($columns))?>" class="no-data">
+                        <td colspan="<?=$colspan?>" class="no-data">
                             <p>No Users Found</p>
                         </td>
                     </tr>
@@ -69,29 +69,7 @@
     </table>
     <?php
 
-        $this->load->view('admin/accounts/utilities/pagination');
+        echo \Nails\Admin\Helper::loadPagination($pagination);
 
     ?>
 </div>
-<script type="text/javascript">
-<!--//
-
-    $(function(){
-
-        //  Hijack the fancybox links and inform the target the view is inline.
-        $('a.fancybox-max').each(function() {
-
-            $(this).fancybox({
-                'type'      : 'iframe',
-                'autoSize'  : false,
-                'autoScale' : false,
-                'width'     : '85%',
-                'height'    : '85%',
-                'href'      : $(this).attr('href') + '&inline=true'
-            });
-        });
-
-    });
-
-//-->
-</script>

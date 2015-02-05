@@ -141,88 +141,50 @@ class Accounts extends \AdminController
      */
     public function index()
     {
-        //  Searching, sorting, ordering and paginating.
-        $hash = 'search_' . md5(uri_string()) . '_';
-
-        if ($this->input->get('reset')) {
-
-            $this->session->unset_userdata($hash . 'per_page');
-            $this->session->unset_userdata($hash . 'sort');
-            $this->session->unset_userdata($hash . 'order');
-        }
-
-        $default_per_page = $this->session->userdata($hash . 'per_page') ? $this->session->userdata($hash . 'per_page') : 50;
-        $default_sort     = $this->session->userdata($hash . 'sort') ?   $this->session->userdata($hash . 'sort') : 'u.id';
-        $default_order    = $this->session->userdata($hash . 'order') ?  $this->session->userdata($hash . 'order') : 'ASC';
-
-        //  Define vars
-        $searchTerm = $this->input->get('search');
-
-        $limit = array(
-                    $this->input->get('per_page') ? $this->input->get('per_page') : $default_per_page,
-                    $this->input->get('offset') ? $this->input->get('offset') : 0
-                );
-
-        $order = array(
-                    $this->input->get('sort') ? $this->input->get('sort') : $default_sort,
-                    $this->input->get('order') ? $this->input->get('order') : $default_order
-                );
-
-        $this->accounts_group = !empty($this->accounts_group) ? $this->accounts_group : $this->input->get('filter');
-
-        //  Set sorting and ordering info in session data so it's remembered for when user returns
-        $this->session->set_userdata($hash . 'per_page', $limit[0]);
-        $this->session->set_userdata($hash . 'sort', $order[0]);
-        $this->session->set_userdata($hash . 'order', $order[1]);
-
-        //  Set values for the page
-        $this->data['search']           = new \stdClass();
-        $this->data['search']->per_page = $limit[0];
-        $this->data['search']->sort     = $order[0];
-        $this->data['search']->order    = $order[1];
+        //  Set method info
+        $this->data['page']->title = 'View All Members';
 
         // --------------------------------------------------------------------------
 
-        //  Is a group set?
-        if ($this->accounts_group) {
-
-            $this->accounts_where['u.group_id'] = $this->accounts_group;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Get the accounts
-        $this->data['users']       = new \stdClass();
-        $this->data['users']->data = $this->user_model->get_all(false, $order, $limit, $this->accounts_where, $searchTerm);
-
-        //  Work out pagination
-        $this->data['users']->pagination                = new \stdClass();
-        $this->data['users']->pagination->total_results = $this->user_model->count_all($this->accounts_where, $searchTerm);
+        //  Get pagination and search/sort variables
+        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
+        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'u.id';
+        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
+        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
         // --------------------------------------------------------------------------
 
-        //  Override the title (used when loading this method from one of the other methods)
-        $this->data['page']->title = !empty($this->data['page']->title) ? $this->data['page']->title : 'View All Members';
-
-        if ($searchTerm) {
-
-            $this->data['page']->title  .= ' (search for "' . $searchTerm . '" returned ' . number_format($this->data['users']->pagination->total_results) . 'results)';
-
-        } else {
-
-            $this->data['page']->title  .= ' (' . number_format($this->data['users']->pagination->total_results) . ')';
-        }
+        //  Define the sortable columns
+        $sortColumns = array(
+            'u.id'         => 'User ID',
+            'u.group_id'   => 'Group ID',
+            'u.first_name' => 'First Name, Surname',
+            'u.last_name'  => 'Surname, First Name',
+            'ue.email'     => 'Email'
+        );
 
         // --------------------------------------------------------------------------
 
-        //  Pass any columns and actions to the view
-        $this->data['columns']    = $this->accounts_columns;
-        $this->data['actions']    = $this->accounts_actions;
-        $this->data['sortfields'] = $this->accounts_sortfields;
+        //  Define the $data variable for the queries
+        $data = array(
+            'sort'  => array(
+                'column' => $sortOn,
+                'order'  => $sortOrder
+            ),
+            'keywords' => $keywords
+        );
+
+        //  Get the items for the page
+        $totalRows           = $this->user_model->count_all($data);
+        $this->data['users'] = $this->user_model->get_all($page, $perPage, $data);
+
+        //  Set Search and Pagination objects for the view
+        $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         // --------------------------------------------------------------------------
 
-        //  Load views
         \Nails\Admin\Helper::loadView('index');
     }
 

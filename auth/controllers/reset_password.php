@@ -223,7 +223,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
                                 } else {
 
-                                    $lastLogin = userDatetime($loginUser->last_login);
+                                    $lastLogin = toUserDatetime($loginUser->last_login);
                                 }
 
                                 if ($this->config->item('auth_show_last_ip_on_login')) {

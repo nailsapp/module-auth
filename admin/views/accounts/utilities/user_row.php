@@ -57,7 +57,7 @@
             echo '<small>';
             if ($member->last_login) {
                 echo 'Last login: ';
-                echo '<span class="nice-time">' . userMysqlDatetime($member->last_login) . '</span> ';
+                echo '<span class="nice-time">' . toUserDate($member->last_login, 'Y-m-d H:i:s') . '</span> ';
                 echo '(' . $member->login_count . 'logins)';
             } else {
                 echo 'Last login: Never Logged In';
@@ -72,10 +72,12 @@
     <!--    EXTRA COLUMNS   -->
     <?php
 
-        foreach ($columns as $col) {
-            $this->load->view('admin/accounts/utilities/user_row_column_' . $col['view']);
-        }
+        if (!empty($columns)) {
 
+            foreach ($columns as $col) {
+                $this->load->view('admin/accounts/utilities/user_row_column_' . $col['view']);
+            }
+        }
     ?>
 
     <!--    ACTIONS -->
@@ -192,12 +194,15 @@
                 // --------------------------------------------------------------------------
 
                 //  These buttons are variable between views
-                foreach ($actions as $button) {
-                    $_buttons[] = anchor(
-                        $button['url'] . $_return,
-                        $button['label'],
-                        'class="awesome small ' . $button['class'] . '"'
-                    );
+                if (!empty($actions)) {
+
+                    foreach ($actions as $button) {
+                        $_buttons[] = anchor(
+                            $button['url'] . $_return,
+                            $button['label'],
+                            'class="awesome small ' . $button['class'] . '"'
+                        );
+                    }
                 }
 
                 // --------------------------------------------------------------------------

@@ -2,7 +2,7 @@ Your password has been changed, if you made this request you can safely ignore t
 
 <?php
 
-	echo 'The request was made at ' . userDatetime( $updated_at );
+	echo 'The request was made at ' . toUserDatetime( $updated_at );
 	echo ! empty( $updated_by['id'] ) && $updated_by['id'] != $sent_to->id ? ' by ' . strtoupper( $updated_by['name'] ) : '';
 	echo ! empty( $ip_address ) ? ' from IP address ' . $ip_address: '';
 	echo '.';
