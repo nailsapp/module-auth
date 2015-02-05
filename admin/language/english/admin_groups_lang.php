@@ -20,7 +20,7 @@ $lang['accounts_groups_index_th_actions']                          = 'Actions';
 $lang['accounts_groups_index_action_set_default']                  = 'Set As Default Group';
 
 //  Edit group
-$lang['accounts_groups_edit_title']                                = 'Edit Group (%s)';
+$lang['accounts_groups_edit_title']                                = 'Edit Group &rsaquo; %s';
 $lang['accounts_groups_edit_warning']                              = '<strong>Please note:</strong> while the system will do its best to validate the content you set ' .
                                                                       'sometimes a valid combination can render an entire group useless (including your own). Please be ' .
                                                                       'extra careful and only change things when you know what you\'re doing. Remember that you won\'t see ' .

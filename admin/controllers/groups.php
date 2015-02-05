@@ -69,7 +69,7 @@ class Groups extends \AdminController
      * Create a user group
      * @return void
      */
-    public function groupsCreate()
+    public function create()
     {
         if (!userHasPermission('admin.accounts:0.can_create_group')) {
 
