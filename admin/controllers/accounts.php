@@ -14,14 +14,6 @@ namespace Nails\Admin\Auth;
 
 class Accounts extends \AdminController
 {
-    protected $accounts_group;
-    protected $accounts_where;
-    protected $accounts_columns;
-    protected $accounts_actions;
-    protected $accounts_sortfields;
-
-    // --------------------------------------------------------------------------
-
     /**
      * Announces this controllers methods
      * @return stdClass
@@ -110,26 +102,6 @@ class Accounts extends \AdminController
     public function __construct()
     {
         parent::__construct();
-
-        // --------------------------------------------------------------------------
-
-        //  Defaults defaults
-        $this->accounts_group      = false;
-        $this->accounts_where      = array();
-        $this->accounts_columns    = array();
-        $this->accounts_actions    = array();
-        $this->accounts_sortfields = array();
-
-        // --------------------------------------------------------------------------
-
-        $this->accounts_sortfields[] = array('label' => 'User ID', 'col' => 'u.id');
-        $this->accounts_sortfields[] = array('label' => 'Group ID', 'col' => 'u.group_id');
-        $this->accounts_sortfields[] = array('label' => 'First Name, Surname', 'col' => 'u.first_name');
-        $this->accounts_sortfields[] = array('label' => 'Surname, First Name', 'col' => 'u.last_name');
-        $this->accounts_sortfields[] = array('label' => 'Email', 'col' => 'ue.email');
-
-        // --------------------------------------------------------------------------
-
         $this->lang->load('admin_accounts');
     }
 
@@ -182,6 +154,12 @@ class Accounts extends \AdminController
         //  Set Search and Pagination objects for the view
         $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+
+        //  Add a header button
+        if (userHasPermission('admin.accounts:0.can_create_user')) {
+
+             \Nails\Admin\Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
+        }
 
         // --------------------------------------------------------------------------
 
@@ -726,7 +704,7 @@ class Accounts extends \AdminController
         $this->data['timezones']    = $this->datetime_model->getAllTimezone();
         $this->data['date_formats'] = $this->datetime_model->getAllDateFormat();
         $this->data['time_formats'] = $this->datetime_model->getAllTimeFormat();
-        $this->data['languages']    = $this->language_model->get_all_enabled_flat();
+        $this->data['languages']    = $this->language_model->getAllEnabledFlat();
 
         //  Fetch any user uploads
         if (isModuleEnabled('nailsapp/module-cdn')) {

@@ -1,14 +1,6 @@
 <div class="group-accounts groups overview">
     <p>
-    <?php
-
-        echo lang('accounts_groups_index_intro');
-        if (userHasPermission('admin.accounts:0.can_create_group')) {
-
-            echo anchor('admin/auth/groups/create', 'Create Group', 'class="awesome small green right"');
-        }
-
-    ?>
+    <?=lang('accounts_groups_index_intro')?>
     </p>
     <hr />
     <table>

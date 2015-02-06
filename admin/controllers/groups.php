@@ -60,6 +60,13 @@ class Groups extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        if (userHasPermission('admin.accounts:0.can_create_group')) {
+
+            \Nails\Admin\Helper::addHeaderButton('admin/auth/groups/create', 'Create Group');
+        }
+
+        // --------------------------------------------------------------------------
+
         \Nails\Admin\Helper::loadView('index');
     }
 

@@ -6,11 +6,6 @@
             echo 'This section lists all users registered on site. You can browse or search this ';
             echo 'list using the search facility below.';
 
-            if (userHasPermission('admin.accounts:0.can_create_user')) {
-
-                echo anchor('admin/auth/accounts/create', 'Create User', 'class="awesome small green right"');
-            }
-
         echo '</p>';
 
         echo \Nails\Admin\Helper::loadSearch($search);
