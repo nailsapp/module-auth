@@ -39,11 +39,11 @@ $lang['accounts_edit_title']            = 'Edit User (%s)';
 $lang['accounts_edit_error_unknown_id']     = 'Unknown User ID';
 $lang['accounts_edit_error_profile_img']    = '<strong>Update Failed:</strong> There was a problem uploading the Profile Image.';
 $lang['accounts_edit_error_upload']         = '<strong>Update failed:</strong> The file "%s" failed to upload.';
-$lang['accounts_edit_error_noteditable']    = '<strong>Sorry,</strong> you do not have permission to perform manipulations on that user.';
+$lang['accounts_edit_error_noteditable']    = 'You do not have permission to perform manipulations on that user.';
 
 
-$lang['accounts_edit_ok']                   = '<strong>Success!</strong> Updated user %s';
-$lang['accounts_edit_fail']                 = '<strong>Sorry,</strong> failed to update user: %s';
+$lang['accounts_edit_ok']                   = 'Updated user %s';
+$lang['accounts_edit_fail']                 = 'Failed to update user: %s';
 $lang['accounts_edit_editing_self_m']       = '<strong>Hey there handsome!</strong> You are currently editing your own account.';
 $lang['accounts_edit_editing_self_f']       = '<strong>Hey there beautiful!</strong> You are currently editing your own account.';
 $lang['accounts_edit_editing_self_u']       = '<strong>Hello there!</strong> You are currently editing your own account.';
@@ -122,22 +122,22 @@ $lang['accounts_edit_upload_type_file']     = 'Files';
 // --------------------------------------------------------------------------
 
 //  Suspending/Unsuspending
-$lang['accounts_suspend_success']       = '<strong>Success!</strong> %s was suspended.';
-$lang['accounts_suspend_error']         = '<strong>Sorry,</strong> there was a problem suspending %s.';
-$lang['accounts_unsuspend_success']     = '<strong>Success!</strong> %s was unsuspended.';
-$lang['accounts_unsuspend_error']       = '<strong>Sorry,</strong> there was a problem unsuspending %s.';
+$lang['accounts_suspend_success']       = '%s was suspended.';
+$lang['accounts_suspend_error']         = 'There was a problem suspending %s.';
+$lang['accounts_unsuspend_success']     = '%s was unsuspended.';
+$lang['accounts_unsuspend_error']       = 'There was a problem unsuspending %s.';
 
 // --------------------------------------------------------------------------
 
 //  Deleting
-$lang['accounts_delete_error_selfie']   = '<strong>Sorry,</strong> you can\'t delete yourself.';
+$lang['accounts_delete_error_selfie']   = 'You can\'t delete yourself.';
 $lang['accounts_delete_success']        = '<strong>See ya!</strong> User %s was deleted successfully.';
-$lang['accounts_delete_error']          = '<strong>Sorry,</strong> there was a problem deleting %s.';
+$lang['accounts_delete_error']          = 'There was a problem deleting %s.';
 
 // --------------------------------------------------------------------------
 
 //  Deleting profile image
-$lang['accounts_delete_img_success']        = '<strong>Success!</strong> Profile image was deleted.';
-$lang['accounts_delete_img_error']          = '<strong>Sorry,</strong> I was unable delete this user\'s profile image. The server said: "%s"';
-$lang['accounts_delete_img_error_noid']     = '<strong>Sorry,</strong> I was unable to find a user by that ID.';
+$lang['accounts_delete_img_success']        = 'Profile image was deleted.';
+$lang['accounts_delete_img_error']          = 'I was unable delete this user\'s profile image. The server said: "%s"';
+$lang['accounts_delete_img_error_noid']     = 'I was unable to find a user by that ID.';
 $lang['accounts_delete_img_error_noimg']    = '<strong>Hey!</strong> This user doesn\'t have a profile image to delete.';

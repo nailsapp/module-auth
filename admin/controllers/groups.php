@@ -155,7 +155,7 @@ class Groups extends \AdminController
 
                 } else {
 
-                    $this->data['error'] = '<strong>Sorry,</strong> I was unable to update the group. ' . $this->user_group_model->last_error();
+                    $this->data['error'] = 'I was unable to update the group. ' . $this->user_group_model->last_error();
                 }
 
             } else {
@@ -211,11 +211,11 @@ class Groups extends \AdminController
 
         if ($this->user_group_model->setAsDefault($this->uri->segment(5))) {
 
-            $this->session->set_flashdata('success', '<strong>Success!</strong> Group set as default successfully.');
+            $this->session->set_flashdata('success', 'Group set as default successfully.');
 
         } else {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> I could not set that group as the default user group. ' . $this->user_group_model->last_error());
+            $this->session->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->last_error());
         }
 
         redirect('admin/auth/groups');

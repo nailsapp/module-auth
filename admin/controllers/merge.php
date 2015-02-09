@@ -76,7 +76,7 @@ class Merge extends \AdminController
                     } else {
 
                         $status  = 'success';
-                        $message = '<strong>Success!</strong> Users were merged successfully.';
+                        $message = 'Users were merged successfully.';
                         $this->session->set_flashdata($status, $message);
                         redirect('admin/auth/accounts/merge');
                     }
@@ -88,7 +88,7 @@ class Merge extends \AdminController
 
             } else {
 
-                $this->data['error'] = '<strong>Sorry,</strong> you cannot list yourself as a user to merge.';
+                $this->data['error'] = 'You cannot list yourself as a user to merge.';
             }
         }
 

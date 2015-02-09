@@ -305,7 +305,7 @@ class Accounts extends \AdminController
                     // --------------------------------------------------------------------------
 
                     $status   = 'success';
-                    $message  = '<strong>Success!</strong> A user account was created for <strong>';
+                    $message  = 'A user account was created for <strong>';
                     $message .= $new_user->first_name . '</strong>, update their details now.';
                     $this->session->set_flashdata($status, $message);
 
@@ -313,14 +313,14 @@ class Accounts extends \AdminController
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> there was an error when creating the user ';
+                    $this->data['error']  = 'There was an error when creating the user ';
                     $this->data['error'] .= 'account:<br />&rsaquo; ';
                     $this->data['error'] .= implode('<br />&rsaquo; ', $this->user_model->get_errors());
                 }
 
             } else {
 
-                $this->data['error']  = '<strong>Sorry,</strong> there was an error when creating the user account. ';
+                $this->data['error']  = 'There was an error when creating the user account. ';
                 $this->data['error'] .= $this->user_model->last_error();
             }
         }
@@ -794,12 +794,12 @@ class Accounts extends \AdminController
 
             if ($this->user_group_model->changeUserGroup($userIds, $this->input->post('newGroupId'))) {
 
-                $this->session->set_flashdata('success', '<strong>Success!</strong> User group was updated successfully.');
+                $this->session->set_flashdata('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts/index');
 
             } else {
 
-                $this->data['error'] = '<strong>Sorry,</strong> failed to update user group. ' . $this->user_group_model->last_error();
+                $this->data['error'] = 'Failed to update user group. ' . $this->user_group_model->last_error();
             }
         }
 
@@ -1089,12 +1089,12 @@ class Accounts extends \AdminController
                 if ($this->user_model->email_add($email, $id, $isPrimary, $isVerified)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> "' . $email . '" was added successfully. ';
+                    $message = '"' . $email . '" was added successfully. ';
 
                 } else {
 
                     $status   = 'error';
-                    $message  = '<strong>Sorry,</strong> failed to add email "' . $email . '". ';
+                    $message  = 'Failed to add email "' . $email . '". ';
                     $message .= $this->user_model->last_error();
                 }
                 break;
@@ -1104,12 +1104,12 @@ class Accounts extends \AdminController
                 if ($this->user_model->email_delete($email, $id)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> "' . $email . '" was deleted successfully. ';
+                    $message = '"' . $email . '" was deleted successfully. ';
 
                 } else {
 
                     $status   = 'error';
-                    $message  = '<strong>Sorry,</strong> failed to delete email "' . $email . '". ';
+                    $message  = 'Failed to delete email "' . $email . '". ';
                     $message .= $this->user_model->last_error();
                 }
                 break;
@@ -1119,12 +1119,12 @@ class Accounts extends \AdminController
                 if ($this->user_model->email_make_primary($email, $id)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> "' . $email . '" was set as the primary email.';
+                    $message = '"' . $email . '" was set as the primary email.';
 
                 } else {
 
                     $status   = 'error';
-                    $message  = '<strong>Sorry,</strong> failed to mark "' . $email . '" as the primary address. ';
+                    $message  = 'Failed to mark "' . $email . '" as the primary address. ';
                     $message .= $this->user_model->last_error();
                 }
                 break;
@@ -1146,18 +1146,18 @@ class Accounts extends \AdminController
                 if (!empty($code) && $this->user_model->email_verify($id, $code)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> "' . $email . '" was verified successfully.';
+                    $message = '"' . $email . '" was verified successfully.';
 
                 } elseif (empty($code)) {
 
                     $status   = 'error';
-                    $message  = '<strong>Sorry,</strong> failed to mark "' . $email . '" as verified. ';
+                    $message  = 'Failed to mark "' . $email . '" as verified. ';
                     $message .= 'Could not determine email\'s security code.';
 
                 } else {
 
                     $status   = 'error';
-                    $message  = '<strong>Sorry,</strong> failed to mark "' . $email . '" as verified. ';
+                    $message  = 'Failed to mark "' . $email . '" as verified. ';
                     $message .= $this->user_model->last_error();
                 }
                 break;
