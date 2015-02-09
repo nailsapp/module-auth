@@ -18,7 +18,7 @@
                 $_field['key']          = 'label';
                 $_field['label']        = lang('accounts_groups_edit_basic_field_label_label');
                 $_field['default']      = $group->label;
-                $_field['required']     = TRUE;
+                $_field['required']     = true;
                 $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_label');
 
                 echo form_field($_field);
@@ -30,7 +30,7 @@
                 $_field['key']          = 'slug';
                 $_field['label']        = lang('accounts_groups_edit_basic_field_label_slug');
                 $_field['default']      = $group->slug;
-                $_field['required']     = TRUE;
+                $_field['required']     = true;
                 $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_slug');
 
                 echo form_field($_field);
@@ -43,7 +43,7 @@
                 $_field['type']         = 'textarea';
                 $_field['label']        = lang('accounts_groups_edit_basic_field_label_description');
                 $_field['default']      = $group->description;
-                $_field['required']     = TRUE;
+                $_field['required']     = true;
                 $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_description');
 
                 echo form_field($_field);
@@ -55,7 +55,7 @@
                 $_field['key']          = 'default_homepage';
                 $_field['label']        = lang('accounts_groups_edit_basic_field_label_homepage');
                 $_field['default']      = $group->default_homepage;
-                $_field['required']     = TRUE;
+                $_field['required']     = true;
                 $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_homepage');
 
                 echo form_field($_field);
@@ -67,7 +67,7 @@
                 $_field['key']          = 'registration_redirect';
                 $_field['label']        = lang('accounts_groups_edit_basic_field_label_registration');
                 $_field['default']      = $group->registration_redirect;
-                $_field['required']     = FALSE;
+                $_field['required']     = false;
                 $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_registration');
 
                 echo form_field($_field, lang('accounts_groups_edit_basic_field_tip_registration'));
@@ -95,8 +95,8 @@
                 $_field                 = array();
                 $_field['key']          = 'acl[superuser]';
                 $_field['label']        = lang('accounts_groups_edit_permissions_field_label_superuser');
-                $_field['default']      = isset($group->acl['superuser']) && $group->acl['superuser'] ? TRUE : FALSE;
-                $_field['required']     = FALSE;
+                $_field['default']      = isset($group->acl['superuser']) && $group->acl['superuser'] ? true : false;
+                $_field['required']     = false;
                 $_field['id']           = 'super-user';
 
                 echo form_field_boolean($_field);
@@ -116,7 +116,7 @@
 
                         $_field                 = array();
                         $_field['label']        = $detail->name;
-                        $_field['default']      = FALSE;
+                        $_field['default']      = false;
 
                         //  Build the field. Sadly, can't use the form helper due to the crazy multidimensional array
                         //  that we're building here. Saddest of the sad pandas.
@@ -139,7 +139,7 @@
                             echo '</span>';
                             echo '<span class="input togglize-me">';
                                 echo '<div class="toggle toggle-modern"></div>';
-                                echo form_checkbox('acl[admin][' . $detail->class_index . ']', TRUE, $_selected);
+                                echo form_checkbox('acl[admin][' . $detail->class_index . ']', true, $_selected);
                                 echo '<div class="mask">Disable additional permissions in order to deactivate this module.</div>';
                             echo '</span>';
 
@@ -162,7 +162,7 @@
                                     echo '<span class="label" style="font-weight:normal;">' . $label . '</span>';
                                     echo '<span class="input togglize-me-extra">';
                                         echo '<div class="toggle toggle-modern"></div>';
-                                        echo form_checkbox('acl[admin][' . $detail->class_index . '][' . $permission . ']', TRUE, $_selected);
+                                        echo form_checkbox('acl[admin][' . $detail->class_index . '][' . $permission . ']', true, $_selected);
                                     echo '</span>';
 
                                 endforeach;
