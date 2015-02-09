@@ -6,6 +6,7 @@ class NAILS_User_password_model extends CI_Model
     use NAILS_COMMON_TRAIT_ERROR_HANDLING;
     use NAILS_COMMON_TRAIT_CACHING;
 
+    protected $user_model;
     protected $pwCharsetSymbol;
     protected $pwCharsetLowerAlpha;
     protected $pwCharsetUpperAlpha;
@@ -42,7 +43,7 @@ class NAILS_User_password_model extends CI_Model
      */
     public function setUserObject(&$user)
     {
-        $this->user = $user;
+        $this->user_model = $user;
     }
 
     // --------------------------------------------------------------------------
@@ -575,14 +576,14 @@ class NAILS_User_password_model extends CI_Model
 
             case 'EMAIL':
 
-                $_user = $this->user->get_by_email($identifier);
+                $_user = $this->user_model->get_by_email($identifier);
                 break;
 
             // --------------------------------------------------------------------------
 
             case 'USERNAME':
 
-                $_user = $this->user->get_by_username($identifier);
+                $_user = $this->user_model->get_by_username($identifier);
                 break;
 
             // --------------------------------------------------------------------------
@@ -591,11 +592,11 @@ class NAILS_User_password_model extends CI_Model
 
                 if (valid_email($identifier)) {
 
-                    $_user = $this->user->get_by_email($identifier);
+                    $_user = $this->user_model->get_by_email($identifier);
 
                 } else {
 
-                    $_user = $this->user->get_by_username($identifier);
+                    $_user = $this->user_model->get_by_username($identifier);
                 }
                 break;
         }
@@ -607,7 +608,7 @@ class NAILS_User_password_model extends CI_Model
                 'forgotten_password_code' => $_ttl . ':' . $_key
             );
 
-            return $this->user->update($_user->id, $_data);
+            return $this->user_model->update($_user->id, $_data);
 
         } else {
 

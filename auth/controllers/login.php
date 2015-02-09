@@ -14,1037 +14,990 @@ require_once '_auth.php';
  */
 class NAILS_Login extends NAILS_Auth_Controller
 {
-	/**
-	 * Constructor
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Construct the controller
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Load libraries
-		$this->load->library('form_validation');
-		$this->load->library('auth/social_signon');
+        //  Load libraries
+        $this->load->library('form_validation');
+        $this->load->library('auth/social_signon');
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Where are we returning user to?
-		$_return_to = $this->input->get('return_to');
+        //  Where are we returning user to?
+        $returnTo = $this->input->get('return_to');
 
-		if ($_return_to) :
+        if ($returnTo) {
 
-			$_return_to = preg_match('#^(http|https)\://#', $_return_to) ? $_return_to : site_url($_return_to);
-			$_return_to = parse_url($_return_to);
+            $returnTo = preg_match('#^(http|https)\://#', $returnTo) ? $returnTo : site_url($returnTo);
+            $returnTo = parse_url($returnTo);
 
-			//	urlencode the query if there is one
-			if (!empty($_return_to['query'])) :
+            //  urlencode the query if there is one
+            if (!empty($returnTo['query'])) {
 
-				//	Break it apart and glue it together (urlencoded)
-				$_query = parse_str($_return_to['query'], $_query_ar);
-				$_return_to['query'] = http_build_query($_query_ar);
+                //  Break it apart and glue it together (urlencoded)
+                $query = parse_str($returnTo['query'], $query_ar);
+                $returnTo['query'] = http_build_query($query_ar);
+            }
 
-			endif;
+            $this->data['return_to']  = '';
+            $this->data['return_to'] .= !empty($returnTo['scheme'])   ? $returnTo['scheme'] . '://' : 'http://';
+            $this->data['return_to'] .= !empty($returnTo['host'])     ? $returnTo['host']           : site_url();
+            $this->data['return_to'] .= !empty($returnTo['path'])     ? $returnTo['path']           : '';
+            $this->data['return_to'] .= !empty($returnTo['query'])    ? '?' . $returnTo['query']    : '';
 
-			$this->data['return_to']  = '';
-			$this->data['return_to'] .= !empty($_return_to['scheme'])	? $_return_to['scheme'] . '://'	: 'http://';
-			$this->data['return_to'] .= !empty($_return_to['host'])		? $_return_to['host']			: site_url();
-			$this->data['return_to'] .= !empty($_return_to['path'])		? $_return_to['path']			: '';
-			$this->data['return_to'] .= !empty($_return_to['query'])		? '?' . $_return_to['query']	: '';
+        } else {
 
-		else :
+            $this->data['return_to'] = '';
+        }
 
-			$this->data['return_to'] = '';
+        // --------------------------------------------------------------------------
 
-		endif;
+        //  Specify a default title for this page
+        $this->data['page']->title = lang('auth_title_login');
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		//	Specify a default title for this page
-		$this->data['page']->title = lang('auth_title_login');
-	}
+    /**
+     * Validate data and log the user in.
+     * @return  void
+     **/
+    public function index()
+    {
+        //  If you're logged in you shouldn't be accessing this method
+        if ($this->user_model->is_logged_in()) {
 
+            redirect($this->data['return_to']);
+        }
 
-	// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
+        //  If there's POST data attempt to log user in
+        if ($this->input->post()) {
 
-	/**
-	 * Validate data and log the user in.
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function index()
-	{
-		//	If you're logged in you shouldn't be accessing this method
-		if ($this->user_model->is_logged_in()) :
+            //  Validate input
 
-			$this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
-			redirect($this->data['return_to']);
+            //  The rules vary depending on what login methods are enabled.
+            switch (APP_NATIVE_LOGIN_USING) {
 
-		endif;
+                case 'EMAIL':
 
-		// --------------------------------------------------------------------------
+                    $this->form_validation->set_rules('identifier', 'Email',    'required|xss_clean|trim|valid_email');
+                    break;
 
-		//	If there's POST data attempt to log user in
-		if ($this->input->post()) :
+                case 'USERNAME':
 
-			//	Validate input
+                    $this->form_validation->set_rules('identifier', 'Username', 'required|xss_clean|trim');
+                    break;
 
-			//	The rules vary depending on what login methods are enabled.
-			switch (APP_NATIVE_LOGIN_USING) :
+                default:
 
-				case 'EMAIL' :
+                    $this->form_validation->set_rules('identifier', 'Username or Email',    'xss_clean|trim');
+                    break;
+            }
 
-					$this->form_validation->set_rules('identifier',	'Email',	'required|xss_clean|trim|valid_email');
+            //  Password is always required, obviously.
+            $this->form_validation->set_rules('password', 'Password', 'required|xss_clean');
+            $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
 
-				break;
+            if ($this->form_validation->run()) {
 
-				// --------------------------------------------------------------------------
+                //  Attempt the log in
+                $identifier = $this->input->post('identifier');
+                $password   = $this->input->post('password');
+                $rememberMe = (bool) $this->input->post('remember');
 
-				case 'USERNAME' :
+                $user = $this->auth_model->login($identifier, $password, $rememberMe);
 
-					$this->form_validation->set_rules('identifier',	'Username',	'required|xss_clean|trim');
+                if ($user) {
 
-				break;
+                    $this->_login($user, $rememberMe);
 
-				// --------------------------------------------------------------------------
+                } else {
 
-				default:
+                    //  Login failed
+                    $this->data['error'] = $this->auth_model->last_error();
+                }
 
-					$this->form_validation->set_rules('identifier',	'Username or Email',	'xss_clean|trim');
+            } else {
 
-				break;
+                $this->data['error'] = lang('fv_there_were_errors');
+            }
+        }
 
-			endswitch;
+        // --------------------------------------------------------------------------
 
-			//	Password is always required, obviously.
-			$this->form_validation->set_rules('password',	'Password',	'required|xss_clean');
-			$this->form_validation->set_message('required',	lang('fv_required'));
-			$this->form_validation->set_message('valid_email',	lang('fv_valid_email'));
+        $this->data['social_signon_enabled']   = $this->social_signon->is_enabled();
+        $this->data['social_signon_providers'] = $this->social_signon->get_providers('ENABLED');
 
-			if ($this->form_validation->run()) :
+        // --------------------------------------------------------------------------
 
-				//	Attempt the log in
-				$_identifier	= $this->input->post('identifier');
-				$_password		= $this->input->post('password');
-				$_remember		= (bool) $this->input->post('remember');
+        //  Load the views
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/login/form', $this->data);
+        $this->load->view('structure/footer', $this->data);
+    }
 
-				$_user = $this->auth_model->login($_identifier, $_password, $_remember);
+    // --------------------------------------------------------------------------
 
-				if ($_user) :
+    /**
+     * Handles the next stage of login after successfully authenticating
+     * @param  stdClass $user     The user object
+     * @param  boolean  $remember Whether to set the rememberMe cookie or not
+     * @param  string   $provider Which provider authenticated the login
+     * @return void
+     */
+    protected function _login($user, $remember = false, $provider = 'native')
+    {
+        if ($user->is_suspended) {
 
-					$this->_login($_user, $_remember);
+            $this->data['error'] = lang('auth_login_fail_suspended');
+            return false;
 
-				else :
+        } elseif (!empty($user->temp_pw)) {
 
-					//	Login failed
-					$this->data['error'] = $this->auth_model->last_error();
+            /**
+             * Temporary password detected, log user out and redirect to
+             * temp password reset page.
+             *
+             * temp_pw will be an array containing the user's ID and hash
+             *
+             **/
 
-				endif;
+            $query = array();
 
-			else :
+            if ($this->data['return_to']) {
 
-				$this->data['error'] = lang('fv_there_were_errors');
+                $query['return_to'] = $this->data['return_to'];
+            }
 
-			endif;
+            /**
+             * Log the user out and remove the 'remember me' cookie - if we don't do this
+             * then the password reset page will see a logged in user and go nuts
+             * (i.e error).
+             */
 
-		endif;
+            if ($remember) {
 
-		// --------------------------------------------------------------------------
+                $query['remember'] = true;
+            }
 
-		$this->data['social_signon_enabled']	= $this->social_signon->is_enabled();
-		$this->data['social_signon_providers']	= $this->social_signon->get_providers('ENABLED');
+            $query = $query ? '?' . http_build_query($query) : '';
 
-		// --------------------------------------------------------------------------
+            $this->auth_model->logout();
 
-		//	Load the views
-		$this->load->view('structure/header',	$this->data);
-		$this->load->view('auth/login/form',	$this->data);
-		$this->load->view('structure/footer',	$this->data);
-	}
+            redirect('auth/reset_password/' . $user->id . '/' . md5($user->salt) . $query);
 
+        } elseif ($this->config->item('authTwoFactorMode')) {
 
-	// --------------------------------------------------------------------------
+            //  Generate token
+            $twoFactorToken = $this->auth_model->mfaTokenGenerate($user->id);
 
+            if (!$twoFactorToken) {
 
-	protected function _login($user, $remember = FALSE, $provider = 'native')
-	{
-		if ($user->is_suspended) :
+                $subject = 'Failed to generate two-factor auth token';
+                $message = 'A user tried to login and the system failed to generate a two-factor auth token.';
+                showFatalError($subject, $message);
+            }
 
-			$this->data['error'] = lang('auth_login_fail_suspended');
-			return FALSE;
+            //  Is there any query data?
+            $query = array();
 
-		elseif (!empty($user->temp_pw)) :
+            if ($this->data['return_to']) {
 
-			/**
-			 * Temporary password detected, log user out and redirect to
-			 * temp password reset page.
-			 *
-			 * temp_pw will be an array containing the user's ID and hash
-			 *
-			 **/
+                $query['return_to'] = $this->data['return_to'];
+            }
 
-			$_query	= array();
+            if ($remember) {
 
-			if ($this->data['return_to']) :
+                $query['remember'] = true;
+            }
 
-				$_query['return_to'] = $this->data['return_to'];
+            $query = $query ? '?' . http_build_query($query) : '';
 
-			endif;
+            //  Where we sending the user?
+            switch ($this->config->item('authTwoFactorMode')) {
 
-			//	Log the user out and remove the 'remember me' cookie - if we don't do this then the password reset
-			//	page will see a logged in user and go nuts (i.e error).
+                case 'QUESTION':
 
-			if ($remember) :
+                    $controller = 'mfa_question';
+                    break;
 
-				$_query['remember'] = TRUE;
+                case 'DEVICE':
 
-			endif;
+                    $controller = 'mfa_device';
+                    break;
+            }
 
-			$_query = $_query ? '?' . http_build_query($_query) : '';
+            //  Compile the URL
+            $url = array(
+                'auth',
+                $controller,
+                $user->id,
+                $twoFactorToken['salt'],
+                $twoFactorToken['token']
+            );
 
-			$this->auth_model->logout();
+            $url = implode($url, '/') . $query;
 
-			redirect('auth/reset_password/' . $user->id . '/' . md5($user->salt) . $_query);
+            //  Login was successful, redirect to the appropriate MFA page
+            redirect($url);
 
-		elseif ($this->config->item('authTwoFactorMode')) :
+        } else {
 
-			//	Generate token
-			$twoFactorToken = $this->auth_model->mfaTokenGenerate($user->id);
+            //  Finally! Send this user on their merry way...
+            if ($user->last_login) {
 
-			if (!$twoFactorToken) {
+                $this->load->helper('date');
 
-				$subject = 'Failed to generate two-factor auth token';
-				$message = 'A user tried to login and the system failed to generate a two-factor auth token.';
-				showFatalError($subject, $message);
-			}
+                $lastLogin = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-			//	Is there any query data?
-			$query	= array();
+                if ($this->config->item('auth_show_last_ip_on_login')) {
 
-			if ($this->data['return_to']) {
+                    $status  = 'message';
+                    $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
 
-				$query['return_to'] = $this->data['return_to'];
-			}
+                } else {
 
-			if ($remember) {
+                    $status  = 'message';
+                    $message = lang('auth_login_ok_welcome', array($user->first_name, $lastLogin));
+                }
 
-				$query['remember'] = true;
-			}
+            } else {
 
-			$query = $query ? '?' . http_build_query($query) : '';
+                $status  = 'message';
+                $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
+            }
 
-			//	Where we sending the user?
-			switch ($this->config->item('authTwoFactorMode')) {
+            $this->session->set_flashdata($status, $message);
 
-				case 'QUESTION':
+            $redirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $user->group_homepage;
 
-					$controller = 'mfa_question';
-					break;
+            // --------------------------------------------------------------------------
 
-				case 'DEVICE':
+            //  Generate an event for this log in
+            create_event('did_log_in', array('provider' => $provider), $user->id);
 
-					$controller = 'mfa_device';
-					break;
-			}
+            // --------------------------------------------------------------------------
 
-			//	Compile the URL
-			$url = array(
-				'auth',
-				$controller,
-				$user->id,
-				$twoFactorToken['salt'],
-				$twoFactorToken['token']
-			);
+            redirect($redirectUrl);
+        }
+    }
 
-			$url = implode($url, '/') . $query;
+    // --------------------------------------------------------------------------
 
-			//	Login was successful, redirect to the appropriate MFA page
-			redirect($url);
+    /**
+     * Log a user in using hashes of their user ID and password; easy way of
+     * automatically logging a user in from the likes of an email.
+     * @return  void
+     **/
+    public function with_hashes()
+    {
+        if (!$this->config->item('auth_enable_hashed_login')) {
 
-		else :
+            show_404();
+        }
 
-			//	Finally! Send this user on their merry way...
-			if ($user->last_login) :
+        // --------------------------------------------------------------------------
 
-				$this->load->helper('date');
+        $hash['id'] = $this->uri->segment(4);
+        $hash['pw'] = $this->uri->segment(5);
 
-				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
+        if (empty($hash['id']) || empty($hash['pw'])) {
 
-				if ($this->config->item('auth_show_last_ip_on_login')) :
+            show_error($lang['auth_with_hashes_incomplete_creds']);
+        }
 
-					$this->session->set_flashdata('message', lang('auth_login_ok_welcome_with_ip', array($user->first_name, $_last_login, $user->last_ip)));
+        // --------------------------------------------------------------------------
 
-				else :
+        /**
+         * If the user is already logged in we need to check to see if we check to see if they are
+         * attempting to login as themselves, if so we redirect, otherwise we log them out and try
+         * again using the hashes.
+         */
 
-					$this->session->set_flashdata('message', lang('auth_login_ok_welcome', array($user->first_name, $_last_login)));
+        if ($this->user_model->is_logged_in()) {
 
-				endif;
+            if (md5(active_user('id')) == $hash['id']) {
 
-			else :
+                //  We are attempting to log in as who we're already logged in as, redirect normally
+                if ($this->data['return_to']) {
 
-				$this->session->set_flashdata('message', lang('auth_login_ok_welcome_notime', array($user->first_name)));
+                    redirect($this->data['return_to']);
 
-			endif;
+                } else {
 
-			$_redirect = $this->data['return_to'] ? $this->data['return_to'] : $user->group_homepage;
+                    //  Nowhere to go? Send them to their default homepage
+                    redirect(active_user('group_homepage'));
+                }
 
-			// --------------------------------------------------------------------------
+            } else {
 
-			//	Generate an event for this log in
-			create_event('did_log_in', array('provider' => $provider), $user->id);
+                //  We are logging in as someone else, log the current user out and try again
+                $this->auth_model->logout();
 
-			// --------------------------------------------------------------------------
+                redirect(preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
+            }
+        }
 
-			redirect($_redirect);
+        // --------------------------------------------------------------------------
 
-		endif;
-	}
+        /**
+         * The active user is a guest, we must look up the hashed user and log them in
+         * if all is ok otherwise we report an error.
+         */
 
+        $user = $this->user_model->get_by_hashes($hash['id'], $hash['pw']);
 
-	// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
+        if ($user) {
 
-	/**
-	 * Log a user in using hashes of their user ID and password; easy way of
-	 * automatically logging a user in from the likes of an email.
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function with_hashes()
-	{
-		if (!$this->config->item('auth_enable_hashed_login')) :
+            //  User was verified, log the user in
+            $this->user_model->set_login_data($user->id);
 
-			show_404();
+            // --------------------------------------------------------------------------
 
-		endif;
+            //  Say hello
+            if ($user->last_login) {
 
-		// --------------------------------------------------------------------------
+                $this->load->helper('date');
 
-		$_hash['id']	= $this->uri->segment(4);
-		$_hash['pw']	= $this->uri->segment(5);
+                $lastLogin = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-		if (empty($_hash['id']) || empty($_hash['pw'])) :
+                if ($this->config->item('auth_show_last_ip_on_login')) {
 
-			show_error($lang['auth_with_hashes_incomplete_creds']);
+                    $status  = 'message';
+                    $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
 
-		endif;
+                } else {
 
-		// --------------------------------------------------------------------------
+                    $status  = 'message';
+                    $message = lang('auth_login_ok_welcome', array($user->first_name, $user->last_login));
+                }
 
-		/**
-		 * If the user is already logged in we need to check to see if we check to see if they are
-		 * attempting to login as themselves, if so we redirect, otherwise we log them out and try
-		 * again using the hashes.
-		 *
-		 **/
-		if ($this->user_model->is_logged_in()) :
+            } else {
 
-			if (md5(active_user('id')) == $_hash['id']) :
+                $status  = 'message';
+                $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
+            }
 
-				//	We are attempting to log in as who we're already logged in as, redirect normally
-				if ($this->data['return_to']) :
+            $this->session->set_flashdata($status, $message);
 
-					redirect($this->data['return_to']);
+            // --------------------------------------------------------------------------
 
-				else :
+            //  Update their last login
+            $this->user_model->update_last_login($user->id);
 
-					//	Nowhere to go? Send them to their default homepage
-					redirect(active_user('group_homepage'));
+            // --------------------------------------------------------------------------
 
-				endif;
+            //  Redirect user
+            if ($this->data['return_to'] != site_url()) {
 
-			else :
+                //  We have somewhere we want to go
+                redirect($this->data['return_to']);
 
-				//	We are logging in as someone else, log the current user out and try again
-				$this->auth_model->logout();
+            } else {
 
-				redirect(preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
+                //  Nowhere to go? Send them to their default homepage
+                redirect($user->group_homepage);
+            }
 
-			endif;
+        } else {
 
-		endif;
+            //  Bad lookup, invalid hash.
+            $this->session->set_flashdata('error', lang('auth_with_hashes_autologin_fail'));
+            redirect($this->data['return_to']);
+        }
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		/**
-		 * The active user is a guest, we must look up the hashed user and log them in
-		 * if all is ok otherwise we report an error.
-		 *
-		 **/
+    /**
+     * Handle login/registration via social provider
+     * @param  string $provider The provider to use
+     * @return void
+     */
+    protected function socialSignon($provider)
+    {
+        //  Get the adapter, HybridAuth will handle the redirect
+        $adapter  = $this->social_signon->authenticate($provider);
+        $provider = $this->social_signon->get_provider($provider);
 
-		$_user = $this->user_model->get_by_hashes($_hash['id'], $_hash['pw']);
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Fetch the user's social profile and, if one exists, the local profile.
+        try {
 
-		if ($_user) :
+            $socialUser = $adapter->getUserProfile();
 
-			//	User was verified, log the user in
-			$this->user_model->set_login_data($_user->id);
+        } catch(Exception $e) {
 
-			// --------------------------------------------------------------------------
+            //  Failed to fetch from the provider, something must have gone wrong
+            log_message('error', 'HybridAuth failed to fetch data from provider.');
+            log_message('error', 'Error Code: ' . $e->getCode());
+            log_message('error', 'Error Message: ' . $e->getMessage());
 
-			//	Say hello
-			if ($_user->last_login) :
+            if (empty($provider)) {
 
-				$this->load->helper('date');
+                $this->session->set_flashdata('error', '<strong>Sorry,</strong> there was a problem communicating with the network.');
 
-				$_last_login = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($_user->last_login)) : toUserDatetime($_user->last_login);
+            } else {
 
-				if ($this->config->item('auth_show_last_ip_on_login')) :
+                $this->session->set_flashdata('error', '<strong>Sorry,</strong> there was a problem communicating with ' . $provider['label'] . '.');
+            }
 
-					$this->session->set_flashdata('message', lang('auth_login_ok_welcome_with_ip', array($_user->first_name, $_last_login, $_user->last_ip)));
+            if ($this->uri->segment(4) == 'register') {
 
-				else :
+                $redirectUrl = 'auth/register';
 
-					$this->session->set_flashdata('message', lang('auth_login_ok_welcome', array($_user->first_name, $_user->last_login)));
+            } else {
 
-				endif;
+                $redirectUrl = 'auth/login';
+            }
 
-			else :
+            if ($this->data['return_to']) {
 
-				$this->session->set_flashdata('message', lang('auth_login_ok_welcome_notime', array($_user->first_name)));
+                $redirectUrl .= '?return_to=' . urlencode($this->data['return_to']);
+            }
 
-			endif;
+            redirect($redirectUrl);
+        }
 
-			// --------------------------------------------------------------------------
+        $user = $this->social_signon->get_user_by_provider_identifier($provider, $socialUser->identifier);
 
-			//	Update their last login
-			$this->user_model->update_last_login($_user->id);
+        // --------------------------------------------------------------------------
 
-			// --------------------------------------------------------------------------
+        /**
+         * See if we already know about this user, react accordingly.
+         * If a user already exists for this provder/identifier then it's logical
+         * to spok them in, I mean, log them in - provided of course they aren't
+         * already logged in, if they are then silly user. If no user is recognised
+         * then we need to register them, providing, of course that registration is
+         * enabled and that no one else on the system has their email address.
+         * On that note, we need to respect APP_NATIVE_LOGIN_USING; if the provider
+         * cannot satisfy this then we'll need to interrupt registration and ask them
+         * for either a username or an email (or both).
+         */
 
-			//	Redirect user
-			if ($this->data['return_to'] != site_url()) :
+        if ($user) {
 
-				//	We have somewhere we want to go
-				redirect($this->data['return_to']);
+            if ($this->user_model->is_logged_in() && active_user('id') == $user->id) {
 
-			else :
+                /**
+                 * Logged in user is already logged in and is the social user.
+                 * Silly user, just redirect them to where they need to go.
+                 */
 
-				//	Nowhere to go? Send them to their default homepage
-				redirect($_user->group_homepage);
+                $this->session->set_flashdata('message', lang('auth_social_already_linked', $provider['label']));
 
-			endif;
+                if ($this->data['return_to']) {
 
-		else :
+                    redirect($this->data['return_to']);
 
-			//	Bad lookup, invalid hash.
-			$this->session->set_flashdata('error', lang('auth_with_hashes_autologin_fail'));
-			redirect($this->data['return_to']);
+                } else {
 
-		endif;
-	}
+                    redirect($user->group_homepage);
+                }
 
+            } elseif ($this->user_model->is_logged_in() && active_user('id') != $user->id) {
 
-	// --------------------------------------------------------------------------
+                /**
+                 * Hmm, a user was found for this Provider ID, but it's not the actively logged
+                 * in user. This means that this provider account is already registered.
+                 */
 
+                $this->session->set_flashdata('error', lang('auth_social_account_in_use', array($provider['label'], APP_NAME)));
 
-	protected function _social_signon($provider)
-	{
-		//	Get the adapter, HybridAuth will handle the redirect
-		$_adapter	= $this->social_signon->authenticate($provider);
-		$_provider	= $this->social_signon->get_provider($provider);
+                if ($this->data['return_to']) {
 
-		// --------------------------------------------------------------------------
+                    redirect($this->data['return_to']);
 
-		//	Fetch the user's social profile and, if one exists, the local profile.
-		try
-		{
-			$_social_user = $_adapter->getUserProfile();
-		}
-		catch(Exception $e)
-		{
-			//	Failed to fetch from the provider, something must have gone wrong
-			log_message('error', 'HybridAuth failed to fetch data from provider.');
-			log_message('error', 'Error Code: ' . $e->getCode());
-			log_message('error', 'Error Message: ' . $e->getMessage());
+                } else {
 
-			if (empty($_provider)) :
+                    redirect($user->group_homepage);
+                }
 
-				$this->session->set_flashdata('error', '<strong>Sorry,</strong> there was a problem communicating with the network.');
+            } else {
 
-			else :
+                //  Fab, user exists, try to log them in
+                $this->user_model->set_login_data($user->id);
+                $this->social_signon->save_session($user->id);
 
-				$this->session->set_flashdata('error', '<strong>Sorry,</strong> there was a problem communicating with ' . $_provider['label'] . '.');
+                if (!$this->_login($user)) {
 
-			endif;
+                    $this->session->set_flashdata('error', $this->data['error']);
 
-			if ($this->uri->segment(4) == 'register') :
+                    $redirectUrl = 'auth/login';
 
-				$_redirect = 'auth/register';
+                    if ($this->data['return_to']) {
 
-			else :
+                        $redirectUrl .= '?return_to=' . urlencode($this->data['return_to']);
+                    }
 
-				$_redirect = 'auth/login';
+                    redirect($redirectUrl);
+                }
+            }
 
-			endif;
+        } elseif ($this_model->user->is_logged_in()) {
 
-			if ($this->data['return_to']) :
+            /**
+             * User is logged in and it look's like the provider isn't being used by
+             * anyone else. Go ahead and link the two accounts together.
+             */
 
-				$_redirect .= '?return_to=' . urlencode($this->data['return_to']);
+            if ($this->social_signon->save_session(active_user('id'), $provider)) {
 
-			endif;
+                create_event('did_link_provider',array('provider' => $provider));
+                $this->session->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
 
-			redirect($_redirect);
-		}
+            } else {
 
-		$_user = $this->social_signon->get_user_by_provider_identifier($provider, $_social_user->identifier);
+                $this->session->set_flashdata('error', lang('auth_social_linked_fail', $provider['label']));
+            }
 
-		// --------------------------------------------------------------------------
+            redirect($this->data['return_to']);
 
-		/**
-		 * See if we already know about this user, react accordingly.
-		 * If a user already exists for this provder/identifier then it's logical
-		 * to spok them in, I mean, log them in - provided of course they aren't
-		 * already logged in, if they are then silly user. If no user is recognised
-		 * then we need to register them, providing, of course that registration is
-		 * enabled and that no one else on the system has their email address.
-		 * On that note, we need to respect APP_NATIVE_LOGIN_USING; if the provider
-		 * cannot satisfy this then we'll need to interrupt registration and ask them
-		 * for either a username or an email (or both).
-		 **/
+        } else {
 
-		if ($_user) :
+            /**
+             * Didn't find a user and the active user isn't logged in, assume they want
+             * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
+             */
 
-			if ($this->user_model->is_logged_in() && active_user('id') == $_user->id) :
+            if (app_setting('user_registration_enabled', 'app')) {
 
-				//	Logged in user is already logged in and is the social user.
-				//	Silly user, just redirect them to where they need to go.
+                $requiredData = array();
+                $optionalData = array();
 
-				$this->session->set_flashdata('message', lang('auth_social_already_linked', $_provider['label']));
+                //  Fetch required data
+                switch (APP_NATIVE_LOGIN_USING) {
 
-				if ($this->data['return_to']) :
+                    case 'EMAIL':
 
-					redirect($this->data['return_to']);
+                        $requiredData['email'] = trim($socialUser->email);
+                        break;
 
-				else :
+                    case 'USERNAME':
 
-					redirect($_user->group_homepage);
+                        $requiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
+                        break;
 
-				endif;
+                    default:
 
-			elseif ($this->user_model->is_logged_in() && active_user('id') != $_user->id) :
+                        $requiredData['email']    = trim($socialUser->email);
+                        $requiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
+                        break;
+                }
 
-				//	Hmm, a user was found for this Provider ID, but it's not the
-				//	actively logged in user. This means that this provider account
-				//	is already registered with us
+                $requiredData['first_name']   = trim($socialUser->firstName);
+                $requiredData['last_name']    = trim($socialUser->lastName);
 
-				$this->session->set_flashdata('error', lang('auth_social_account_in_use', array($_provider['label'], APP_NAME)));
+                //  And any optional data
+                if (checkdate($socialUser->birthMonth, $socialUser->birthDay, $socialUser->birthYear)) {
 
-				if ($this->data['return_to']) :
+                    $optionalData['dob']          = array();
+                    $optionalData['dob']['year']  = trim($socialUser->birthYear);
+                    $optionalData['dob']['month'] = str_pad(trim($socialUser->birthMonth), 2, 0, STR_PAD_LEFT);
+                    $optionalData['dob']['day']   = str_pad(trim($socialUser->birthDay), 2, 0, STR_PAD_LEFT);
+                    $optionalData['dob']          = implode('-', $optionalData['dob']);
+                }
 
-					redirect($this->data['return_to']);
+                switch (strtoupper($socialUser->gender)) {
 
-				else :
+                    case 'MALE' :
 
-					redirect($_user->group_homepage);
+                        $optionalData['gender'] = 'MALE';
+                        break;
 
-				endif;
+                    case 'FEMALE' :
 
-			else :
+                        $optionalData['gender'] = 'FEMALE';
+                        break;
+                }
 
-				//	Fab, user exists, try to log them in
-				$this->user_model->set_login_data($_user->id);
-				$this->social_signon->save_session($_user->id);
+                // --------------------------------------------------------------------------
 
-				if (!$this->_login($_user)) :
+                /**
+                 * If any required fields are missing then we need to interrupt the registration
+                 * flow and ask for them
+                 */
 
-					$this->session->set_flashdata('error', $this->data['error']);
+                if (count($requiredData) !== count(array_filter($requiredData))) {
 
-					$_redirect = 'auth/login';
+                    /**
+                     * @TODO: One day work out a way of doing this so that we don't need to call
+                     * the API again etc, uses unnessecary calls. Then again, maybe it *is*
+                     * necessary.
+                     */
 
-					if ($this->data['return_to']) :
+                    $this->requestData($requiredData, $provider);
+                }
 
-						$_redirect .= '?return_to=' . urlencode($this->data['return_to']);
+                /**
+                 * We have everything we need to create the user account However, first we need to
+                 * make sure that our data is valid and not in use. At this point it's not the
+                 * user's fault so don't throw an error.
+                 */
 
-					endif;
+                //  Check email
+                if (isset($requiredData['email'])) {
 
-					redirect($_redirect);
+                    $check = $this->user_model->get_by_email($requiredData['email']);
 
-				endif;
+                    if ($check) {
 
-			endif;
+                        $requiredData['email'] = '';
+                        $requestData           = true;
+                    }
+                }
 
-		elseif ($this->user->is_logged_in()) :
+                // --------------------------------------------------------------------------
 
-			//	User is logged in and it look's like the provider isn't being used by anyone
-			//	else. Go ahead and link the two accounts together.
+                if (isset($requiredData['username'])) {
 
-			if ($this->social_signon->save_session(active_user('id'), $provider)) :
+                    /**
+                     * Username was set using provider provided username, check it's valid if
+                     * not, then request one. At this point it's not the user's fault so don't
+                     * throw an error.
+                     */
 
-				create_event('did_link_provider',array('provider' => $provider));
-				$this->session->set_flashdata('success', lang('auth_social_linked_ok', $_provider['label']));
+                    $check = $this->user_model->get_by_username($requiredData['username']);
 
-			else :
+                    if ($check) {
 
-				$this->session->set_flashdata('error', lang('auth_social_linked_fail', $_provider['label']));
+                        $requiredData['username'] = '';
+                        $requestData              = true;
+                    }
 
-			endif;
+                } else {
 
-			redirect($this->data['return_to']);
+                    /**
+                     * No username, make one up for them, try to use the social_user username
+                     * (as it might not have been set above), failing that use the user's name,
+                     * failing THAT use a random string
+                     */
 
-		else :
+                    if (!empty($socialUser->username)) {
 
-			/**
-			 * Didn't find a user and the active user isn't logged in, assume they want
-			 * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
-			 */
+                        $username = $socialUser->username;
 
-			if (app_setting('user_registration_enabled', 'app')) :
+                    } elseif($requiredData['first_name'] || $requiredData['last_name']) {
 
-				$_required_data = array();
-				$_optional_data = array();
+                        $username = $requiredData['first_name'] . ' ' . $requiredData['last_name'];
 
-				//	Fetch required data
-				switch (APP_NATIVE_LOGIN_USING) :
+                    } else {
 
-					case 'EMAIL' :
+                        $username = 'user' . date('YmdHis');
+                    }
 
-						$_required_data['email'] = trim($_social_user->email);
+                    $basename = url_title($username, '-', true);
+                    $requiredData['username'] = $basename;
 
-					break;
+                    $user = $this->user_model->get_by_username($requiredData['username']);
 
-					case 'USERNAME' :
+                    while ($user) {
 
-						$_required_data['username'] = !empty($_social_user->username) ? trim($_social_user->username) : '';
+                        $requiredData['username'] = increment_string($basename, '');
+                        $user = $this->user_model->get_by_username($requiredData['username']);
+                    }
+                }
 
-					break;
+                // --------------------------------------------------------------------------
 
-					default :
+                //  Request data?
+                if (!empty($requestData)) {
 
-						$_required_data['email']	= trim($_social_user->email);
-						$_required_data['username'] = !empty($_social_user->username) ? trim($_social_user->username) : '';
+                    $this->requestData($requiredData, $provider);
+                }
 
-					break;
+                // --------------------------------------------------------------------------
 
-				endswitch;
+                //  Handle referrals
+                if ($this->session->userdata('referred_by')) {
 
-				$_required_data['first_name']	= trim($_social_user->firstName);
-				$_required_data['last_name']	= trim($_social_user->lastName);
+                    $optionalData['referred_by'] = $this->session->userdata('referred_by');
+                }
 
-				//	And any optional data
-				if (checkdate($_social_user->birthMonth, $_social_user->birthDay, $_social_user->birthYear)) :
+                // --------------------------------------------------------------------------
 
-					$_optional_data['dob']			= array();
-					$_optional_data['dob']['year']	= trim($_social_user->birthYear);
-					$_optional_data['dob']['month']	= str_pad(trim($_social_user->birthMonth), 2, 0, STR_PAD_LEFT);
-					$_optional_data['dob']['day']	= str_pad(trim($_social_user->birthDay), 2, 0, STR_PAD_LEFT);
-					$_optional_data['dob']			= implode('-', $_optional_data['dob']);
+                //  Merge data arrays
+                $data = array_merge($requiredData, $optionalData);
 
-				endif;
+                // --------------------------------------------------------------------------
 
-				switch ($_social_user->gender) :
+                //  Create user
+                $newUser = $this->user_model->create($data);
 
-					case 'male' :
+                if ($newUser) {
 
-						$_optional_data['gender'] = 'MALE';
+                    /**
+                     * Welcome aboard, matey
+                     * - Save provider details
+                     * - Upload profile image if available
+                     */
 
-					break;
+                    $this->social_signon->save_session($newUser->id, $provider);
 
-					case 'female' :
+                    if (!empty($socialUser->photoURL)) {
 
-						$_optional_data['gender'] = 'FEMALE';
+                        //  Has profile image
+                        $imgUrl = $socialUser->photoURL;
 
-					break;
+                    } elseif (!empty($newUser->email)) {
 
-				endswitch;
+                        //  Attempt gravatar
+                        $imgUrl = 'http://www.gravatar.com/avatar/' . md5($newUser->email) . '?d=404&s=2048&r=pg';
+                    }
 
-				// --------------------------------------------------------------------------
+                    if (!empty($imgUrl)) {
 
-				//	If any required fields are missing then we need to interrupt the
-				//	registration flow and ask for them
+                        //  Fetch the image
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                        curl_setopt($ch, CURLOPT_URL, $imgUrl);
+                        $imgData = curl_exec($ch);
 
-				if (count($_required_data) !== count(array_filter($_required_data))) :
+                        if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200) {
 
-					//	TODO: One day work out a way of doing this so that we don't need to
-					//	call the API again etc, uses unnessecary calls. Then again, maybe it
-					//	*is* necessary.
+                            //  Attempt upload
+                            $this->load->library('cdn/cdn');
 
-					$this->_request_data($_required_data, $provider);
+                            //  Save file to cache
+                            $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;
 
-				endif;
+                            if (@file_put_contents($cacheFile, $imgData)) {
 
-				//	We have everything we need to create the user account
-				//	However, first we need to make sure that our data is valid
-				//	and not in use.At this point it's not the user's fault so
-				//	don't throw an error.
+                                $_upload = $this->cdn->object_create($cacheFile, 'profile-images', array());
 
-				//	Check email
-				if (isset($_required_data['email'])) :
+                                if ($_upload) {
 
-					$_check = $this->user_model->get_by_email($_required_data['email']);
+                                    $data                = array();
+                                    $data['profile_img'] = $_upload->id;
 
-					if ($_check) :
+                                    $this->user_model->update($newUser->id, $data);
 
-						$_required_data['email'] = '';
-						$_request_data			= TRUE;
+                                } else {
 
-					endif;
+                                    log_message('debug', 'Failed to uload user\'s profile image');
+                                    log_message('debug', $this->cdn->last_error());
+                                }
+                            }
+                        }
+                    }
 
-				endif;
+                    // --------------------------------------------------------------------------
 
-				// --------------------------------------------------------------------------
+                    //  Aint that swell, all registered!Redirect!
+                    $this->user_model->set_login_data($newUser->id);
 
-				if (isset($_required_data['username'])) :
+                    // --------------------------------------------------------------------------
 
-					//	Username was set using provider provided username, check it's valid
-					//	if not, then request one. At this point it's not the user's fault so
-					//	don't throw an error.
+                    //  Create an event for this event
+                    create_event('did_register', array('method' => $provider),$newUser->id);
 
-					$_check = $this->user_model->get_by_username($_required_data['username']);
+                    // --------------------------------------------------------------------------
 
-					if ($_check) :
+                    //  Redirect
+                    $this->session->set_flashdata('success', lang('auth_social_register_ok', $newUser->first_name));
 
-						$_required_data['username']	= '';
-						$_request_data				= TRUE;
+                    /**
+                     * Registrations will be forced to the registration redirect, regardless
+                     * of what else has been set
+                     */
 
-					endif;
+                    $group     = $this->user_group_model->get_by_id($newUser->group_id);
+                    $redirectUrl  = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
 
-				else :
+                    redirect($redirectUrl);
 
-					//	No username, make one up for them, try to use the social_user
-					//	username (as it might not have been set above), failing that
-					//	use the user's name, failing THAT use a random string
+                } else {
 
-					if (!empty($_social_user->username)) :
+                    //  Oh dear, something went wrong
+                    $status  = 'error';
+                    $message = '<strong>Sorry,</strong> something went wrong and your account could not be created.';
+                    $this->session->set_flashdata($status, $message);
 
-						$_username = $_social_user->username;
+                    $redirectUrl = 'auth/login';
 
-					elseif($_required_data['first_name'] || $_required_data['last_name']) :
+                    if ($this->data['return_to']) {
 
-						$_username = $_required_data['first_name'] . ' ' . $_required_data['last_name'];
+                        $redirectUrl .= '?return_to=' . urlencode($this->data['return_to']);
+                    }
 
-					else :
+                    redirect($redirectUrl);
+                }
 
-						$_username = 'user' . date('YmdHis');
+            } else {
 
-					endif;
+                //  How unfortunate, registration is disabled. Redrect back to the login page
+                $this->session->set_flashdata('error', lang('auth_social_register_disabled'));
 
-					$_basename = url_title($_username, '-', TRUE);
-					$_required_data['username'] = $_basename;
+                $redirectUrl = 'auth/login';
 
-					$_user = $this->user_model->get_by_username($_required_data['username']);
+                if ($this->data['return_to']) {
 
-					while ($_user) :
+                    $redirectUrl .= '?return_to=' . urlencode($this->data['return_to']);
+                }
 
-						$_required_data['username']  = increment_string($_basename, '');
-						$_user = $this->user_model->get_by_username($_required_data['username']);
+                redirect($redirectUrl);
+            }
+        }
+    }
 
-					endwhile;
+    // --------------------------------------------------------------------------
 
-				endif;
+    /**
+     * Handles requesting of additional data from the user
+     * @param  array  &$requiredData An array of fields to request
+     * @param  string $provider      The provider to use
+     * @return void
+     */
+    protected function requestData(&$requiredData, $provider)
+    {
+        if ($this->input->post()) {
 
-				// --------------------------------------------------------------------------
+            if (isset($requiredData['email'])) {
 
-				//	Request data?
-				if (!empty($_request_data)) :
+                $this->form_validation->set_rules('email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
+            }
 
-					$this->_request_data($_required_data, $provider);
+            if (isset($requiredData['username'])) {
 
-				endif;
+                $this->form_validation->set_rules('username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
+            }
 
-				// --------------------------------------------------------------------------
+            if (empty($requiredData['first_name'])) {
 
-				//	Handle referrals
-				if ($this->session->userdata('referred_by')) :
+                $this->form_validation->set_rules('first_name', '', 'xss_clean|trim|required');
+            }
 
-					$_optional_data['referred_by'] = $this->session->userdata('referred_by');
+            if (empty($requiredData['last_name'])) {
 
-				endif;
+                $this->form_validation->set_rules('last_name', '', 'xss_clean|trim|required');
+            }
 
-				// --------------------------------------------------------------------------
+            $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
 
-				//	Merge data arrays
-				$_data = array_merge($_required_data, $_optional_data);
+            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-				// --------------------------------------------------------------------------
+                $this->form_validation->set_message('is_unique', lang('fv_email_already_registered', site_url('auth/forgotten_password')));
 
-				//	Create user
-				$_new_user = $this->user_model->create($_data);
+            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-				if ($_new_user) :
+                $this->form_validation->set_message('is_unique', lang('fv_username_already_registered', site_url('auth/forgotten_password')));
 
-					//	Welcome aboard, matey
-					//	Save provider details
-					//	Upload profile image if available
+            } else {
 
-					$this->social_signon->save_session($_new_user->id, $provider);
+                $this->form_validation->set_message('is_unique', lang('fv_identity_already_registered', site_url('auth/forgotten_password')));
+            }
 
-					if (!empty($_social_user->photoURL)) :
+            $this->load->library('form_validation');
 
-						//	Has profile image
-						$_img_url = $_social_user->photoURL;
+            if ($this->form_validation->run()) {
 
-					elseif (!empty($_new_user->email)) :
+                //  Valid!Ensure required data is set correctly then allow system to move on.
+                if (isset($requiredData['email'])) {
 
-						//	Attempt gravatar
-						$_img_url = 'http://www.gravatar.com/avatar/' . md5($_new_user->email) . '?d=404&s=2048&r=pg';
+                    $requiredData['email'] = $this->input->post('email');
+                }
 
-					endif;
+                if (isset($requiredData['username'])) {
 
-					if (!empty($_img_url)) :
+                    $requiredData['username'] = $this->input->post('username');
+                }
 
-						//	Fetch the image
-						$_ch = curl_init();
-						curl_setopt($_ch, CURLOPT_RETURNTRANSFER, TRUE);
-						curl_setopt($_ch, CURLOPT_FOLLOWLOCATION, TRUE);
-						curl_setopt($_ch, CURLOPT_URL, $_img_url);
-						$_img_data = curl_exec($_ch);
+                if (empty($requiredData['first_name'])) {
 
-						if (curl_getinfo($_ch, CURLINFO_HTTP_CODE) === 200) :
+                    $requiredData['first_name'] = $this->input->post('first_name');
+                }
 
-							//	Attempt upload
-							$this->load->library('cdn/cdn');
+                if (empty($requiredData['last_name'])) {
 
-							//	Save file to cache
-							$_cache_file = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $_new_user->id;
+                    $requiredData['last_name'] = $this->input->post('last_name');
+                }
 
-							if (@file_put_contents($_cache_file, $_img_data)) :
+            } else {
 
-								$_upload = $this->cdn->object_create($_cache_file, 'profile-images', array());
+                $this->data['error'] = lang('fv_there_were_errors');
+                $this->requestDataForm($requiredData, $provider);
+            }
 
-								if ($_upload) :
+        } else {
 
-									$_data					= array();
-									$_data['profile_img']	= $_upload->id;
+            $this->requestDataForm($requiredData, $provider);
+        }
+    }
 
-									$this->user_model->update($_new_user->id, $_data);
+    // --------------------------------------------------------------------------
 
-								else :
+    /**
+     * Renders the "request data" form
+     * @param  array &$requiredData An array of fields to request
+     * @param  string $provider     The provider being used
+     * @return void
+     */
+    protected function requestDataForm(&$requiredData, $provider)
+    {
+        $this->data['required_data'] = $requiredData;
+        $this->data['form_url']      = 'auth/login/' . $provider;
 
-									log_message('debug', 'Failed to uload user\'s profile image');
-									log_message('debug', $this->cdn->last_error());
+        if ($this->uri->segment(4) == 'register') {
 
-								endif;
+            $this->data['form_url'] .= '/register';
+        }
 
-							endif;
+        if ($this->data['return_to']) {
 
-						endif;
+            $this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
+        }
 
-					endif;
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/register/social_request_data', $this->data);
+        $this->load->view('structure/footer', $this->data);
+        echo $this->output->get_output();
+        exit();
+    }
 
-					// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-					//	Aint that swell, all registered!Redirect!
-					$this->user_model->set_login_data($_new_user->id);
+    /**
+     * Route requests aprpopriately
+     * @return void
+     */
+    public function _remap()
+    {
+        $method = $this->uri->segment(3) ? $this->uri->segment(3) : 'index';
 
-					// --------------------------------------------------------------------------
+        if (method_exists($this, $method) && substr($method, 0, 1) != '_') {
 
-					//	Create an event for this event
-					create_event('did_register', array('method' => $provider),$_new_user->id);
+            $this->{$method}();
 
-					// --------------------------------------------------------------------------
+        } else {
 
-					//	Redirect
-					$this->session->set_flashdata('success', lang('auth_social_register_ok', $_new_user->first_name));
+            //  Assume the 3rd segment is a login provider supported by Hybrid Auth
+            if ($this->social_signon->is_valid_provider($method)) {
 
-					//	Registrations will be forced to the registration redirect, regardless of
-					//	what else has been set
+                $this->socialSignon($method);
 
-					$_group		= $this->user_group_model->get_by_id($_new_user->group_id);
-					$_redirect	= $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
+            } else {
 
-					redirect($_redirect);
-
-				else :
-
-					//	Oh dear, something went wrong
-					$this->session->set_flashdata('error', '<strong>Sorry,</strong> something went wrong and your account could not be created.');
-
-					$_redirect = 'auth/login';
-
-					if ($this->data['return_to']) :
-
-						$_redirect .= '?return_to=' . urlencode($this->data['return_to']);
-
-					endif;
-
-					redirect($_redirect);
-
-				endif;
-
-			else :
-
-				//	How unfortunate, registration is disabled. Redrect back to the login page
-				$this->session->set_flashdata('error', lang('auth_social_register_disabled'));
-
-				$_redirect = 'auth/login';
-
-				if ($this->data['return_to']) :
-
-					$_redirect .= '?return_to=' . urlencode($this->data['return_to']);
-
-				endif;
-
-				redirect($_redirect);
-
-			endif;
-
-		endif;
-
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	protected function _request_data(&$required_data, $provider)
-	{
-		if ($this->input->post()) :
-
-			if (isset($required_data['email'])) :
-
-				$this->form_validation->set_rules('email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
-
-			endif;
-
-			if (isset($required_data['username'])) :
-
-				$this->form_validation->set_rules('username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
-
-			endif;
-
-			if (empty($required_data['first_name'])) :
-
-				$this->form_validation->set_rules('first_name', '', 'xss_clean|trim|required');
-
-			endif;
-
-			if (empty($required_data['last_name'])) :
-
-				$this->form_validation->set_rules('last_name', '', 'xss_clean|trim|required');
-
-			endif;
-
-			$this->form_validation->set_message('required',	lang('fv_required'));
-			$this->form_validation->set_message('valid_email',	lang('fv_valid_email'));
-
-			if (APP_NATIVE_LOGIN_USING == 'EMAIL') :
-
-				$this->form_validation->set_message('is_unique',	lang('fv_email_already_registered', site_url('auth/forgotten_password')));
-
-			elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') :
-
-				$this->form_validation->set_message('is_unique',	lang('fv_username_already_registered', site_url('auth/forgotten_password')));
-
-			else :
-
-				$this->form_validation->set_message('is_unique',	lang('fv_identity_already_registered', site_url('auth/forgotten_password')));
-
-			endif;
-
-			$this->load->library('form_validation');
-
-			if ($this->form_validation->run()) :
-
-				//	Valid!Ensure required data is set correctly then allow system to move on.
-				if (isset($required_data['email'])) :
-
-					$required_data['email'] = $this->input->post('email');
-
-				endif;
-
-				if (isset($required_data['username'])) :
-
-					$required_data['username'] = $this->input->post('username');
-
-				endif;
-
-				if (empty($required_data['first_name'])) :
-
-					$required_data['first_name'] = $this->input->post('first_name');
-
-				endif;
-
-				if (empty($required_data['last_name'])) :
-
-					$required_data['last_name'] = $this->input->post('last_name');
-
-				endif;
-
-			else :
-
-				$this->data['error'] = lang('fv_there_were_errors');
-				$this->_required_data_form($required_data, $provider);
-
-			endif;
-
-		else :
-
-			$this->_required_data_form($required_data, $provider);
-
-		endif;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	protected function _required_data_form(&$required_data, $provider)
-	{
-		$this->data['required_data']	= $required_data;
-		$this->data['form_url']			= 'auth/login/' . $provider;
-
-		if ($this->uri->segment(4) == 'register') :
-
-			$this->data['form_url'] .= '/register';
-
-		endif;
-
-		if ($this->data['return_to']) :
-
-			$this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
-
-		endif;
-
-		$this->load->view('structure/header',					$this->data);
-		$this->load->view('auth/register/social_request_data',	$this->data);
-		$this->load->view('structure/footer',					$this->data);
-		echo $this->output->get_output();
-		exit();
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function _remap()
-	{
-		$_method = $this->uri->segment(3) ? $this->uri->segment(3) : 'index';
-
-		if (method_exists($this, $_method) && substr($_method, 0, 1) != '_') :
-
-			$this->{$_method}();
-
-		else :
-
-			//	Assume the 3rd segment is a login provider supported by Hybrid Auth
-			if ($this->social_signon->is_valid_provider($_method)) :
-
-				$this->_social_signon($_method);
-
-			else :
-
-				show_404();
-
-			endif;
-
-		endif;
-	}
+                show_404();
+            }
+        }
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -1070,10 +1023,9 @@ class NAILS_Login extends NAILS_Auth_Controller
  *
  **/
 
-if (!defined('NAILS_ALLOW_EXTENSION')) :
+if (!defined('NAILS_ALLOW_EXTENSION')) {
 
-	class Login extends NAILS_Login
-	{
-	}
-
-endif;
+    class Login extends NAILS_Login
+    {
+    }
+}
