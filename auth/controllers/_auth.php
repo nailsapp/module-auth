@@ -9,6 +9,7 @@
  * @author      Nails Dev Team
  * @link
  */
+
 class NAILS_Auth_Controller extends NAILS_Controller
 {
 	public function __construct()

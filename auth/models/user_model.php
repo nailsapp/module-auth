@@ -1,21 +1,14 @@
 <?php
 
 /**
- * Name:        User_model
+ * This model contains all methods for interacting with users.
  *
- * Description: The user model contains all methods for interacting and
- *              querying the active user. It also contains functionality for
- *              interfacing with the database with regards user accounts.
- *
- **/
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Model
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_User_model extends NAILS_Model
 {
@@ -118,11 +111,10 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Fetches a value from the active user's session data; done this way so
      * that interfacing with active user data is consistent.
-     * @param   string  $keys       The key to look up in active_user
-     * @param   string  $delimiter  If multiple fields are requested they'll be joined by this string
-     * @return  mixed
-     *
-     **/
+     * @param  string  $keys      The key to look up in active_user
+     * @param  string  $delimiter If multiple fields are requested they'll be joined by this string
+     * @return mixed
+     */
     public function active_user($keys = false, $delimiter = ' ')
     {
         //  Only look for a value if we're logged in
@@ -141,83 +133,40 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Only stitch items together if we have more than one key
+        //  If only one key is being requested then don't do anything fancy
         if (strpos($keys, ',') === false) {
 
-            $val = isset($this->activeUser->{$keys}) ? $this->activeUser->{$keys} : false;
+            $val = isset($this->activeUser->{$keys}) ? $this->activeUser->{$keys} : null;
 
-            //  If something is found, then use that
-            if ($val !== false) {
+        } else {
 
-                return $val;
+            //  More than one key
+            $keys = explode(',', $keys);
+            $keys = array_filter($keys);
+            $out  = array();
+
+            foreach ($keys as $key) {
+
+                //  If something is found, use that.
+                if (isset($this->activeUser->{trim($key)})) {
+
+                    $out[] = isset($this->activeUser->{trim($key)});
+
+                }
+            }
+
+            //  If nothing was found, just return false
+            if (empty($out)) {
+
+                $val = null;
 
             } else {
 
-                //  Nothing was found, but if $keys matches user_meta_* then attempt an extra table look up
-                if (preg_match('/^user_meta_(.*)/', $keys)) {
-
-                    //  Look up the extra table
-                    $val = $this->extra_table_fetch($keys, null, $this->activeUser->id);
-
-                    //  Save it to active_user so that we don't do this lookup twice
-                    $this->activeUser->{$keys} = $val;
-
-                    //  ...and return the data to the user.
-                    return $val;
-                }
+                $val = implode($delimiter, $out);
             }
         }
 
-        // --------------------------------------------------------------------------
-
-        //  More than one key
-        $keys = explode(',', $keys);
-        $out  = array();
-
-        foreach ($keys as $key) {
-
-            $val = isset($this->activeUser->{trim($key)}) ? $this->activeUser->{trim($key)} : false;
-
-            //  If something is found, use that.
-            if ($val !== false) {
-
-                $out[] = $val;
-
-            } else {
-
-                //  Nothing was found, but if $key matcehs user_meta_* then attempt an extra table look up
-                if (preg_match('/^user_meta_(.*)/', $key)) {
-
-                    //  Look up the extra table
-                    $val = $this->extra_table_fetch($key, null, $this->activeUser->id);
-
-                    //  Save it to active_user so that we don't do this lookup twice
-                    $this->activeUser->{$key} = $val;
-
-                    /**
-                     * ...and return the data to the user. (Normally doesn't really make sense
-                     * as this will just return the word Array because this is being imploded
-                     * into a concacted string, however if a comma is left in by accident or the
-                     * other keys fail to return data then the output will be as normal).
-                     */
-
-                    $out[] =  $val;
-                }
-            }
-        }
-
-        //  If nothing was found, just return false
-        if (empty($out)) {
-
-            return false;
-        }
-
-        /**
-         * If we have more than 1 element then stitch them together, if not
-         * just return the single element
-         */
-
-        return count($out > 1) ? implode($delimiter, $out) : $out[0];
+        return $val;
     }
 
     // --------------------------------------------------------------------------
@@ -257,7 +206,7 @@ class NAILS_User_model extends NAILS_Model
 
     /**
      * Set the user's login data
-     * @param mixed  $idEmail         The user's ID or email address
+     * @param mixed   $idEmail        The user's ID or email address
      * @param boolean $setSessionData Whether to set the session data or not
      */
     public function set_login_data($idEmail, $setSessionData = true)
@@ -265,15 +214,15 @@ class NAILS_User_model extends NAILS_Model
         //  Valid user?
         if (is_numeric($idEmail)) {
 
-            $user   = $this->get_by_id($idEmail);
-            $error  = 'Invalid User ID.';
+            $user  = $this->get_by_id($idEmail);
+            $error = 'Invalid User ID.';
 
         } elseif (is_string($idEmail)) {
 
             if (valid_email($idEmail)) {
 
-                $user   = $this->get_by_email($idEmail);
-                $error  = 'Invalid User email.';
+                $user  = $this->get_by_email($idEmail);
+                $error = 'Invalid User email.';
 
             } else {
 
@@ -309,9 +258,9 @@ class NAILS_User_model extends NAILS_Model
             if ($setSessionData) {
 
                 $sessionData = array(
-                    'id'        => $user->id,
-                    'email'     => $user->email,
-                    'group_id'  => $user->group_id,
+                    'id'       => $user->id,
+                    'email'    => $user->email,
+                    'group_id' => $user->group_id,
                 );
                 $this->session->set_userdata($sessionData);
             }
@@ -328,7 +277,7 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Clears the login data for a user
      * @return  void
-     **/
+     */
     public function clear_login_data()
     {
         //  Clear the session
@@ -351,7 +300,7 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Determines whether the active user is logged in or not.
      * @return  bool
-     **/
+     */
     public function is_logged_in()
     {
         return $this->isLoggedIn;
@@ -362,7 +311,7 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Determines whether the active user is to be remembered
      * @return  bool
-     **/
+     */
     public function is_remembered()
     {
         //  Deja vu?
@@ -394,7 +343,7 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Determines whether the active user group has admin permissions.
      * @return  boolean
-     **/
+     */
     public function is_admin($user = null)
     {
         if ($this->is_superuser($user)) {
@@ -411,7 +360,7 @@ class NAILS_User_model extends NAILS_Model
      * Determines whether the active user is a superuser. Extend this method to
      * alter it's response.
      * @return  boolean
-     **/
+     */
     public function is_superuser($user = null)
     {
         return $this->has_permission('superuser', $user);
@@ -424,7 +373,7 @@ class NAILS_User_model extends NAILS_Model
      * the system can log them back in. this method is simply a quick and logical
      * way of checking if the session variable exists.
      * @return  boolean
-     **/
+     */
     public function was_admin()
     {
         return (bool) $this->session->userdata('admin_recovery');
@@ -437,7 +386,7 @@ class NAILS_User_model extends NAILS_Model
      * @param   string  $permission The permission to check for, in the format admin.account.view
      * @param   mixed   $user       The user to check for; if null uses active user, if numeric, fetches suer, if object uses that object
      * @return  boolean
-     **/
+     */
     public function has_permission($permission, $user = null)
     {
         //  Fetch the correct ACL
@@ -494,7 +443,7 @@ class NAILS_User_model extends NAILS_Model
      * @param string $data    Data passed from the calling method
      * @param string $_caller The name of the calling method
      * @return void
-     **/
+     */
     protected function _getcount_common($data = array(), $_caller = null)
     {
         //  If there's a search term, then we better get %LIKING%
@@ -793,31 +742,28 @@ class NAILS_User_model extends NAILS_Model
      * Update a user, if $user_id is not set method will attempt to update the
      * active user. If $data is passed then the method will attempt to update
      * the user and/or user_meta tables
-     *
-     * @access  public
-     * @return  int     $id     The ID of the user to update
-     * @return  array   $data   Any data to be updated
-     *
-     **/
+     * @return  integer $id   The ID of the user to update
+     * @return  array   $data Any data to be updated
+     */
     public function update($user_id = null, $data = null)
     {
         $data = (array) $data;
 
         //  Get the user ID to update
-        if (null !== $user_id && $user_id !== false) :
+        if (!is_null($user_id) && $user_id !== false) {
 
             $_uid = $user_id;
 
-        elseif (active_user('id')) :
+        } elseif (active_user('id')) {
 
             $_uid = active_user('id');
 
-        else :
+        } else {
 
             $this->_set_error('No user ID set');
             return false;
 
-        endif;
+        }
 
 
         // --------------------------------------------------------------------------
@@ -826,7 +772,7 @@ class NAILS_User_model extends NAILS_Model
         //  If there's some data we'll need to know the columns of `user`
         //  We also want to unset any 'dangerous' items then set it for the query
 
-        if ($data) :
+        if ($data) {
 
             //  Set the cols in `user` (rather than querying the DB)
             $_cols = $this->_get_user_columns();
@@ -836,16 +782,16 @@ class NAILS_User_model extends NAILS_Model
             unset($data->id_md5);
 
             //  If we're updating the user's password we should generate a new hash
-            if (array_key_exists('password', $data)) :
+            if (array_key_exists('password', $data)) {
 
                 $_hash = $this->user_password_model->generateHash($data['password']);
 
-                if (!$_hash) :
+                if (!$_hash) {
 
                     $this->_set_error($this->user_password_model->last_error());
                     return false;
 
-                endif;
+                }
 
                 $data['password']           = $_hash->password;
                 $data['password_md5']       = $_hash->password_md5;
@@ -855,11 +801,11 @@ class NAILS_User_model extends NAILS_Model
 
                 $_password_updated = true;
 
-            else :
+            } else {
 
                 $_password_updated = false;
 
-            endif;
+            }
 
             //  Set the data
             $_data_user             = array();
@@ -869,51 +815,46 @@ class NAILS_User_model extends NAILS_Model
             $dataResetMfaQuestion   = false;
             $dataResetMfaDevice     = false;
 
-            foreach ($data as $key => $val) :
+            foreach ($data as $key => $val) {
 
                 //  user or user_meta?
-                if (array_search($key, $_cols) !== false) :
+                if (array_search($key, $_cols) !== false) {
 
                     //  Careful now, some items cannot be blank and must be null
-                    switch ($key) :
+                    switch ($key) {
 
-                        case 'profile_img' :
+                        case 'profile_img':
 
                             $_data_user[$key] = $val ? $val : null;
+                            break;
 
-                        break;
-
-                        default :
+                        default:
 
                             $_data_user[$key] = $val;
+                            break;
+                    }
 
-                        break;
-
-                    endswitch;
-
-                elseif ($key == 'email') :
+                } elseif ($key == 'email') {
 
                     $_data_email = strtolower(trim($val));
 
-                elseif ($key == 'username') :
+                } elseif ($key == 'username') {
 
                     $_data_username = strtolower(trim($val));
 
-                elseif ($key == 'reset_mfa_question') :
+                } elseif ($key == 'reset_mfa_question') {
 
                     $dataResetMfaQuestion = $val;
 
-                elseif ($key == 'reset_mfa_device') :
+                } elseif ($key == 'reset_mfa_device') {
 
                     $dataResetMfaDevice = $val;
 
-                else :
+                } else {
 
                     $_data_meta[$key] = $val;
-
-                endif;
-
-            endforeach;
+                }
+            }
 
             // --------------------------------------------------------------------------
 
@@ -983,83 +924,83 @@ class NAILS_User_model extends NAILS_Model
             $this->db->where('id', (int) $_uid);
             $this->db->set('last_update', 'NOW()', false);
 
-            if ($_data_user) :
+            if ($_data_user) {
 
                 $this->db->set($_data_user);
-
-            endif;
+            }
 
             $this->db->update(NAILS_DB_PREFIX . 'user');
 
             // --------------------------------------------------------------------------
 
             //  Update the meta table
-            if ($_data_meta) :
+            if ($_data_meta) {
 
                 $this->db->where('user_id', (int) $_uid);
                 $this->db->set($_data_meta);
                 $this->db->update(NAILS_DB_PREFIX . 'user_meta');
-
-            endif;
+            }
 
             // --------------------------------------------------------------------------
 
             //  If an email has been passed then attempt to update the user's email too
-            if ($_data_email) :
+            if ($_data_email) {
 
-                if (valid_email($_data_email)) :
+                if (valid_email($_data_email)) {
 
                     //  Check if the email is already being used
                     $this->db->where('email', $_data_email);
                     $_email = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
 
-                    if ($_email) :
+                    if ($_email) {
 
-                        //  Email is in use, if it's in use by the ID of this user then
-                        //  set it as the primary email for this account. If it's in use
-                        //  by another user then error
+                        /**
+                         * Email is in use, if it's in use by the ID of this user then set
+                         * it as the primary email for this account. If it's in use by
+                         * another user then error
+                         */
 
-                        if ($_email->user_id == $_uid) :
+                        if ($_email->user_id == $_uid) {
 
                             $this->email_make_primary($_email->email);
 
-                        else :
+                        } else {
 
                             $this->_set_error('Email is already in use.');
                             $_rollback = true;
 
-                        endif;
+                        }
 
-                    else :
+                    } else {
 
-                        //  Doesn't appear to be in use, add as a new email address and
-                        //  make it the primary one
+                        /**
+                         * Doesn't appear to be in use, add as a new email address and
+                         * make it the primary one
+                         */
 
                         $this->email_add($_data_email, (int) $_uid, true);
 
-                    endif;
+                    }
 
-                else :
+                } else {
 
                     //  Error, not a valid email; roll back transaction
                     $this->_set_error('"' . $_data_email . '" is not a valid email address.');
                     $_rollback = true;
-
-                endif;
-
-            endif;
+                }
+            }
 
             // --------------------------------------------------------------------------
 
             //  How'd we get on?
-            if (!$_rollback && $this->db->trans_status() !== false) :
+            if (!$_rollback && $this->db->trans_status() !== false) {
 
                 $this->db->trans_commit();
 
                 // --------------------------------------------------------------------------
 
                 //  If the user's password was updated send them a notification
-                if ($_password_updated) :
+                if ($_password_updated) {
 
                     $_email                     = new stdClass();
                     $_email->type               = 'password_updated';
@@ -1070,78 +1011,75 @@ class NAILS_User_model extends NAILS_Model
                     $_email->data['ip_address'] = $this->input->ip_address();
 
                     $this->emailer->send($_email, true);
+                }
 
-                endif;
-
-            else :
+            } else {
 
                 $this->db->trans_rollback();
                 return false;
+            }
 
-            endif;
+        } else {
 
-        else :
-
-            //  If there was no data then run an update anyway on just user table. We need to do this
-            //  As some methods will use $this->db->set() before calling update(); not sure if this is
-            //  a bad design or not... sorry.
+            /**
+             * If there was no data then run an update anyway on just user table. We need to
+             * do this as some methods will use $this->db->set() before calling update(); not
+             * sure if this is a bad design or not... sorry.
+             */
 
             $this->db->set('last_update', 'NOW()', false);
             $this->db->where('id', (int) $_uid);
             $this->db->update(NAILS_DB_PREFIX . 'user');
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
         //  If we just updated the active user we should probably update their session info
-        if ($_uid == active_user('id')) :
+        if ($_uid == active_user('id')) {
 
             $this->activeUser->last_update = date('Y-m-d H:i:s');
 
-            if ($data) :
+            if ($data) {
 
-                foreach ($data as $key => $val) :
+                foreach ($data as $key => $val) {
 
                     $this->activeUser->{$key} = $val;
-
-                endforeach;
-
-            endif;
+                }
+            }
 
             // --------------------------------------------------------------------------
 
             //  Do we need to update any timezone/date/time preferences?
-            if (isset($data['timezone'])) :
+            if (isset($data['timezone'])) {
 
                 $this->datetime_model->setUserTimezone($data['timezone']);
 
-            endif;
+            }
 
-            if (isset($data['datetime_format_date'])) :
+            if (isset($data['datetime_format_date'])) {
 
                 $this->datetime_model->setDateFormat($data['datetime_format_date']);
 
-            endif;
+            }
 
-            if (isset($data['datetime_format_time'])) :
+            if (isset($data['datetime_format_time'])) {
 
                 $this->datetime_model->setTimeFormat($data['datetime_format_time']);
 
-            endif;
+            }
 
             // --------------------------------------------------------------------------
 
             //  If there's a remember me cookie then update that too, but only if the password
             //  or email address has changed
 
-            if ((isset($data['email']) || !empty($_password_updated)) && $this->is_remembered()) :
+            if ((isset($data['email']) || !empty($_password_updated)) && $this->is_remembered()) {
 
                 $this->set_remember_cookie();
 
-            endif;
+            }
 
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
@@ -1152,13 +1090,11 @@ class NAILS_User_model extends NAILS_Model
         return true;
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Returns a user from the cache
-     * @param  int $userId The ID of the user to return
+     * @param  int   $userId The ID of the user to return
      * @return mixed
      */
     public function getCacheUser($userId)
@@ -1168,10 +1104,10 @@ class NAILS_User_model extends NAILS_Model
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Saves a user object to the persistent cache
      * @param int $userId The user ID to cache
+     * @return boolean
      */
     public function setCacheUser($userId)
     {
@@ -1187,37 +1123,31 @@ class NAILS_User_model extends NAILS_Model
         return true;
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Sets the user's object into the cache
-     * @param stdClass $userObj The complete user Object to cache
+     * @param  stdClass $userObj The complete user Object to cache
+     * @return void
      */
     protected function setCacheUserObj($userObj)
     {
         $this->_set_cache('user-' . $userObj->id, $userObj);
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Removes a user object from the persistent cache
      * @param int $userId The user ID to remove from cache
+     * @return void
      */
     public function unsetCacheUser($userId)
     {
         $this->_unset_cache('user-' . $userId);
-
-        return true;
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Adds a new email to the user_email table. Will optionally send the verification email, too.
@@ -1234,76 +1164,74 @@ class NAILS_User_model extends NAILS_Model
         $_email     = trim(strtolower($email));
         $_u         = $this->get_by_id($_user_id);
 
-        if (!$_u) :
+        if (!$_u) {
 
             $this->_set_error('Invalid User ID');
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
         //  Make sure the email is valid
-        if (!valid_email($_email)) :
+        if (!valid_email($_email)) {
 
             $this->_set_error('"' . $_email . '" is not a valid email address');
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
-        //  Test email, if it's in use and for the same user then return true. If
-        //  it's in use by a different user then return an error.
+        /**
+         * Test email, if it's in use and for the same user then return true. If it's
+         * in use by a different user then return an error.
+         */
 
         $this->db->select('id, user_id, is_verified, code');
         $this->db->where('email', $_email);
         $_test = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
 
-        if ($_test) :
+        if ($_test) {
 
-            if ($_test->user_id == $_u->id) :
+            if ($_test->user_id == $_u->id) {
 
-                //  In use, but belongs to the same user - return the code
-                //  (imitates behavior of newly added email)
+                /**
+                 * In use, but belongs to the same user - return the code (imitates
+                 * behavior of newly added email)
+                 */
 
-                if ($is_primary) :
+                if ($is_primary) {
 
                     $this->email_make_primary($_test->id);
-
-                endif;
+                }
 
                 //  Resend verification email?
-                if ($send_email && !$_test->is_verified) :
+                if ($send_email && !$_test->is_verified) {
 
                     $this->email_add_send_verify($_test->id);
-
-                endif;
+                }
 
                 //  Recache the user
                 $this->setCacheUser($_u->id);
 
                 return $_test->code;
 
-            else :
+            } else {
 
                 //  In use, but belongs to another user
                 $this->_set_error('Email in use by another user.');
                 return false;
-
-            endif;
-
-        endif;
+            }
+        }
 
         // --------------------------------------------------------------------------
 
         $_code = NAILS_User_password_model::salt();
 
-        $this->db->set('user_id',       $_u->id);
-        $this->db->set('email',     $_email);
-        $this->db->set('code',          $_code);
-        $this->db->set('is_verified',   (bool) $is_verified);
-        $this->db->set('date_added',    'NOW()', false);
+        $this->db->set('user_id', $_u->id);
+        $this->db->set('email', $_email);
+        $this->db->set('code', $_code);
+        $this->db->set('is_verified', (bool) $is_verified);
+        $this->db->set('date_added', 'NOW()', false);
 
         if ((bool) $is_verified) {
 
@@ -1312,24 +1240,22 @@ class NAILS_User_model extends NAILS_Model
 
         $this->db->insert(NAILS_DB_PREFIX . 'user_email');
 
-        if ($this->db->affected_rows()) :
+        if ($this->db->affected_rows()) {
 
             //  Email ID
             $_email_id = $this->db->insert_id();
 
             //  Make it the primary email address?
-            if ($is_primary) :
+            if ($is_primary) {
 
                 $this->email_make_primary($_email_id);
-
-            endif;
+            }
 
             //  Send off the verification email
-            if ($send_email && !$is_verified) :
+            if ($send_email && !$is_verified) {
 
                 $this->email_add_send_verify($_email_id);
-
-            endif;
+            }
 
             //  Recache the user
             $this->setCacheUser($_u->id);
@@ -1337,111 +1263,108 @@ class NAILS_User_model extends NAILS_Model
             //  Return the code
             return $_code;
 
-        else :
+        } else {
 
             return false;
-
-        endif;
+        }
     }
-
 
     // --------------------------------------------------------------------------
 
-
+    /**
+     * Send, or resend, the verify email for a aprticular email address
+     * @param  integer $email_id The email's ID
+     * @param  integer $user_id  The user's ID
+     * @return boolean
+     */
     public function email_add_send_verify($email_id, $user_id = null)
     {
         //  Fetch the email and the user's group
         $this->db->select('ue.id,ue.code,ue.is_verified,ue.user_id,u.group_id');
 
-        if (is_numeric($email_id)) :
+        if (is_numeric($email_id)) {
 
             $this->db->where('ue.id', $email_id);
 
-        else :
+        } else {
 
             $this->db->where('ue.email', $email_id);
 
-        endif;
+        }
 
-        if (!empty($user_id)) :
+        if (!empty($user_id)) {
 
             $this->db->where('ue.user_id', $user_id);
 
-        endif;
+        }
 
         $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ue.user_id');
 
         $_e = $this->db->get(NAILS_DB_PREFIX . 'user_email ue')->row();
 
-        if (!$_e) :
+        if (!$_e) {
 
             $this->_set_error('Invalid Email.');
             return false;
 
-        endif;
+        }
 
-        if ($_e->is_verified) :
+        if ($_e->is_verified) {
 
             $this->_set_error('Email is already verified.');
             return false;
 
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
-        $_email                     = new stdClass();
-        $_email->type               = 'verify_email_' . $_e->group_id;
-        $_email->to_id              = $_e->user_id;
-        $_email->data               = array();
-        $_email->data['user_id']    = $_e->user_id;
-        $_email->data['code']       = $_e->code;
+        $_email                  = new stdClass();
+        $_email->type            = 'verify_email_' . $_e->group_id;
+        $_email->to_id           = $_e->user_id;
+        $_email->data            = array();
+        $_email->data['user_id'] = $_e->user_id;
+        $_email->data['code']    = $_e->code;
 
-        if (!$this->emailer->send($_email, true)) :
+        if (!$this->emailer->send($_email, true)) {
 
             //  Failed to send using the group email, try using the generic email template
             $_email->type = 'verify_email';
 
-            if (!$this->emailer->send($_email, true)) :
+            if (!$this->emailer->send($_email, true)) {
 
                 //  Email failed to send, for now, do nothing.
                 $this->_set_error('The verification email failed to send.');
                 return false;
-
-            endif;
-
-        endif;
+            }
+        }
 
         return true;
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Deletes a non-primary email from the user_email table, optionally filtering
      * by $user_id
      * @param  mixed $email_id The email address, or the ID of the email address to remove
      * @param  int $user_id    The ID of the user to restrict to
-     * @return bool            true on success, false on failure
+     * @return boolean
      */
     public function email_delete($email_id, $user_id = null)
     {
-        if (is_numeric($email_id)) :
+        if (is_numeric($email_id)) {
 
             $this->db->where('id', $email_id);
 
-        else :
+        } else {
 
             $this->db->where('email', $email_id);
+        }
 
-        endif;
-
-        if (!empty($user_id)) :
+        if (!empty($user_id)) {
 
             $this->db->where('user_id', $user_id);
-
-        endif;
+        }
 
         $this->db->where('is_primary', false);
         $this->db->delete(NAILS_DB_PREFIX . 'user_email');
@@ -1457,7 +1380,6 @@ class NAILS_User_model extends NAILS_Model
         }
     }
 
-
     // --------------------------------------------------------------------------
 
 
@@ -1466,7 +1388,7 @@ class NAILS_User_model extends NAILS_Model
      * address. If it is then the email is marked as verified.
      * @param  mixed  $id_email The numeric ID of the user, or the email address
      * @param  string $code     The verification code as generated by email_add()
-     * @return bool             true on successful verification, false on failure
+     * @return boolean
      */
     public function email_verify($idEmail, $code)
     {
@@ -1521,44 +1443,39 @@ class NAILS_User_model extends NAILS_Model
         }
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Sets an email address as the primary email address for that user.
      * @param  mixed $id_email The numeric  ID of the email address, or the email address itself
      * @param  int   $user_id  Specify the user ID which this should apply to
-     * @return bool            true on success, false on failure
+     * @return boolean
      */
     public function email_make_primary($id_email, $user_id = null)
     {
         //  Fetch email
         $this->db->select('id,user_id,email');
 
-        if (is_numeric($id_email)) :
+        if (is_numeric($id_email)) {
 
             $this->db->where('id', $id_email);
 
-        else :
+        } else {
 
             $this->db->where('email', $id_email);
+        }
 
-        endif;
-
-        if (!is_null($user_id)) :
+        if (!is_null($user_id)) {
 
             $this->db->where('user_id', $user_id);
-
-        endif;
+        }
 
         $_email = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
 
-        if (!$_email) :
+        if (!$_email) {
 
             return false;
-
-        endif;
+        }
 
         //  Update
         $this->db->trans_begin();
@@ -1573,113 +1490,97 @@ class NAILS_User_model extends NAILS_Model
 
         $this->db->trans_complete();
 
-        if ($this->db->trans_status() === false) :
+        if ($this->db->trans_status() === false) {
 
             $this->db->trans_rollback();
             return false;
 
-        else :
+        } else {
 
             $this->db->trans_commit();
             $this->setCacheUser($_email->user_id);
             return true;
 
-        endif;
+        }
     }
-
 
     // --------------------------------------------------------------------------
 
-
     /**
-     * Increase the user's failed login account by 1
-     *
-     * @access  public
-     * @param   int     $user_id    The ID of the user to increment
-     * @param   int     $expires    Time (in seconds) until expiration
-     * @return  void
-     **/
+     * Increment the user's failed logins
+     * @param  integer $user_id The user ID to increment
+     * @param  integer $expires How long till the block, if the threshold is reached, expires.
+     * @return boolean
+     */
     public function increment_failed_login($user_id, $expires = 300)
     {
         $this->db->set('failed_login_count', '`failed_login_count`+1', false);
         $this->db->set('failed_login_expires', date('Y-m-d H:i:s', time() + $expires));
-        $this->update($user_id);
+        return $this->update($user_id);
     }
-
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Reset a user's failed login
-     *
-     * @access  public
-     * @param   int     $user_id    The ID of the user to reset
-     * @return  void
-     **/
+     * @param  integer $user_id The user ID to reset
+     * @return boolean
+     */
     public function reset_failed_login($user_id)
     {
         $this->db->set('failed_login_count', 0);
         $this->db->set('failed_login_expires', 'null', false);
-        $this->update($user_id);
+        return $this->update($user_id);
     }
-
 
     // --------------------------------------------------------------------------
 
-
     /**
-     * Update a user's last login field
-     *
-     * @access  public
-     * @param   int     $user_id    The ID of the user to update
-     * @return  void
-     **/
+     * Update a user's `last_login` field
+     * @param  integer $user_id The user ID to update
+     * @return boolean
+     */
     public function update_last_login($user_id)
     {
         $this->db->set('last_login', 'NOW()', false);
         $this->db->set('login_count', 'login_count+1', false);
-        $this->update($user_id);
+        return $this->update($user_id);
     }
-
 
     // --------------------------------------------------------------------------
 
-
     /**
-     * Set the user's 'remember me' cookie, nom nom nom
-     *
-     * @access  public
-     * @return  void
-     **/
+     * Set the user's 'rememberMe' cookie, nom nom nom
+     * @param  integer $id      The User's ID
+     * @param  string $password The user's password, hashed
+     * @param  string $email    The user's email\
+     * @return boolean
+     */
     public function set_remember_cookie($id = null, $password = null, $email = null)
     {
         //  Is remember me functionality enabled?
         $this->config->load('auth/auth');
 
-        if (!$this->config->item('auth_enable_remember_me')) :
+        if (!$this->config->item('auth_enable_remember_me')) {
 
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
-        if (!$id || !$password || !$email) :
+        if (!$id || !$password || !$email) {
 
-            if (!active_user('id') ||  !active_user('password') || !active_user('email')) :
+            if (!active_user('id') ||  !active_user('password') || !active_user('email')) {
 
                 return false;
 
-            else :
+            } else {
 
-                $id         = active_user('id');
-                $password   = active_user('password');
-                $email      = active_user('email');
-
-            endif;
-
-        endif;
+                $id       = active_user('id');
+                $password = active_user('password');
+                $email    = active_user('email');
+            }
+        }
 
         // --------------------------------------------------------------------------
 
@@ -1693,10 +1594,10 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Set the cookie
-        $_data              = array();
-        $_data['name']      = $this->rememberCookie;
-        $_data['value']     = $email . '|' . $_salt;
-        $_data['expire']    = 1209600; //   2 weeks
+        $_data           = array();
+        $_data['name']   = $this->rememberCookie;
+        $_data['value']  = $email . '|' . $_salt;
+        $_data['expire'] = 1209600; //   2 weeks
 
         set_cookie($_data);
 
@@ -1704,18 +1605,16 @@ class NAILS_User_model extends NAILS_Model
 
         //  Update the flag
         $this->isRemembered = true;
-    }
 
+        return true;
+    }
 
     // --------------------------------------------------------------------------
 
-
     /**
-     * Clears the user's remember me cookie
-     *
-     * @access  public
-     * @return  void
-     **/
+     * Clear the active user's 'rememberMe' cookie
+     * @return void
+     */
     public function clear_remember_cookie()
     {
         $this->load->helper('cookie');
@@ -1730,61 +1629,54 @@ class NAILS_User_model extends NAILS_Model
         $this->isRemembered = false;
     }
 
-
     // --------------------------------------------------------------------------
 
-
     /**
-     * Refreshes the user's session from database data
-     *
-     * @access  protected
-     * @return  void
-     *
-     **/
+     * Refresh the user's session from the database
+     * @return void
+     */
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
-        if ($this->was_admin()) :
+        if ($this->was_admin()) {
 
             $_admin = $this->session->userdata('admin_recovery');
 
-            if (!empty($_admin->logged_in_as)) :
+            if (!empty($_admin->logged_in_as)) {
 
                 $_me = $_admin->logged_in_as;
 
-            else :
+            } else {
 
                 $_me = $this->session->userdata('id');
+            }
 
-            endif;
-
-        else :
+        } else {
 
             $_me = $this->session->userdata('id');
-
-        endif;
+        }
 
         //  Is anybody home? Hello...?
-        if (!$_me) :
+        if (!$_me) {
 
             $_me = $this->me;
 
-            if (!$_me) :
+            if (!$_me) {
 
                 return false;
-
-            endif;
-
-        endif;
+            }
+        }
 
         $_me = $this->get_by_id($_me);
 
         // --------------------------------------------------------------------------
 
-        //  If the user is isn't found (perhaps deleted) or has been suspended then
-        //  obviously don't proceed with the log in
+        /**
+         * If the user is isn't found (perhaps deleted) or has been suspended then
+         * obviously don't proceed with the log in
+         */
 
-        if (!$_me || !empty($_me->is_suspended)) :
+        if (!$_me || !empty($_me->is_suspended)) {
 
             $this->clear_remember_cookie();
             $this->clear_active_user();
@@ -1793,8 +1685,7 @@ class NAILS_User_model extends NAILS_Model
             $this->isLoggedIn = false;
 
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
@@ -1815,199 +1706,15 @@ class NAILS_User_model extends NAILS_Model
         $this->db->update(NAILS_DB_PREFIX . 'user');
     }
 
-
     // --------------------------------------------------------------------------
-
-
-    /**
-     * Create a new row in a user extended table
-     *
-     * @access  public
-     * @param   string  $table      The name of the table to insert to
-     * @param   object  $data       The data to insert
-     * @param   int     $user_id    If not updating the active user specify the user ID
-     * @return  mixed
-     **/
-    public function extra_table_insert($table, $data, $user_id = false)
-    {
-        $_uid = !$user_id ? (int) active_user('id') : $user_id ;
-
-        // --------------------------------------------------------------------------
-
-        //  Unable to determine user ID
-        if (!$_uid) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $data           = (object) $data;
-        $data->user_id  = $_uid;
-
-        // --------------------------------------------------------------------------
-
-        $this->db->insert($table, $data);
-
-        // --------------------------------------------------------------------------
-
-        return $this->db->affected_rows() ? $this->db->insert_id() : false ;
-    }
-
-
-    // --------------------------------------------------------------------------
-
-
-    /**
-     * Update an extra user table
-     *
-     * @access  public
-     * @param   string  $table      The name of the table to fetch from
-     * @param   int     $id         The ID of the row to fetch
-     * @param   int     $user_id    If not fetching for the active user specify the user ID
-     * @return  boolean
-     **/
-    public function extra_table_fetch($table, $id = null, $user_id = null)
-    {
-        $_uid = !$user_id ? (int) active_user('id') : $user_id ;
-
-        // --------------------------------------------------------------------------
-
-        //  Unable to determine user ID
-        if (!$_uid) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $this->db->where('user_id', $_uid);
-
-        // --------------------------------------------------------------------------
-
-        //  Add restriction if necessary
-        if ($id) :
-
-            $this->db->where('id', $id);
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $_row = $this->db->get($table);
-
-        return $id ? $_row->row() : $_row->result();
-    }
-
-
-    // --------------------------------------------------------------------------
-
-
-    /**
-     * Update an extra user table
-     *
-     * @access  public
-     * @param   string  $table      The name of the table to update
-     * @param   object  $data       The data to update
-     * @param   int     $user_id    If not updating the active user specify the user ID
-     * @return  boolean
-     **/
-    public function extra_table_update($table, $data, $user_id = false)
-    {
-        $_uid = !$user_id ? (int) active_user('id') : $user_id ;
-
-        // --------------------------------------------------------------------------
-
-        //  Unable to determine user ID
-        if (!$_uid) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $data = (object) $data;
-
-        // --------------------------------------------------------------------------
-
-        if (!isset($data->id) || empty($data->id)) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $this->db->where('user_id', $_uid);
-        $this->db->where('id', $data->id);
-        $this->db->update($table, $data);
-
-        // --------------------------------------------------------------------------
-
-        return true;
-    }
-
-
-    // --------------------------------------------------------------------------
-
-
-    /**
-     * Delete from an extra user table
-     *
-     * @access  public
-     * @param   string  $table      The name of the table to delete from
-     * @param   int     $id         The ID of the row to delete
-     * @param   int     $user_id    If not updating the active user specify the user ID
-     * @return  boolean
-     **/
-    public function extra_table_delete($table, $id, $user_id = false)
-    {
-        $_uid = !$user_id ? (int) active_user('id') : $user_id ;
-
-        // --------------------------------------------------------------------------
-
-        //  Unable to determine user ID
-        if (!$_uid) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        if (!isset($id) || empty($id)) :
-
-            return false;
-
-        endif;
-
-        // --------------------------------------------------------------------------
-
-        $this->db->where('user_id', $_uid);
-        $this->db->where('id', $id);
-        $this->db->delete($table);
-
-        // --------------------------------------------------------------------------
-
-        return (bool) $this->db->affected_rows();
-    }
-
-
-    // --------------------------------------------------------------------------
-
 
     /**
      * Create a new user
-     *
-     * @access  public
-     * @param   string  $data           An array of data to use for creating the user
-     * @param   boolean $sendWelcome    Whether or not to send the welcome email or not
-     * @return  boolean
-     **/
-    public function create($data = false, $sendWelcome = true)
+     * @param  array $data          An array of data to create the user with
+     * @param  boolean $sendWelcome Whether to send the welcome email
+     * @return mixed                StdClass on success, false on failure
+     */
+    public function create($data, $sendWelcome = true)
     {
         //  Has an email or a username been submitted?
         if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
@@ -2078,124 +1785,114 @@ class NAILS_User_model extends NAILS_Model
          * that they need to set a password using forgotten password.
          */
 
-        if (empty($data['password'])) :
+        if (empty($data['password'])) {
 
             $_password = $this->user_password_model->generateNullHash();
 
-            if (!$_password) :
+            if (!$_password) {
 
                 $this->_set_error($this->user_password_model->last_error());
                 return false;
+            }
 
-            endif;
-
-        else :
+        } else {
 
             $_password = $this->user_password_model->generateHash($data['password']);
 
-            if (!$_password) :
+            if (!$_password) {
 
                 $this->_set_error($this->user_password_model->last_error());
                 return false;
+            }
+        }
 
-            endif;
-
-        endif;
-
-        //  Do we need to inform the user of their password? This might be set
-        //  if an admin created the account, or if the system generated a new password
+        /**
+         * Do we need to inform the user of their password? This might be set if an
+         * admin created the account, or if the system generated a new password
+         */
 
         $_inform_user_pw = !empty($data['inform_user_pw']) ? true : false;
 
         // --------------------------------------------------------------------------
 
         //  Check that we're dealing with a valid group
-        if (empty($data['group_id'])) :
+        if (empty($data['group_id'])) {
 
             $_user_data['group_id'] = $this->user_group_model->getDefaultGroupId();
 
-        else :
+        } else {
 
             $_user_data['group_id'] = $data['group_id'];
-
-        endif;
+        }
 
         $_group = $this->user_group_model->get_by_id($_user_data['group_id']);
 
-        if (!$_group) :
+        if (!$_group) {
 
             $this->_set_error('Invalid Group ID specified.');
             return false;
 
-        else :
+        } else {
 
             $_user_data['group_id'] = $_group->id;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
-        if (!empty($data['username'])) :
+        if (!empty($data['username'])) {
 
             $_user_data['username'] = strtolower($data['username']);
+        }
 
-        endif;
-
-        if (!empty($data['email'])) :
+        if (!empty($data['email'])) {
 
             $_email             = $data['email'];
             $_email_is_verified = !empty($data['email_is_verified']);
+        }
 
-        endif;
-
-        $_user_data['password']         = $_password->password;
-        $_user_data['password_md5']     = $_password->password_md5;
-        $_user_data['password_engine']  = $_password->engine;
-        $_user_data['salt']             = $_password->salt;
-        $_user_data['ip_address']       = $this->input->ip_address();
-        $_user_data['last_ip']          = $_user_data['ip_address'];
-        $_user_data['created']          = date('Y-m-d H:i:s');
-        $_user_data['last_update']      = date('Y-m-d H:i:s');
-        $_user_data['is_suspended']     = !empty($data['is_suspended']);
-        $_user_data['temp_pw']          = !empty($data['temp_pw']);
+        $_user_data['password']        = $_password->password;
+        $_user_data['password_md5']    = $_password->password_md5;
+        $_user_data['password_engine'] = $_password->engine;
+        $_user_data['salt']            = $_password->salt;
+        $_user_data['ip_address']      = $this->input->ip_address();
+        $_user_data['last_ip']         = $_user_data['ip_address'];
+        $_user_data['created']         = date('Y-m-d H:i:s');
+        $_user_data['last_update']     = date('Y-m-d H:i:s');
+        $_user_data['is_suspended']    = !empty($data['is_suspended']);
+        $_user_data['temp_pw']         = !empty($data['temp_pw']);
 
         //  Referral code
-        $_user_data['referral']         = $this->generateReferral();
+        $_user_data['referral'] = $this->generateReferral();
 
         //  Other data
-        $_user_data['salutation']       = !empty($data['salutation'])   ? $data['salutation']   : null ;
-        $_user_data['first_name']       = !empty($data['first_name'])   ? $data['first_name']   : null ;
-        $_user_data['last_name']        = !empty($data['last_name'])        ? $data['last_name']    : null ;
+        $_user_data['salutation'] = !empty($data['salutation']) ? $data['salutation'] : null ;
+        $_user_data['first_name'] = !empty($data['first_name']) ? $data['first_name'] : null ;
+        $_user_data['last_name']  = !empty($data['last_name']) ? $data['last_name'] : null ;
 
-        if (isset($data['gender'])) :
+        if (isset($data['gender'])) {
 
             $_user_data['gender'] = $data['gender'];
+        }
 
-        endif;
-
-        if (isset($data['timezone'])) :
+        if (isset($data['timezone'])) {
 
             $_user_data['timezone'] = $data['timezone'];
+        }
 
-        endif;
-
-        if (isset($data['datetime_format_date'])) :
+        if (isset($data['datetime_format_date'])) {
 
             $_user_data['datetime_format_date'] = $data['datetime_format_date'];
+        }
 
-        endif;
-
-        if (isset($data['datetime_format_time'])) :
+        if (isset($data['datetime_format_time'])) {
 
             $_user_data['datetime_format_time'] = $data['datetime_format_time'];
+        }
 
-        endif;
-
-        if (isset($data['language'])) :
+        if (isset($data['language'])) {
 
             $_user_data['language'] = $data['language'];
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
@@ -2203,15 +1900,13 @@ class NAILS_User_model extends NAILS_Model
         $_meta_cols = $this->_get_meta_columns();
         $_meta_data = array();
 
-        foreach ($data as $key => $val) :
+        foreach ($data as $key => $val) {
 
-            if (array_search($key, $_meta_cols) !== false) :
+            if (array_search($key, $_meta_cols) !== false) {
 
                 $_meta_data[$key] = $val;
-
-            endif;
-
-        endforeach;
+            }
+        }
 
         // --------------------------------------------------------------------------
 
@@ -2219,76 +1914,73 @@ class NAILS_User_model extends NAILS_Model
 
         $this->db->set($_user_data);
 
-        if (!$this->db->insert(NAILS_DB_PREFIX . 'user')) :
+        if (!$this->db->insert(NAILS_DB_PREFIX . 'user')) {
 
             $this->_set_error('Failed to create base user object.');
             $this->db->trans_rollback();
             return false;
-
-        endif;
+        }
 
         $_id = $this->db->insert_id();
 
         // --------------------------------------------------------------------------
 
-        //  Update the user table with an MD5 hash of the user ID; a number of functions
-        //  make use of looking up this hashed information; this should be quicker.
+        /**
+         * Update the user table with an MD5 hash of the user ID; a number of functions
+         * make use of looking up this hashed information; this should be quicker.
+         */
 
         $this->db->set('id_md5', md5($_id));
         $this->db->where('id', $_id);
 
-        if (!$this->db->update(NAILS_DB_PREFIX . 'user')) :
+        if (!$this->db->update(NAILS_DB_PREFIX . 'user')) {
 
             $this->_set_error('Failed to update base user object.');
             $this->db->trans_rollback();
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
         //  Create the user_meta record, add any extra data if needed
         $this->db->set('user_id', $_id);
 
-        if ($_meta_data) :
+        if ($_meta_data) {
 
             $this->db->set($_meta_data);
+        }
 
-        endif;
-
-        if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta')) :
+        if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta')) {
 
             $this->_set_error('Failed to create user meta data object.');
             $this->db->trans_rollback();
             return false;
-
-        endif;
+        }
 
         // --------------------------------------------------------------------------
 
         //  Finally add the email address to the user_email table
-        if (!empty($_email)) :
+        if (!empty($_email)) {
 
             $_code = $this->email_add($_email, $_id, true, $_email_is_verified, false);
 
-            if (!$_code) :
+            if (!$_code) {
 
                 //  Error will be set by email_add();
                 $this->db->trans_rollback();
                 return false;
-
-            endif;
+            }
 
             //  Send the user the welcome email
-            if ($sendWelcome) :
+            if ($sendWelcome) {
 
-                $_email                 = new stdClass();
-                $_email->type           = 'new_user_' . $_group->id;
-                $_email->to_id          = $_id;
-                $_email->data           = array();
+                $_email        = new stdClass();
+                $_email->type  = 'new_user_' . $_group->id;
+                $_email->to_id = $_id;
+                $_email->data  = array();
 
                 //  If this user is created by an admin then take note of that.
-                if ($this->is_admin()) :
+                if ($this->is_admin()) {
 
                     $_email->data['admin']              = new stdClass();
                     $_email->data['admin']->id          = active_user('id');
@@ -2297,76 +1989,63 @@ class NAILS_User_model extends NAILS_Model
                     $_email->data['admin']->group       = new stdClass();
                     $_email->data['admin']->group->id   = $_group->id;
                     $_email->data['admin']->group->name = $_group->label;
+                }
 
-                endif;
-
-                if (!empty($data['password']) && !empty($_inform_user_pw)) :
+                if (!empty($data['password']) && !empty($_inform_user_pw)) {
 
                     $_email->data['password'] = $data['password'];
 
                     //  Is this a temp password? We should let them know that too
-                    if ($_user_data['temp_pw']) :
+                    if ($_user_data['temp_pw']) {
 
                         $_email->data['temp_pw'] = !empty($_user_data['temp_pw']);
-
-                    endif;
-
-                endif;
+                    }
+                }
 
                 //  If the email isn't verified we'll want to include a note asking them to do so
-                if (!$_email_is_verified) :
+                if (!$_email_is_verified) {
 
                     $_email->data['verification_code']  = $_code;
+                }
 
-                endif;
-
-                if (!$this->emailer->send($_email, true)) :
+                if (!$this->emailer->send($_email, true)) {
 
                     //  Failed to send using the group email, try using the generic email template
                     $_email->type = 'new_user';
 
-                    if (!$this->emailer->send($_email, true)) :
+                    if (!$this->emailer->send($_email, true)) {
 
                         //  Email failed to send, musn't exist, oh well.
                         $_error  = 'Failed to send welcome email.';
                         $_error .= !empty($_inform_user_pw) ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
 
                         $this->_set_error($_error);
-
-                    endif;
-
-                endif;
-
-            endif;
-
-        endif;
+                    }
+                }
+            }
+        }
 
         // --------------------------------------------------------------------------
 
         //  commit the transaction and return new user object
-        if ($this->db->trans_status() !== false) :
+        if ($this->db->trans_status() !== false) {
 
             $this->db->trans_commit();
             return $this->get_by_id($_id);
 
-        else :
+        } else {
 
             return false;
-
-        endif;
+        }
     }
-
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Delete a user
-     *
-     * @access  public
-     * @param   int     $userId The ID of the user to delete
-     * @return  boolean
-     **/
+     * @param  integer $userId The ID of the user to delete
+     * @return boolean
+     */
     public function destroy($userId)
     {
         $this->db->where('id', $userId);
@@ -2383,13 +2062,11 @@ class NAILS_User_model extends NAILS_Model
         }
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Alias to destroy()
-     * @param  int $userId The ID of the user to delete
+     * @param  integer $userId The ID of the user to delete
      * @return boolean
      */
     public function delete($userId)
@@ -2397,22 +2074,15 @@ class NAILS_User_model extends NAILS_Model
         return $this->destroy($userId);
     }
 
-
     // --------------------------------------------------------------------------
 
-
     /**
-     * Generate a valid referral code
-     *
-     * @access  protected
-     * @param   none
-     * @return  string
-     **/
+     * Generates a valid referral code
+     * @return string
+     */
     protected function generateReferral()
     {
         $this->load->helper('string');
-
-        // --------------------------------------------------------------------------
 
         while (1 > 0) {
 
@@ -2425,60 +2095,60 @@ class NAILS_User_model extends NAILS_Model
             }
         }
 
-        // --------------------------------------------------------------------------
-
         return $referral;
     }
 
-
     // --------------------------------------------------------------------------
 
-
-    public function reward_referral($user_id, $referrer_id)
+    /**
+     * Reqards a user for their referral
+     * @param  integer $userId     The ID of the user who signed up
+     * @param  integer $referrerId The ID of the user who made the referral
+     * @return void
+     */
+    public function reward_referral($userId, $referrerId)
     {
-        //  TODO
+        // @todo Implement this emthod where appropriate
     }
 
-
     // --------------------------------------------------------------------------
-
 
     /**
      * Suspend a user
-     *
-     * @access  public
-     * @param   int     $id The ID of the user to suspend
-     * @return  boolean
-     **/
-    public function suspend($id)
+     * @param  integer $userId The ID of the user to suspend
+     * @return boolean
+     */
+    public function suspend($userId)
     {
-        return $this->update($id, array('is_suspended' => true));
+        return $this->update($userId, array('is_suspended' => true));
     }
-
-
-     // --------------------------------------------------------------------------
-
-
-    /**
-     * Unsuspend a user
-     *
-     * @access  public
-     * @param   int     $id The ID of the user to unsuspend
-     * @return  boolean
-     **/
-    public function unsuspend($id)
-    {
-        return $this->update($id, array('is_suspended' => false));
-    }
-
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Unsuspend a user
+     * @param  integer $userId The ID of the user to unsuspend
+     * @return boolean
+     */
+    public function unsuspend($userId)
+    {
+        return $this->update($userId, array('is_suspended' => false));
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Checks whether a username is valid
+     * @param  string  $username     The username to check
+     * @param  boolean $checkDb      Whether to test against the database
+     * @param  mixed   $ignoreUserId The ID of a user to ignore when checking the database
+     * @return boolean
+     */
     public function isValidUsername($username, $checkDb = false, $ignoreUserId = null)
     {
         /**
          * Check username doesn't contain invalid characters - we're actively looking
-         * for characters which are invalid so we can say "Hey!The following
+         * for characters which are invalid so we can say "Hey! The following
          * characters are invalid" rather than making the user guess, y'know, 'cause
          * we're good guys.
          */
@@ -2531,12 +2201,10 @@ class NAILS_User_model extends NAILS_Model
         return true;
     }
 
-
     // --------------------------------------------------------------------------
 
-
     /**
-     * Merges users with id in $mergeIds into $userId
+     * Merges users with ID in $mergeIds into $userId
      * @param  int   $userId   The user ID to keep
      * @param  array $mergeIds An array of user ID's to merge into $userId
      * @return boolean
@@ -2715,7 +2383,6 @@ class NAILS_User_model extends NAILS_Model
         return $out;
     }
 
-
     // --------------------------------------------------------------------------
 
     /**
@@ -2773,16 +2440,16 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Ints
-        $user->id                   = (int) $user->id;
-        $user->group_id             = (int) $user->group_id;
-        $user->login_count          = (int) $user->login_count;
-        $user->referred_by          = (int) $user->referred_by;
-        $user->failed_login_count   = (int) $user->failed_login_count;
+        $user->id                 = (int) $user->id;
+        $user->group_id           = (int) $user->group_id;
+        $user->login_count        = (int) $user->login_count;
+        $user->referred_by        = (int) $user->referred_by;
+        $user->failed_login_count = (int) $user->failed_login_count;
 
         //  Bools
-        $user->temp_pw              = (bool) $user->temp_pw;
-        $user->is_suspended         = (bool) $user->is_suspended;
-        $user->email_is_verified    = (bool) $user->email_is_verified;
+        $user->temp_pw           = (bool) $user->temp_pw;
+        $user->is_suspended      = (bool) $user->is_suspended;
+        $user->email_is_verified = (bool) $user->email_is_verified;
 
         // --------------------------------------------------------------------------
 
@@ -2791,9 +2458,7 @@ class NAILS_User_model extends NAILS_Model
     }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' MODELS
@@ -2819,13 +2484,9 @@ class NAILS_User_model extends NAILS_Model
  *
  **/
 
-if (!defined('NAILS_ALLOW_EXTENSION_USER_MODEL')) :
+if (!defined('NAILS_ALLOW_EXTENSION_USER_MODEL')) {
 
     class User_model extends NAILS_User_model
     {
     }
-
-endif;
-
-/* End of file user_model.php */
-/* Location: ./system/application/models/user_model.php */
+}
