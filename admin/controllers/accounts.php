@@ -152,7 +152,7 @@ class Accounts extends \AdminController
         $this->data['users'] = $this->user_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
@@ -1197,7 +1197,7 @@ class Accounts extends \AdminController
 
         } else {
 
-            show_404();
+            show_404('', true);
         }
     }
 }

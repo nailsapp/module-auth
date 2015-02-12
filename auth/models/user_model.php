@@ -420,8 +420,8 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Super users can do anything they damn well please
-        if (isset($acl['superuser']) && $acl['superuser']) {
+        //  Super users or CLI suers can do anything they damn well please
+        if (!empty($acl['superuser']) || $this->input->is_cli_request()) {
 
             return true;
         }
