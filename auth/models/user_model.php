@@ -150,12 +150,11 @@ class NAILS_User_model extends NAILS_Model
                 //  If something is found, use that.
                 if (isset($this->activeUser->{trim($key)})) {
 
-                    $out[] = isset($this->activeUser->{trim($key)});
-
+                    $out[] = $this->activeUser->{trim($key)};
                 }
             }
 
-            //  If nothing was found, just return false
+            //  If nothing was found, just return null
             if (empty($out)) {
 
                 $val = null;
