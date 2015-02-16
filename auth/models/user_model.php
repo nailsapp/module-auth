@@ -449,7 +449,7 @@ class NAILS_User_model extends NAILS_Model
         //  If there's a search term, then we better get %LIKING%
         if (!empty($data['keywords'])) {
 
-            if (!isset($data['or_like'])) {
+            if (empty($data['or_like'])) {
 
                 $data['or_like'] = array();
             }
