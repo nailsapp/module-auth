@@ -13,9 +13,9 @@
 
 		if ( $_GET ) :
 
-			//	Remove common problematic GET vars (for instance, we don't want isFancybox when we return)
+			//	Remove common problematic GET vars (for instance, we don't want isModal when we return)
 			$_get = $_GET;
-			unset( $_get['isFancybox'] );
+			unset( $_get['isModal'] );
 			unset( $_get['inline'] );
 
 			if ( $_get ) :
