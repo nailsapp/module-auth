@@ -14,166 +14,154 @@
             <?php
 
                 //  Display Name
-                $_field                 = array();
-                $_field['key']          = 'label';
-                $_field['label']        = lang('accounts_groups_edit_basic_field_label_label');
-                $_field['default']      = $group->label;
-                $_field['required']     = true;
-                $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_label');
+                $field                = array();
+                $field['key']         = 'label';
+                $field['label']       = lang('accounts_groups_edit_basic_field_label_label');
+                $field['default']     = $group->label;
+                $field['required']    = true;
+                $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_label');
 
-                echo form_field($_field);
+                echo form_field($field);
 
                 // --------------------------------------------------------------------------
 
                 //  Name
-                $_field                 = array();
-                $_field['key']          = 'slug';
-                $_field['label']        = lang('accounts_groups_edit_basic_field_label_slug');
-                $_field['default']      = $group->slug;
-                $_field['required']     = true;
-                $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_slug');
+                $field                = array();
+                $field['key']         = 'slug';
+                $field['label']       = lang('accounts_groups_edit_basic_field_label_slug');
+                $field['default']     = $group->slug;
+                $field['required']    = true;
+                $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_slug');
 
-                echo form_field($_field);
+                echo form_field($field);
 
                 // --------------------------------------------------------------------------
 
                 //  Description
-                $_field                 = array();
-                $_field['key']          = 'description';
-                $_field['type']         = 'textarea';
-                $_field['label']        = lang('accounts_groups_edit_basic_field_label_description');
-                $_field['default']      = $group->description;
-                $_field['required']     = true;
-                $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_description');
+                $field                = array();
+                $field['key']         = 'description';
+                $field['type']        = 'textarea';
+                $field['label']       = lang('accounts_groups_edit_basic_field_label_description');
+                $field['default']     = $group->description;
+                $field['required']    = true;
+                $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_description');
 
-                echo form_field($_field);
+                echo form_field($field);
 
                 // --------------------------------------------------------------------------
 
                 //  Default Homepage
-                $_field                 = array();
-                $_field['key']          = 'default_homepage';
-                $_field['label']        = lang('accounts_groups_edit_basic_field_label_homepage');
-                $_field['default']      = $group->default_homepage;
-                $_field['required']     = true;
-                $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_homepage');
+                $field                = array();
+                $field['key']         = 'default_homepage';
+                $field['label']       = lang('accounts_groups_edit_basic_field_label_homepage');
+                $field['default']     = $group->default_homepage;
+                $field['required']    = true;
+                $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_homepage');
 
-                echo form_field($_field);
+                echo form_field($field);
 
                 // --------------------------------------------------------------------------
 
                 //  Registration Redirect
-                $_field                 = array();
-                $_field['key']          = 'registration_redirect';
-                $_field['label']        = lang('accounts_groups_edit_basic_field_label_registration');
-                $_field['default']      = $group->registration_redirect;
-                $_field['required']     = false;
-                $_field['placeholder']  = lang('accounts_groups_edit_basic_field_placeholder_registration');
+                $field                = array();
+                $field['key']         = 'registration_redirect';
+                $field['label']       = lang('accounts_groups_edit_basic_field_label_registration');
+                $field['default']     = $group->registration_redirect;
+                $field['required']    = false;
+                $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_registration');
 
-                echo form_field($_field, lang('accounts_groups_edit_basic_field_tip_registration'));
+                echo form_field($field, lang('accounts_groups_edit_basic_field_tip_registration'));
 
             ?>
 
         </fieldset>
         <!--    PERMISSIONS -->
         <fieldset id="permissions">
-
             <legend><?=lang('accounts_groups_edit_permission_legend')?></legend>
-
             <p class="system-alert message">
                 <?=lang('accounts_groups_edit_permission_warn')?>
             </p>
             <p>
                 <?=lang('accounts_groups_edit_permission_intro')?>
             </p>
-
             <hr />
-
             <?php
 
                 //  Enable Super User status for this user group
-                $_field                 = array();
-                $_field['key']          = 'acl[superuser]';
-                $_field['label']        = lang('accounts_groups_edit_permissions_field_label_superuser');
-                $_field['default']      = isset($group->acl['superuser']) && $group->acl['superuser'] ? true : false;
-                $_field['required']     = false;
-                $_field['id']           = 'super-user';
+                $field             = array();
+                $field['key']      = 'acl[superuser]';
+                $field['label']    = lang('accounts_groups_edit_permissions_field_label_superuser');
+                $field['default']  = !empty($group->acl['superuser']);
+                $field['required'] = false;
+                $field['id']       = 'super-user';
 
-                echo form_field_boolean($_field);
+                echo form_field_boolean($field);
 
                 // --------------------------------------------------------------------------
 
-                $_visible = $_field['default'] ? 'none' : 'block';
-                echo '<div id="toggle-superuser" style="display:' . $_visible . ';">';
+                $_visible = $field['default'] ? 'none' : 'block';
+                echo '<div id="toggle-superuser" class="permissionGroups" style="display:' . $_visible . ';">';
 
-                    foreach ($loaded_modules as $detail) :
+                    $numPermissions = count($permissions);
+                    $rowOpen = false;
+                    $perRow = 3;
 
-                        if ($detail->class_name == 'dashboard') :
+                    for ($i=0; $i < $numPermissions; $i++) {
 
-                            continue;
+                        $permissionSlug = $permissions[$i]->slug;
 
-                        endif;
+                        if (!$rowOpen) {
 
-                        $_field                 = array();
-                        $_field['label']        = $detail->name;
-                        $_field['default']      = false;
+                            echo '<div class="row">';
+                            $rowOpen = true;
+                        }
 
-                        //  Build the field. Sadly, can't use the form helper due to the crazy multidimensional array
-                        //  that we're building here. Saddest of the sad pandas.
+                        echo '<div class="col-md-4">';
+                            echo '<fieldset class="permissionGroup">';
+                                echo '<legend>' . $permissions[$i]->label . '</legend>';
 
-                        echo '<div class="field">';
+                                echo '<div class="tableScroller">';
+                                echo '<table>';
+                                    echo '<thead>';
+                                        echo '<tr>';
+                                            echo '<th class="permission">Permission</th>';
+                                            echo '<th class="enabled text-center">Enabled</th>';
+                                        echo '</tr>';
+                                    echo '</thead>';
+                                    echo '<tbody>';
 
-                            //  Module permission
-                            if ($this->input->post()) :
+                                        foreach ($permissions[$i]->permissions as $permission => $label) {
 
-                                $_selected = isset($_POST['acl']['admin'][$detail->class_index]);
+                                            $contextColor = 1 == 0 ? 'success' : 'error';
 
-                            else :
+                                            echo '<tr>';
+                                                echo '<td class="permission">' . $label . '</td>';
+                                                echo '<td class="enabled text-center ' . $contextColor . '">';
+                                                    echo '<label>';
+                                                        $key = 'acl[admin][' . $permissionSlug . '][' . $permission . ']';
+                                                        echo form_checkbox($key, true, set_checkbox($key, true, true));
+                                                    echo '</label>';
+                                                echo '</td>';
+                                            echo '</tr>';
+                                        }
 
-                                $_selected = isset($group->acl['admin'][$detail->class_index]);
-
-                            endif;
-
-                            echo '<span class="label">';
-                                echo $detail->name;
-                            echo '</span>';
-                            echo '<span class="input togglize-me">';
-                                echo '<div class="toggle toggle-modern"></div>';
-                                echo form_checkbox('acl[admin][' . $detail->class_index . ']', true, $_selected);
-                                echo '<div class="mask">Disable additional permissions in order to deactivate this module.</div>';
-                            echo '</span>';
-
-                            //  Extra permissions
-                            if (! empty($detail->extra_permissions)) :
-                            echo '<div class="extra-permissions">';
-
-                                foreach ($detail->extra_permissions as $permission => $label) :
-
-                                    if ($this->input->post()) :
-
-                                        $_selected = isset($_POST['acl']['admin'][$detail->class_index][$permission]);
-
-                                    else :
-
-                                        $_selected = isset($group->acl['admin'][$detail->class_index][$permission]);
-
-                                    endif;
-
-                                    echo '<span class="label" style="font-weight:normal;">' . $label . '</span>';
-                                    echo '<span class="input togglize-me-extra">';
-                                        echo '<div class="toggle toggle-modern"></div>';
-                                        echo form_checkbox('acl[admin][' . $detail->class_index . '][' . $permission . ']', true, $_selected);
-                                    echo '</span>';
-
-                                endforeach;
-
-                            echo '</div>';
-                            endif;
-
-                            echo '<div class="clear"></div>';
+                                    echo '<tbody>';
+                                echo '</table>';
+                                echo '</div>';
+                            echo '</fieldset>';
                         echo '</div>';
 
-                    endforeach;
+                        if ($i % $perRow == $perRow-1) {
+
+                            echo '</div>';
+                            $rowOpen = false;
+                        }
+                    }
+
+                    if ($rowOpen) {
+
+                        echo '</div>';
+                    }
 
                 echo '</div>';
 
@@ -187,116 +175,3 @@
 
     <?=form_close()?>
 </div>
-<script style="text/javascript">
-<!--//
-
-    $(function(){
-
-        //  Show/hide modules based on super user status
-        $('.field.boolean .toggle').on('toggle', function (e, active) {
-
-            if (active)
-            {
-                $('#toggle-superuser').slideUp();
-            }
-            else
-            {
-                $('#toggle-superuser').slideDown();
-            }
-
-        });
-
-        // --------------------------------------------------------------------------
-
-        $('.togglize-me').each(function()
-        {
-            var _checkbox   = $(this).find('input[type=checkbox]');
-
-            $(this).find('.toggle').css({
-                'width':        '100px',
-                'height':       '30px',
-                'text-align':   'center'
-            }).toggles({
-                checkbox:   _checkbox,
-                click:      true,
-                drag:       true,
-                clicker:    _checkbox,
-                on:         _checkbox.is(':checked'),
-                text:
-                {
-                    on:     'ON',
-                    off:    'OFF'
-                }
-            }).on('toggle', function(e,active)
-            {
-                if (active === true)
-                {
-                    _checkbox.closest('div.field').find('div.extra-permissions').slideDown();
-                }
-                else
-                {
-                    _checkbox.closest('div.field').find('div.extra-permissions').slideUp();
-                }
-            });
-
-            //  Initial state
-            if (_checkbox.is(':checked'))
-            {
-                _checkbox.closest('div.field').find('div.extra-permissions').show();
-            }
-            else
-            {
-                _checkbox.closest('div.field').find('div.extra-permissions').hide();
-            }
-
-            _checkbox.hide();
-        });
-
-        $('.togglize-me-extra').each(function()
-        {
-            var _checkbox   = $(this).find('input[type=checkbox]');
-
-            $(this).find('.toggle').css({
-                'width':        '100px',
-                'height':       '30px',
-                'text-align':   'center'
-            }).toggles({
-                checkbox:   _checkbox,
-                click:      true,
-                drag:       true,
-                clicker:    _checkbox,
-                on:         _checkbox.is(':checked'),
-                text:
-                {
-                    on:     'ON',
-                    off:    'OFF'
-                }
-            }).on('toggle', function(e,active)
-            {
-                if (active === true)
-                {
-                    _checkbox.closest('div.field').find('span.togglize-me .mask').fadeIn();
-                }
-                else
-                {
-                    //  Check if any others are toggled on, if not then remove mask
-                    if (_checkbox.closest('div.field').find('.togglize-me-extra input:checked').length === 0)
-                    {
-                        _checkbox.closest('div.field').find('span.togglize-me .mask').fadeOut();
-                    }
-                }
-            });
-
-            //  If any extra permissions are checked then show the mask
-            if (_checkbox.closest('div.field').find('.togglize-me-extra input:checked').length !== 0)
-            {
-                _checkbox.closest('div.field').find('span.togglize-me .mask').show();
-            }
-
-            _checkbox.hide();
-        });
-
-    });
-
-//-->
-</script>

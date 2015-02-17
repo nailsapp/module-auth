@@ -66,28 +66,21 @@ class Accounts extends \AdminController
 
     /**
      * Returns an array of extra permissions for this controller
-     * @param  string $classIndex The class_index value, used when multiple admin instances are available
      * @return array
      */
-    public static function permissions($classIndex = null)
+    public static function permissions()
     {
-        $permissions = parent::permissions($classIndex);
+        $permissions = parent::permissions();
 
         // --------------------------------------------------------------------------
 
         //  Define some basic extra permissions
-        $permissions['can_create_user']       = 'Can create users';
-        $permissions['can_suspend_user']      = 'Can suspend/unsuspend users';
-        $permissions['can_login_as']          = 'Can log in as another user';
-        $permissions['can_edit_others']       = 'Can edit other users';
-        $permissions['can_change_user_group'] = 'Can change a user\'s group';
-        $permissions['can_delete_others']     = 'Can delete other users';
-        $permissions['can_merge_users']       = 'Can merge users';
-        $permissions['can_manage_groups']     = 'Can manage user groups';
-        $permissions['can_create_group']      = 'Can create user groups';
-        $permissions['can_edit_group']        = 'Can edit user groups';
-        $permissions['can_delete_group']      = 'Can delete user groups';
-        $permissions['can_set_default_group'] = 'Can set the default user groups';
+        $permissions['create']          = 'Can create users';
+        $permissions['suspend']         = 'Can suspend/unsuspend users';
+        $permissions['loginAs']         = 'Can log in as another user';
+        $permissions['editOthers']      = 'Can edit other users';
+        $permissions['changeUserGroup'] = 'Can change a user\'s group';
+        $permissions['canDeleteOthers'] = 'Can delete other users';
 
         // --------------------------------------------------------------------------
 

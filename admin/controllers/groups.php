@@ -31,6 +31,30 @@ class Groups extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of extra permissions for this controller
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        // --------------------------------------------------------------------------
+
+        //  Define some basic extra permissions
+        $permissions['manage_']    = 'Can manage user groups';
+        $permissions['create']     = 'Can create user groups';
+        $permissions['edit']       = 'Can edit user groups';
+        $permissions['delete']     = 'Can delete user groups';
+        $permissions['setDefault'] = 'Can set the default user groups';
+
+        // --------------------------------------------------------------------------
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()
@@ -116,7 +140,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         if ($this->input->post()) {
-
+dumpanddie($_POST);
             //  Load library
             $this->load->library('form_validation');
 
@@ -163,6 +187,28 @@ class Groups extends \AdminController
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
+
+        // --------------------------------------------------------------------------
+
+        //  Prepare the permissions
+        $this->data['permissions'] = array();
+        foreach ($this->data['adminControllers'] as $module => $moduleDetails) {
+            foreach ($moduleDetails->controllers as $controller => $controllerDetails) {
+
+                $temp              = new \stdClass();
+                $temp->label       = ucfirst($module) . ': ' . ucfirst($controller);
+                $temp->slug        = $module . ':' . $controller;
+                $temp->permissions = $controllerDetails['className']::permissions();
+
+                if (!empty($temp->permissions)) {
+
+                    $this->data['permissions'][] = $temp;
+                }
+            }
+        }
+
+        array_sort_multi($this->data['permissions'], 'label');
+        $this->data['permissions'] = array_values($this->data['permissions']);
 
         // --------------------------------------------------------------------------
 

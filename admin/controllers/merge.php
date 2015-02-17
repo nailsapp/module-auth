@@ -31,6 +31,26 @@ class Merge extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of extra permissions for this controller
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        // --------------------------------------------------------------------------
+
+        //  Define some basic extra permissions
+        $permissions['users'] = 'Can merge users';
+
+        // --------------------------------------------------------------------------
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()
