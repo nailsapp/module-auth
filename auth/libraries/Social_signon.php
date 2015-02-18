@@ -42,7 +42,7 @@ class Social_signon
 
                 $this->_providers['all'][strtolower($provider['slug'])] = $provider;
 
-                if (app_setting('auth_social_signon_' . $provider['slug'] . '_enabled') ) {
+                if (app_setting('auth_social_signon_' . $provider['slug'] . '_enabled', 'auth') ) {
 
                     $this->_providers['enabled'][strtolower($provider['slug'])] = $provider;
 
@@ -81,12 +81,12 @@ class Social_signon
 
                         foreach ($label as $key1 => $label1) {
 
-                            $_temp[$key][$key1] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
+                            $_temp[$key][$key1] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1, 'auth');
                         }
 
                     } else {
 
-                        $_temp[$key] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key);
+                        $_temp[$key] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key, 'auth');
                     }
                 }
 
@@ -138,7 +138,7 @@ class Social_signon
      */
     public function is_enabled()
     {
-        return app_setting('auth_social_signon_enabled') && $this->get_providers('ENABLED');
+        return app_setting('auth_social_signon_enabled', 'auth') && $this->get_providers('ENABLED');
     }
 
     // --------------------------------------------------------------------------

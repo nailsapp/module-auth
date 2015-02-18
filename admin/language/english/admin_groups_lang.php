@@ -36,6 +36,7 @@ $lang['accounts_groups_edit_basic_field_label_description']        = 'Descriptio
 $lang['accounts_groups_edit_basic_field_placeholder_description']  = 'Type the group\'s description here.';
 $lang['accounts_groups_edit_basic_field_label_homepage']           = 'Default Homepage';
 $lang['accounts_groups_edit_basic_field_placeholder_homepage']     = 'Type the group\'s homepage here.';
+$lang['accounts_groups_edit_basic_field_tip_homepage']             = 'This is where users are sent after login, unless a specific redirect is already in place. If not specified the user will be sent to the homepage.';
 $lang['accounts_groups_edit_basic_field_label_registration']       = 'Registration Redirect';
 $lang['accounts_groups_edit_basic_field_placeholder_registration'] = 'Redirect new registrants of this group here.';
 $lang['accounts_groups_edit_basic_field_tip_registration']         = 'If not defined new registrants will be redirected to the group\'s homepage.';

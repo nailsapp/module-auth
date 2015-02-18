@@ -745,12 +745,6 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load views
-        if ($this->input->get('inline') || $this->input->get('isModal')) {
-
-            $this->data['headerOverride'] = 'structure/headerBlank';
-            $this->data['footerOverride'] = 'structure/footerBlank';
-        }
-
         \Nails\Admin\Helper::loadView('edit/index');
     }
 

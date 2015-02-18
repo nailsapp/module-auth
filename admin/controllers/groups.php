@@ -170,7 +170,7 @@ class Groups extends \AdminController
 
                 if ($this->user_group_model->update($gid, $data)) {
 
-                    $this->session->set_flashdata('success', '<strong>Huzzah!</strong> Group updated successfully!');
+                    $this->session->set_flashdata('success', 'Group updated successfully!');
                     redirect('admin/auth/groups');
 
                 } else {

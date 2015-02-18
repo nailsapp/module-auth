@@ -40,7 +40,6 @@
                 //  Description
                 $field                = array();
                 $field['key']         = 'description';
-                $field['type']        = 'textarea';
                 $field['label']       = lang('accounts_groups_edit_basic_field_label_description');
                 $field['default']     = $group->description;
                 $field['required']    = true;
@@ -58,7 +57,7 @@
                 $field['required']    = true;
                 $field['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_homepage');
 
-                echo form_field($field);
+                echo form_field($field, lang('accounts_groups_edit_basic_field_tip_homepage'));
 
                 // --------------------------------------------------------------------------
 
@@ -75,6 +74,7 @@
             ?>
 
         </fieldset>
+
         <!--    PERMISSIONS -->
         <fieldset id="permissions">
             <legend><?=lang('accounts_groups_edit_permission_legend')?></legend>
@@ -110,82 +110,67 @@
                 $_visible = $field['default'] ? 'none' : 'block';
                 echo '<div id="adminPermissions" class="permissionGroups" style="display:' . $_visible . ';">';
 
+                    echo '<div class="search" id="permissionSearch">';
+                        echo '<div class="search-text">';
+                            echo form_input('', '', 'autocomplete="off" placeholder="Type to filter permissions"');
+                        echo '</div>';
+                    echo '</div>';
+
+                    // --------------------------------------------------------------------------
+
                     $numPermissions = count($permissions);
-                    $rowOpen = false;
-                    $perRow = 3;
 
                     for ($i=0; $i < $numPermissions; $i++) {
 
                         $permissionSlug = $permissions[$i]->slug;
 
-                        if (!$rowOpen) {
+                        echo '<fieldset class="permissionGroup">';
+                            echo '<legend>' . $permissions[$i]->label . '</legend>';
 
-                            echo '<div class="row">';
-                            $rowOpen = true;
-                        }
+                            echo '<table>';
+                                echo '<thead>';
+                                    echo '<tr>';
+                                        echo '<th class="permission">Permission</th>';
+                                        echo '<th class="enabled text-center">';
+                                            echo '<input type="checkbox" class="toggleAll">';
+                                        echo '</th>';
+                                    echo '</tr>';
+                                echo '</thead>';
+                                echo '<tbody>';
 
-                        echo '<div class="col-md-4">';
-                            echo '<fieldset class="permissionGroup">';
-                                echo '<legend>' . $permissions[$i]->label . '</legend>';
+                                    foreach ($permissions[$i]->permissions as $permission => $label) {
 
-                                echo '<div class="tableScroller">';
-                                echo '<table>';
-                                    echo '<thead>';
-                                        echo '<tr>';
-                                            echo '<th class="permission">Permission</th>';
-                                            echo '<th class="enabled text-center">';
-                                                echo '<input type="checkbox" class="toggleAll">';
-                                            echo '</th>';
-                                        echo '</tr>';
-                                    echo '</thead>';
-                                    echo '<tbody>';
+                                        $key      = 'acl[admin][' . $permissionSlug . '][' . $permission . ']';
+                                        $checkKey = 'admin:' . $permissionSlug . ':' . $permission;
 
-                                        foreach ($permissions[$i]->permissions as $permission => $label) {
+                                        if ($_POST) {
 
-                                            $key      = 'acl[admin][' . $permissionSlug . '][' . $permission . ']';
-                                            $checkKey = 'admin:' . $permissionSlug . ':' . $permission;
+                                            $checked = !empty($_POST['acl']['admin'][$permissionSlug][$permission]);
 
-                                            if ($_POST) {
+                                        } elseif (!empty($group->acl)) {
 
-                                                $checked = !empty($_POST['acl']['admin'][$permissionSlug][$permission]);
+                                            $checked = in_array($checkKey, $group->acl);
 
-                                            } elseif (!empty($group->acl)) {
+                                        } else {
 
-                                                $checked = in_array($checkKey, $group->acl);
-
-                                            } else {
-
-                                                $checked = false;
-                                            }
-
-                                            $contextColor = $checked ? 'success' : 'error';
-
-                                            echo '<tr>';
-                                                echo '<td class="permission">' . $label . '</td>';
-                                                echo '<td class="enabled text-center ' . $contextColor . '">';
-                                                    echo '<label>';
-                                                        echo form_checkbox($key, true, $checked);
-                                                    echo '</label>';
-                                                echo '</td>';
-                                            echo '</tr>';
+                                            $checked = false;
                                         }
 
-                                    echo '<tbody>';
-                                echo '</table>';
-                                echo '</div>';
-                            echo '</fieldset>';
-                        echo '</div>';
+                                        $contextColor = $checked ? 'success' : 'error';
 
-                        if ($i % $perRow == $perRow-1) {
+                                        echo '<tr>';
+                                            echo '<td class="permission">' . $label . '</td>';
+                                            echo '<td class="enabled text-center ' . $contextColor . '">';
+                                                echo '<label>';
+                                                    echo form_checkbox($key, true, $checked);
+                                                echo '</label>';
+                                            echo '</td>';
+                                        echo '</tr>';
+                                    }
 
-                            echo '</div>';
-                            $rowOpen = false;
-                        }
-                    }
-
-                    if ($rowOpen) {
-
-                        echo '</div>';
+                                echo '<tbody>';
+                            echo '</table>';
+                        echo '</fieldset>';
                     }
 
                 echo '</div>';

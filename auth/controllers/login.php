@@ -572,7 +572,7 @@ class NAILS_Login extends NAILS_Auth_Controller
              * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
              */
 
-            if (app_setting('user_registration_enabled', 'app')) {
+            if (app_setting('user_registration_enabled', 'auth')) {
 
                 $requiredData = array();
                 $optionalData = array();

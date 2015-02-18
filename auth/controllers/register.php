@@ -28,7 +28,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 		// --------------------------------------------------------------------------
 
 		//	Is registration enabled
-		if ( ! app_setting( 'user_registration_enabled', 'app' ) ) :
+		if ( ! app_setting( 'user_registration_enabled', 'auth' ) ) :
 
 			show_404();
 
