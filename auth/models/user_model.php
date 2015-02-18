@@ -38,8 +38,8 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Clear the active_user
-        $this->clear_active_user();
+        //  Clear the activeUser
+        $this->clearActiveUser();
     }
 
     // --------------------------------------------------------------------------
@@ -56,7 +56,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  If no user is logged in, see if there's a remembered user to be logged in
-        if (!$this->is_logged_in()) {
+        if (!$this->isLoggedIn()) {
 
             $this->loginRememberedUser();
         }
@@ -97,7 +97,7 @@ class NAILS_User_model extends NAILS_Model
                 if ($user && $code === $user->remember_code) {
 
                     //  User was validated, log them in!
-                    $this->set_login_data($user->id);
+                    $this->setLoginData($user->id);
                     $this->me = $user->id;
                 }
             }
@@ -109,16 +109,15 @@ class NAILS_User_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Fetches a value from the active user's session data; done this way so
-     * that interfacing with active user data is consistent.
-     * @param  string  $keys      The key to look up in active_user
+     * Fetches a value from the active user's session data
+     * @param  string  $keys      The key to look up in activeUser
      * @param  string  $delimiter If multiple fields are requested they'll be joined by this string
      * @return mixed
      */
-    public function active_user($keys = false, $delimiter = ' ')
+    public function activeUser($keys = '', $delimiter = ' ')
     {
         //  Only look for a value if we're logged in
-        if (!$this->is_logged_in()) {
+        if (!$this->isLoggedIn()) {
 
             return false;
         }
@@ -126,7 +125,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  If $keys is false just return the user object in its entirety
-        if ($keys === false) {
+        if (empty($keys)) {
 
             return $this->activeUser;
         }
@@ -174,17 +173,17 @@ class NAILS_User_model extends NAILS_Model
      * Set the active user
      * @param stdClass $user The user obect to set
      */
-    public function set_active_user($user)
+    public function setActiveUser($user)
     {
         $this->activeUser = $user;
 
         // --------------------------------------------------------------------------
 
         //  Set the user's date/time formats
-        $formatDate = active_user('pref_date_format');
+        $formatDate = $this->activeUser('pref_date_format');
         $formatDate = $formatDate ? $formatDate : $this->datetime_model->getDateFormatDefaultSlug();
 
-        $formatTime = active_user('pref_time_format');
+        $formatTime = $this->activeUser('pref_time_format');
         $formatTime = $formatTime ? $formatTime : $this->datetime_model->getTimeFormatDefaultSlug();
 
         $this->datetime_model->setFormats($formatDate, $formatTime);
@@ -196,7 +195,7 @@ class NAILS_User_model extends NAILS_Model
      * Clear the acive user
      * @return void
      */
-    public function clear_active_user()
+    public function clearActiveUser()
     {
         $this->activeUser = new stdClass();
     }
@@ -208,7 +207,7 @@ class NAILS_User_model extends NAILS_Model
      * @param mixed   $idEmail        The user's ID or email address
      * @param boolean $setSessionData Whether to set the session data or not
      */
-    public function set_login_data($idEmail, $setSessionData = true)
+    public function setLoginData($idEmail, $setSessionData = true)
     {
         //  Valid user?
         if (is_numeric($idEmail)) {
@@ -265,7 +264,7 @@ class NAILS_User_model extends NAILS_Model
             }
 
             //  Set the active user
-            $this->set_active_user($user);
+            $this->setActiveUser($user);
 
             return true;
         }
@@ -277,7 +276,7 @@ class NAILS_User_model extends NAILS_Model
      * Clears the login data for a user
      * @return  void
      */
-    public function clear_login_data()
+    public function clearLoginData()
     {
         //  Clear the session
         $this->session->unset_userdata('id');
@@ -287,11 +286,11 @@ class NAILS_User_model extends NAILS_Model
         //  Set the flag
         $this->isLoggedIn = false;
 
-        //  Reset the active_user
-        $this->clear_active_user();
+        //  Reset the activeUser
+        $this->clearActiveUser();
 
         //  Remove any rememebr me cookie
-        $this->clear_remember_cookie();
+        $this->clearRememberCookie();
     }
 
     // --------------------------------------------------------------------------
@@ -300,7 +299,7 @@ class NAILS_User_model extends NAILS_Model
      * Determines whether the active user is logged in or not.
      * @return  bool
      */
-    public function is_logged_in()
+    public function isLoggedIn()
     {
         return $this->isLoggedIn;
     }
@@ -311,7 +310,7 @@ class NAILS_User_model extends NAILS_Model
      * Determines whether the active user is to be remembered
      * @return  bool
      */
-    public function is_remembered()
+    public function isRemembered()
     {
         //  Deja vu?
         if (!is_null($this->isRemembered)) {
@@ -341,39 +340,23 @@ class NAILS_User_model extends NAILS_Model
 
     /**
      * Determines whether the active user group has admin permissions.
-     * @return  boolean
+     * @param  mixed   $user The user to check, uses activeUser if null
+     * @return boolean
      */
-    public function is_admin($user = null)
+    public function isAdmin($user = null)
     {
-        if ($this->is_superuser($user)) {
-
-            return true;
-        }
-
-        return $this->has_permission('admin', $user);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Determines whether the active user is a superuser. Extend this method to
-     * alter it's response.
-     * @return  boolean
-     */
-    public function is_superuser($user = null)
-    {
-        return $this->has_permission('superuser', $user);
+        return $this->hasPermission('admin:.+', $user);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * When an admin 'logs in as' another user a hash is added to the session so
-     * the system can log them back in. this method is simply a quick and logical
+     * the system can log them back in. This method is simply a quick and logical
      * way of checking if the session variable exists.
-     * @return  boolean
+     * @return boolean
      */
-    public function was_admin()
+    public function wasAdmin()
     {
         return (bool) $this->session->userdata('admin_recovery');
     }
@@ -381,12 +364,25 @@ class NAILS_User_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
+     * Determines whether the active user is a superuser. Extend this method to
+     * alter it's response.
+     * @param  mixed   $user The user to check, uses activeUser if null
+     * @return boolean
+     */
+    public function isSuperuser($user = null)
+    {
+        return $this->hasPermission('admin:superuser', $user);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Determines whether the specified user has a certain ACL permission
-     * @param   string  $permission The permission to check for, in the format admin.account.view
-     * @param   mixed   $user       The user to check for; if null uses active user, if numeric, fetches suer, if object uses that object
+     * @param   string  $search The permission to check for
+     * @param   mixed   $user   The user to check for; if null uses activeUser, if numeric, fetches suer, if object uses that object
      * @return  boolean
      */
-    public function has_permission($permission, $user = null)
+    public function hasPermission($search, $user = null)
     {
         //  Fetch the correct ACL
         if (is_numeric($user)) {
@@ -409,7 +405,7 @@ class NAILS_User_model extends NAILS_Model
 
         } else {
 
-            $acl = active_user('acl');
+            $acl = $this->activeUser('acl');
         }
 
         if (!$acl) {
@@ -419,18 +415,34 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Super users or CLI suers can do anything they damn well please
-        if (!empty($acl['superuser']) || $this->input->is_cli_request()) {
+        // Super users or CLI users can do anything their heart's desire
+        if (in_array('admin:superuser', $acl) || $this->input->is_cli_request()) {
 
             return true;
         }
 
         // --------------------------------------------------------------------------
 
-        //  Test ACL, making sure to clean any dangerous data first
-        $permissionClean = preg_replace('/[^a-zA-Z\_\.\:0-9]/', '', $permission);
-        $permissionClean = explode('.', $permissionClean);
-        eval('$hasPermission = isset($acl[\'' . implode('\'][\'', $permissionClean) .'\']);');
+        /**
+         * Test the ACL
+         * We're going to use regular experessios here so we can allow for some
+         * flexability in the search, i.e admin:* would return true if the user has
+         * access to any of admin.
+         */
+
+        $hasPermission = false;
+        foreach ($acl as $permission) {
+
+            $pattern = '/^' . $search . '$/';
+            $match   = preg_match($pattern, $permission);
+
+            if ($match) {
+
+                $hasPermission = true;
+                break;
+            }
+        }
+
         return $hasPermission;
     }
 
@@ -646,7 +658,7 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_preifx . '.username',
+                    'column' => $this->_table_prefix . '.username',
                     'value'  => $username
                 )
             )
@@ -675,11 +687,11 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_preifx . '.id_md5',
+                    'column' => $this->_table_prefix . '.id_md5',
                     'value'  => $md5Id
                 ),
                 array(
-                    'column' => $this->_table_preifx . '.password_md5',
+                    'column' => $this->_table_prefix . '.password_md5',
                     'value'  => $md5Pw
                 )
             )
@@ -709,7 +721,7 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_preifx . '.referral',
+                    'column' => $this->_table_prefix . '.referral',
                     'value'  => $referralCode
                 )
             )
@@ -753,9 +765,9 @@ class NAILS_User_model extends NAILS_Model
 
             $_uid = $user_id;
 
-        } elseif (active_user('id')) {
+        } elseif (activeUser('id')) {
 
-            $_uid = active_user('id');
+            $_uid = $this->activeUser('id');
 
         } else {
 
@@ -1006,7 +1018,7 @@ class NAILS_User_model extends NAILS_Model
                     $_email->to_id              = $_uid;
                     $_email->data               = array();
                     $_email->data['updated_at'] = date('Y-m-d H:i:s');
-                    $_email->data['updated_by'] = array('id' => active_user('id'), 'name' => active_user('first_name,last_name'));
+                    $_email->data['updated_by'] = array('id' => $this->activeUser('id'), 'name' => $this->activeUser('first_name,last_name'));
                     $_email->data['ip_address'] = $this->input->ip_address();
 
                     $this->emailer->send($_email, true);
@@ -1034,7 +1046,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  If we just updated the active user we should probably update their session info
-        if ($_uid == active_user('id')) {
+        if ($_uid == $this->activeUser('id')) {
 
             $this->activeUser->last_update = date('Y-m-d H:i:s');
 
@@ -1072,9 +1084,9 @@ class NAILS_User_model extends NAILS_Model
             //  If there's a remember me cookie then update that too, but only if the password
             //  or email address has changed
 
-            if ((isset($data['email']) || !empty($_password_updated)) && $this->is_remembered()) {
+            if ((isset($data['email']) || !empty($_password_updated)) && $this->isRemembered()) {
 
-                $this->set_remember_cookie();
+                $this->setRememberCookie();
 
             }
 
@@ -1151,7 +1163,7 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Adds a new email to the user_email table. Will optionally send the verification email, too.
      * @param  string  $email       The email address to add
-     * @param  int     $user_id     The ID of the user to add for, defaults to active_user('id')
+     * @param  int     $user_id     The ID of the user to add for, defaults to $this->activeUser('id')
      * @param  boolean $is_primary  Whether or not the email address should be the primary email address for the user
      * @param  boolean $is_verified Whether ot not the email should be marked as verified
      * @param  boolean $send_email  If unverified, whether or not the verification email should be sent
@@ -1159,7 +1171,7 @@ class NAILS_User_model extends NAILS_Model
      */
     public function email_add($email, $user_id = null, $is_primary = false, $is_verified = false, $send_email = true)
     {
-        $_user_id   = empty($user_id) ? active_user('id') : $user_id;
+        $_user_id   = empty($user_id) ? $this->activeUser('id') : $user_id;
         $_email     = trim(strtolower($email));
         $_u         = $this->get_by_id($_user_id);
 
@@ -1511,7 +1523,7 @@ class NAILS_User_model extends NAILS_Model
      * @param  integer $expires How long till the block, if the threshold is reached, expires.
      * @return boolean
      */
-    public function increment_failed_login($user_id, $expires = 300)
+    public function incrementFailedLogin($user_id, $expires = 300)
     {
         $this->db->set('failed_login_count', '`failed_login_count`+1', false);
         $this->db->set('failed_login_expires', date('Y-m-d H:i:s', time() + $expires));
@@ -1525,7 +1537,7 @@ class NAILS_User_model extends NAILS_Model
      * @param  integer $user_id The user ID to reset
      * @return boolean
      */
-    public function reset_failed_login($user_id)
+    public function resetFailedLogin($user_id)
     {
         $this->db->set('failed_login_count', 0);
         $this->db->set('failed_login_expires', 'null', false);
@@ -1539,7 +1551,7 @@ class NAILS_User_model extends NAILS_Model
      * @param  integer $user_id The user ID to update
      * @return boolean
      */
-    public function update_last_login($user_id)
+    public function updateLastLogin($user_id)
     {
         $this->db->set('last_login', 'NOW()', false);
         $this->db->set('login_count', 'login_count+1', false);
@@ -1555,7 +1567,7 @@ class NAILS_User_model extends NAILS_Model
      * @param  string $email    The user's email\
      * @return boolean
      */
-    public function set_remember_cookie($id = null, $password = null, $email = null)
+    public function setRememberCookie($id = null, $password = null, $email = null)
     {
         //  Is remember me functionality enabled?
         $this->config->load('auth/auth');
@@ -1569,15 +1581,15 @@ class NAILS_User_model extends NAILS_Model
 
         if (!$id || !$password || !$email) {
 
-            if (!active_user('id') ||  !active_user('password') || !active_user('email')) {
+            if (!activeUser('id') ||  !activeUser('password') || !activeUser('email')) {
 
                 return false;
 
             } else {
 
-                $id       = active_user('id');
-                $password = active_user('password');
-                $email    = active_user('email');
+                $id       = $this->activeUser('id');
+                $password = $this->activeUser('password');
+                $email    = $this->activeUser('email');
             }
         }
 
@@ -1614,7 +1626,7 @@ class NAILS_User_model extends NAILS_Model
      * Clear the active user's 'rememberMe' cookie
      * @return void
      */
-    public function clear_remember_cookie()
+    public function clearRememberCookie()
     {
         $this->load->helper('cookie');
 
@@ -1637,7 +1649,7 @@ class NAILS_User_model extends NAILS_Model
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
-        if ($this->was_admin()) {
+        if ($this->wasAdmin()) {
 
             $_admin = $this->session->userdata('admin_recovery');
 
@@ -1677,9 +1689,9 @@ class NAILS_User_model extends NAILS_Model
 
         if (!$_me || !empty($_me->is_suspended)) {
 
-            $this->clear_remember_cookie();
-            $this->clear_active_user();
-            $this->clear_login_data();
+            $this->clearRememberCookie();
+            $this->clearActiveUser();
+            $this->clearLoginData();
 
             $this->isLoggedIn = false;
 
@@ -1689,7 +1701,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Store this entire user in memory
-        $this->set_active_user($_me);
+        $this->setActiveUser($_me);
 
         // --------------------------------------------------------------------------
 
@@ -1979,12 +1991,12 @@ class NAILS_User_model extends NAILS_Model
                 $_email->data  = array();
 
                 //  If this user is created by an admin then take note of that.
-                if ($this->is_admin()) {
+                if ($this->isAdmin()) {
 
                     $_email->data['admin']              = new stdClass();
-                    $_email->data['admin']->id          = active_user('id');
-                    $_email->data['admin']->first_name  = active_user('first_name');
-                    $_email->data['admin']->last_name   = active_user('last_name');
+                    $_email->data['admin']->id          = $this->activeUser('id');
+                    $_email->data['admin']->first_name  = $this->activeUser('first_name');
+                    $_email->data['admin']->last_name   = $this->activeUser('last_name');
                     $_email->data['admin']->group       = new stdClass();
                     $_email->data['admin']->group->id   = $_group->id;
                     $_email->data['admin']->group->name = $_group->label;
@@ -2105,7 +2117,7 @@ class NAILS_User_model extends NAILS_Model
      * @param  integer $referrerId The ID of the user who made the referral
      * @return void
      */
-    public function reward_referral($userId, $referrerId)
+    public function rewardReferral($userId, $referrerId)
     {
         // @todo Implement this emthod where appropriate
     }
@@ -2395,41 +2407,15 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $user->group_acl = unserialize($user->group_acl);
+        $user->group_acl = json_decode($user->group_acl);
 
         //  If the user has an ACL set then we'll need to extract and merge that
         if ($user->user_acl) {
 
-            $user->user_acl = unserialize($user->user_acl);
-            $user->acl      = array();
-
-            foreach ($user->group_acl as $key => $value) {
-
-                if (array_key_exists($key, $user->user_acl)) {
-
-                    /**
-                     * This key DOES exist in the second array, we'll need to analyse it and
-                     * see if we need to recursively search. We are overwriting the source value
-                     * with the new value, if both source and target
-                     */
-
-                    if (is_array($value) && is_array($user->user_acl[$key])) {
-
-                        //  Two arrays, which will need to be merged
-                        $user->acl[$key] = array_merge($value, $user->user_acl[$key]);
-
-                    } else {
-
-                        //  Simply overwrite the old value with the new one, no recursion required
-                        $user->acl[$key] = $user->user_acl[$key];
-                    }
-
-                } else {
-
-                    //  This key isn't in the new array, ignore and just tack this onto the $result
-                    $user->acl[$key] = $value;
-                }
-            }
+            $user->user_acl = json_decode($user->user_acl);
+            $user->acl      = array_merge($user->group_acl, $user->user_acl);
+            $user->acl      = array_filter($user->acl);
+            $user->acl      = array_unique($user->acl);
 
         } else {
 

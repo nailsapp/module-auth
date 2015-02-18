@@ -60,9 +60,9 @@ class NAILS_Register extends NAILS_Auth_Controller
 	public function index()
 	{
 		//	If you're logged in you shouldn't be accessing this method
-		if ( $this->user_model->is_logged_in() ) :
+		if ( $this->user_model->isLoggedIn() ) :
 
-			$this->session->set_flashdata( 'error', lang( 'auth_no_access_already_logged_in', active_user( 'email' ) ) );
+			$this->session->set_flashdata( 'error', lang( 'auth_no_access_already_logged_in', activeUser( 'email' ) ) );
 			redirect( '/' );
 
 		endif;
@@ -160,7 +160,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 					// --------------------------------------------------------------------------
 
 					//	Log the user in
-					$this->user_model->set_login_data( $_new_user->id );
+					$this->user_model->setLoginData( $_new_user->id );
 
 					// --------------------------------------------------------------------------
 

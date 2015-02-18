@@ -123,7 +123,7 @@ class NAILS_Auth_model extends NAILS_Model
                 }
 
                 //  Reset user's failed login counter and allow login
-                $this->user_model->reset_failed_login($_user->id);
+                $this->user_model->resetFailedLogin($_user->id);
 
                 /**
                  * If two factor auth is enabled then don't _actually_ set login data the
@@ -133,16 +133,16 @@ class NAILS_Auth_model extends NAILS_Model
                 if (!$this->config->item('authTwoFactorMode')) {
 
                     //  Set login data for this user
-                    $this->user_model->set_login_data($_user->id);
+                    $this->user_model->setLoginData($_user->id);
 
                     //  If we're remembering this user set a cookie
                     if ($remember) {
 
-                        $this->user_model->set_remember_cookie($_user->id, $_user->password, $_user->email);
+                        $this->user_model->setRememberCookie($_user->id, $_user->password, $_user->email);
                     }
 
                     //  Update their last login and increment their login count
-                    $this->user_model->update_last_login($_user->id);
+                    $this->user_model->updateLastLogin($_user->id);
                 }
 
                 return $_user;
@@ -182,7 +182,7 @@ class NAILS_Auth_model extends NAILS_Model
                 //  User was recognised but the password was wrong
 
                 //  Increment the user's failed login count
-                $this->user_model->increment_failed_login($_user->id, $this->brute_force_protection['expire']);
+                $this->user_model->incrementFailedLogin($_user->id, $this->brute_force_protection['expire']);
 
                 //  Are we already blocked? Let them know...
                 if ($_user->failed_login_count >= $this->brute_force_protection['limit']) {
@@ -197,7 +197,7 @@ class NAILS_Auth_model extends NAILS_Model
                     }
 
                     //  Block has expired, reset the counter
-                    $this->user_model->reset_failed_login($user->id);
+                    $this->user_model->resetFailedLogin($user->id);
                 }
 
                 //  Check if the password was changed recently
@@ -238,19 +238,19 @@ class NAILS_Auth_model extends NAILS_Model
     public function logout()
     {
         // Delete the remember me cookies if they exist
-        $this->user_model->clear_remember_cookie();
+        $this->user_model->clearRememberCookie();
 
         // --------------------------------------------------------------------------
 
         //  null the remember_code so that auto-logins stop
         $this->db->set('remember_code', null);
-        $this->db->where('id', active_user('id'));
+        $this->db->where('id', activeUser('id'));
         $this->db->update(NAILS_DB_PREFIX . 'user');
 
         // --------------------------------------------------------------------------
 
         //  Destroy key parts of the session (enough for user_model to report user as logged out)
-        $this->user_model->clear_login_data();
+        $this->user_model->clearLoginData();
 
         // --------------------------------------------------------------------------
 

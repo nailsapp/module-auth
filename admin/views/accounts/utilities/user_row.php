@@ -85,7 +85,7 @@
         <?php
 
             //  Actions, only super users can do anything to other superusers
-            if (!$user->is_superuser() && userHasPermission('superuser', $member)) {
+            if (!$user->isSuperuser() && userHasPermission('superuser', $member)) {
                 //  Member is a superuser and the admin is not a super user, no editing facility
                 echo '<span class="not-editable">';
                     echo 'You do not have permission to perform manipulations on this user.';
@@ -98,7 +98,7 @@
                 // --------------------------------------------------------------------------
 
                 //  Login as?
-                if ($member->id != active_user('id') && userHasPermission('admin.accounts:0.can_login_as')) {
+                if ($member->id != activeUser('id') && userHasPermission('admin.accounts:0.can_login_as')) {
 
                     //  Generate the return string
                     $_url = uri_string();
@@ -129,7 +129,7 @@
                 //  Edit
                 if (userHasPermission('admin.accounts:0.can_edit_others')) {
 
-                    if ($member->id == active_user('id') || userHasPermission('admin.accounts:0.can_edit_others')) {
+                    if ($member->id == activeUser('id') || userHasPermission('admin.accounts:0.can_edit_others')) {
 
                         $_buttons[] = anchor(
                             'admin/auth/accounts/edit/' . $member->id . $_return,
@@ -165,8 +165,8 @@
                 //  Delete user
                 if (
                     userHasPermission('admin.accounts:0.can_delete_others')
-                    && $member->id != active_user('id')
-                    && !$this->user_model->is_superuser($member->id)
+                    && $member->id != activeUser('id')
+                    && !$this->user_model->isSuperuser($member->id)
                 ) {
                     $_buttons[] = anchor(
                         'admin/auth/accounts/delete/' . $member->id . $_return,
@@ -180,7 +180,7 @@
                 //  Update user's group
                 if (userHasPermission('admin.accounts:0.can_change_user_group')) {
                     //  If this user us a super user and the current user is not a super user then don't allow this option
-                    if ($this->user_model->is_superuser($member->id) && !$this->user_model->is_superuser()) {
+                    if ($this->user_model->isSuperuser($member->id) && !$this->user_model->isSuperuser()) {
                         //  Nothing
                     } else {
                         $_buttons[] = anchor(

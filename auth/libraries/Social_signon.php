@@ -290,7 +290,7 @@ class Social_signon
     {
         if (empty($user_id)) {
 
-            $user_id = active_user('id');
+            $user_id = activeUser('id');
         }
 
         if (empty($user_id)) {
@@ -457,7 +457,7 @@ class Social_signon
     {
         if (empty($user_id)) {
 
-            $user_id = active_user('id');
+            $user_id = activeUser('id');
         }
 
         if (empty($user_id)) {

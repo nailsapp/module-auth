@@ -21,7 +21,12 @@ class Accounts extends \AdminController
     public static function announce()
     {
         $navGroup = new \Nails\Admin\Nav('Members');
-        $navGroup->addMethod('View All Members');
+
+        if (userHasPermission('admin.auth.accounts.browse')) {
+
+            $navGroup->addMethod('View All Members');
+        }
+
         return $navGroup;
     }
 
@@ -72,17 +77,13 @@ class Accounts extends \AdminController
     {
         $permissions = parent::permissions();
 
-        // --------------------------------------------------------------------------
-
-        //  Define some basic extra permissions
+        $permissions['browse']          = 'Can browse users';
         $permissions['create']          = 'Can create users';
         $permissions['suspend']         = 'Can suspend/unsuspend users';
         $permissions['loginAs']         = 'Can log in as another user';
         $permissions['editOthers']      = 'Can edit other users';
         $permissions['changeUserGroup'] = 'Can change a user\'s group';
         $permissions['canDeleteOthers'] = 'Can delete other users';
-
-        // --------------------------------------------------------------------------
 
         return $permissions;
     }
@@ -106,6 +107,13 @@ class Accounts extends \AdminController
      */
     public function index()
     {
+        if (!userHasPermission('admin.auth.accounts.browse')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Set method info
         $this->data['page']->title = 'View All Members';
 
@@ -319,8 +327,9 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        //  Get the groups
+        //  Get data for the view
         $this->data['groups'] = $this->user_group_model->get_all();
+        $this->data['passwordRulesAsString'] = $this->user_password_model->getRulesAsString();
 
         // --------------------------------------------------------------------------
 
@@ -336,7 +345,7 @@ class Accounts extends \AdminController
      */
     public function edit()
     {
-        if ($this->uri->segment(5) != active_user('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             unauthorised();
         }
@@ -357,7 +366,7 @@ class Accounts extends \AdminController
         }
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
+        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -365,7 +374,7 @@ class Accounts extends \AdminController
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
-        if (active_user('id') != $user->id && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if (activeUser('id') != $user->id && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -706,9 +715,9 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        if (active_user('id') == $user->id) {
+        if (activeUser('id') == $user->id) {
 
-            switch (strtolower(active_user('gender'))) {
+            switch (strtolower(activeUser('gender'))) {
 
                 case 'male':
 
@@ -770,7 +779,7 @@ class Accounts extends \AdminController
 
         foreach ($this->data['users'] as $user) {
 
-            if ($this->user_model->is_superuser($user->id) && !$this->user_model->is_superuser()) {
+            if ($this->user_model->isSuperuser($user->id) && !$this->user_model->isSuperuser()) {
 
                 show_404();
             }
@@ -824,7 +833,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
+        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -887,7 +896,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
+        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -949,7 +958,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
+        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -966,7 +975,7 @@ class Accounts extends \AdminController
             redirect($this->input->get('return_to'));
         }
 
-        if ($user->id == active_user('id')) {
+        if ($user->id == activeUser('id')) {
 
             $this->session->set_flashdata('error', lang('accounts_delete_error_selfie'));
             redirect($this->input->get('return_to'));
@@ -1000,7 +1009,7 @@ class Accounts extends \AdminController
      */
     public function delete_profile_img()
     {
-        if ($this->uri->segment(5) != active_user('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
 
             unauthorised();
         }
@@ -1021,7 +1030,7 @@ class Accounts extends \AdminController
         } else {
 
             //  Non-superusers editing superusers is not cool
-            if (!$this->user_model->is_superuser() && userHasPermission('superuser', $user)) {
+            if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
                 $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
                 redirect($return_to);

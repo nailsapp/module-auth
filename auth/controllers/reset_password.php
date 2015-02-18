@@ -28,9 +28,9 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
         // --------------------------------------------------------------------------
 
         //  If user is logged in they shouldn't be accessing this method
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', active_user('email')));
+            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
     }
@@ -266,7 +266,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($this->config->item('authTwoFactorMode')) {
 
-                                $this->user_model->set_login_data($user->id);
+                                $this->user_model->setLoginData($user->id);
                             }
 
                             //  Log user in and forward to wherever they need to go

@@ -4,7 +4,7 @@
 require_once '_auth.php';
 
 /**
- * This class allows administrators with the "can_login_as_others" permission to login as other users.
+ * This class allows users to "login as" other users (where permission allows)
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -14,166 +14,148 @@ require_once '_auth.php';
  */
 class NAILS_Override extends NAILS_Auth_Controller
 {
-	/**
-	 * Constructor
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Construct the controller
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	If you're not a admin then you shouldn't be accessing this class
-		if ( ! $this->user_model->was_admin() && ! $this->user_model->is_admin() ) :
+        //  If you're not a admin then you shouldn't be accessing this class
+        if (!$this->user_model->wasAdmin() && !$this->user_model->isAdmin()) {
 
-			$this->session->set_flashdata( 'error', lang( 'auth_no_access' ) );
-			redirect( '/' );
-
-		endif;
-	}
+            $this->session->set_flashdata('error', lang('auth_no_access'));
+            redirect('/');
+        }
+    }
 
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
 
-	/**
-	 * Log in as another user
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function login_as( )
-	{
-		//	Perform lookup of user
-		$_hashid = $this->uri->segment( 4 );
-		$_hashpw = $this->uri->segment( 5 );
+    /**
+     * Log in as another user
+     * @return  void
+     */
+    public function login_as()
+    {
+        //  Perform lookup of user
+        $hashId = $this->uri->segment(4);
+        $hashPw = $this->uri->segment(5);
+        $user   = $this->user_model->get_by_hashes($hashId, $hashPw);
 
-		$_u = $this->user_model->get_by_hashes( $_hashid, $_hashpw, TRUE );
+        if (!$user) {
 
-		if ( ! $_u ) :
+            show_error(lang('auth_override_invalid'));
+        }
 
-			show_error( lang( 'auth_override_invalid' ) );
+        // --------------------------------------------------------------------------
 
-		endif;
+        /**
+         * Check sign-in permissions; ignore if recovering.
+         * Users cannot:
+         * - Sign in as themselves
+         * - Sign in as superusers (unless they are a superuser)
+         */
 
-		// --------------------------------------------------------------------------
+        if (!$this->user_model->wasAdmin()) {
 
-		/**
-		 * Check sign-in permissions; ignore if recovering.
-		 * Users cannot:
-		 * - Sign in as themselves
-		 * - Sign in as superusers (unless they are a superuser)
-		 */
+            $hasPermission = userHasPermission('admin.accounts:0.can_login_as');
+            $isCloning     = activeUser('id') == $user->id ? true : false;
+            $isSuperuser   = !userHasPermission('superuser') && userHasPermission('superuser', $user) ? true : false;
 
-		if ( ! $this->user_model->was_admin() ) :
+            if (!$hasPermission || $isCloning || $isSuperuser) {
 
-			$_permission	= userHasPermission( 'admin.accounts:0.can_login_as' );
-			$_cloning		= active_user( 'id' ) == $_u->id ? TRUE : FALSE;
-			$_superuser		= ! userHasPermission( 'superuser' ) && userHasPermission( 'superuser', $_u ) ? TRUE : FALSE;
+                if (!$hasPermission) {
 
-			if ( ! $_permission || $_cloning || $_superuser ) :
+                    $this->session->set_flashdata('error', lang('auth_override_fail_nopermission'));
+                    redirect('admin/dashboard');
 
-				if ( ! $_permission ) :
+                } elseif ($isCloning) {
 
-					$this->session->set_flashdata( 'error', lang( 'auth_override_fail_nopermission' ) );
-					redirect( 'admin/dashboard' );
+                    show_error(lang('auth_override_fail_cloning'));
 
-				elseif ( $_cloning ) :
+                } elseif ($isSuperuser) {
 
-					show_error( lang( 'auth_override_fail_cloning' ) );
+                    show_error(lang('auth_override_fail_superuser'));
+                }
+            }
+        }
 
-				elseif ( $_superuser ) :
+        // --------------------------------------------------------------------------
 
-					show_error( lang( 'auth_override_fail_superuser' ) );
+        //  Prep recovery data
+        $recoveryData                    = new stdClass();
+        $recoveryData->id                = md5(activeUser('id'));
+        $recoveryData->hash              = md5(activeUser('password'));
+        $recoveryData->email             = activeUser('email');
+        $recoveryData->name              = activeUser('first_name');
+        $recoveryData->logged_in_as      = $user->id;
+        $recoveryData->now_where_was_i   = $this->input->get('return_to');
+        $recoveryData->back_to_admin_url = site_url('auth/override/login_as/' . $recoveryData->id . '/' . $recoveryData->hash);
 
-				endif;
+        // --------------------------------------------------------------------------
 
-			endif;
+        //  Replace current user's session data
+        $this->user_model->setLoginData($user->id);
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Unset our admin recovery session data if we're recovering
+        if ($this->user_model->wasAdmin()) {
 
-		//	Prep recovery data
-		$_recovery_data						= new stdClass();
-		$_recovery_data->id					= md5( active_user( 'id' ) );
-		$_recovery_data->hash				= md5( active_user( 'password' ) );
-		$_recovery_data->email				= active_user( 'email' );
-		$_recovery_data->name				= active_user( 'first_name' );
-		$_recovery_data->logged_in_as		= $_u->id;
-		$_recovery_data->now_where_was_i	= $this->input->get( 'return_to' );
-		$_recovery_data->back_to_admin_url	= site_url( 'auth/override/login_as/' . $_recovery_data->id . '/' . $_recovery_data->hash );
+            //  Where we sending the user back to? If not set go to the group homepage
+            $redirect = $this->session->userdata('admin_recovery')->now_where_was_i;
+            $redirect = $redirect ? $redirect : $user->group_homepage;
 
-		// --------------------------------------------------------------------------
+            /**
+             * Are we logging back in as the original admin? If so, unset the admin recovery,
+             * if not, leave it as it is so they can log back in in the future.
+             */
 
-		//	Replace current user's session data
-		$this->user_model->set_login_data( $_u->id );
+            $originalAdmin = $this->session->userdata('admin_recovery');
 
-		// --------------------------------------------------------------------------
+            if ($originalAdmin->id === $user->id_md5) {
 
-		//	Unset our admin recovery session data if we're recovering
-		if ( $this->user_model->was_admin() ) :
+                $this->session->unset_userdata('admin_recovery');
 
-			//	Where we sending the user back to? If not set go to the group homepage
-			$_redirect = $this->session->userdata( 'admin_recovery' )->now_where_was_i;
-			$_redirect = $_redirect ? $_redirect : $_u->group_homepage;
+            } else {
 
-			/**
-			 * Are we logging back in as the original admin? If so, unset the admin recovery,
-			 * if not, leave it as it is so they can log back in in the future.
-			 */
+                /**
+                 * We're logging in as someone else, update the recovery data
+                 * to reflect the new user
+                 */
 
-			$_original_admin = $this->session->userdata( 'admin_recovery' );
+                $recoveryData = $this->session->userdata('admin_recovery');
+                $recoveryData->logged_in_as = $user->id;
+                $this->session->set_userdata('admin_recovery', $recoveryData);
+            }
 
-			if ( $_original_admin->id === $_u->id_md5 ) :
+            //  Welcome home!
+            $this->session->set_flashdata('success', lang('auth_override_return', $user->first_name));
 
-				$this->session->unset_userdata( 'admin_recovery' );
+        } else {
 
-			else :
+            //  It worked, it actually worked!They said I was crazy but it actually worked!
+            $this->session->set_flashdata('success', lang('auth_override_ok', title_case($user->first_name . ' ' . $user->last_name)));
 
-				/**
-				 * We're logging in as someone else, update the recovery data
-				 * to reflect the new user
-				 */
+            //  Prep redirect variable
+            $redirect = $user->group_homepage;
 
-				$_recovery_data = $this->session->userdata( 'admin_recovery' );
-				$_recovery_data->logged_in_as = $_u->id;
-				$this->session->set_userdata( 'admin_recovery', $_recovery_data );
+            //  Set a session variable so we can come back as admin
+            $this->session->set_userdata('admin_recovery', $recoveryData);
+        }
 
-			endif;
+        // --------------------------------------------------------------------------
 
-			//	Welcome home!
-			$this->session->set_flashdata( 'success', lang( 'auth_override_return', $_u->first_name ) );
-
-		else :
-
-			//	It worked, it actually worked! They said I was crazy but it actually worked!
-			$this->session->set_flashdata( 'success', lang( 'auth_override_ok', title_case( $_u->first_name . ' ' . $_u->last_name ) ) );
-
-			//	Prep redirect variable
-			$_redirect = $_u->group_homepage;
-
-			//	Set a session variable so we can come back as admin
-			$this->session->set_userdata( 'admin_recovery', $_recovery_data );
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Redirect our user
-		redirect( $_redirect );
-	}
-
+        //  Redirect our user
+        redirect($redirect);
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -197,12 +179,11 @@ class NAILS_Override extends NAILS_Auth_Controller
  * before including this PHP file and extend as normal (i.e in the same way as below);
  * the helper won't be declared so we can declare our own one, app specific.
  *
- **/
+ */
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION')) {
 
-	class Override extends NAILS_Override
-	{
-	}
-
-endif;
+    class Override extends NAILS_Override
+    {
+    }
+}

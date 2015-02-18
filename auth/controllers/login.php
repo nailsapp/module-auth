@@ -71,7 +71,7 @@ class NAILS_Login extends NAILS_Auth_Controller
     public function index()
     {
         //  If you're logged in you shouldn't be accessing this method
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
             redirect($this->data['return_to']);
         }
@@ -323,9 +323,9 @@ class NAILS_Login extends NAILS_Auth_Controller
          * again using the hashes.
          */
 
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            if (md5(active_user('id')) == $hash['id']) {
+            if (md5(activeUser('id')) == $hash['id']) {
 
                 //  We are attempting to log in as who we're already logged in as, redirect normally
                 if ($this->data['return_to']) {
@@ -335,7 +335,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                 } else {
 
                     //  Nowhere to go? Send them to their default homepage
-                    redirect(active_user('group_homepage'));
+                    redirect(activeUser('group_homepage'));
                 }
 
             } else {
@@ -361,7 +361,7 @@ class NAILS_Login extends NAILS_Auth_Controller
         if ($user) {
 
             //  User was verified, log the user in
-            $this->user_model->set_login_data($user->id);
+            $this->user_model->setLoginData($user->id);
 
             // --------------------------------------------------------------------------
 
@@ -394,7 +394,7 @@ class NAILS_Login extends NAILS_Auth_Controller
             // --------------------------------------------------------------------------
 
             //  Update their last login
-            $this->user_model->update_last_login($user->id);
+            $this->user_model->updateLastLogin($user->id);
 
             // --------------------------------------------------------------------------
 
@@ -489,7 +489,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
         if ($user) {
 
-            if ($this->user_model->is_logged_in() && active_user('id') == $user->id) {
+            if ($this->user_model->isLoggedIn() && activeUser('id') == $user->id) {
 
                 /**
                  * Logged in user is already logged in and is the social user.
@@ -507,7 +507,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                     redirect($user->group_homepage);
                 }
 
-            } elseif ($this->user_model->is_logged_in() && active_user('id') != $user->id) {
+            } elseif ($this->user_model->isLoggedIn() && activeUser('id') != $user->id) {
 
                 /**
                  * Hmm, a user was found for this Provider ID, but it's not the actively logged
@@ -528,7 +528,7 @@ class NAILS_Login extends NAILS_Auth_Controller
             } else {
 
                 //  Fab, user exists, try to log them in
-                $this->user_model->set_login_data($user->id);
+                $this->user_model->setLoginData($user->id);
                 $this->social_signon->save_session($user->id);
 
                 if (!$this->_login($user)) {
@@ -546,14 +546,14 @@ class NAILS_Login extends NAILS_Auth_Controller
                 }
             }
 
-        } elseif ($this_model->user->is_logged_in()) {
+        } elseif ($this_model->user->isLoggedIn()) {
 
             /**
              * User is logged in and it look's like the provider isn't being used by
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($this->social_signon->save_session(active_user('id'), $provider)) {
+            if ($this->social_signon->save_session(activeUser('id'), $provider)) {
 
                 create_event('did_link_provider',array('provider' => $provider));
                 $this->session->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
@@ -797,7 +797,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                     // --------------------------------------------------------------------------
 
                     //  Aint that swell, all registered!Redirect!
-                    $this->user_model->set_login_data($newUser->id);
+                    $this->user_model->setLoginData($newUser->id);
 
                     // --------------------------------------------------------------------------
 

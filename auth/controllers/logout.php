@@ -24,7 +24,7 @@ class NAILS_Logout extends NAILS_Auth_Controller
 	public function index()
 	{
 		//	If already logged out just send them silently on their way
-		if ( ! $this->user_model->is_logged_in() ) :
+		if ( ! $this->user_model->isLoggedIn() ) :
 
 			redirect( '/' );
 
@@ -37,7 +37,7 @@ class NAILS_Logout extends NAILS_Auth_Controller
 		//	something with 'em.
 
 		$_flash				= array();
-		$_flash['name']		= active_user( 'first_name' );
+		$_flash['name']		= activeUser( 'first_name' );
 		$_flash['success']	= $this->session->flashdata( 'success' );
 		$_flash['error']	= $this->session->flashdata( 'error' );
 		$_flash['notice']	= $this->session->flashdata( 'notice' );

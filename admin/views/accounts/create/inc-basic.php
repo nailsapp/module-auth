@@ -19,7 +19,7 @@
 
 			//	If the group is a superuser group and the active user is not a superuser
 			//	then remove it
-			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->is_superuser() ) :
+			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->isSuperuser() ) :
 
 				continue;
 
@@ -35,7 +35,7 @@
 		echo '<ul id="user-group-descriptions">';
 		foreach ( $groups as $group ) :
 
-			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->is_superuser() ) :
+			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->isSuperuser() ) :
 
 				continue;
 
@@ -58,6 +58,7 @@
 		$_field['key']			= 'password';
 		$_field['label']		= lang( 'form_label_password' );
 		$_field['placeholder']	= lang( 'accounts_create_field_password_placeholder' );
+		$_field['info']			= $passwordRulesAsString;
 
 		echo form_field( $_field, lang( 'accounts_create_field_password_tip' ) );
 

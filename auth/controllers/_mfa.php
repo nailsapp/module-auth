@@ -120,12 +120,12 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
     protected function loginUser()
     {
         //  Set login data for this user
-        $this->user_model->set_login_data($this->mfaUser->id);
+        $this->user_model->setLoginData($this->mfaUser->id);
 
         //  If we're remembering this user set a cookie
         if ($this->remember) {
 
-            $this->user_model->set_remember_cookie(
+            $this->user_model->setRememberCookie(
                 $this->mfaUser->id,
                 $this->mfaUser->password,
                 $this->mfaUser->email
@@ -133,7 +133,7 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
         }
 
         //  Update their last login and increment their login count
-        $this->user_model->update_last_login($this->mfaUser->id);
+        $this->user_model->updateLastLogin($this->mfaUser->id);
 
         // --------------------------------------------------------------------------
 

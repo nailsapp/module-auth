@@ -80,7 +80,7 @@ class Merge extends \AdminController
             $mergeIds = explode(',', $this->input->post('mergeIds'));
             $preview  = !$this->input->post('doMerge') ? true : false;
 
-            if (!in_array(active_user('id'), $mergeIds)) {
+            if (!in_array(activeUser('id'), $mergeIds)) {
 
                 $mergeResult = $this->user_model->merge($userId, $mergeIds, $preview);
 

@@ -89,18 +89,26 @@
 
                 //  Enable Super User status for this user group
                 $field             = array();
-                $field['key']      = 'acl[superuser]';
+                $field['key']      = 'acl[admin][superuser]';
                 $field['label']    = lang('accounts_groups_edit_permissions_field_label_superuser');
-                $field['default']  = !empty($group->acl['superuser']);
+                if (!empty($group->acl)) {
+
+                    $checkKey = 'admin:superuser';
+                    $field['default'] = in_array($checkKey, $group->acl);
+
+                } else {
+
+                    $field['default'] = false;
+                }
                 $field['required'] = false;
-                $field['id']       = 'super-user';
+                $field['id']       = 'toggleSuperuser';
 
                 echo form_field_boolean($field);
 
                 // --------------------------------------------------------------------------
 
                 $_visible = $field['default'] ? 'none' : 'block';
-                echo '<div id="toggle-superuser" class="permissionGroups" style="display:' . $_visible . ';">';
+                echo '<div id="adminPermissions" class="permissionGroups" style="display:' . $_visible . ';">';
 
                     $numPermissions = count($permissions);
                     $rowOpen = false;
@@ -125,21 +133,38 @@
                                     echo '<thead>';
                                         echo '<tr>';
                                             echo '<th class="permission">Permission</th>';
-                                            echo '<th class="enabled text-center">Enabled</th>';
+                                            echo '<th class="enabled text-center">';
+                                                echo '<input type="checkbox" class="toggleAll">';
+                                            echo '</th>';
                                         echo '</tr>';
                                     echo '</thead>';
                                     echo '<tbody>';
 
                                         foreach ($permissions[$i]->permissions as $permission => $label) {
 
-                                            $contextColor = 1 == 0 ? 'success' : 'error';
+                                            $key      = 'acl[admin][' . $permissionSlug . '][' . $permission . ']';
+                                            $checkKey = 'admin:' . $permissionSlug . ':' . $permission;
+
+                                            if ($_POST) {
+
+                                                $checked = !empty($_POST['acl']['admin'][$permissionSlug][$permission]);
+
+                                            } elseif (!empty($group->acl)) {
+
+                                                $checked = in_array($checkKey, $group->acl);
+
+                                            } else {
+
+                                                $checked = false;
+                                            }
+
+                                            $contextColor = $checked ? 'success' : 'error';
 
                                             echo '<tr>';
                                                 echo '<td class="permission">' . $label . '</td>';
                                                 echo '<td class="enabled text-center ' . $contextColor . '">';
                                                     echo '<label>';
-                                                        $key = 'acl[admin][' . $permissionSlug . '][' . $permission . ']';
-                                                        echo form_checkbox($key, true, set_checkbox($key, true, true));
+                                                        echo form_checkbox($key, true, $checked);
                                                     echo '</label>';
                                                 echo '</td>';
                                             echo '</tr>';

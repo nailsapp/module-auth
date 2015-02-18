@@ -41,7 +41,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Define some basic extra permissions
-        $permissions['manage_']    = 'Can manage user groups';
+        $permissions['manage']     = 'Can manage user groups';
         $permissions['create']     = 'Can create user groups';
         $permissions['edit']       = 'Can edit user groups';
         $permissions['delete']     = 'Can delete user groups';
@@ -60,7 +60,8 @@ class Groups extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!userHasPermission('admin.accounts:0.can_manage_groups')) {
+
+        if (!userHasPermission('admin:auth:')) {
 
             unauthorised();
         }
@@ -140,7 +141,7 @@ class Groups extends \AdminController
         // --------------------------------------------------------------------------
 
         if ($this->input->post()) {
-dumpanddie($_POST);
+
             //  Load library
             $this->load->library('form_validation');
 
@@ -150,10 +151,6 @@ dumpanddie($_POST);
             $this->form_validation->set_rules('description', '', 'xss_clean|required');
             $this->form_validation->set_rules('default_homepage', '', 'xss_clean|required');
             $this->form_validation->set_rules('registration_redirect', '', 'xss_clean');
-            $this->form_validation->set_rules('acl[]', '', 'xss_clean');
-            $this->form_validation->set_rules('acl[superuser]', '', 'xss_clean');
-            $this->form_validation->set_rules('acl[admin]', '', 'xss_clean');
-            $this->form_validation->set_rules('acl[admin][]', '', 'xss_clean');
 
             //  Set messages
             $this->form_validation->set_message('required', lang('fv_required'));
@@ -169,8 +166,7 @@ dumpanddie($_POST);
                 $data['registration_redirect'] = $this->input->post('registration_redirect');
 
                 //  Parse ACL's
-                $acl         = $this->input->post('acl');
-                $data['acl'] = serialize($acl);
+                $data['acl'] = $this->user_group_model->processPermissions($this->input->post('acl'));
 
                 if ($this->user_group_model->update($gid, $data)) {
 
@@ -190,7 +186,7 @@ dumpanddie($_POST);
 
         // --------------------------------------------------------------------------
 
-        //  Prepare the permissions
+        //  Get all available permissions
         $this->data['permissions'] = array();
         foreach ($this->data['adminControllers'] as $module => $moduleDetails) {
             foreach ($moduleDetails->controllers as $controller => $controllerDetails) {
@@ -214,6 +210,12 @@ dumpanddie($_POST);
 
         //  Page title
         $this->data['page']->title = lang('accounts_groups_edit_title', $this->data['group']->label);
+
+        // --------------------------------------------------------------------------
+
+        //  Assets
+        $this->asset->load('nails.admin.auth.groups.min.js', 'NAILS');
+        $this->asset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
 
         // --------------------------------------------------------------------------
 

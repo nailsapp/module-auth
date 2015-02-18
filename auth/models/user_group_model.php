@@ -50,9 +50,9 @@ class NAILS_User_group_model extends NAILS_Model
         //  Unset old default
         $this->db->set('is_default', false);
         $this->db->set('modified', 'NOW()', false);
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', active_user('id'));
+            $this->db->set('modified_by', activeUser('id'));
 
         }
         $this->db->where('is_default', true);
@@ -61,9 +61,9 @@ class NAILS_User_group_model extends NAILS_Model
         //  Set new default
         $this->db->set('is_default', true);
         $this->db->set('modified', 'NOW()', false);
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', active_user('id'));
+            $this->db->set('modified_by', activeUser('id'));
 
         }
         $this->db->where('id', $_group->id);
@@ -171,9 +171,45 @@ class NAILS_User_group_model extends NAILS_Model
 
     // --------------------------------------------------------------------------
 
+    public function processPermissions($permissions, $prefix = '')
+    {
+        $out = array();
+
+        //  Level 1
+        foreach ($permissions as $levelOneSlug => $levelOnePermissions) {
+
+            if (is_string($levelOnePermissions)) {
+
+                $out[] = $levelOneSlug;
+                continue;
+            }
+
+            foreach ($levelOnePermissions as $levelTwoSlug => $levelTwoPermissions) {
+
+                if (is_string($levelTwoPermissions)) {
+
+                    $out[] = $levelOneSlug . ':' . $levelTwoSlug;
+                    continue;
+                }
+
+                foreach ($levelTwoPermissions as $levelThreeSlug => $levelThreePermissions) {
+
+                    $out[] = $levelOneSlug . ':' . $levelTwoSlug . ':' . $levelThreeSlug;
+                }
+            }
+        }
+
+        $out = array_unique($out);
+        $out = array_filter($out);
+
+        return json_encode($out);
+    }
+
+    // --------------------------------------------------------------------------
+
     protected function _format_object(&$obj)
     {
-        $obj->acl = @unserialize($obj->acl);
+        $obj->acl = json_decode($obj->acl);
     }
 }
 
