@@ -132,7 +132,7 @@
                     $_buttons[] = anchor(
                         'admin/auth/accounts/edit/' . $member->id . $_return,
                         lang('action_edit'),
-                        'data-fancybox-type="iframe" class="edit fancybox-max awesome small"'
+                        'data-fancybox-type="iframe" class="edit awesome small"'
                     );
                 }
 
