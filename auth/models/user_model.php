@@ -30,11 +30,12 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->_table             = NAILS_DB_PREFIX . 'user';
-        $this->_table_prefix      = 'u';
-        $this->_table_slug_column = 'username';
-        $this->rememberCookie     = 'nailsrememberme';
-        $this->isRemembered       = null;
+        $this->_table              = NAILS_DB_PREFIX . 'user';
+        $this->_table_prefix       = 'u';
+        $this->_table_slug_column  = 'username';
+        $this->rememberCookie      = 'nailsrememberme';
+        $this->adminRecoveryField = 'nailsAdminRecoveryData';
+        $this->isRemembered        = null;
 
         // --------------------------------------------------------------------------
 
@@ -358,7 +359,86 @@ class NAILS_User_model extends NAILS_Model
      */
     public function wasAdmin()
     {
-        return (bool) $this->session->userdata('admin_recovery');
+        return (bool) $this->session->userdata($this->adminRecoveryField);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Adds to the admin recovery array, allowing suers to login as other users multiple times, and come back
+     * @param integer $loggingInAs The ID of the user who is being immitated
+     * @param string  $returnTo    Where to redirect the user when they log back in
+     */
+    public function setAdminRecoveryData($loggingInAs, $returnTo = '')
+    {
+        //  Look for existing Recovery Data
+        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+
+        if (empty($existingRecoveryData)) {
+
+            $existingRecoveryData = array();
+        }
+
+        //  Prepare the new element
+        $adminRecoveryData            = new \stdClass();
+        $adminRecoveryData->oldUserId = activeUser('id');
+        $adminRecoveryData->newUserId = $loggingInAs;
+        $adminRecoveryData->hash      = md5(activeUser('password'));
+        $adminRecoveryData->name      = activeUser('first_name,last_name');
+        $adminRecoveryData->email     = activeUser('email');
+        $adminRecoveryData->returnTo  = empty($returnTo) ? $this->input->server('REQUEST_URI') : $returnTo;
+
+        $adminRecoveryData->loginUrl  = 'auth/override/login_as/';
+        $adminRecoveryData->loginUrl .= md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash;
+        $adminRecoveryData->loginUrl .= '?returningAdmin=1';
+        $adminRecoveryData->loginUrl  = site_url($adminRecoveryData->loginUrl);
+
+        //  Put the new session onto the stack and save to the session
+        $existingRecoveryData[] = $adminRecoveryData;
+
+        $this->session->set_userdata($this->adminRecoveryField, $existingRecoveryData);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the recovery data at the bottom of the stack, i.e the most recently added
+     * @return stdClass
+     */
+    public function getAdminRecoveryData()
+    {
+        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+
+        if (empty($existingRecoveryData)) {
+
+            return array();
+
+        } else {
+
+            return end($existingRecoveryData);
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Removes the most recently added recovery data from the stack
+     * @return void
+     */
+    public function unsetAdminRecoveryData()
+    {
+        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+
+        if (empty($existingRecoveryData)) {
+
+            $existingRecoveryData = array();
+
+        } else {
+
+            array_pop($existingRecoveryData);
+        }
+
+        $this->session->set_userdata($this->adminRecoveryField, $existingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
@@ -1651,34 +1731,34 @@ class NAILS_User_model extends NAILS_Model
         //  Get the user; be wary of admin's logged in as other people
         if ($this->wasAdmin()) {
 
-            $_admin = $this->session->userdata('admin_recovery');
+            $recoveryData = $this->getAdminRecoveryData();
 
-            if (!empty($_admin->logged_in_as)) {
+            if (!empty($recoveryData->newUserId)) {
 
-                $_me = $_admin->logged_in_as;
+                $me = $recoveryData->newUserId;
 
             } else {
 
-                $_me = $this->session->userdata('id');
+                $me = $this->session->userdata('id');
             }
 
         } else {
 
-            $_me = $this->session->userdata('id');
+            $me = $this->session->userdata('id');
         }
 
         //  Is anybody home? Hello...?
-        if (!$_me) {
+        if (!$me) {
 
-            $_me = $this->me;
+            $me = $this->me;
 
-            if (!$_me) {
+            if (!$me) {
 
                 return false;
             }
         }
 
-        $_me = $this->get_by_id($_me);
+        $me = $this->get_by_id($me);
 
         // --------------------------------------------------------------------------
 
@@ -1687,7 +1767,7 @@ class NAILS_User_model extends NAILS_Model
          * obviously don't proceed with the log in
          */
 
-        if (!$_me || !empty($_me->is_suspended)) {
+        if (!$me || !empty($me->is_suspended)) {
 
             $this->clearRememberCookie();
             $this->clearActiveUser();
@@ -1701,7 +1781,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Store this entire user in memory
-        $this->setActiveUser($_me);
+        $this->setActiveUser($me);
 
         // --------------------------------------------------------------------------
 
@@ -1713,7 +1793,7 @@ class NAILS_User_model extends NAILS_Model
         //  Update user's `last_seen` and `last_ip` properties
         $this->db->set('last_seen', 'NOW()', false);
         $this->db->set('last_ip', $this->input->ip_address());
-        $this->db->where('id', $_me->id);
+        $this->db->where('id', $me->id);
         $this->db->update(NAILS_DB_PREFIX . 'user');
     }
 

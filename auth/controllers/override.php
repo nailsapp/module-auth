@@ -86,15 +86,49 @@ class NAILS_Override extends NAILS_Auth_Controller
 
         // --------------------------------------------------------------------------
 
-        //  Prep recovery data
-        $recoveryData                    = new stdClass();
-        $recoveryData->id                = md5(activeUser('id'));
-        $recoveryData->hash              = md5(activeUser('password'));
-        $recoveryData->email             = activeUser('email');
-        $recoveryData->name              = activeUser('first_name');
-        $recoveryData->logged_in_as      = $user->id;
-        $recoveryData->now_where_was_i   = $this->input->get('return_to');
-        $recoveryData->back_to_admin_url = site_url('auth/override/login_as/' . $recoveryData->id . '/' . $recoveryData->hash);
+        if (!$this->input->get('returningAdmin') && $this->user_model->isAdmin()) {
+
+            /**
+             * The current user is an admin, we should set our Admin Recovery Data so
+             * that they can come back.
+             */
+
+            $this->user_model->setAdminRecoveryData($user->id, $this->input->get('return_to'));
+            $redirect = $user->group_homepage;
+
+            //  A bit of feedback
+            $status  = 'success';
+            $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
+
+        } elseif ($this->user_model->wasAdmin()) {
+
+            /**
+             * This user is a recovering adminaholic. Work out where we're sending
+             * them back to then remove the adminRecovery data.
+             */
+
+            $recoveryData = $this->user_model->getAdminRecoveryData();
+            $redirect     = !empty($recoveryData->returnTo) ? $recoveryData->returnTo : $user->group_homepage;
+
+            $this->user_model->unsetAdminRecoveryData();
+
+            //  Some feedback
+            $status  = 'success';
+            $message = lang('auth_override_return', $user->first_name . ' ' . $user->last_name);
+
+        } else {
+
+            /**
+             * This user is simply logging in as someone else and has passed the hash
+             * verification.
+             */
+
+            $redirect = $user->group_homepage;
+
+            //  Some feedback
+            $status  = 'success';
+            $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
+        }
 
         // --------------------------------------------------------------------------
 
@@ -103,54 +137,14 @@ class NAILS_Override extends NAILS_Auth_Controller
 
         // --------------------------------------------------------------------------
 
-        //  Unset our admin recovery session data if we're recovering
-        if ($this->user_model->wasAdmin()) {
+        //  Any feedback?
+        if (!empty($message)) {
 
-            //  Where we sending the user back to? If not set go to the group homepage
-            $redirect = $this->session->userdata('admin_recovery')->now_where_was_i;
-            $redirect = $redirect ? $redirect : $user->group_homepage;
-
-            /**
-             * Are we logging back in as the original admin? If so, unset the admin recovery,
-             * if not, leave it as it is so they can log back in in the future.
-             */
-
-            $originalAdmin = $this->session->userdata('admin_recovery');
-
-            if ($originalAdmin->id === $user->id_md5) {
-
-                $this->session->unset_userdata('admin_recovery');
-
-            } else {
-
-                /**
-                 * We're logging in as someone else, update the recovery data
-                 * to reflect the new user
-                 */
-
-                $recoveryData = $this->session->userdata('admin_recovery');
-                $recoveryData->logged_in_as = $user->id;
-                $this->session->set_userdata('admin_recovery', $recoveryData);
-            }
-
-            //  Welcome home!
-            $this->session->set_flashdata('success', lang('auth_override_return', $user->first_name));
-
-        } else {
-
-            //  It worked, it actually worked!They said I was crazy but it actually worked!
-            $this->session->set_flashdata('success', lang('auth_override_ok', title_case($user->first_name . ' ' . $user->last_name)));
-
-            //  Prep redirect variable
-            $redirect = $user->group_homepage;
-
-            //  Set a session variable so we can come back as admin
-            $this->session->set_userdata('admin_recovery', $recoveryData);
+            $this->session->set_flashdata($status, $message);
         }
 
         // --------------------------------------------------------------------------
 
-        //  Redirect our user
         redirect($redirect);
     }
 }

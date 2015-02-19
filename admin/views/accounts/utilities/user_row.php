@@ -4,6 +4,7 @@
         <?php
 
             if ($member->profile_img) {
+
                 echo anchor(
                     cdn_serve($member->profile_img),
                     img(array(
@@ -14,16 +15,10 @@
                 );
             } else {
 
-                switch ($member->gender) {
-
-                    case 'female':
-                        echo img(array('src' => cdn_blank_avatar(65, 65, 'female'), 'class' => 'profile-img'));
-                        break;
-
-                    default:
-                        echo img(array('src' => cdn_blank_avatar(65, 65, 'male'), 'class' => 'profile-img'));
-                        break;
-                }
+                echo img(array(
+                    'src' => cdn_blank_avatar(65, 65, $member->gender),
+                    'class' => 'profile-img'
+                ));
             }
 
             echo '<div>';
@@ -58,7 +53,7 @@
             if ($member->last_login) {
                 echo 'Last login: ';
                 echo '<span class="nice-time">' . toUserDate($member->last_login, 'Y-m-d H:i:s') . '</span> ';
-                echo '(' . $member->login_count . 'logins)';
+                echo '(' . $member->login_count . ' logins)';
             } else {
                 echo 'Last login: Never Logged In';
             }

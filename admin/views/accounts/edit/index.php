@@ -1,7 +1,7 @@
 <?php
 
     echo '<div class="group-accounts edit">';
-    echo form_open_multipart('admin/accounts/edit/' . $user_edit->id . '?' . $this->input->server('QUERY_STRING'));
+    echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $this->input->server('QUERY_STRING'));
     echo form_hidden('id', $user_edit->id);
     echo form_hidden('email_orig', $user_edit->email);
     echo form_hidden('username_orig', $user_edit->username);
@@ -42,7 +42,7 @@
     // --------------------------------------------------------------------------
 
     //  email forms
-    echo form_open('admin/accounts/email', 'id="emailForm"');
+    echo form_open('admin/auth/accounts/email', 'id="emailForm"');
         echo form_hidden('id', $user_edit->id);
         echo form_hidden('return', uri_string() . '?' . $this->input->server('QUERY_STRING'));
         echo form_hidden('email');

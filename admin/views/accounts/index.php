@@ -42,10 +42,10 @@
 
                         foreach ($users as $member) {
 
-                            $data = array(
+                            $viewData = array(
                                 'member' => &$member
-                           );
-                            $this->load->view('admin/accounts/utilities/user_row', $data);
+                            );
+                            echo \Nails\Admin\Helper::loadInlineView('utilities/user_row', $viewData);
 
                         }
 

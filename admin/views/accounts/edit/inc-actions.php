@@ -41,7 +41,7 @@
 	//	Edit
 	if ( $user_edit->id != activeUser( 'id' ) && userHasPermission( 'admin.accounts:0.delete' ) ) :
 
-		$_buttons[] = anchor( 'admin/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode( 'admin/accounts' ), lang( 'action_delete' ), 'class="awesome red confirm" data-title="' . lang( 'admin_confirm_delete_title' ) . '" data-body="' . lang( 'admin_confirm_delete_body' ) . '"' );
+		$_buttons[] = anchor( 'admin/auth/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode( 'admin/auth/accounts' ), lang( 'action_delete' ), 'class="awesome red confirm" data-title="' . lang( 'admin_confirm_delete_title' ) . '" data-body="' . lang( 'admin_confirm_delete_body' ) . '"' );
 
 	endif;
 
@@ -52,7 +52,7 @@
 
 		if ( activeUser( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.unsuspend' ) ) :
 
-			$_buttons[] = anchor( 'admin/accounts/unsuspend/' . $user_edit->id . $return_string, lang( 'action_unsuspend' ), 'class="awesome"' );
+			$_buttons[] = anchor( 'admin/auth/accounts/unsuspend/' . $user_edit->id . $return_string, lang( 'action_unsuspend' ), 'class="awesome"' );
 
 		endif;
 
@@ -60,7 +60,7 @@
 
 		if ( activeUser( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.suspend' ) ) :
 
-			$_buttons[] = anchor( 'admin/accounts/suspend/' . $user_edit->id . $return_string, lang( 'action_suspend' ), 'class="awesome red"' );
+			$_buttons[] = anchor( 'admin/auth/accounts/suspend/' . $user_edit->id . $return_string, lang( 'action_suspend' ), 'class="awesome red"' );
 
 		endif;
 
