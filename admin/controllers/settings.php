@@ -20,11 +20,11 @@ class Settings extends \AdminController
      */
     public static function announce()
     {
-        $navGroup = new \Nails\Admin\Nav('Settings');
+        $navGroup = new \Nails\Admin\Nav('Settings', 'fa-wrench');
 
-        if (userHasPermission('admin:auth:settings:update')) {
+        if (userHasPermission('admin:auth:settings:update:.*')) {
 
-            $navGroup->addMethod('Authentication');
+            $navGroup->addAction('Authentication');
         }
 
         return $navGroup;
@@ -40,7 +40,9 @@ class Settings extends \AdminController
     {
         $permissions = parent::permissions();
 
-        $permissions['update'] = 'Can update settings';
+        $permissions['update:registration'] = 'Can configure registration';
+        $permissions['update:password']     = 'Can configure password';
+        $permissions['update:social']       = 'Can social integrations';
 
         return $permissions;
     }
@@ -53,7 +55,7 @@ class Settings extends \AdminController
      */
     public function index()
     {
-        if (!userHasPermission('admin:auth:settings:update')) {
+        if (!userHasPermission('admin:auth:settings:update:.*')) {
 
             unauthorised();
         }
@@ -72,92 +74,107 @@ class Settings extends \AdminController
             $settings          = array();
             $settingsEncrypted = array();
 
-            $settings['user_registration_enabled'] = $this->input->post('user_registration_enabled');
+            if (userHasPermission('admin:auth:settings:update:registration')) {
 
-            //  Disable social signon, if any providers are proeprly enabled it'll turn itself on again.
-            $settings['auth_social_signon_enabled'] = false;
+                $settings['user_registration_enabled'] = $this->input->post('user_registration_enabled');
+            }
 
-            foreach ($providers as $provider) {
+            if (userHasPermission('admin:auth:settings:update:password')) {
 
-                $settings['auth_social_signon_' . $provider['slug'] . '_enabled'] = (bool) $this->input->post('auth_social_signon_' . $provider['slug'] . '_enabled');
+                //  @todo
+            }
 
-                if ($settings['auth_social_signon_' . $provider['slug'] . '_enabled']) {
+            if (userHasPermission('admin:auth:settings:update:social')) {
 
-                    //  null out each key
-                    if ($provider['fields']) {
+                /**
+                 * Disable social signon, if any providers are proeprly enabled it'll
+                 * turn itself on again.
+                 */
 
-                        foreach ($provider['fields'] as $key => $label) {
+                $settings['auth_social_signon_enabled'] = false;
 
-                            if (is_array($label) && !isset($label['label'])) {
+                foreach ($providers as $provider) {
 
-                                foreach ($label as $key1 => $label1) {
+                    $settings['auth_social_signon_' . $provider['slug'] . '_enabled'] = (bool) $this->input->post('auth_social_signon_' . $provider['slug'] . '_enabled');
 
-                                    $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
+                    if ($settings['auth_social_signon_' . $provider['slug'] . '_enabled']) {
 
-                                    if (!empty($label1['required']) && empty($value)) {
+                        //  null out each key
+                        if ($provider['fields']) {
 
-                                        $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
-                                        break 3;
+                            foreach ($provider['fields'] as $key => $label) {
 
+                                if (is_array($label) && !isset($label['label'])) {
+
+                                    foreach ($label as $key1 => $label1) {
+
+                                        $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
+
+                                        if (!empty($label1['required']) && empty($value)) {
+
+                                            $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
+                                            break 3;
+
+                                        }
+
+                                        if ( empty($label1['encrypted'])) {
+
+                                            $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
+
+                                        } else {
+
+                                            $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
+                                        }
                                     }
-
-                                    if ( empty($label1['encrypted'])) {
-
-                                        $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
-
-                                    } else {
-
-                                        $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
-                                    }
-                                }
-
-                            } else {
-
-                                $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
-
-                                if (!empty($label['required']) && empty($value)) {
-
-                                    $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';
-                                    break 2;
-                                }
-
-                                if ( empty($label['encrypted'])) {
-
-                                    $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
 
                                 } else {
 
-                                    $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
+                                    $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
+
+                                    if (!empty($label['required']) && empty($value)) {
+
+                                        $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';
+                                        break 2;
+                                    }
+
+                                    if ( empty($label['encrypted'])) {
+
+                                        $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
+
+                                    } else {
+
+                                        $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    //  Turn on social signon
-                    $settings['auth_social_signon_enabled'] = true;
+                        //  Turn on social signon
+                        $settings['auth_social_signon_enabled'] = true;
 
-                } else {
+                    } else {
 
-                    //  null out each key
-                    if ($provider['fields']) {
+                        //  null out each key
+                        if ($provider['fields']) {
 
-                        foreach ($provider['fields'] as $key => $label) {
+                            foreach ($provider['fields'] as $key => $label) {
 
-                            /**
-                             * Secondary conditional detects an actual array fo fields rather than
-                             * just the label/required array. Design could probably be improved...
-                             **/
+                                /**
+                                 * Secondary conditional detects an actual array fo fields rather than
+                                 * just the label/required array. Design could probably be improved...
+                                 **/
 
-                            if (is_array($label) && !isset($label['label'])) {
+                                if (is_array($label) && !isset($label['label'])) {
 
-                                foreach ($label as $key1 => $label1) {
+                                    foreach ($label as $key1 => $label1) {
 
-                                    $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = null;
+                                        $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = null;
+                                    }
+
+                                } else {
+
+                                    $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = null;
                                 }
-
-                            } else {
-
-                                $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = null;
                             }
                         }
                     }
@@ -165,44 +182,51 @@ class Settings extends \AdminController
             }
 
             //  Save
-            if (empty($error)) {
+            if (!empty($settings)) {
 
-                $this->db->trans_begin();
-                $rollback = false;
+                if (empty($error)) {
 
-                if (!empty($settings)) {
+                    $this->db->trans_begin();
+                    $rollback = false;
 
-                    if (!$this->app_setting_model->set($settings, 'auth')) {
+                    if (!empty($settings)) {
 
-                        $error    = $this->app_setting_model->last_error();
-                        $rollback = true;
+                        if (!$this->app_setting_model->set($settings, 'auth')) {
+
+                            $error    = $this->app_setting_model->last_error();
+                            $rollback = true;
+                        }
                     }
-                }
 
-                if (!empty($settingsEncrypted)) {
+                    if (!empty($settingsEncrypted)) {
 
-                    if (!$this->app_setting_model->set($settingsEncrypted, 'auth', null, true)) {
+                        if (!$this->app_setting_model->set($settingsEncrypted, 'auth', null, true)) {
 
-                        $error    = $this->app_setting_model->last_error();
-                        $rollback = true;
+                            $error    = $this->app_setting_model->last_error();
+                            $rollback = true;
+                        }
                     }
-                }
 
-                if ($rollback) {
+                    if ($rollback) {
 
-                    $this->db->trans_rollback();
-                    $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
+                        $this->db->trans_rollback();
+                        $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
+
+                    } else {
+
+                        $this->db->trans_commit();
+                        $this->data['success'] = 'Authentication settings were saved.';
+
+                    }
 
                 } else {
 
-                    $this->db->trans_commit();
-                    $this->data['success'] = 'Authentication settings were saved.';
-
+                    $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
                 }
 
             } else {
 
-                $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
+                $this->data['message'] = 'No settings to save.';
             }
         }
 
@@ -214,8 +238,7 @@ class Settings extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load assets
-        $this->asset->load('nails.admin.auth.settings.min.js', 'NAILS');
-        $this->asset->inline('<script>_settings = new NAILS_Admin_Auth_Settings();</script>');
+        $this->asset->load('nails.admin.settings.min.js', 'NAILS');
 
         // --------------------------------------------------------------------------
 

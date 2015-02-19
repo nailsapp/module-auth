@@ -15,15 +15,15 @@ namespace Nails\Admin\Auth;
 class Merge extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        if (userHasPermission('admin.accounts:0.can_merge_users')) {
+        if (userHasPermission('admin:auth:merge:users')) {
 
-            $navGroup = new \Nails\Admin\Nav('Members');
-            $navGroup->addMethod('Merge Users');
+            $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
+            $navGroup->addAction('Merge Users');
             return $navGroup;
         }
     }
@@ -51,25 +51,18 @@ class Merge extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the controller
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        if (!userHasPermission('admin.accounts:0.can_merge_users')) {
-
-            unauthorised();
-        }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Merge users
      * @return void
      */
     public function index()
     {
+        if (!userHasPermission('admin:auth:merge:users')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         $this->data['page']->title = 'Merge Users';
 
         // --------------------------------------------------------------------------

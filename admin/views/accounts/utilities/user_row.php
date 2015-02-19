@@ -98,7 +98,7 @@
                 // --------------------------------------------------------------------------
 
                 //  Login as?
-                if ($member->id != activeUser('id') && userHasPermission('admin.accounts:0.can_login_as')) {
+                if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
 
                     //  Generate the return string
                     $_url = uri_string();
@@ -127,31 +127,33 @@
                 // --------------------------------------------------------------------------
 
                 //  Edit
-                if (userHasPermission('admin.accounts:0.can_edit_others')) {
+                if ($member->id == activeUser('id') || userHasPermission('admin:auth:accounts:editOthers')) {
 
-                    if ($member->id == activeUser('id') || userHasPermission('admin.accounts:0.can_edit_others')) {
-
-                        $_buttons[] = anchor(
-                            'admin/auth/accounts/edit/' . $member->id . $_return,
-                            lang('action_edit'),
-                            'data-fancybox-type="iframe" class="edit fancybox-max awesome small"'
-                        );
-                    }
+                    $_buttons[] = anchor(
+                        'admin/auth/accounts/edit/' . $member->id . $_return,
+                        lang('action_edit'),
+                        'data-fancybox-type="iframe" class="edit fancybox-max awesome small"'
+                    );
                 }
 
                 // --------------------------------------------------------------------------
 
                 //  Suspend user
                 if ($member->is_suspended) {
-                    if (userHasPermission('admin.accounts:0.can_suspend_user')) {
+
+                    if (userHasPermission('admin:auth:accounts:unsuspend')) {
+
                         $_buttons[] = anchor(
                             'admin/auth/accounts/unsuspend/' . $member->id . $_return,
                             lang('action_unsuspend'),
                             'class="awesome small green"'
                         );
                     }
+
                 } else {
-                    if (userHasPermission('admin.accounts:0.can_suspend_user')) {
+
+                    if (userHasPermission('admin:auth:accounts:suspend')) {
+
                         $_buttons[] = anchor(
                             'admin/auth/accounts/suspend/' . $member->id . $_return,
                             lang('action_suspend'),
@@ -164,7 +166,7 @@
 
                 //  Delete user
                 if (
-                    userHasPermission('admin.accounts:0.can_delete_others')
+                    userHasPermission('admin:auth:accounts:delete')
                     && $member->id != activeUser('id')
                     && !$this->user_model->isSuperuser($member->id)
                 ) {
@@ -178,7 +180,7 @@
                 // --------------------------------------------------------------------------
 
                 //  Update user's group
-                if (userHasPermission('admin.accounts:0.can_change_user_group')) {
+                if (userHasPermission('admin:auth:accounts:changeUserGroup')) {
                     //  If this user us a super user and the current user is not a super user then don't allow this option
                     if ($this->user_model->isSuperuser($member->id) && !$this->user_model->isSuperuser()) {
                         //  Nothing

@@ -15,15 +15,15 @@ namespace Nails\Admin\Auth;
 class Groups extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        if (userHasPermission('admin.accounts:0.can_manage_groups')) {
+        if (userHasPermission('admin:auth:groups:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('Members');
-            $navGroup->addMethod('Manage User Groups');
+            $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
+            $navGroup->addAction('Manage User Groups');
             return $navGroup;
         }
     }
@@ -60,12 +60,6 @@ class Groups extends \AdminController
     public function __construct()
     {
         parent::__construct();
-
-        if (!userHasPermission('admin:auth:')) {
-
-            unauthorised();
-        }
-
         $this->lang->load('admin_groups');
     }
 
@@ -77,6 +71,13 @@ class Groups extends \AdminController
      */
     public function index()
     {
+        if (!userHasPermission('admin:auth:groups:manage')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         $this->data['page']->title = 'Manage User Groups';
 
         // --------------------------------------------------------------------------
@@ -85,7 +86,7 @@ class Groups extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        if (userHasPermission('admin.accounts:0.can_create_group')) {
+        if (userHasPermission('admin:auth:groups:create')) {
 
             \Nails\Admin\Helper::addHeaderButton('admin/auth/groups/create', 'Create Group');
         }
@@ -103,7 +104,7 @@ class Groups extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin.accounts:0.can_create_group')) {
+        if (!userHasPermission('admin:auth:groups:create')) {
 
             show_404();
         }
@@ -122,7 +123,7 @@ class Groups extends \AdminController
      */
     public function edit()
     {
-        if (!userHasPermission('admin.accounts:0.can_edit_group')) {
+        if (!userHasPermission('admin:auth:groups:edit')) {
 
             show_404();
         }
@@ -231,7 +232,7 @@ class Groups extends \AdminController
      */
     public function delete()
     {
-        if (!userHasPermission('admin.accounts:0.can_delete_group')) {
+        if (!userHasPermission('admin:auth:groups:delete')) {
 
             show_404();
         }
@@ -250,7 +251,7 @@ class Groups extends \AdminController
      */
     public function set_default()
     {
-        if (!userHasPermission('admin.accounts:0.can_set_default_group')) {
+        if (!userHasPermission('admin:auth:groups:setDefault')) {
 
             show_404();
         }

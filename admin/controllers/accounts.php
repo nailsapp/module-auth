@@ -15,56 +15,30 @@ namespace Nails\Admin\Auth;
 class Accounts extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        $navGroup = new \Nails\Admin\Nav('Members');
+        $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
 
-        if (userHasPermission('admin.auth.accounts.browse')) {
+        if (userHasPermission('admin:auth:accounts:browse')) {
 
-            $navGroup->addMethod('View All Members');
+            $ci =& get_instance();
+
+            $ci->db->where('is_suspended', false);
+            $numTotal = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+
+            $ci->db->where('is_suspended', true);
+            $numSuspended = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+
+            $alerts   = array();
+            $alerts[] = \Nails\Admin\Nav::alertObject($numTotal,     'info', 'Number of Users');
+            $alerts[] = \Nails\Admin\Nav::alertObject($numSuspended, 'alert', 'Number of Suspended Users');
+            $navGroup->addAction('View All Members', 'index', $alerts);
         }
 
         return $navGroup;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns an array of notifications
-     * @param  string $classIndex The class_index value, used when multiple admin instances are available
-     * @return array
-     */
-    public static function notifications($classIndex = null)
-    {
-        $ci =& get_instance();
-        $notifications = array();
-
-        // --------------------------------------------------------------------------
-
-        $notifications['index']            = array();
-        $notifications['index']['type']    = 'split';
-        $notifications['index']['options'] = array();
-
-        $ci->db->where('is_suspended', true);
-        $notifications['index']['options'][] = array(
-            'title' => 'Suspended',
-            'type' => 'alert',
-            'value' => $ci->db->count_all_results(NAILS_DB_PREFIX . 'user')
-        );
-
-        $ci->db->where('is_suspended', false);
-        $notifications['index']['options'][] = array(
-            'title' => 'Active',
-            'type' => 'info',
-            'value' => $ci->db->count_all_results(NAILS_DB_PREFIX . 'user')
-        );
-
-        // --------------------------------------------------------------------------
-
-        return $notifications;
     }
 
     // --------------------------------------------------------------------------
@@ -79,11 +53,12 @@ class Accounts extends \AdminController
 
         $permissions['browse']          = 'Can browse users';
         $permissions['create']          = 'Can create users';
-        $permissions['suspend']         = 'Can suspend/unsuspend users';
+        $permissions['delete']          = 'Can delete users';
+        $permissions['suspend']         = 'Can suspend users';
+        $permissions['unsuspend']       = 'Can unsuspend users';
         $permissions['loginAs']         = 'Can log in as another user';
         $permissions['editOthers']      = 'Can edit other users';
         $permissions['changeUserGroup'] = 'Can change a user\'s group';
-        $permissions['canDeleteOthers'] = 'Can delete other users';
 
         return $permissions;
     }
@@ -107,7 +82,7 @@ class Accounts extends \AdminController
      */
     public function index()
     {
-        if (!userHasPermission('admin.auth.accounts.browse')) {
+        if (!userHasPermission('admin:auth:accounts:browse')) {
 
             unauthorised();
         }
@@ -156,7 +131,7 @@ class Accounts extends \AdminController
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
-        if (userHasPermission('admin.accounts:0.can_create_user')) {
+        if (userHasPermission('admin:auth:accounts:create')) {
 
              \Nails\Admin\Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
         }
@@ -175,7 +150,7 @@ class Accounts extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin.accounts:0.can_create_user')) {
+        if (!userHasPermission('admin:auth:accounts:create')) {
 
             unauthorised();
         }
@@ -345,7 +320,7 @@ class Accounts extends \AdminController
      */
     public function edit()
     {
-        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
 
             unauthorised();
         }
@@ -374,7 +349,7 @@ class Accounts extends \AdminController
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
-        if (activeUser('id') != $user->id && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if (activeUser('id') != $user->id && !userHasPermission('admin:auth:accounts:editOthers')) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -756,7 +731,7 @@ class Accounts extends \AdminController
      */
     public function change_group()
     {
-        if (!userHasPermission('admin.accounts:0.can_change_user_group')) {
+        if (!userHasPermission('admin:auth:accounts:changeUserGroup')) {
 
             show_404();
         }
@@ -812,7 +787,7 @@ class Accounts extends \AdminController
      */
     public function suspend()
     {
-        if (!userHasPermission('admin.accounts:0.can_suspend_user')) {
+        if (!userHasPermission('admin:auth:accounts:suspend')) {
 
             unauthorised();
         }
@@ -875,7 +850,7 @@ class Accounts extends \AdminController
      */
     public function unsuspend()
     {
-        if (!userHasPermission('admin.accounts:0.can_suspend_user')) {
+        if (!userHasPermission('admin:auth:accounts:unsuspend')) {
 
             unauthorised();
         }
@@ -938,7 +913,7 @@ class Accounts extends \AdminController
      */
     public function delete()
     {
-        if (!userHasPermission('admin.accounts:0.can_delete_others')) {
+        if (!userHasPermission('admin:auth:accounts:delete')) {
 
             unauthorised();
         }
@@ -1003,7 +978,7 @@ class Accounts extends \AdminController
      */
     public function delete_profile_img()
     {
-        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin.accounts:0.can_edit_others')) {
+        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
 
             unauthorised();
         }
@@ -1166,33 +1141,5 @@ class Accounts extends \AdminController
 
         $this->session->set_flashdata($status, $message);
         redirect($this->input->post('return'));
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Manage user groups
-     * @return void
-     */
-    public function groups()
-    {
-        if (!userHasPermission('admin.accounts:0.can_manage_groups')) {
-
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        $method = $this->uri->segment(5) ? $this->uri->segment(5) : 'index';
-        $method = ucfirst(strtolower($method));
-
-        if (method_exists($this, 'groups' . $method)) {
-
-            $this->{'groups' . $method}();
-
-        } else {
-
-            show_404('', true);
-        }
     }
 }

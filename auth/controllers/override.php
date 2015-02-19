@@ -62,7 +62,7 @@ class NAILS_Override extends NAILS_Auth_Controller
 
         if (!$this->user_model->wasAdmin()) {
 
-            $hasPermission = userHasPermission('admin.accounts:0.can_login_as');
+            $hasPermission = userHasPermission('admin:auth:accounts:loginAs');
             $isCloning     = activeUser('id') == $user->id ? true : false;
             $isSuperuser   = !userHasPermission('superuser') && userHasPermission('superuser', $user) ? true : false;
 
