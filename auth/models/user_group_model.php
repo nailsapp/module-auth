@@ -20,8 +20,8 @@ class NAILS_User_group_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->_table        = NAILS_DB_PREFIX . 'user_group';
-        $this->_table_prefix = 'ug';
+        $this->table        = NAILS_DB_PREFIX . 'user_group';
+        $this->tablePrefix = 'ug';
 
         // --------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ class NAILS_User_group_model extends NAILS_Model
 
         }
         $this->db->where('is_default', true);
-        $this->db->update($this->_table);
+        $this->db->update($this->table);
 
         //  Set new default
         $this->db->set('is_default', true);
@@ -67,7 +67,7 @@ class NAILS_User_group_model extends NAILS_Model
 
         }
         $this->db->where('id', $_group->id);
-        $this->db->update($this->_table);
+        $this->db->update($this->table);
 
         if ($this->db->trans_status() === false) {
 

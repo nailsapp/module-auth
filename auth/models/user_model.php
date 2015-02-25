@@ -30,9 +30,9 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->_table              = NAILS_DB_PREFIX . 'user';
-        $this->_table_prefix       = 'u';
-        $this->_table_slug_column  = 'username';
+        $this->table              = NAILS_DB_PREFIX . 'user';
+        $this->tablePrefix       = 'u';
+        $this->tableSlugColumn  = 'username';
         $this->rememberCookie      = 'nailsrememberme';
         $this->adminRecoveryField = 'nailsAdminRecoveryData';
         $this->isRemembered        = null;
@@ -576,7 +576,7 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Define the selects
-        $this->db->select($this->_table_prefix . '.*');
+        $this->db->select($this->tablePrefix . '.*');
         $this->db->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
         $this->db->select('ue.date_verified email_is_verified_on');
         $this->db->select($this->_get_meta_columns('um'));
@@ -587,19 +587,19 @@ class NAILS_User_model extends NAILS_Model
         //  Define the joins
         $this->db->join(
             NAILS_DB_PREFIX . 'user_email ue',
-            $this->_table_prefix . '.id = ue.user_id AND ue.is_primary = 1',
+            $this->tablePrefix . '.id = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );
 
         $this->db->join(
             NAILS_DB_PREFIX . 'user_meta um',
-            $this->_table_prefix . '.id = um.user_id',
+            $this->tablePrefix . '.id = um.user_id',
             'LEFT'
         );
 
         $this->db->join(
             NAILS_DB_PREFIX . 'user_group ug',
-            $this->_table_prefix . '.group_id = ug.id',
+            $this->tablePrefix . '.group_id = ug.id',
             'LEFT'
         );
     }
@@ -738,7 +738,7 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_prefix . '.username',
+                    'column' => $this->tablePrefix . '.username',
                     'value'  => $username
                 )
             )
@@ -767,11 +767,11 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_prefix . '.id_md5',
+                    'column' => $this->tablePrefix . '.id_md5',
                     'value'  => $md5Id
                 ),
                 array(
-                    'column' => $this->_table_prefix . '.password_md5',
+                    'column' => $this->tablePrefix . '.password_md5',
                     'value'  => $md5Pw
                 )
             )
@@ -801,7 +801,7 @@ class NAILS_User_model extends NAILS_Model
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->_table_prefix . '.referral',
+                    'column' => $this->tablePrefix . '.referral',
                     'value'  => $referralCode
                 )
             )

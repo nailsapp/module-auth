@@ -1,132 +1,112 @@
 <fieldset id="edit-user-meta">
-	<legend><?=lang( 'accounts_edit_meta_legend' )?></legend>
-	<?php
+    <legend><?=lang('accounts_edit_meta_legend')?></legend>
+    <?php
 
-		if ( $user_meta ) :
+        if ($user_meta) {
 
-			foreach ( $user_meta as $field => $value ) :
+            foreach ($user_meta as $metaField => $value) {
 
-				//	Always ignore some fields
-				if ( array_search( $field, $ignored_fields ) !== FALSE )
-					continue;
+                //  Always ignore some fields
+                if (array_search($metaField, $ignored_fields) !== false) {
 
-				// --------------------------------------------------------------------------
+                    continue;
+                }
 
-				$_datatype = isset( $user_meta_cols[$field]['datatype'] ) ? $user_meta_cols[$field]['datatype'] : 'string';
+                // --------------------------------------------------------------------------
 
-				$_field						= array();
-				$_field['key']				= $field;
-				$_field['type']				= isset( $user_meta_cols[$field]['datatype'] ) ? $user_meta_cols[$field]['datatype'] : 'text';
-				$_field['label']			= isset( $user_meta_cols[$field]['label'] ) ? $user_meta_cols[$field]['label'] : ucwords( str_replace( '_', ' ', $field ) );
-				$_field['required']			= isset( $user_meta_cols[$field]['required'] ) ? $user_meta_cols[$field]['required'] : FALSE;
-				$_field['default']			= $value;
+                $dataType = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'string';
 
-				switch ( $_datatype ) :
+                $field             = array();
+                $field['key']      = $metaField;
+                $field['type']     = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'text';
+                $field['label']    = isset($user_meta_cols[$metaField]['label']) ? $user_meta_cols[$metaField]['label'] : ucwords(str_replace('_', ' ', $metaField));
+                $field['required'] = isset($user_meta_cols[$metaField]['required']) ? $user_meta_cols[$metaField]['required'] : false;
+                $field['default']  = $value;
 
-					case 'bool':
-					case 'boolean' :
+                switch ($dataType) {
 
-						$_field['class']	= 'select2';
-						$_field['text_on']	= strtoupper( lang( 'yes' ) );
-						$_field['text_off']	= strtoupper( lang( 'no' ) );
+                    case 'bool':
+                    case 'boolean':
 
-						echo form_field_boolean( $_field );
+                        $field['class']    = 'select2';
+                        $field['text_on']  = strtoupper(lang('yes'));
+                        $field['text_off'] = strtoupper(lang('no'));
 
-					break;
+                        echo form_field_boolean($field);
+                        break;
 
-					// --------------------------------------------------------------------------
+                    case 'date':
 
-					case 'date' :
+                        echo form_field_date($field);
+                        break;
 
-						echo form_field_date( $_field );
+                    case 'id':
 
-					break;
+                        //  Fetch items from the joining table
+                        if (isset($user_meta_cols[$metaField]['join'])) {
 
-					// --------------------------------------------------------------------------
+                            $table      = isset($user_meta_cols[$metaField]['join']['table'])     ? $user_meta_cols[$metaField]['join']['table']     : null;
+                            $selectId   = isset($user_meta_cols[$metaField]['join']['id'])        ? $user_meta_cols[$metaField]['join']['id']        : null;
+                            $selectName = isset($user_meta_cols[$metaField]['join']['name'])      ? $user_meta_cols[$metaField]['join']['name']      : null;
+                            $orderCol   = isset($user_meta_cols[$metaField]['join']['order_col']) ? $user_meta_cols[$metaField]['join']['order_col'] : null;
+                            $orderDir   = isset($user_meta_cols[$metaField]['join']['order_dir']) ? $user_meta_cols[$metaField]['join']['order_dir'] : 'ASC';
 
-					case 'id' :
+                            if ($table && $selectId && $selectName) {
 
-						//	Fetch items from the joining table
+                                $this->db->select($selectId . ',' . $selectName);
 
-						if ( isset( $user_meta_cols[$field]['join'] ) ) :
+                                if ($orderCol) {
 
-							$_table			= isset( $user_meta_cols[$field]['join']['table'] ) 	?  $user_meta_cols[$field]['join']['table']		: NULL;
-							$_select_id		= isset( $user_meta_cols[$field]['join']['id'] )		?  $user_meta_cols[$field]['join']['id']		: NULL;
-							$_select_name	= isset( $user_meta_cols[$field]['join']['name'] )		?  $user_meta_cols[$field]['join']['name']		: NULL;
-							$_order_col		= isset( $user_meta_cols[$field]['join']['order_col'] )	?  $user_meta_cols[$field]['join']['order_col']	: NULL;
-							$_order_dir		= isset( $user_meta_cols[$field]['join']['order_dir'] )	?  $user_meta_cols[$field]['join']['order_dir']	: 'ASC';
+                                    $this->db->order_by($orderCol, $orderDir);
+                                }
 
-							if ( $_table && $_select_id && $_select_name ) :
+                                $results = $this->db->get($table)->result();
+                                $options = array();
 
-								$this->db->select( $_select_id . ',' . $_select_name );
+                                foreach ($results as $row) {
 
-								if ( $_order_col ) :
+                                    $options[$row->{$selectId}] = $row->{$selectName};
+                                }
 
-									$this->db->order_by( $_order_col, $_order_dir );
+                                $field['class'] = 'select2';
 
-								endif;
+                                echo form_field_dropdown($field, $options);
 
-								$_results = $this->db->get( $_table )->result();
-								$_options = array();
+                            } else {
 
-								foreach ( $_results as $row ) :
+                                echo form_field($field);
+                            }
 
-									$_options[$row->{$_select_id}] = $row->{$_select_name};
+                        } else {
 
-								endforeach;
+                            echo form_field($field);
+                        }
+                        break;
 
-								$_field['class'] = 'select2';
+                    case 'file':
+                    case 'upload':
 
-								echo form_field_dropdown( $_field, $_options );
+                        $field['bucket'] = isset($user_meta_cols[$metaField]['bucket']) ? $user_meta_cols[$metaField]['bucket'] : false;
+                        if (isset(${'upload_error_' . $field['key']})) {
 
-							else :
+                            $field['error'] = implode(' ', ${'upload_error_' . $field['key']});
+                        }
 
-								echo form_field( $_field );
+                        echo form_field_mm($field);
+                        break;
 
-							endif;
+                    case 'string':
+                    default:
 
-						else :
+                        echo form_field($field);
+                        break;
+                }
+            }
 
-							echo form_field( $_field );
+        } else {
 
-						endif;
+            echo '<p>' . lang('accounts_edit_meta_noeditable') . '</p>';
+        }
 
-					break;
-
-					// --------------------------------------------------------------------------
-
-					case 'file' :
-					case 'upload' :
-
-						$_field['bucket'] = isset( $user_meta_cols[$field]['bucket'] ) ? $user_meta_cols[$field]['bucket'] : FALSE;
-						if ( isset( ${'upload_error_' . $_field['key']} )) :
-
-							$_field['error'] = implode( ' ', ${'upload_error_' . $_field['key']} );
-
-						endif;
-
-						echo form_field_mm( $_field );
-
-					break;
-
-					// --------------------------------------------------------------------------
-
-					case 'string':
-					default:
-
-						echo form_field( $_field );
-
-					break;
-
-				endswitch;
-
-			endforeach;
-
-		else :
-
-			echo '<p>' . lang( 'accounts_edit_meta_noeditable' ) . '</p>';
-
-		endif;
-
-	?>
+    ?>
 </fieldset>
