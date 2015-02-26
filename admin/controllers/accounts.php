@@ -528,7 +528,7 @@ class Accounts extends \AdminController
                 // --------------------------------------------------------------------------
 
                 //  If we have a profile image, attempt to upload it
-                if (isset($FILES['profile_img']) && $FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
+                if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
                     $object = $this->cdn->object_replace($user->profile_img, 'profile-images', 'profile_img');
 

@@ -2348,6 +2348,8 @@ class NAILS_User_model extends NAILS_Model
         $ignoreTables   = array();
         $ignoreTables[] = NAILS_DB_PREFIX . 'user';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_meta';
+        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_code';
+        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_question';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_token';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_social';
