@@ -10,22 +10,25 @@
 
 class NAILS_User_group_model extends NAILS_Model
 {
-    protected $default_group;
+    protected $defaultGroup;
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Cosntruct the model
+     */
     public function __construct()
     {
         parent::__construct();
 
         // --------------------------------------------------------------------------
 
-        $this->table        = NAILS_DB_PREFIX . 'user_group';
+        $this->table       = NAILS_DB_PREFIX . 'user_group';
         $this->tablePrefix = 'ug';
 
         // --------------------------------------------------------------------------
 
-        $this->_default_group = $this->getDefaultGroup();
+        $this->defaultGroup = $this->getDefaultGroup();
     }
 
     // --------------------------------------------------------------------------
@@ -36,9 +39,9 @@ class NAILS_User_group_model extends NAILS_Model
      */
     public function setAsDefault($group_id_slug)
     {
-        $_group = $this->get_by_id_or_slug($group_id_slug);
+        $group = $this->get_by_id_or_slug($group_id_slug);
 
-        if (!$_group) {
+        if (!$group) {
 
             $this->_set_error('Invalid Group');
         }
@@ -66,7 +69,7 @@ class NAILS_User_group_model extends NAILS_Model
             $this->db->set('modified_by', activeUser('id'));
 
         }
-        $this->db->where('id', $_group->id);
+        $this->db->where('id', $group->id);
         $this->db->update($this->table);
 
         if ($this->db->trans_status() === false) {
@@ -87,32 +90,46 @@ class NAILS_User_group_model extends NAILS_Model
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns the default user group
+     * @return stdClass
+     */
     public function getDefaultGroup()
     {
-        $_data['where']   = array();
-        $_data['where'][] = array('column' => 'is_default', 'value' => true);
+        $data['where']   = array();
+        $data['where'][] = array('column' => 'is_default', 'value' => true);
 
-        $_group = $this->get_all(null, null, $_data);
+        $group = $this->get_all(null, null, $data);
 
-        if (!$_group) {
+        if (!$group) {
 
             showFatalError('No Default Group Set', 'A default user group must be set.');
         }
 
-        $this->_default_group = $_group[0];
+        $this->defaultGroup = $group[0];
 
-        return $this->_default_group;
+        return $this->defaultGroup;
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns the default group's ID
+     * @return int
+     */
     public function getDefaultGroupId()
     {
-        return $this->_default_group->id;
+        return $this->defaultGroup->id;
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Change the user group of multiple users, executing any pre/post upgrade functionality as required
+     * @param  array   $userIds    An array of User ID's to update
+     * @param  integer $newGroupId The ID of the new user group
+     * @return boolean
+     */
     public function changeUserGroup($userIds, $newGroupId)
     {
         $group = $this->get_by_id($newGroupId);
@@ -171,7 +188,12 @@ class NAILS_User_group_model extends NAILS_Model
 
     // --------------------------------------------------------------------------
 
-    public function processPermissions($permissions, $prefix = '')
+    /**
+     * Formats an array of permissions into a JSON encoded string suitable for the database
+     * @param  array  $permissions An array of permissions to set
+     * @return string
+     */
+    public function processPermissions($permissions)
     {
         $out = array();
 
@@ -207,6 +229,11 @@ class NAILS_User_group_model extends NAILS_Model
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Formats a group object
+     * @param  stdClass &$obj the group object to format
+     * @return void
+     */
     protected function _format_object(&$obj)
     {
         $obj->acl = json_decode($obj->acl);
