@@ -136,7 +136,7 @@ class NAILS_User_model extends NAILS_Model
         //  If only one key is being requested then don't do anything fancy
         if (strpos($keys, ',') === false) {
 
-            $val = isset($this->activeUser->{$keys}) ? $this->activeUser->{$keys} : null;
+            $val = isset($this->activeUser->{trim($keys)}) ? $this->activeUser->{trim($keys)} : null;
 
         } else {
 
