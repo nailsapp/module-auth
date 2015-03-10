@@ -1,158 +1,151 @@
 <fieldset>
+    <legend><?=lang('accounts_create_basic_legend')?></legend>
+    <div class="box-container">
+    <?php
 
-	<legend><?=lang( 'accounts_create_basic_legend' )?></legend>
+        //  Group ID
+        $field             = array();
+        $field['key']      = 'group_id';
+        $field['label']    = lang('accounts_create_field_group_label');
+        $field['required'] = true;
+        $field['default']  = $this->user_group_model->getDefaultGroupId();
+        $field['class']    = 'select2';
 
-	<div class="box-container">
-	<?php
+        //  Prepare ID's
+        $groupsById = array();
+        foreach ($groups as $group) {
 
-		//	Group ID
-		$_field					= array();
-		$_field['key']			= 'group_id';
-		$_field['label']		= lang( 'accounts_create_field_group_label' );
-		$_field['required']		= TRUE;
-		$_field['default']		= $this->user_group_model->getDefaultGroupId();
-		$_field['class']		= 'select2';
+            //  If the group is a superuser group and the active user is not a superuser then remove it
+            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !$user->isSuperuser()) {
 
-		//	Prepare ID's
-		$_groups_by_id = array();
-		foreach ( $groups as $group ) :
+                continue;
+            }
 
-			//	If the group is a superuser group and the active user is not a superuser
-			//	then remove it
-			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->isSuperuser() ) :
+            $groupsById[$group->id] = $group->label;
+        }
 
-				continue;
+        //  Render the group descriptions
+        $field['info'] = '<ul id="user-group-descriptions">';
+        foreach ($groups as $group) {
 
-			endif;
+            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !$user->isSuperuser()) {
 
-			$_groups_by_id[$group->id] = $group->label;
+                continue;
+            }
 
-		endforeach;
+            // --------------------------------------------------------------------------
 
-		echo form_field_dropdown( $_field, $_groups_by_id, lang( 'accounts_create_field_group_tip' ) );
+            $display = $group->id == $this->user_group_model->getDefaultGroupId() ? 'block' : 'none';
+            $field['info'] .= '<li class="system-alert notice" id="user-group-' . $group->id . '" style="display:' . $display . ';">';
+            $field['info'] .=  $group->description;
+            $field['info'] .= '</li>';
+        }
+        $field['info'] .= '</ul>';
 
-		//	Render the group descriptions
-		echo '<ul id="user-group-descriptions">';
-		foreach ( $groups as $group ) :
+        echo form_field_dropdown($field, $groupsById, lang('accounts_create_field_group_tip'));
 
-			if ( isset( $group->acl['superuser'] ) && $group->acl['superuser'] && ! $user->isSuperuser() ) :
+        // --------------------------------------------------------------------------
 
-				continue;
+        //  Password
+        $field                = array();
+        $field['key']         = 'password';
+        $field['label']       = lang('form_label_password');
+        $field['placeholder'] = lang('accounts_create_field_password_placeholder');
+        $field['info']        = '<div class="system-alert notice">' . $passwordRulesAsString . '</div>';
 
-			endif;
+        echo form_field($field, lang('accounts_create_field_password_tip'));
 
-			// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-			$_display = $group->id == $this->user_group_model->getDefaultGroupId() ? 'block' : 'none';
-			echo '<li class="system-alert notice" id="user-group-' . $group->id . '" style="display:' . $_display . ';">';
-			echo  '<strong>' . $group->label . ':</strong> ' . $group->description;
-			echo '</li>';
+        //  Send welcome/activation email
+        $field             = array();
+        $field['key']      = 'send_activation';
+        $field['label']    = lang('accounts_create_field_send_welcome_label');
+        $field['default']  = false;
+        $field['required'] = false;
 
-		endforeach;
-		echo '</ul>';
+        $options = array();
+        $options[] = array(
+            'value'    => 'true',
+            'label'    => lang('accounts_create_field_send_welcome_yes'),
+            'selected' => true
+       );
+        $options[] = array(
+            'value'    => 'false',
+            'label'    => lang('accounts_create_field_send_welcome_no'),
+            'selected' =>  false
+       );
 
-		// --------------------------------------------------------------------------
+        echo form_field_radio($field, $options);
 
-		//	Password
-		$_field					= array();
-		$_field['key']			= 'password';
-		$_field['label']		= lang( 'form_label_password' );
-		$_field['placeholder']	= lang( 'accounts_create_field_password_placeholder' );
-		$_field['info']			= $passwordRulesAsString;
+        // --------------------------------------------------------------------------
 
-		echo form_field( $_field, lang( 'accounts_create_field_password_tip' ) );
+        //  Require password update on log in
+        $field             = array();
+        $field['key']      = 'temp_pw';
+        $field['label']    = lang('accounts_create_field_temp_pw_label');
+        $field['default']  = false;
+        $field['required'] = false;
 
-		// --------------------------------------------------------------------------
+        $options = array();
+        $options[] = array(
+            'value'    => 'true',
+            'label'    => lang('accounts_create_field_temp_pw_yes'),
+            'selected' => true
+       );
+        $options[] = array(
+            'value'    => 'false',
+            'label'    => lang('accounts_create_field_temp_pw_no'),
+            'selected' =>  false
+       );
 
-		//	Send welcome/activation email
-		$_field					= array();
-		$_field['key']			= 'send_activation';
-		$_field['label']		= lang( 'accounts_create_field_send_welcome_label' );
-		$_field['default']		= FALSE;
-		$_field['required']		= FALSE;
+        echo form_field_radio($field, $options);
 
-		$_options = array();
-		$_options[] = array(
-			'value'		=> 'TRUE',
-			'label'		=> lang( 'accounts_create_field_send_welcome_yes' ),
-			'selected'	=> TRUE
-		);
-		$_options[] = array(
-			'value'		=> 'FALSE',
-			'label'		=> lang( 'accounts_create_field_send_welcome_no' ),
-			'selected'	=>	FALSE
-		);
+        // --------------------------------------------------------------------------
 
-		echo form_field_radio( $_field, $_options );
+        //  First Name
+        $field                = array();
+        $field['key']         = 'first_name';
+        $field['label']       = lang('form_label_first_name');
+        $field['required']    = true;
+        $field['placeholder'] = lang('accounts_create_field_first_placeholder');
 
-		// --------------------------------------------------------------------------
+        echo form_field($field);
 
-		//	Require password update on log in
-		$_field					= array();
-		$_field['key']			= 'temp_pw';
-		$_field['label']		= lang( 'accounts_create_field_temp_pw_label' );
-		$_field['default']		= FALSE;
-		$_field['required']		= FALSE;
+        // --------------------------------------------------------------------------
 
-		$_options = array();
-		$_options[] = array(
-			'value'		=> 'TRUE',
-			'label'		=> lang( 'accounts_create_field_temp_pw_yes' ),
-			'selected'	=> TRUE
-		);
-		$_options[] = array(
-			'value'		=> 'FALSE',
-			'label'		=> lang( 'accounts_create_field_temp_pw_no' ),
-			'selected'	=>	FALSE
-		);
+        //  Last name
+        $field                = array();
+        $field['key']         = 'last_name';
+        $field['label']       = lang('form_label_last_name');
+        $field['required']    = true;
+        $field['placeholder'] = lang('accounts_create_field_last_placeholder');
 
-		echo form_field_radio( $_field, $_options );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	First Name
-		$_field					= array();
-		$_field['key']			= 'first_name';
-		$_field['label']		= lang( 'form_label_first_name' );
-		$_field['required']		= TRUE;
-		$_field['placeholder']	= lang( 'accounts_create_field_first_placeholder' );
+        //  Email address
+        $field                = array();
+        $field['key']         = 'email';
+        $field['label']       = lang('form_label_email');
+        $field['required']    = APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME';
+        $field['placeholder'] = lang('accounts_create_field_email_placeholder');
 
-		echo form_field( $_field );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Last name
-		$_field					= array();
-		$_field['key']			= 'last_name';
-		$_field['label']		= lang( 'form_label_last_name' );
-		$_field['required']		= TRUE;
-		$_field['placeholder']	= lang( 'accounts_create_field_last_placeholder' );
+        //  Username
+        $field                = array();
+        $field['key']         = 'username';
+        $field['label']       = lang('form_label_username');
+        $field['required']    = APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL';
+        $field['placeholder'] = lang('accounts_create_field_username_placeholder');
+        $field['info']        = 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
 
-		echo form_field( $_field );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
-
-		//	Email address
-		$_field					= array();
-		$_field['key']			= 'email';
-		$_field['label']		= lang( 'form_label_email' );
-		$_field['required']		= APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME';
-		$_field['placeholder']	= lang( 'accounts_create_field_email_placeholder' );
-
-		echo form_field( $_field );
-
-		// --------------------------------------------------------------------------
-
-		//	Username
-		$_field					= array();
-		$_field['key']			= 'username';
-		$_field['label']		= lang( 'form_label_username' );
-		$_field['required']		= APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL';
-		$_field['placeholder']	= lang( 'accounts_create_field_username_placeholder' );
-		$_field['info']			= 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
-
-		echo form_field( $_field );
-
-	?>
-	</div>
+    ?>
+    </div>
 </fieldset>

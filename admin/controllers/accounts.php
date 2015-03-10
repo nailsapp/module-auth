@@ -335,6 +335,12 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Assets
+        $this->asset->load('nails.admin.accounts.create.min.js', true);
+        $this->asset->inline('_nailsAdminAccountsCreate = new NAILS_Admin_Accounts_Create();', 'JS');
+
+        // --------------------------------------------------------------------------
+
         //  Load views
         \Nails\Admin\Helper::loadView('create/index');
     }
