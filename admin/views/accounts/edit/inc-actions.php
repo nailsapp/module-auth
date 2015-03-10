@@ -1,87 +1,92 @@
 <?php
 
-	$_buttons		= array();
-	$return_string	= '?return_to=' . urlencode( uri_string() . '?' . $_SERVER['QUERY_STRING'] );
+$buttons      = array();
+$returnString = '?return_to=' . urlencode(uri_string() . '?' . $SERVER['QUERY_STRING']);
 
-	// --------------------------------------------------------------------------
+//  Login as
+if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
 
-	//	Login as
-	if ( $user_edit->id != activeUser( 'id' ) && userHasPermission( 'admin.accounts:0.can_login_as' ) ) :
+    //  Generate the return string
+    $url = uri_string();
 
-		//	Generate the return string
-		$_url = uri_string();
+    if ($this->input->get()) {
 
-		if ( $_GET ) :
+        //  Remove common problematic GET vars (for instance, we don't want isModal when we return)
+        $get = $this->input->get();
+        unset($get['isModal']);
+        unset($get['inline']);
 
-			//	Remove common problematic GET vars (for instance, we don't want isModal when we return)
-			$_get = $_GET;
-			unset( $_get['isModal'] );
-			unset( $_get['inline'] );
+        if ($get) {
 
-			if ( $_get ) :
+            $url .= '?' . http_build_query($get);
+        }
+    }
 
-				$_url .= '?' . http_build_query( $_get );
+    $returnString = '?return_to=' . urlencode($url);
 
-			endif;
+    // --------------------------------------------------------------------------
 
-		endif;
+    $url = site_url('auth/override/login_as/' . md5($user_edit->id) . '/' . md5($user_edit->password) . $returnString);
 
-		$_return_string = '?return_to=' . urlencode( $_url );
+    $buttons[] = anchor($url, lang('admin_login_as') . ' ' . $user_edit->first_name, 'class="awesome" target="_parent"');
+}
 
-		// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
-		$_url = site_url( 'auth/override/login_as/' . md5( $user_edit->id ) . '/' . md5( $user_edit->password ) . $_return_string );
+//  Edit
+if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete')) {
 
-		$_buttons[] = anchor( $_url, lang( 'admin_login_as' ) . ' ' . $user_edit->first_name, 'class="awesome" target="_parent"' );
+    $title = lang('admin_confirm_delete_title');
+    $body  = lang('admin_confirm_delete_body');
 
-	endif;
+    $buttons[] = anchor(
+        'admin/auth/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode('admin/auth/accounts'),
+        lang('action_delete'),
+        'class="awesome red confirm" data-title="' . $title . '" data-body="' . $body . '"'
+    );
+}
 
-	// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
-	//	Edit
-	if ( $user_edit->id != activeUser( 'id' ) && userHasPermission( 'admin.accounts:0.delete' ) ) :
+//  Suspend
+if ($user_edit->is_suspended) {
 
-		$_buttons[] = anchor( 'admin/auth/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode( 'admin/auth/accounts' ), lang( 'action_delete' ), 'class="awesome red confirm" data-title="' . lang( 'admin_confirm_delete_title' ) . '" data-body="' . lang( 'admin_confirm_delete_body' ) . '"' );
+    if (activeUser('id') != $user_edit->id && userHasPermission('admin:auth:accounts:unsuspend')) {
 
-	endif;
+        $buttons[] = anchor(
+            'admin/auth/accounts/unsuspend/' . $user_edit->id . $returnString,
+            lang('action_unsuspend'),
+            'class="awesome"'
+        );
+    }
 
-	// --------------------------------------------------------------------------
+} else {
 
-	//	Suspend
-	if ( $user_edit->is_suspended ) :
+    if (activeUser('id') != $user_edit->id && userHasPermission('admin:auth:accounts:suspend')) {
 
-		if ( activeUser( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.unsuspend' ) ) :
+        $buttons[] = anchor(
+            'admin/auth/accounts/suspend/' . $user_edit->id . $returnString,
+            lang('action_suspend'),
+            'class="awesome red"'
+        );
+    }
+}
 
-			$_buttons[] = anchor( 'admin/auth/accounts/unsuspend/' . $user_edit->id . $return_string, lang( 'action_unsuspend' ), 'class="awesome"' );
 
-		endif;
+if ($buttons) {
 
-	else :
+    echo '<fieldset id="edit-user-actions">';
+        echo '<legend>';
+            echo lang('accounts_edit_actions_legend');
+        echo '</legend>';
+        echo '<p>';
 
-		if ( activeUser( 'id') != $user_edit->id && userHasPermission( 'admin.accounts:0.suspend' ) ) :
+        foreach ($buttons as $button) {
 
-			$_buttons[] = anchor( 'admin/auth/accounts/suspend/' . $user_edit->id . $return_string, lang( 'action_suspend' ), 'class="awesome red"' );
+            echo $button;
+        }
 
-		endif;
-
-	endif;
-
-?>
-
-<?php if ( $_buttons ) : ?>
-<fieldset id="edit-user-actions">
-	<legend><?=lang( 'accounts_edit_actions_legend' )?></legend>
-	<p>
-	<?php
-
-		foreach ( $_buttons as $button ) :
-
-			echo $button;
-
-		endforeach;
-
-	?>
-	</p>
-	<div class="clear"></div>
-</fieldset>
-<?php endif; ?>
+        echo '</p>';
+        echo '<div class="clear"></div>';
+    echo '</fieldset>';
+}
