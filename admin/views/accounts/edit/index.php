@@ -6,7 +6,7 @@
     echo form_hidden('email_orig', $user_edit->email);
     echo form_hidden('username_orig', $user_edit->username);
 
-    if (!$this->input->get('inline') || $this->input->get('isModal')) {
+    if (!empty($isModal)) {
 
         $this->load->view('accounts/edit/inc-actions');
     }

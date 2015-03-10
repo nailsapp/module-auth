@@ -1,7 +1,7 @@
 <?php
 
 $buttons      = array();
-$returnString = '?return_to=' . urlencode(uri_string() . '?' . $SERVER['QUERY_STRING']);
+$returnString = '?return_to=' . urlencode(uri_string() . '?' . $this->input->server('QUERY_STRING'));
 
 //  Login as
 if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
@@ -14,7 +14,6 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
         //  Remove common problematic GET vars (for instance, we don't want isModal when we return)
         $get = $this->input->get();
         unset($get['isModal']);
-        unset($get['inline']);
 
         if ($get) {
 

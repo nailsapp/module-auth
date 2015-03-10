@@ -129,7 +129,6 @@
                                         //  Remove common problematic GET vars (for instance, we don't want isModal when we return)
                                         $params = $this->input->get();
                                         unset($params['isModal']);
-                                        unset($params['inline']);
 
                                         if ($params) {
 
