@@ -35,7 +35,7 @@ class Accounts extends \AdminController
             $alerts   = array();
             $alerts[] = \Nails\Admin\Nav::alertObject($numTotal,     'info', 'Number of Users');
             $alerts[] = \Nails\Admin\Nav::alertObject($numSuspended, 'alert', 'Number of Suspended Users');
-            $navGroup->addAction('View All Members', 'index', $alerts);
+            $navGroup->addAction('View All Members', 'index', $alerts, 0);
         }
 
         return $navGroup;
