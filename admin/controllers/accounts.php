@@ -94,10 +94,14 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        $tablePrefix = $this->user_model->getTablePrefix();
+
+        // --------------------------------------------------------------------------
+
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'u.id';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tablePrefix . '.id';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -105,12 +109,34 @@ class Accounts extends \AdminController
 
         //  Define the sortable columns
         $sortColumns = array(
-            'u.id'         => 'User ID',
-            'u.group_id'   => 'Group ID',
-            'u.first_name' => 'First Name, Surname',
-            'u.last_name'  => 'Surname, First Name',
-            'ue.email'     => 'Email'
+            $tablePrefix . '.id'         => 'User ID',
+            $tablePrefix . '.group_id'   => 'Group ID',
+            $tablePrefix . '.first_name' => 'First Name, Surname',
+            $tablePrefix . '.last_name'  => 'Surname, First Name',
+            'ue.email'                   => 'Email'
         );
+
+        // --------------------------------------------------------------------------
+
+        $groupsFlat   = $this->user_group_model->get_all_flat();
+        $groupsFilter = array();
+
+        foreach ($groupsFlat as $id => $label) {
+
+            $groupsFilter[] = array($label, $id, true);
+        }
+
+        //  Filter Checkboxes
+        $cbFilters   = array();
+
+        if (count($groupsFilter) > 1) {
+
+            $cbFilters[] = \Nails\Admin\Helper::searchFilterObject(
+                $tablePrefix . '.group_id',
+                'User Group',
+                $groupsFilter
+            );
+        }
 
         // --------------------------------------------------------------------------
 
@@ -119,7 +145,8 @@ class Accounts extends \AdminController
             'sort' => array(
                 array($sortOn, $sortOrder)
             ),
-            'keywords' => $keywords
+            'keywords' => $keywords,
+            'cbFilters' => $cbFilters
         );
 
         //  Get the items for the page
@@ -127,7 +154,7 @@ class Accounts extends \AdminController
         $this->data['users'] = $this->user_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
