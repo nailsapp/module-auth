@@ -1,0 +1,1 @@
+CREATE TABLE `{{NAILS_DB_PREFIX}}user_auth_access_token` (`id` int(11) unsigned NOT NULL AUTO_INCREMENT, `user_id` int(11) unsigned NOT NULL, `token` varchar(100) NOT NULL DEFAULT '', `expires` timestamp NULL DEFAULT NULL, `scope` varchar(100) DEFAULT NULL, PRIMARY KEY (`id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

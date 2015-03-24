@@ -146,14 +146,10 @@ class NAILS_Auth_model extends NAILS_Model
                         $identifier = $user->email;
                         break;
 
-                    // --------------------------------------------------------------------------
-
                     case 'USERNAME':
 
                         $identifier = $user->username;
                         break;
-
-                    // --------------------------------------------------------------------------
 
                     default:
 
@@ -216,6 +212,29 @@ class NAILS_Auth_model extends NAILS_Model
         }
 
         return false;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Verifies a user's login credentials
+     * @param  string $identifier The identifier to use for the lookup
+     * @param  string $password   The user's password
+     * @return boolean
+     */
+    public function verifyCredentials($identifier, $password)
+    {
+        //  Look up the user, how we do so depends on the login mode that the app is using
+        $user = $this->user_model->getByIdentifier($identifier);
+
+        if (!empty($user)) {
+
+            return $this->user_password_model->isCorrect($user->id, $password);
+
+        } else {
+
+            return false;
+        }
     }
 
     // --------------------------------------------------------------------------

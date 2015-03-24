@@ -691,6 +691,45 @@ class NAILS_User_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
+     * Look up a user by their identifier
+     * @param  string $identifier The user's identifier, either an email address or a username
+     * @return mixed              false on failure, stdClass on success
+     */
+    public function getByIdentifier($identifier)
+    {
+        $this->load->helper('email');
+
+        switch (APP_NATIVE_LOGIN_USING) {
+
+            case 'EMAIL':
+
+                $user = $this->get_by_email($identifier);
+                break;
+
+            case 'USERNAME':
+
+                $user = $this->get_by_username($identifier);
+                break;
+
+            default:
+
+                if (valid_email($identifier)) {
+
+                    $user = $this->get_by_email($identifier);
+
+                } else {
+
+                    $user = $this->get_by_username($identifier);
+                }
+                break;
+        }
+
+        return $user;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Get a user by their email address
      * @param  string $email The user's email address
      * @return mixed         stdClass on success, false on failure

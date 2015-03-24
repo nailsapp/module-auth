@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This model contains all methods for interacting with user's passwords.
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Model
+ * @author      Nails Dev Team
+ * @link
+ */
+
 class NAILS_User_password_model extends CI_Model
 {
     //  Class traits
@@ -572,34 +582,7 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Update the user
-        switch (APP_NATIVE_LOGIN_USING) {
-
-            case 'EMAIL':
-
-                $_user = $this->user_model->get_by_email($identifier);
-                break;
-
-            // --------------------------------------------------------------------------
-
-            case 'USERNAME':
-
-                $_user = $this->user_model->get_by_username($identifier);
-                break;
-
-            // --------------------------------------------------------------------------
-
-            default:
-
-                if (valid_email($identifier)) {
-
-                    $_user = $this->user_model->get_by_email($identifier);
-
-                } else {
-
-                    $_user = $this->user_model->get_by_username($identifier);
-                }
-                break;
-        }
+        $_user = $this->user_model->getByIdentifier($identifier);
 
         if ($_user) {
 
