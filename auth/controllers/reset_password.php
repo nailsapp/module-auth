@@ -154,9 +154,13 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
                 // --------------------------------------------------------------------------
 
-                //  Define rules
-                $this->form_validation->set_rules('new_password', '', 'required|matches[confirm_pass]');
-                $this->form_validation->set_rules('confirm_pass', '', 'required');
+                /**
+                 * Define rules - I know it's not usual to give fields names, but in this case
+                 * it allows the matches message to have more context (a name, rather than a
+                 * field name)
+                 */
+                $this->form_validation->set_rules('new_password', 'Password', 'required|matches[confirm_pass]');
+                $this->form_validation->set_rules('confirm_pass', 'Confirm Password', 'required');
 
                 // --------------------------------------------------------------------------
 
