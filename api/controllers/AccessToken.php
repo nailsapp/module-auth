@@ -24,6 +24,7 @@ class AccessToken extends \ApiController
 
         $identifier = $this->input->post('identifier');
         $password   = $this->input->post('password');
+        $label      = $this->input->post('tokenLabel');
         $isValid    = get_instance()->auth_model->verifyCredentials($identifier, $password);
 
         if ($isValid) {
@@ -33,9 +34,9 @@ class AccessToken extends \ApiController
             $this->load->model('auth/user_access_token_model');
             $token = $this->user_access_token_model->create(
                 array(
-                    'user_id' => $user->id
-                ),
-                true
+                    'user_id' => $user->id,
+                    'label'   => $label
+                )
             );
 
             if ($token) {

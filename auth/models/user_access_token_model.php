@@ -26,13 +26,12 @@ class NAILS_User_access_token_model extends NAILS_Model
 
     /**
      * Creates a new access token
-     * @param  array   $data         The data to create the access token with
-     * @param  boolean $returnObject Whether to return just the new ID or the full access token
-     * @return mixed
+     * @param  array $data The data to create the access token with
+     * @return mixed false on failure, stdClass on success
      */
-    public function create($data = array(), $returnObject = false)
+    public function create($data = array())
     {
-        //§User Id is a required field
+        //  User ID is a required field
         if (empty($data['user_id'])) {
 
             $this->_set_error('A user ID must be supplied.');
@@ -41,8 +40,19 @@ class NAILS_User_access_token_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
+        //  If not specified, generate an expiration date 6 months from now
+        if (!isset($data['expires'])) {
+
+            $expires = new DateTime();
+            $expires->add(new DateInterval('P6M'));
+
+            $data['expires'] = $expires->format('Y-m-d H:i:s');
+        }
+
+        // --------------------------------------------------------------------------
+
         /**
-         * No aprticular reason for this template, other than to ensure a certain
+         * No particular reason for this template, other than to ensure a certain
          * length and to look relatively tidy
          */
 
@@ -52,7 +62,7 @@ class NAILS_User_access_token_model extends NAILS_Model
         //  Generate a new token
         do {
 
-            $data['token'] = preg_replace_callback(
+            $token = preg_replace_callback(
                 '/[X]/',
                 function ($matches) use ($tokenChars) {
 
@@ -62,13 +72,26 @@ class NAILS_User_access_token_model extends NAILS_Model
                 $tokenTemplate
             );
 
+            $data['token'] = hash('sha256', $token . APP_PRIVATE_KEY);
+
             $this->db->where('token', $data['token']);
 
         } while ($this->db->count_all_results($this->table));
 
         // --------------------------------------------------------------------------
 
-        return parent::create($data, $returnObject);
+        if (parent::create($data)) {
+
+            $out          = new \stdClass();
+            $out->token   = $token;
+            $out->expires = $data['expires'];
+
+            return $out;
+
+        } else {
+
+            return false;
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -88,46 +111,19 @@ class NAILS_User_access_token_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Prevent deletion of access tokens
-     * @param  int $id The accessToken's ID
-     * @return boolean
-     */
-    public function delete($id)
-    {
-        $this->_set_error('Access tokens cannot be deleted.');
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Prevent deletion of access tokens
-     * @param  int $id The accessToken's ID
-     * @return boolean
-     */
-    public function destroy($id)
-    {
-        $this->_set_error('Access tokens cannot be deleted.');
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Returns a token by it's token
      * @param  string $token The token to return
+     * @param  array  $data  Data to pass to get_all()
      * @return mixed         false on failure, stdClass on success
      */
-    public function getByToken($token)
+    public function getByToken($token, $data = array())
     {
-        $data = array(
-            'where' => array(
-                array(
-                    $this->tablePrefix . '.token',
-                    $token
-                )
-            )
-        );
+        if (empty($data['where'])) {
+
+            $data['where'] = array();
+        }
+
+        $data['where'][] = array($this->tablePrefix . '.token', hash('sha256', $token . APP_PRIVATE_KEY));
 
         $token = $this->get_all(null, null, $data);
 
@@ -150,33 +146,13 @@ class NAILS_User_access_token_model extends NAILS_Model
      */
     public function getByValidToken($token)
     {
-        $token = $this->getByToken($token);
+        $data = array(
+            'where' => array(
+                '(' . $this->tablePrefix . '.expires IS NULL OR ' . $this->tablePrefix . '.expires > NOW())'
+            )
+        );
 
-        if ($token) {
-
-            if (!is_null($token->expires)) {
-
-                //  Expired?
-                if (time() < strtotime($token->expires)) {
-
-                    return $token;
-
-                } else {
-
-                    return false;
-                }
-
-            } else {
-
-                //  No expirey date
-                return $token;
-            }
-            dumpanddie($token);
-
-        } else {
-
-            return false;
-        }
+        return $this->getByToken($token, $data);
     }
 }
 
