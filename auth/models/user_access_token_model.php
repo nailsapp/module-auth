@@ -52,6 +52,20 @@ class NAILS_User_access_token_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         /**
+         * If a scope has been requested then check that the user has permission to
+         * request such a scope.
+         */
+
+        if (!empty($data['scope'])) {
+
+            /**
+             * @todo Integrate these checks
+             */
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
          * No particular reason for this template, other than to ensure a certain
          * length and to look relatively tidy
          */
@@ -153,6 +167,24 @@ class NAILS_User_access_token_model extends NAILS_Model
         );
 
         return $this->getByToken($token, $data);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Formats a single object
+     *
+     * The get_all() method iterates over each returned item with this method so as to
+     * correctly format the output. Use this to typecast ID's and/or organise data into objects.
+     *
+     * @param  object $obj  A reference to the object being formatted.
+     * @param  array  $data The same data array which is passed to _getcount_common, for reference if needed
+     * @return void
+     */
+    protected function _format_object(&$obj, $data = array())
+    {
+        parent::_format_object($obj, $data);
+        $obj->scope = explode(',', $obj->scope);
     }
 }
 

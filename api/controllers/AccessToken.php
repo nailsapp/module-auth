@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Auth;
+namespace Nails\Api\Auth;
 
 /**
  * Access Token API endpoints
@@ -24,6 +24,7 @@ class AccessToken extends \ApiController
 
         $identifier = $this->input->post('identifier');
         $password   = $this->input->post('password');
+        $scope      = $this->input->post('scope');
         $label      = $this->input->post('tokenLabel');
         $isValid    = get_instance()->auth_model->verifyCredentials($identifier, $password);
 
@@ -35,7 +36,8 @@ class AccessToken extends \ApiController
             $token = $this->user_access_token_model->create(
                 array(
                     'user_id' => $user->id,
-                    'label'   => $label
+                    'label'   => $label,
+                    'scope'   => $scope
                 )
             );
 

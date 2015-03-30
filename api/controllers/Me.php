@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Auth;
+namespace Nails\Api\Auth;
 
 /**
  * Returns information about the currently logged in user
