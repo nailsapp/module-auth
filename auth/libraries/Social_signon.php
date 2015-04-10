@@ -269,11 +269,11 @@ class Social_signon
 
             $this->db->where('provider', $provider);
 
-        } elseif (property_exists($provider, 'slug')) {
+        } elseif (is_object($provider) && property_exists($provider, 'slug')) {
 
             $this->db->where('provider', $provider->slug);
 
-        } elseif (array_key_exists('slug', $provider)) {
+        } elseif (is_array($provider) && array_key_exists('slug', $provider)) {
 
             $this->db->where('provider', $provider['slug']);
 
