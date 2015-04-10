@@ -546,7 +546,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                 }
             }
 
-        } elseif ($this_model->user->isLoggedIn()) {
+        } elseif ($this->user_model->isLoggedIn()) {
 
             /**
              * User is logged in and it look's like the provider isn't being used by
