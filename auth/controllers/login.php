@@ -471,7 +471,7 @@ class NAILS_Login extends NAILS_Auth_Controller
             redirect($redirectUrl);
         }
 
-        $user = $this->social_signon->get_user_by_provider_identifier($provider, $socialUser->identifier);
+        $user = $this->social_signon->get_user_by_provider_identifier($provider['slug'], $socialUser->identifier);
 
         // --------------------------------------------------------------------------
 
@@ -638,7 +638,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                      * necessary.
                      */
 
-                    $this->requestData($requiredData, $provider);
+                    $this->requestData($requiredData, $provider['slug']);
                 }
 
                 /**
@@ -715,7 +715,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                 //  Request data?
                 if (!empty($requestData)) {
 
-                    $this->requestData($requiredData, $provider);
+                    $this->requestData($requiredData, $provider->slug);
                 }
 
                 // --------------------------------------------------------------------------
@@ -929,6 +929,7 @@ class NAILS_Login extends NAILS_Auth_Controller
             } else {
 
                 $this->data['error'] = lang('fv_there_were_errors');
+
                 $this->requestDataForm($requiredData, $provider);
             }
 

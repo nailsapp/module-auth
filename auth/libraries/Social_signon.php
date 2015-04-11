@@ -259,31 +259,14 @@ class Social_signon
 
     /**
      * Fetches a local user profile via a provider and provider ID
-     * @param  mixed   $provider   The provider to use either as a string, object or array
+     * @param  string  $provider   The provider to use
      * @param  string  $identifier The provider's user ID
      * @return mixed               stdClass on success, false on failure
      */
     public function get_user_by_provider_identifier($provider, $identifier)
     {
-        if (is_string($provider)) {
-
-            $this->db->where('provider', $provider);
-
-        } elseif (is_object($provider) && property_exists($provider, 'slug')) {
-
-            $this->db->where('provider', $provider->slug);
-
-        } elseif (is_array($provider) && array_key_exists('slug', $provider)) {
-
-            $this->db->where('provider', $provider['slug']);
-
-        } else {
-
-            $this->_set_error('Could not determine provider.');
-            return false;
-        }
-
         $this->db->select('user_id');
+        $this->db->where('provider', $provider);
         $this->db->where('identifier', $identifier);
 
         $_user = $this->db->get(NAILS_DB_PREFIX . 'user_social')->row();
