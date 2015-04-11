@@ -65,7 +65,7 @@
                     $field            = array();
                     $field['key']     = 'user_registration_enabled';
                     $field['label']   = 'Registration Enabled';
-                    $field['default'] = app_setting($field['key']) ? true : false;
+                    $field['default'] = app_setting($field['key'], 'auth') ? true : false;
 
                     echo form_field_boolean($field, 'Admin will always be able to create users.');
 
@@ -118,7 +118,7 @@
                                 $field            = array();
                                 $field['key']     = 'auth_social_signon_' . $provider['slug'] . '_enabled';
                                 $field['label']   = $provider['label'];
-                                $field['default'] = app_setting($field['key']) ? true : false;
+                                $field['default'] = app_setting($field['key'], 'auth') ? true : false;
 
                                 echo '<div class="field checkbox boolean configure-provider">';
 
@@ -157,7 +157,7 @@
                                                     $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1;
                                                     $field['label']    = $label1['label'];
                                                     $field['required'] = $label1['required'];
-                                                    $field['default']  = app_setting($field['key']);
+                                                    $field['default']  = app_setting($field['key'], 'auth');
 
                                                     echo form_field($field);
                                                 }
@@ -168,7 +168,7 @@
                                                 $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key;
                                                 $field['label']    = $label['label'];
                                                 $field['required'] = $label['required'];
-                                                $field['default']  = app_setting($field['key']);
+                                                $field['default']  = app_setting($field['key'], 'auth');
 
                                                 echo form_field($field);
                                             }
