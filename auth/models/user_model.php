@@ -31,11 +31,11 @@ class NAILS_User_model extends NAILS_Model
 
         //  Set defaults
         $this->table              = NAILS_DB_PREFIX . 'user';
-        $this->tablePrefix       = 'u';
-        $this->tableSlugColumn  = 'username';
-        $this->rememberCookie      = 'nailsrememberme';
+        $this->tablePrefix        = 'u';
+        $this->tableSlugColumn    = 'username';
+        $this->rememberCookie     = 'nailsrememberme';
         $this->adminRecoveryField = 'nailsAdminRecoveryData';
-        $this->isRemembered        = null;
+        $this->isRemembered       = null;
 
         // --------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ class NAILS_User_model extends NAILS_Model
         //  Is remember me functionality enabled?
         $this->config->load('auth/auth');
 
-        if (!$this->config->item('auth_enable_remember_me')) {
+        if (!$this->config->item('authEnableRememberMe')) {
 
             return false;
         }
@@ -1691,7 +1691,7 @@ class NAILS_User_model extends NAILS_Model
         //  Is remember me functionality enabled?
         $this->config->load('auth/auth');
 
-        if (!$this->config->item('auth_enable_remember_me')) {
+        if (!$this->config->item('authEnableRememberMe')) {
 
             return false;
         }

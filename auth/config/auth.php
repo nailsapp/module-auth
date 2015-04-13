@@ -14,33 +14,33 @@
 /**
  * Disable errors when submitting the forgotten password form
  */
-$config['auth_forgotten_pass_always_succeed'] = false;
+$config['authForgottenPassAlwaysSucceed'] = false;
 
 /**
  * Toggle the "remember me" functionality
  */
-$config['auth_enable_remember_me'] = true;
+$config['authEnableRememberMe'] = true;
 
 /**
  * Toggle logins via hashes functionality
  */
-$config['auth_enable_hashed_login'] = true;
+$config['authEnableHashedLogin'] = true;
 
 /**
  * On login show the last seen time as a human friendly string
  */
-$config['auth_show_nicetime_on_login'] = true;
+$config['authShowNicetimeOnLogin'] = true;
 
 /**
  * On login show the last known IP of the user
  */
-$config['auth_show_last_ip_on_login'] = false;
+$config['authShowLastIpOnLogin'] = false;
 
 // --------------------------------------------------------------------------
 
 /**
  * Auth sub config files
- * Look for an app version, fallback to Nails version
+ * Load both versions, app version overrides Nails version
  */
 $appPath   = FCPATH . APPPATH . 'modules/auth/config/';
 $nailsPath = NAILS_PATH . 'module-auth/auth/config/';
@@ -48,17 +48,19 @@ $nailsPath = NAILS_PATH . 'module-auth/auth/config/';
 $files = array(
     'auth.password.php',
     'auth.social.php',
-    'auth.twofactor.php'
+    'auth.twofactor.php',
+    'auth.accesstoken.php'
 );
 
 foreach ($files as $file) {
 
+    if (file_exists($nailsPath . $file)) {
+
+        include $nailsPath . $file;
+    }
+
     if (file_exists($appPath . $file)) {
 
         include $appPath . $file;
-
-    } else {
-
-        include $nailsPath . $file;
     }
 }

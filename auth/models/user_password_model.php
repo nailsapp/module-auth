@@ -369,7 +369,7 @@ class NAILS_User_password_model extends CI_Model
         $this->config->load('auth/auth');
 
         $_pw_str     = '';
-        $_pw_rules   = $this->config->item('auth_password_rules');
+        $_pw_rules   = $this->config->item('authPasswordRules');
         $_pw_rules   = !is_array($_pw_rules) ? array() : $_pw_rules;
         $_min_length = 0;
         $_max_length = false;
@@ -380,12 +380,12 @@ class NAILS_User_password_model extends CI_Model
 
             switch ($rule) {
 
-                case 'min_length':
+                case 'minLength':
 
                     $_min_length = (int) $val;
                     break;
 
-                case 'max_length':
+                case 'maxLength':
 
                     $_max_length = (int) $val;
                     break;
@@ -398,7 +398,7 @@ class NAILS_User_password_model extends CI_Model
                     }
                     break;
 
-                case 'is_not':
+                case 'isNot':
 
                     foreach ($val as $str) {
 

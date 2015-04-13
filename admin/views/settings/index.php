@@ -90,7 +90,7 @@
             <?php
         }
 
-        if (userHasPermission('admin:auth:settings:update:registration')) {
+        if (userHasPermission('admin:auth:settings:update:social')) {
 
             if (!empty($providers)) {
 

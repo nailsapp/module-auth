@@ -11,13 +11,13 @@
  */
 
 //  Define password strength rules
-$config['auth_password_rules'] = array();
+$config['authPasswordRules'] = array();
 
 //  Minimum password length
-$config['auth_password_rules']['min_length'] = 6;
+$config['authPasswordRules']['minLength'] = 6;
 
 //  Maximum password length, 0 means unlimited length
-$config['auth_password_rules']['max_length'] = 0;
+$config['authPasswordRules']['maxLength'] = 0;
 
 /**
  * Define sets of characters which a password must contain
@@ -26,13 +26,13 @@ $config['auth_password_rules']['max_length'] = 0;
  * string will be treated as a charset itself.
  */
 
-$config['auth_password_rules']['contains']   = array();
-$config['auth_password_rules']['contains'][] = 'symbol';
-$config['auth_password_rules']['contains'][] = 'lower_alpha';
-$config['auth_password_rules']['contains'][] = 'upper_alpha';
-$config['auth_password_rules']['contains'][] = 'number';
+$config['authPasswordRules']['contains']   = array();
+$config['authPasswordRules']['contains'][] = 'symbol';
+$config['authPasswordRules']['contains'][] = 'lower_alpha';
+$config['authPasswordRules']['contains'][] = 'upper_alpha';
+$config['authPasswordRules']['contains'][] = 'number';
 
 //  Define strings which should not be used as a password
-$config['auth_password_rules']['is_not']   = array();
-$config['auth_password_rules']['is_not'][] = 'password';
-$config['auth_password_rules']['is_not'][] = '123456789';
+$config['authPasswordRules']['isNot']   = array();
+$config['authPasswordRules']['isNot'][] = 'password';
+$config['authPasswordRules']['isNot'][] = '123456789';

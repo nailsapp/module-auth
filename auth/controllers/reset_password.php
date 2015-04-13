@@ -221,7 +221,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
                                 $this->load->helper('date');
 
-                                if ($this->config->item('auth_show_nicetime_on_login')) {
+                                if ($this->config->item('authShowNicetimeOnLogin')) {
 
                                     $lastLogin = niceTime(strtotime($loginUser->last_login));
 
@@ -230,7 +230,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
                                     $lastLogin = toUserDatetime($loginUser->last_login);
                                 }
 
-                                if ($this->config->item('auth_show_last_ip_on_login')) {
+                                if ($this->config->item('authShowLastIpOnLogin')) {
 
                                     $status  = 'message';
                                     $message = lang(

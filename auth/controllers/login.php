@@ -257,9 +257,9 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                 $this->load->helper('date');
 
-                $lastLogin = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
+                $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-                if ($this->config->item('auth_show_last_ip_on_login')) {
+                if ($this->config->item('authShowLastIpOnLogin')) {
 
                     $status  = 'message';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
@@ -300,7 +300,7 @@ class NAILS_Login extends NAILS_Auth_Controller
      **/
     public function with_hashes()
     {
-        if (!$this->config->item('auth_enable_hashed_login')) {
+        if (!$this->config->item('authEnableHashedLogin')) {
 
             show_404();
         }
@@ -370,9 +370,9 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                 $this->load->helper('date');
 
-                $lastLogin = $this->config->item('auth_show_nicetime_on_login') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
+                $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-                if ($this->config->item('auth_show_last_ip_on_login')) {
+                if ($this->config->item('authShowLastIpOnLogin')) {
 
                     $status  = 'message';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));

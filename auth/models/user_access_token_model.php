@@ -12,6 +12,10 @@
 
 class NAILS_User_access_token_model extends NAILS_Model
 {
+    protected $defaultExpiration;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Construct the model
      */
@@ -20,6 +24,13 @@ class NAILS_User_access_token_model extends NAILS_Model
         parent::__construct();
         $this->table       = NAILS_DB_PREFIX . 'user_auth_access_token';
         $this->tablePrefix = 'uaat';
+
+        //  Load the config file and specify values
+        $this->config->load('auth/auth');
+
+        $this->defaultExpiration = $this->config->item('authAccessTokenDefaultExpiration');
+        $this->tokenTemplate     = $this->config->item('authAccessTokenTemplate');
+        $this->tokenCharacters   = $this->config->item('authAccessTokenCharacters');
     }
 
     // --------------------------------------------------------------------------
@@ -41,10 +52,10 @@ class NAILS_User_access_token_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  If not specified, generate an expiration date 6 months from now
-        if (!isset($data['expires'])) {
+        if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
 
             $expires = new DateTime();
-            $expires->add(new DateInterval('P6M'));
+            $expires->add(new DateInterval($this->defaultExpiration));
 
             $data['expires'] = $expires->format('Y-m-d H:i:s');
         }
@@ -65,25 +76,17 @@ class NAILS_User_access_token_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        /**
-         * No particular reason for this template, other than to ensure a certain
-         * length and to look relatively tidy
-         */
-
-        $tokenTemplate = 'XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX/XXX-XXXX-XXX';
-        $tokenChars    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
         //  Generate a new token
         do {
 
             $token = preg_replace_callback(
                 '/[X]/',
-                function ($matches) use ($tokenChars) {
+                function ($matches) {
 
-                    $start = rand(0, strlen($tokenChars)-1);
-                    return substr($tokenChars, $start, 1);
+                    $start = rand(0, strlen($this->tokenCharacters)-1);
+                    return substr($this->tokenCharacters, $start, 1);
                 },
-                $tokenTemplate
+                $this->tokenTemplate
             );
 
             $data['token'] = hash('sha256', $token . APP_PRIVATE_KEY);

@@ -108,7 +108,7 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
                  * even if it wasn't. Bad UX, if you ask me, but I'm not the client.
                  */
 
-                $alwaysSucceed = $this->config->item('auth_forgotten_pass_always_succeed');
+                $alwaysSucceed = $this->config->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
                 if ($this->user_password_model->set_token($_identifier)) {
