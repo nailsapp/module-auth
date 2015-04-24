@@ -406,7 +406,7 @@ class NAILS_Forgotten_Password extends NAILS_Auth_Controller
                         }
                     }
 
-                    $this->data['page']->title = 'cock';
+                    $this->data['page']->title = 'Please enter the code from your device';
 
                     $this->load->view('structure/header', $this->data);
                     $this->load->view('auth/mfa/device/ask', $this->data);
