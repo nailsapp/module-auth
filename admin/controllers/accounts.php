@@ -377,16 +377,16 @@ class Accounts extends \AdminController
         if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
-            redirect($return_to);
+            $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
+            redirect($returnTo);
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
         if (activeUser('id') != $user->id && !userHasPermission('admin:auth:accounts:editOthers')) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
-            redirect($return_to);
+            $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
+            redirect($returnTo);
         }
 
         // --------------------------------------------------------------------------
@@ -439,8 +439,8 @@ class Accounts extends \AdminController
                 // --------------------------------------------------------------------------
 
                 //  Attempt to detect datatype
-                $datatype  = 'string';
-                $type      = 'text';
+                $datatype = 'string';
+                $type     = 'text';
 
                 switch (strtolower($col->Type)) {
 
@@ -463,9 +463,9 @@ class Accounts extends \AdminController
                 // --------------------------------------------------------------------------
 
                 $this->data['user_meta_cols'][$col->Field] = array(
-                    'datatype'      => $datatype,
-                    'type'          => $type,
-                    'label'         => ucwords(str_replace('_', ' ', $col->Field))
+                    'datatype' => $datatype,
+                    'type'     => $type,
+                    'label'    => ucwords(str_replace('_', ' ', $col->Field))
                 );
             }
         }
@@ -532,10 +532,8 @@ class Accounts extends \AdminController
                         } else {
 
                             $this->form_validation->set_rules($col, $label, 'xss_clean');
-
                         }
                         break;
-
                 }
 
             }
@@ -611,6 +609,13 @@ class Accounts extends \AdminController
                                 $data[$col] = stringToBoolean($this->input->post($col));
                                 break;
 
+                            case 'file':
+                            case 'upload':
+
+                                //  File uploads should be an integer, or if empty, null
+                                $data[$col] = (int) $this->input->post($col) ? (int) $this->input->post($col) : null;
+                                break;
+
                             default:
 
                                 $data[$col] = $this->input->post($col);
@@ -677,7 +682,6 @@ class Accounts extends \AdminController
 
                 $this->data['error'] = lang('fv_there_were_errors');
             }
-
         }
         //  End POST() check
 
@@ -830,7 +834,7 @@ class Accounts extends \AdminController
         //  Get the user's details
         $uid       = $this->uri->segment(5);
         $user      = $this->user_model->get_by_id($uid);
-        $old_value = $user->is_suspended;
+        $oldValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
 
@@ -850,7 +854,7 @@ class Accounts extends \AdminController
 
         //  Get the user's details, again
         $user      = $this->user_model->get_by_id($uid);
-        $new_value = $user->is_suspended;
+        $newValue = $user->is_suspended;
 
 
         // --------------------------------------------------------------------------
@@ -868,7 +872,7 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Update admin changelog
-        $this->admin_changelog_model->add('suspended', 'a', 'user', $uid, '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid, 'is_suspended', $old_value, $new_value, false);
+        $this->admin_changelog_model->add('suspended', 'a', 'user', $uid, '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid, 'is_suspended', $oldValue, $newValue, false);
 
         // --------------------------------------------------------------------------
 
@@ -893,7 +897,7 @@ class Accounts extends \AdminController
         //  Get the user's details
         $uid       = $this->uri->segment(5);
         $user      = $this->user_model->get_by_id($uid);
-        $old_value = $user->is_suspended;
+        $oldValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
 
@@ -912,26 +916,47 @@ class Accounts extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user      = $this->user_model->get_by_id($uid);
-        $new_value = $user->is_suspended;
+        $user     = $this->user_model->get_by_id($uid);
+        $newValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
 
         //  Define messages
         if ($user->is_suspended) {
 
-            $this->session->set_flashdata('error', lang('accounts_unsuspend_error', title_case($user->first_name . ' ' . $user->last_name)));
+            $this->session->set_flashdata(
+                'error',
+                lang(
+                    'accounts_unsuspend_error',
+                    title_case($user->first_name . ' ' . $user->last_name)
+                )
+            );
 
         } else {
 
-            $this->session->set_flashdata('success', lang('accounts_unsuspend_success', title_case($user->first_name . ' ' . $user->last_name)));
-
+            $this->session->set_flashdata(
+                'success',
+                lang(
+                    'accounts_unsuspend_success',
+                    title_case($user->first_name . ' ' . $user->last_name)
+                )
+            );
         }
 
         // --------------------------------------------------------------------------
 
         //  Update admin changelog
-        $this->admin_changelog_model->add('unsuspended', 'a', 'user', $uid, '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid, 'is_suspended', $old_value, $new_value, false);
+        $this->admin_changelog_model->add(
+            'unsuspended',
+            'a',
+            'user',
+            $uid,
+            '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid,
+            'is_suspended',
+            $oldValue,
+            $newValue,
+            false
+        );
 
         // --------------------------------------------------------------------------
 
@@ -1018,9 +1043,9 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $uid       = $this->uri->segment(5);
-        $user      = $this->user_model->get_by_id($uid);
-        $return_to = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
+        $uid      = $this->uri->segment(5);
+        $user     = $this->user_model->get_by_id($uid);
+        $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
 
         // --------------------------------------------------------------------------
 
@@ -1035,7 +1060,7 @@ class Accounts extends \AdminController
             if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
 
                 $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-                redirect($return_to);
+                redirect($returnTo);
             }
 
             // --------------------------------------------------------------------------
@@ -1066,7 +1091,7 @@ class Accounts extends \AdminController
 
             // --------------------------------------------------------------------------
 
-            redirect($return_to);
+            redirect($returnTo);
         }
     }
 
