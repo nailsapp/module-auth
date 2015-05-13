@@ -102,6 +102,7 @@ $lang['accounts_edit_emails_th_primary']       = 'Primary';
 $lang['accounts_edit_emails_th_verified']      = 'Verified';
 $lang['accounts_edit_emails_th_date_added']    = 'Date Added';
 $lang['accounts_edit_emails_th_date_verified'] = 'Date Verified';
+$lang['accounts_edit_emails_th_actions']       = 'Actions';
 $lang['accounts_edit_emails_td_not_verified']  = 'Not Verified';
 $lang['accounts_edit_emails_td_actions']       = 'Actions';
 

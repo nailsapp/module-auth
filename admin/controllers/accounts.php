@@ -214,12 +214,12 @@ class Accounts extends \AdminController
 
                 if ($this->input->post('username')) {
 
-                    $this->form_validation->set_rules('username', '', implode('|', 'xss_clean'));
+                    $this->form_validation->set_rules('username', '', 'xss_clean');
                 }
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $this->form_validation->set_rules('username', '', implode('|', 'xss_clean|required'));
+                $this->form_validation->set_rules('username', '', 'xss_clean|required');
 
                 if ($this->input->post('email')) {
 
