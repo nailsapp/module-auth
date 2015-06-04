@@ -6,7 +6,7 @@
     <?php
 
         echo form_open();
-        echo '<input type="hidden" name="activeTab" value="' . set_value('activeTab') . '" id="activeTab" />'
+        echo '<input type="hidden" name="activeTab" value="' . set_value('activeTab') . '" id="activeTab" />';
 
     ?>
     <ul class="tabs">
@@ -50,7 +50,7 @@
 
         ?>
     </ul>
-    <section class="tabs pages">
+    <section class="tabs">
         <?php
 
         if (userHasPermission('admin:auth:settings:update:registration')) {
@@ -58,7 +58,7 @@
             $display = $this->input->post('activeTab') == 'tab-registration' || !$this->input->post('activeTab') ? 'active' : '';
 
             ?>
-            <div id="tab-registration" class="tab page <?=$display?>">
+            <div class="tab-page tab-registration <?=$display?>">
                 <div class="fieldset">
                 <?php
 
@@ -80,7 +80,7 @@
             $display = $this->input->post('activeTab') == 'tab-password' ? 'active' : '';
 
             ?>
-            <div id="tab-password" class="tab page <?=$display?>">
+            <div class="tab-page tab-password <?=$display?>">
                 <p class="system-alert message">
                     <strong>Coming soon!</strong>
                     <br />
@@ -97,7 +97,7 @@
                 $display = $this->input->post('activeTab') == 'tab-social' ? 'active' : '';
 
                 ?>
-                <div id="tab-social" class="tab page <?=$display?>">
+                <div class="tab-page tab-social <?=$display?>">
                     <div class="fieldset" id="site-settings-socialsignin">
                         <p>
                             With the exception of OpenID providers, each social network requires that you
