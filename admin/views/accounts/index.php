@@ -186,7 +186,7 @@
                                 // --------------------------------------------------------------------------
 
                                 //  Delete user
-                                if ($member-id != activeUser('id') && userHasPermission('admin:auth:accounts:delete') && !$this->user_model->isSuperuser($member->id)) {
+                                if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete') && !$this->user_model->isSuperuser($member->id)) {
 
                                     $buttons[] = anchor(
                                         'admin/auth/accounts/delete/' . $member->id . $return,
