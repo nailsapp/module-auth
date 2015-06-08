@@ -162,7 +162,7 @@
                                 //  Suspend user
                                 if ($member->is_suspended) {
 
-                                    if (userHasPermission('admin:auth:accounts:unsuspend')) {
+                                    if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:unsuspend')) {
 
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/unsuspend/' . $member->id . $return,
@@ -173,7 +173,7 @@
 
                                 } else {
 
-                                    if (userHasPermission('admin:auth:accounts:suspend')) {
+                                    if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:suspend')) {
 
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/suspend/' . $member->id . $return,
@@ -186,7 +186,7 @@
                                 // --------------------------------------------------------------------------
 
                                 //  Delete user
-                                if (userHasPermission('admin:auth:accounts:delete') && $member->id != activeUser('id') && !$this->user_model->isSuperuser($member->id)) {
+                                if ($member-id != activeUser('id') && userHasPermission('admin:auth:accounts:delete') && !$this->user_model->isSuperuser($member->id)) {
 
                                     $buttons[] = anchor(
                                         'admin/auth/accounts/delete/' . $member->id . $return,
@@ -199,7 +199,7 @@
 
                                 //  Update user's group
                                 if (userHasPermission('admin:auth:accounts:changeUserGroup')) {
-                                    //  If this user us a super user and the current user is not a super user then don't allow this option
+                                    //  If this user is a super user and the current user is not a super user then don't allow this option
                                     if ($this->user_model->isSuperuser($member->id) && !$this->user_model->isSuperuser()) {
                                         //  Nothing
                                     } else {
