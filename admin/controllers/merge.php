@@ -91,7 +91,7 @@ class Merge extends \AdminController
                         $status  = 'success';
                         $message = 'Users were merged successfully.';
                         $this->session->set_flashdata($status, $message);
-                        redirect('admin/auth/accounts/merge');
+                        redirect('admin/auth/merge');
                     }
 
                 } else {
