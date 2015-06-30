@@ -14,293 +14,290 @@ require_once '_auth.php';
  */
 class NAILS_Register extends NAILS_Auth_Controller
 {
-	/**
-	 * Constructor
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Construct the controller
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Is registration enabled
-		if ( ! app_setting( 'user_registration_enabled', 'auth' ) ) :
+        //  Is registration enabled
+        if (!app_setting('user_registration_enabled', 'auth')) {
 
-			show_404();
+            show_404();
+        }
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Load libraries
+        $this->load->library('form_validation');
+        $this->load->library('auth/social_signon');
 
-		//	Load libraries
-		$this->load->library( 'form_validation' );
-		$this->load->library( 'auth/social_signon' );
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Specify a default title for this page
+        $this->data['page']->title = lang('auth_title_register');
+    }
 
-		//	Specify a default title for this page
-		$this->data['page']->title = lang( 'auth_title_register' );
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Display registration form, validate data and create user
+     * @return void
+     */
+    public function index()
+    {
+        //  If you're logged in you shouldn't be accessing this method
+        if ($this->user_model->isLoggedIn()) {
 
-	// --------------------------------------------------------------------------
+            $this->session->set_flashdata(
+                'error',
+                lang('auth_no_access_already_logged_in', activeUser('email'))
+            );
+            redirect('/');
+        }
 
+        // --------------------------------------------------------------------------
 
-	/**
-	 * Display registration form, validate data and create user
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function index()
-	{
-		//	If you're logged in you shouldn't be accessing this method
-		if ( $this->user_model->isLoggedIn() ) :
+        //  If there's POST data attempt to log user in
+        if ($this->input->post()) {
 
-			$this->session->set_flashdata( 'error', lang( 'auth_no_access_already_logged_in', activeUser( 'email' ) ) );
-			redirect( '/' );
+            //  Validate input
+            $this->form_validation->set_rules('first_name', '', 'required|xss_clean');
+            $this->form_validation->set_rules('last_name', '', 'required|xss_clean');
+            $this->form_validation->set_rules('password', '', 'required|xss_clean');
 
-		endif;
+            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-		// --------------------------------------------------------------------------
+                $this->form_validation->set_rules(
+                    'email',
+                    '',
+                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                );
 
-		//	If there's POST data attempt to log user in
-		if ( $this->input->post() ) :
+                if ($this->input->post('username')) {
 
-			//	Validate input
-			$this->form_validation->set_rules( 'first_name',	'',	'required|xss_clean' );
-			$this->form_validation->set_rules( 'last_name',		'',	'required|xss_clean' );
-			$this->form_validation->set_rules( 'password',		'',	'required|xss_clean' );
+                    $this->form_validation->set_rules('email', '', 'xss_clean');
+                }
 
-			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' ) :
+            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-				$this->form_validation->set_rules( 'email',	'',	'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
+                $this->form_validation->set_rules('username', '', 'xss_clean|required');
 
-				if ( $this->input->post( 'username' ) ) :
+                if ($this->input->post('email')) {
 
-					$this->form_validation->set_rules( 'email',	'',	'xss_clean' );
+                    $this->form_validation->set_rules(
+                        'email',
+                        '',
+                        'xss_clean|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    );
+                }
 
-				endif;
+            } else {
 
-			elseif ( APP_NATIVE_LOGIN_USING == 'USERNAME' ) :
+                $this->form_validation->set_rules(
+                    'email',
+                    '',
+                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                );
+                $this->form_validation->set_rules(
+                    'username',
+                    '',
+                    'xss_clean|required'
+                );
+            }
 
-				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required' );
+            // --------------------------------------------------------------------------
 
-				if ( $this->input->post( 'email' ) ) :
+            //  Change default messages
+            $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
 
-					$this->form_validation->set_rules( 'email',	'',	'xss_clean|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
+            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-				endif;
+                $this->form_validation->set_message(
+                    'is_unique',
+                    lang('auth_register_email_is_unique', site_url('auth/forgotten_password'))
+                );
 
-			else :
+            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-				$this->form_validation->set_rules( 'email',		'',	'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]' );
-				$this->form_validation->set_rules( 'username',	'',	'xss_clean|required' );
+                $this->form_validation->set_message(
+                    'is_unique',
+                    lang('auth_register_username_is_unique', site_url('auth/forgotten_password'))
+                );
 
-			endif;
+            } else {
 
-			// --------------------------------------------------------------------------
+                $this->form_validation->set_message(
+                    'is_unique',
+                    lang('auth_register_identity_is_unique', site_url('auth/forgotten_password'))
+                );
+            }
 
-			//	Change default messages
-			$this->form_validation->set_message( 'required',				lang( 'fv_required' ) );
-			$this->form_validation->set_message( 'valid_email',				lang( 'fv_valid_email' ) );
+            // --------------------------------------------------------------------------
 
-			if ( APP_NATIVE_LOGIN_USING == 'EMAIL' ) :
+            //  Run validation
+            if ($this->form_validation->run()) {
 
-				$this->form_validation->set_message( 'is_unique',			lang( 'auth_register_email_is_unique', site_url( 'auth/forgotten_password' ) ) );
+                //  Attempt the registration
+                $aInsertData               = array();
+                $aInsertData['email']      = $this->input->post('email');
+                $aInsertData['username']   = $this->input->post('username');
+                $aInsertData['group_id']   = $this->user_group_model->getDefaultGroupId();
+                $aInsertData['password']   = $this->input->post('password');
+                $aInsertData['first_name'] = $this->input->post('first_name');
+                $aInsertData['last_name']  = $this->input->post('last_name');
 
-			elseif ( APP_NATIVE_LOGIN_USING == 'USERNAME' ) :
+                // --------------------------------------------------------------------------
 
-				$this->form_validation->set_message( 'is_unique',			lang( 'auth_register_username_is_unique', site_url( 'auth/forgotten_password' ) ) );
+                //  Handle referrals
+                if ($this->session->userdata('referred_by')) {
 
-			else :
+                    $aInsertData['referred_by'] = $this->session->userdata('referred_by');
+                }
 
-				$this->form_validation->set_message( 'is_unique',			lang( 'auth_register_identity_is_unique', site_url( 'auth/forgotten_password' ) ) );
+                // --------------------------------------------------------------------------
 
-			endif;
+                //  Create new user
+                $oNewUser = $this->user_model->create($aInsertData);
 
-			// --------------------------------------------------------------------------
+                if ($oNewUser) {
 
-			//	Run validation
-			if ( $this->form_validation->run() ) :
+                    //  Fetch user and group data
+                    $oGroup = $this->user_group_model->get_by_id($aInsertData['group_id']);
 
-				//	Attempt the registration
-				$_data					= array();
-				$_data['email']			= $this->input->post( 'email' );
-				$_data['username']		= $this->input->post( 'username' );
-				$_data['group_id']		= $this->user_group_model->getDefaultGroupId();
-				$_data['password']		= $this->input->post( 'password' );
-				$_data['first_name']	= $this->input->post( 'first_name' );
-				$_data['last_name']		= $this->input->post( 'last_name' );
+                    // --------------------------------------------------------------------------
 
-				// --------------------------------------------------------------------------
+                    //  Log the user in
+                    $this->user_model->setLoginData($oNewUser->id);
 
-				//	Handle referrals
-				if ( $this->session->userdata( 'referred_by' ) ) :
+                    // --------------------------------------------------------------------------
 
-					$_data['referred_by'] = $this->session->userdata( 'referred_by' );
+                    //  Create an event for this event
+                    create_event('did_register', array('method' => 'native'), $oNewUser->id);
 
-				endif;
+                    // --------------------------------------------------------------------------
 
-				// --------------------------------------------------------------------------
+                    //  Redirect to the group homepage
+                    //  @todo: There should be the option to enable/disable forced activation
 
-				//	Create new user
-				$_new_user = $this->user_model->create( $_data );
+                    $this->session->set_flashdata('success', lang('auth_register_flashdata_welcome', $oNewUser->first_name));
 
-				if ( $_new_user ) :
+                    $sRedirect = $oGroup->registration_redirect ? $oGroup->registration_redirect : $oGroup->default_homepage;
 
-					//	Fetch user and group data
-					$_group	= $this->user_group_model->get_by_id( $_data['group_id'] );
+                    redirect($sRedirect);
 
-					// --------------------------------------------------------------------------
+                } else {
 
-					//	Log the user in
-					$this->user_model->setLoginData( $_new_user->id );
+                    $this->data['error'] = 'Could not create new user account. ' . $this->user_model->last_error();
+                }
 
-					// --------------------------------------------------------------------------
+            } else {
 
-					//	Create an event for this event
-					create_event('did_register', array('method' => 'native'), $_new_user->id);
+                $this->data['error'] = lang('fv_there_were_errors');
+            }
+        }
 
-					// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-					//	Redirect to the group homepage
-					//	TODO: There should be the option to enable/disable forced activation
+        $this->data['social_signon_enabled']   = $this->social_signon->is_enabled();
+        $this->data['social_signon_providers'] = $this->social_signon->get_providers('ENABLED');
+        $this->data['passwordRulesAsString']   = $this->user_password_model->getRulesAsString();
 
-					$this->session->set_flashdata( 'success', lang( 'auth_register_flashdata_welcome', $_new_user->first_name ) );
+        // --------------------------------------------------------------------------
 
-					$_redirect = $_group->registration_redirect ? $_group->registration_redirect : $_group->default_homepage;
+        //  Load the views
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/register/form', $this->data);
+        $this->load->view('structure/footer', $this->data);
+    }
 
-					redirect( $_redirect );
+    // --------------------------------------------------------------------------
 
-				else :
+    /**
+     * Allows a user to resend their activation email
+     * @return void
+     */
+    public function resend()
+    {
+        $iId    = (int) $this->uri->segment(4);
+        $sHash  = $this->uri->segment(5);
 
-					$this->data['error'] = 'Could not create new user account. ' . $this->user_model->last_error();
+        // --------------------------------------------------------------------------
 
-				endif;
+        //  We got details?
+        if (empty($iId) || empty($sHash)) {
 
-			else:
+            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            redirect('/');
+        }
 
-				$this->data['error'] = lang( 'fv_there_were_errors' );
+        // --------------------------------------------------------------------------
 
-			endif;
+        //  Valid user?
+        $oUser = $this->user_model->get_by_id($iId);
 
-		endif;
+        if (!$oUser) {
 
-		// --------------------------------------------------------------------------
+            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            redirect('/');
+        }
 
-		$this->data['social_signon_enabled']	= $this->social_signon->is_enabled();
-		$this->data['social_signon_providers']	= $this->social_signon->get_providers( 'ENABLED' );
-		$this->data['passwordRulesAsString']	= $this->user_password_model->getRulesAsString();
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Account active?
+        if ($oUser->email_is_verified) {
 
-		//	Load the views
-		$this->load->view( 'structure/header',		$this->data );
-		$this->load->view( 'auth/register/form',	$this->data );
-		$this->load->view( 'structure/footer',		$this->data );
-	}
+            $this->session->set_flashdata(
+                'message',
+                lang('auth_register_resend_already_active', site_url('auth/login'))
+            );
+            redirect('auth/login');
+        }
 
+        // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+        //  Hash match?
+        if (md5($oUser->activation_code) != $sHash) {
 
+            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            redirect('/');
+        }
 
-	/**
-	 * Allows a user to resend their activation email
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function resend()
-	{
-		$_id	= $this->uri->segment( 4 );
-		$_hash	= $this->uri->segment( 5 );
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  All good, resend now
+        $oEmail                          = new StdClass();
+        $oEmail->to                      = $oUser->email;
+        $oEmail->type                    = 'register_activate_resend';
+        $oEmail->data                    = array();
+        $oEmail->data['first_name']      = $oUser->first_name;
+        $oEmail->data['user_id']         = $oUser->id;
+        $oEmail->data['activation_code'] = $oUser->activation_code;
 
-		//	We got details?
-		if ( $_id === FALSE || $_hash === FALSE ):
+        // --------------------------------------------------------------------------
 
-			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
-			redirect( '/' );
+        //  Send it off now
+        $this->emailer->send_now($oEmail);
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Set some data for the view
+        $this->data['email'] = $oUser->email;
 
-		//	Valid user?
-		$_u = $this->user_model->get_by_id( $_id );
+        // --------------------------------------------------------------------------
 
-		if ( $_u === FALSE ) :
-
-			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
-			redirect( '/' );
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Account active?
-		if ( $_u->email_is_verified ) :
-
-			$this->session->set_flashdata( 'message', lang( 'auth_register_resend_already_active', site_url( 'auth/login' ) ) );
-			redirect( 'auth/login' );
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Hash match?
-		if ( md5( $_u->activation_code ) != $_hash ) :
-
-			$this->session->set_flashdata( 'error', lang( 'auth_register_resend_invalid' ) );
-			redirect( '/' );
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	All good, resend now
-		//	Initialise vars
-
-		$_data = new StdClass();
-		$_data->data = array();
-
-		$_data->to						= $_u->email;
-		$_data->type					= 'register_activate_resend';
-		$_data->data['first_name']		= $_u->first_name;
-		$_data->data['user_id']			= $_u->id;
-		$_data->data['activation_code']	= $_u->activation_code;
-
-		// --------------------------------------------------------------------------
-
-		//	Send it off now
-		$this->emailer->send_now( $_data );
-
-		// --------------------------------------------------------------------------
-
-		//	Set some data for the view
-		$this->data['email'] = $_u->email;
-
-		// --------------------------------------------------------------------------
-
-		//	Load the views
-		$this->load->view( 'structure/header',		$this->data );
-		$this->load->view( 'auth/register/resend',	$this->data );
-		$this->load->view( 'structure/footer',		$this->data );
-
-	}
+        //  Load the views
+        $this->load->view('structure/header', $this->data);
+        $this->load->view('auth/register/resend', $this->data);
+        $this->load->view('structure/footer', $this->data);
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' AUTH MODULE
@@ -326,10 +323,9 @@ class NAILS_Register extends NAILS_Auth_Controller
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION')) {
 
-	class Register extends NAILS_Register
-	{
-	}
-
-endif;
+    class Register extends NAILS_Register
+    {
+    }
+}
