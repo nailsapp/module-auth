@@ -21,8 +21,6 @@ class NAILS_User_password_model extends CI_Model
     protected $pwCharsetLowerAlpha;
     protected $pwCharsetUpperAlpha;
     protected $pwCharsetNumber;
-    protected $pwGenerateSeperator;
-    protected $pwGenerateSegmentLength;
 
     // --------------------------------------------------------------------------
 
@@ -36,12 +34,10 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->pwCharsetSymbol          = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
-        $this->pwCharsetLowerAlpha      = utf8_encode('abcdefghijklmnopqrstuvwxyz');
-        $this->pwCharsetUpperAlpha      = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-        $this->pwCharsetNumber          = utf8_encode('0123456789');
-        $this->pwGenerateSeperator      = '-';
-        $this->pwGenerateSegmentLength  = 4;
+        $this->pwCharsetSymbol     = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
+        $this->pwCharsetLowerAlpha = utf8_encode('abcdefghijklmnopqrstuvwxyz');
+        $this->pwCharsetUpperAlpha = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        $this->pwCharsetNumber     = utf8_encode('0123456789');
     }
 
     // --------------------------------------------------------------------------
@@ -61,12 +57,12 @@ class NAILS_User_password_model extends CI_Model
     /**
      * Changes a password for a particular user
      * @param  int    $userId   The user ID whose password to change
-     * @param  steing $password The raw, unencrypted new password
+     * @param  string $password The raw, unencrypted new password
      * @return boolean
      */
     public function change($userId, $password)
     {
-        //  @TODO
+        //  @todo
     }
 
     // --------------------------------------------------------------------------
@@ -101,7 +97,7 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         /**
-         * @TODO: use the appropriate driver to determine password correctness, but
+         * @todo: use the appropriate driver to determine password correctness, but
          * for now, do it the old way
          */
 
@@ -129,19 +125,19 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Check password satisfies password rules
-        $_password_rules = $this->getRules();
+        $aPwRules = $this->getRules();
 
         //  Lgng enough?
-        if (strlen($password) < $_password_rules['min_length']) {
+        if (strlen($password) < $aPwRules['min_length']) {
 
             $this->_set_error('Password is too short.');
             return false;
         }
 
         //  Too long?
-        if ($_password_rules['max_length']) {
+        if ($aPwRules['max_length']) {
 
-            if (strlen($password) > $_password_rules['max_length']) {
+            if (strlen($password) > $aPwRules['max_length']) {
 
                 $this->_set_error('Password is too long.');
                 return false;
@@ -149,7 +145,7 @@ class NAILS_User_password_model extends CI_Model
         }
 
         //  Contains at least 1 character from each of the charsets
-        foreach ($_password_rules['charsets'] as $slug => $charset) {
+        foreach ($aPwRules['charsets'] as $slug => $charset) {
 
             $_chars     = str_split($charset);
             $_is_valid  = false;
@@ -194,7 +190,7 @@ class NAILS_User_password_model extends CI_Model
         }
 
         //  Not be a bad password?
-        foreach ($_password_rules['is_not'] as $str) {
+        foreach ($aPwRules['is_not'] as $str) {
 
             if (strtolower($password) == strtolower($str)) {
 
@@ -205,7 +201,7 @@ class NAILS_User_password_model extends CI_Model
 
         // --------------------------------------------------------------------------
 
-        //  Password is valid, generate a salt
+        //  Password is valid, generate hash object
         return self::generateHashObject($password);
     }
 
@@ -246,19 +242,14 @@ class NAILS_User_password_model extends CI_Model
 
     /**
      * Generates a password which is sufficiently secure according to the app's password rules
-     * @param  string $seperator The seperator to use, if any
+     * @param  string  $sSeperator     The seperator to use between segments
+     * @param  integer $iSegmentLength the number of segments the password should contain
      * @return string
      */
-    public function generate($seperator = null)
+    public function generate($sSeperator = '-', $iSegmentLength = 4)
     {
-        $_password_rules = $this->getRules();
-        $_pw_out         = array();
-
-        // --------------------------------------------------------------------------
-
-        if (is_null($seperator)) {
-            $seperator = $this->pwGenerateSeperator;
-        }
+        $aPwRules = $this->getRules();
+        $aPwOut   = array();
 
         // --------------------------------------------------------------------------
 
@@ -267,95 +258,92 @@ class NAILS_User_password_model extends CI_Model
          * also make sure we include any additional charsets which have been defined.
          */
 
-        $_charsets                = array();
-        $_charsets['symbol']      = $this->pwCharsetSymbol;
-        $_charsets['lower_alpha'] = $this->pwCharsetLowerAlpha;
-        $_charsets['upper_alpha'] = $this->pwCharsetUpperAlpha;
-        $_charsets['number']      = $this->pwCharsetNumber;
+        $aCharsets                = array();
+        $aCharsets['symbol']      = $this->pwCharsetSymbol;
+        $aCharsets['lower_alpha'] = $this->pwCharsetLowerAlpha;
+        $aCharsets['upper_alpha'] = $this->pwCharsetUpperAlpha;
+        $aCharsets['number']      = $this->pwCharsetNumber;
 
-        foreach ($_charsets as $set => $chars) {
+        foreach ($aCharsets as $sSet => $sChars) {
 
-            if (isset($_password_rules['charsets'][$set])) {
+            if (isset($aPwRules['charsets'][$sSet])) {
 
-                $_password_rules['charsets'][$set] = $chars;
+                $aPwRules['charsets'][$sSet] = $sChars;
             }
         }
 
         //  If there're no charsets defined, then define a default set
-        if (empty($_password_rules['charsets'])) {
+        if (empty($aPwRules['charsets'])) {
 
-            $_password_rules['charsets']['lower_alpha'] = $this->pwCharsetLowerAlpha;
-            $_password_rules['charsets']['upper_alpha'] = $this->pwCharsetUpperAlpha;
-            $_password_rules['charsets']['number']      = $this->pwCharsetNumber;
-
+            $aPwRules['charsets']['lower_alpha'] = $this->pwCharsetLowerAlpha;
+            $aPwRules['charsets']['upper_alpha'] = $this->pwCharsetUpperAlpha;
+            $aPwRules['charsets']['number']      = $this->pwCharsetNumber;
         }
 
         // --------------------------------------------------------------------------
 
         //  Work out the max length, if it's not been set
-        if (!$_password_rules['min_length'] && !$_password_rules['max_length']) {
+        if (!$aPwRules['min_length'] && !$aPwRules['max_length']) {
 
-            $_password_rules['max_length'] = count($_password_rules['charsets']) * 2;
+            $aPwRules['max_length'] = count($aPwRules['charsets']) * 2;
 
-        } elseif ($_password_rules['min_length'] && !$_password_rules['max_length']) {
+        } elseif ($aPwRules['min_length'] && !$aPwRules['max_length']) {
 
-            $_password_rules['max_length'] = $_password_rules['min_length'] + count($_password_rules['charsets']);
+            $aPwRules['max_length'] = $aPwRules['min_length'] + count($aPwRules['charsets']);
 
-        } elseif ($_password_rules['min_length'] > $_password_rules['max_length']) {
+        } elseif ($aPwRules['min_length'] > $aPwRules['max_length']) {
 
-            $_password_rules['max_length'] = $_password_rules['min_length'] + count($_password_rules['charsets']);
+            $aPwRules['max_length'] = $aPwRules['min_length'] + count($aPwRules['charsets']);
         }
 
         // --------------------------------------------------------------------------
 
         //  We now have a max_length and all our chars, generate password!
-        $_password_valid = true;
+        $bPwValid = true;
         do {
-
             do {
+                foreach ($aPwRules['charsets'] as $charset) {
 
-                foreach ($_password_rules['charsets'] as $charset) {
-
-                    $_character = rand(0, strlen($charset) - 1);
-                    $_pw_out[]  = $charset[$_character];
+                    $sCharacter = rand(0, strlen($charset) - 1);
+                    $aPwOut[]  = $charset[$sCharacter];
                 }
 
-            } while (count($_pw_out) < $_password_rules['max_length']);
+            } while (count($aPwOut) < $aPwRules['max_length']);
 
             //  Check password isn't a prohibited string
-            foreach ($_password_rules['is_not'] as $str) {
+            foreach ($aPwRules['is_not'] as $sString) {
 
-                if (strtolower(implode('', $_pw_out)) == strtolower($str)) {
+                if (strtolower(implode('', $aPwOut)) == strtolower($sString)) {
 
-                    $_password_valid = false;
+                    $bPwValid = false;
                     break;
                 }
             }
 
-        } while (!$_password_valid);
+        } while (!$bPwValid);
 
         // --------------------------------------------------------------------------
 
         //  Shuffle the string
-        shuffle($_pw_out);
+        shuffle($aPwOut);
 
         // --------------------------------------------------------------------------
 
         /**
-         * Replace some chgaracters with the seperator (so as to maintain the correct
+         * Replace some characters with the seperator (so as to maintain the correct
          * password length)
          */
 
-        $segmentLength = $this->pwGenerateSegmentLength + 1;
-        for ($i=0; $i<count($_pw_out); $i++) {
+        $segmentLength = $iSegmentLength + 1;
+        for ($i=0; $i<count($aPwOut); $i++) {
 
             if (($i % $segmentLength) == ($segmentLength-1)) {
 
-                $_pw_out[$i] = $this->pwGenerateSeperator;
+                $aPwOut[$i] = $sSeperator;
             }
         }
 
-        return implode('', $_pw_out);
+        return implode('', $aPwOut);
     }
 
     // --------------------------------------------------------------------------
