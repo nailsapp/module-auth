@@ -1390,6 +1390,20 @@ class NAILS_User_model extends NAILS_Model
             //  Recache the user
             $this->setCacheUser($_u->id);
 
+            //  Update the activeUser
+            if ($_u->id == $this->activeUser('id')) {
+
+                $this->activeUser->last_update = date('Y-m-d H:i:s');
+
+                if ($is_primary) {
+
+                    $this->activeUser->email = $_email;
+                    $this->activeUser->email_verification_code = $_code;
+                    $this->activeUser->email_is_verified = (bool) $is_verified;
+                    $this->activeUser->email_is_verified_on = (bool) $is_verified ? date('Y-m-d H:i:s') : null;
+                }
+            }
+
             //  Return the code
             return $_code;
 
@@ -1402,7 +1416,7 @@ class NAILS_User_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Send, or resend, the verify email for a aprticular email address
+     * Send, or resend, the verify email for a particular email address
      * @param  integer $email_id The email's ID
      * @param  integer $user_id  The user's ID
      * @return boolean
@@ -1501,6 +1515,7 @@ class NAILS_User_model extends NAILS_Model
 
         if ((bool) $this->db->affected_rows()) {
 
+            //  @todo: update the activeUser if required
             $this->setCacheUser($user_id);
             return true;
 
@@ -1565,6 +1580,15 @@ class NAILS_User_model extends NAILS_Model
         if ((bool) $this->db->affected_rows()) {
 
             $this->setCacheUser($user->id);
+
+            //  Update the activeUser
+            if ($_u->id == $this->activeUser('id')) {
+
+                $this->activeUser->last_update = date('Y-m-d H:i:s');
+
+                //  @todo: update the rest of the activeUser
+            }
+
             return true;
 
         } else {
@@ -1629,6 +1653,15 @@ class NAILS_User_model extends NAILS_Model
 
             $this->db->trans_commit();
             $this->setCacheUser($_email->user_id);
+
+            //  Update the activeUser
+            if ($_email->user_id == $this->activeUser('id')) {
+
+                $this->activeUser->last_update = date('Y-m-d H:i:s');
+
+                //  @todo: update the rest of the activeUser
+            }
+
             return true;
 
         }
