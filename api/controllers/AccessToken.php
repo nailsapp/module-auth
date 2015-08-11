@@ -22,35 +22,35 @@ class AccessToken extends \ApiController
     {
         get_instance()->load->model('auth/auth_model');
 
-        $identifier = $this->input->post('identifier');
-        $password   = $this->input->post('password');
-        $scope      = $this->input->post('scope');
-        $label      = $this->input->post('tokenLabel');
-        $isValid    = get_instance()->auth_model->verifyCredentials($identifier, $password);
+        $sIdentifier = $this->input->post('identifier');
+        $sPassword   = $this->input->post('password');
+        $sScope      = $this->input->post('scope');
+        $sLabel      = $this->input->post('tokenLabel');
+        $bIsValid    = get_instance()->auth_model->verifyCredentials($sIdentifier, $sPassword);
 
-        if ($isValid) {
+        if ($bIsValid) {
 
-            $user = $this->user_model->getByIdentifier($identifier);
+            $oUser = $this->user_model->getByIdentifier($sIdentifier);
 
             $this->load->model('auth/user_access_token_model');
-            $token = $this->user_access_token_model->create(
+            $oToken = $this->user_access_token_model->create(
                 array(
-                    'user_id' => $user->id,
-                    'label'   => $label,
-                    'scope'   => $scope
+                    'user_id' => $oUser->id,
+                    'label'   => $sLabel,
+                    'scope'   => $sScope
                 )
             );
 
-            if ($token) {
+            if ($oToken) {
 
-                $out = array(
-                    'token'   => $token->token,
-                    'expires' => $token->expires
+                $aOut = array(
+                    'token'   => $oToken->token,
+                    'expires' => $oToken->expires
                 );
 
             } else {
 
-                $out = array(
+                $aOut = array(
                     'status' => 500,
                     'error'  => 'Failed to generate access token. ' . $this->user_access_token_model->last_error()
                 );
@@ -58,12 +58,55 @@ class AccessToken extends \ApiController
 
         } else {
 
-            $out = array(
+            $aOut = array(
                 'status' => 400,
-                'error'  => 'Invalid login credentials'
+                'error'  => 'Invalid login credentials.'
             );
         }
 
-        return $out;
+        return $aOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Revoke an access token for the authenticated user
+     * @return array
+     */
+    public function postRevoke()
+    {
+        $aOut = array();
+
+        if ($this->user_model->isLoggedIn()) {
+
+            $sAccessToken = $this->input->post('accessToken');
+
+            if (!empty($sAccessToken)) {
+
+                if (!$this->user_access_token_model->revoke(activeUser('id'), $sAccessToken)) {
+
+                    $aOut = array(
+                        'status' => 500,
+                        'error' => 'Failed to revoke access token. ' . $this->user_access_token_model->last_error()
+                    );
+                }
+
+            } else {
+
+                $aOut = array(
+                    'status' => 400,
+                    'error' => 'An access token to revoke must be provided.'
+                );
+            }
+
+        } else {
+
+            $aOut = array(
+                'status' => 401,
+                'error' => 'You must be logged in.'
+            );
+        }
+
+        return $aOut;
     }
 }

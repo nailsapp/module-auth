@@ -154,6 +154,43 @@ class NAILS_User_access_token_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
+     * Revoke an access token for a user
+     * @param  integer $iUserId The ID of the suer the token belongs to
+     * @param  mixed   $mToken  The token object, or a token ID
+     * @return boolean
+     */
+    public function revoke($iUserId, $mToken)
+    {
+        if (is_string($mToken)) {
+
+            $oToken = $this->getByToken($mToken);
+
+        } else {
+
+            $oToken = $mToken;
+        }
+
+        if ($oToken) {
+
+            if ($oToken->user_id === $iUserId) {
+
+                return $this->delete($oToken->id);
+
+            } else {
+
+                $this->_set_error('Not authorised to revoke that token.');
+                return false;
+            }
+
+        } else {
+
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Prevent update of access tokens
      * @param  int   $id   The accessToken's ID
      * @param  array $data Data to update the access token with
@@ -253,9 +290,9 @@ class NAILS_User_access_token_model extends NAILS_Model
      * @param  array  $data The same data array which is passed to _getcount_common, for reference if needed
      * @return void
      */
-    protected function _format_object(&$obj, $data = array())
+    protected function _format_object(&$obj, $data = array(), $integers = array(), $bools = array(), $floats = array())
     {
-        parent::_format_object($obj, $data);
+        parent::_format_object($obj, $data, $integers, $bools, $floats);
         $obj->scope = explode(',', $obj->scope);
     }
 }
