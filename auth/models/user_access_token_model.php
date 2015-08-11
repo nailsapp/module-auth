@@ -31,6 +31,13 @@ class NAILS_User_access_token_model extends NAILS_Model
         $this->defaultExpiration = $this->config->item('authAccessTokenDefaultExpiration');
         $this->tokenTemplate     = $this->config->item('authAccessTokenTemplate');
         $this->tokenCharacters   = $this->config->item('authAccessTokenCharacters');
+
+        /**
+         * Define an array of handlers for checking whether a specified user can
+         * request a certain scope. This should be an array of callables.
+         */
+
+        $this->scopeHandler = array();
     }
 
     // --------------------------------------------------------------------------
@@ -51,6 +58,15 @@ class NAILS_User_access_token_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
+        //  Scope is a required field
+        if (empty($data['scope'])) {
+
+            $this->_set_error('A scope must be supplied.');
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
         //  If not specified, generate an expiration date 6 months from now
         if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
 
@@ -63,16 +79,40 @@ class NAILS_User_access_token_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         /**
-         * If a scope has been requested then check that the user has permission to
-         * request such a scope.
+         * For each scope requested, test the user is permitted to request it.
          */
+        $data['scope'] = explode(',', $data['scope']);
+        $data['scope'] = array_map('trim', $data['scope']);
+        $data['scope'] = array_unique($data['scope']);
 
-        if (!empty($data['scope'])) {
+        asort($data['scope']);
 
-            /**
-             * @todo Integrate these checks
-             */
+        foreach ($data['scope'] as $sScope) {
+
+
+            if (empty($this->scopeHandler[$sScope])) {
+
+                $this->_set_error('"' . $sScope . '" is not a valid token scope.');
+                return false;
+
+            } else {
+
+                $sScopeHandler = 'scopeHandler' . $this->scopeHandler[$sScope];
+
+                if (!is_callable(array($this, $sScopeHandler))) {
+
+                    $this->_set_error('"' . $this->scopeHandler[$sScope] . '" is not a valid token scope callback.');
+                    return false;
+
+                } elseif (!$this->{$sScopeHandler}($data['user_id'], $sScope)) {
+
+                    $this->_set_error('No permission to request a token with scope "' . $sScope . '".');
+                    return false;
+                }
+            }
         }
+
+        $data['scope'] = implode(',', $data['scope']);
 
         // --------------------------------------------------------------------------
 
@@ -170,6 +210,35 @@ class NAILS_User_access_token_model extends NAILS_Model
         );
 
         return $this->getByToken($token, $data);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determines whether a token has a given scope
+     * @param  mixed   $mToken   The token object, or a token ID
+     * @param  string  $sScope   The scope(s) to check for
+     * @return boolean
+     */
+    public function hasScope($mToken, $sScope)
+    {
+        if (is_numeric($mToken)) {
+
+            $oToken = $this->get_by_id($mToken);
+
+        } else {
+
+            $oToken = $mToken;
+        }
+
+        if ($oToken) {
+
+            return in_array($sScope, $oToken->scope);
+
+        } else {
+
+            return false;
+        }
     }
 
     // --------------------------------------------------------------------------
