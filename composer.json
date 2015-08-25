@@ -1,12 +1,6 @@
 {
     "name": "nailsapp/module-auth",
-    "keywords":
-    [
-        "Nails",
-        "Shed Collective",
-        "CodeIgniter",
-        "Auth Module"
-    ],
+    "keywords": ["Nails", "Shed Collective", "CodeIgniter", "Auth Module"],
     "homepage": "http://nailsapp.co.uk/modules/auth",
     "description": "This is the \"Auth\" module for Nails.",
     "license": "MIT",
