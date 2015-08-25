@@ -29,6 +29,8 @@
     {
         "email": "hello@shedcollective.org"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require":
     {
         "nailsapp/module-curl": "dev-develop",
