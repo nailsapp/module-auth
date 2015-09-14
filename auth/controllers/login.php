@@ -58,7 +58,7 @@ class NAILS_Login extends NAILS_Auth_Controller
         }
 
         // --------------------------------------------------------------------------
-die($this->data['return_to']);
+
         //  Specify a default title for this page
         $this->data['page']->title = lang('auth_title_login');
     }
