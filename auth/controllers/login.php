@@ -46,10 +46,11 @@ class NAILS_Login extends NAILS_Auth_Controller
             }
 
             $this->data['return_to']  = '';
-            $this->data['return_to'] .= !empty($returnTo['scheme'])   ? $returnTo['scheme'] . '://' : 'http://';
-            $this->data['return_to'] .= !empty($returnTo['host'])     ? $returnTo['host']           : site_url();
-            $this->data['return_to'] .= !empty($returnTo['path'])     ? $returnTo['path']           : '';
-            $this->data['return_to'] .= !empty($returnTo['query'])    ? '?' . $returnTo['query']    : '';
+            $this->data['return_to'] .= !empty($returnTo['scheme']) ? $returnTo['scheme'] . '://' : 'http://';
+            $this->data['return_to'] .= !empty($returnTo['host']) ? $returnTo['host'] : site_url();
+            $this->data['return_to'] .= !empty($returnTo['port']) ? ':' . $returnTo['port'] : '';
+            $this->data['return_to'] .= !empty($returnTo['path']) ? $returnTo['path'] : '';
+            $this->data['return_to'] .= !empty($returnTo['query']) ? '?' . $returnTo['query'] : '';
 
         } else {
 
@@ -57,7 +58,7 @@ class NAILS_Login extends NAILS_Auth_Controller
         }
 
         // --------------------------------------------------------------------------
-
+die($this->data['return_to']);
         //  Specify a default title for this page
         $this->data['page']->title = lang('auth_title_login');
     }
