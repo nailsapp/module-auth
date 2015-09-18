@@ -39,9 +39,9 @@
                             if ($member->profile_img) {
 
                                 echo anchor(
-                                    cdn_serve($member->profile_img),
+                                    cdnServe($member->profile_img),
                                     img(array(
-                                        'src' => cdn_thumb($member->profile_img, 65, 65),
+                                        'src' => cdnCrop($member->profile_img, 65, 65),
                                         'class' => 'profile-img'
                                     )),
                                     'class="fancybox"'
@@ -50,7 +50,7 @@
                             } else {
 
                                 echo img(array(
-                                    'src' => cdn_blank_avatar(65, 65, $member->gender),
+                                    'src' => cdnBlankAvatar(65, 65, $member->gender),
                                     'class' => 'profile-img'
                                 ));
                             }

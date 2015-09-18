@@ -31,7 +31,7 @@ class Me extends \ApiController
                 'lastName'  => activeUser('last_name'),
                 'email'     => activeUser('email'),
                 'username'  => activeUser('username'),
-                'avatar'    => cdn_avatar(),
+                'avatar'    => cdnAvatar(),
                 'gender'    => activeUser('gender')
             )
         );
@@ -51,7 +51,7 @@ class Me extends \ApiController
         $height = $height ? $height : 100;
 
         return array(
-            'url' => cdn_avatar(null, $width, $height)
+            'url' => cdnAvatar(null, $width, $height)
         );
     }
 }

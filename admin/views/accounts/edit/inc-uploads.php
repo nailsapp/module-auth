@@ -23,8 +23,8 @@ if (isModuleEnabled('nailsapp/module-cdn')) {
                         case 'image/gif':
                         case 'image/png':
 
-                            echo '<a href="' . cdn_serve($file->id) . '" class="fancybox image">';
-                            echo img(cdn_thumb($file->id, 35, 35));
+                            echo '<a href="' . cdnServe($file->id) . '" class="fancybox image">';
+                            echo img(cdnCrop($file->id, 35, 35));
                             echo $file->filename_display;
                             echo '<small>Bucket: ' . $file->bucket->slug . '</small>';
                             echo '</a>';
@@ -32,7 +32,7 @@ if (isModuleEnabled('nailsapp/module-cdn')) {
 
                         default:
 
-                            echo anchor(cdn_serve($file->id) . '?dl=1', $file->filename_display . '<small>Bucket: ' . $file->bucket->slug . '</small>');
+                            echo anchor(cdnServe($file->id) . '?dl=1', $file->filename_display . '<small>Bucket: ' . $file->bucket->slug . '</small>');
                             break;
                     }
 

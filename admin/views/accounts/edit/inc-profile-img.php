@@ -9,7 +9,7 @@
         if (empty($user_edit->profile_img)) {
 
             echo img(array(
-                'src' => cdn_blank_avatar(100, 125, $user_edit->gender),
+                'src' => cdnBlankAvatar(100, 125, $user_edit->gender),
                 'id' => 'preview_image',
                 'class' => 'left img-thumbnail',
                 'style' => 'margin-right:10px;'
@@ -19,13 +19,13 @@
         } else {
 
             $img = array(
-                'src'   => cdn_thumb($user_edit->profile_img, 100, 125),
+                'src'   => cdnCrop($user_edit->profile_img, 100, 125),
                 'id'    => 'preview_image',
                 'style' => 'border:1px solid #CCC;padding:0;margin-right:10px;',
                 'class' => 'img-thumbnail'
            );
 
-            echo anchor(cdn_serve($user_edit->profile_img), img($img), 'class="fancybox left"');
+            echo anchor(cdnServe($user_edit->profile_img), img($img), 'class="fancybox left"');
             echo '<p>';
                 echo form_upload('profile_img', NULL, 'style="float:none;"') . '<br />';
                 $return = '?return_to=' . urlencode(uri_string() . '?' . $_SERVER['QUERY_STRING']);
