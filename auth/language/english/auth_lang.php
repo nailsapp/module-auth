@@ -43,9 +43,11 @@
 	$lang['auth_login_social_signin']					= 'Sign in with %s';
 
 	//	Messages
-	$lang['auth_login_ok_welcome']						= '<strong>Welcome, %s!</strong> You last logged in %s.';
+	$lang['auth_login_ok_elcome']						= '<strong>Welcome, %s!</strong> You last logged in %s.';
 	$lang['auth_login_ok_welcome_with_ip']				= '<strong>Welcome, %s!</strong> You last logged in %s from IP address %s.';
 	$lang['auth_login_ok_welcome_notime']				= '<strong>Welcome, %s!</strong> Nice to see you again.';
+    $lang['auth_login_pw_expired']						= '<strong>Your password has expired</strong><br />You must update your password every %s days. Please choose a new password and click "Change Password &amp; Log In"';
+    $lang['auth_login_pw_temp']							= '<strong>A password reset has been requested for this account</strong><br />Please choose a new password and click "Change Password &amp; Log In"';
 
 	//	with_hashes() lang strings
 	$lang['auth_with_hashes_incomplete_creds']			= 'Incomplete login credentials.';
@@ -158,7 +160,6 @@
 
 	//	Forgotten Password
 	$lang['auth_forgot_message']						= 'Please enter your registered email address so we can send you an email with a link which you can use to reset your password.';
-	$lang['auth_forgot_temp_message']					= '<strong>A password reset has been requested for this account</strong><br />Please choose a new password and click "Change Password &amp; Log In"';
 	$lang['auth_forgot_new_pass_placeholder']			= 'Type a new password';
 	$lang['auth_forgot_new_pass_confirm_placeholder']	= 'Confirm your new password';
 	$lang['auth_forgot_email_placeholder']				= 'Your registered email address';
@@ -181,4 +182,3 @@
 	$lang['auth_forgot_reminder']						= '<strong>In case you forgot,</strong> your temporary password is <strong>%s</strong>. You won\'t be shown this message again.';
 	$lang['auth_forgot_reset_ok']						= 'Please log in using this temporary password:';
 	$lang['auth_forgot_action_proceed']					= 'Proceed to Log In';
-

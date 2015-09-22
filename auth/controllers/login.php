@@ -89,7 +89,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                 case 'EMAIL':
 
-                    $this->form_validation->set_rules('identifier', 'Email',    'required|xss_clean|trim|valid_email');
+                    $this->form_validation->set_rules('identifier', 'Email', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME':
@@ -99,7 +99,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                 default:
 
-                    $this->form_validation->set_rules('identifier', 'Username or Email',    'xss_clean|trim');
+                    $this->form_validation->set_rules('identifier', 'Username or Email', 'xss_clean|trim');
                     break;
             }
 
@@ -166,35 +166,20 @@ class NAILS_Login extends NAILS_Auth_Controller
 
             /**
              * Temporary password detected, log user out and redirect to
-             * temp password reset page.
-             *
-             * temp_pw will be an array containing the user's ID and hash
-             *
+             * password reset page.
              **/
 
-            $query = array();
+            $this->resetPassword($user->id, $user->salt, $remember, 'TEMP');
 
-            if ($this->data['return_to']) {
 
-                $query['return_to'] = $this->data['return_to'];
-            }
+        } elseif ($this->user_password_model->isExpired($user->id)) {
 
             /**
-             * Log the user out and remove the 'remember me' cookie - if we don't do this
-             * then the password reset page will see a logged in user and go nuts
-             * (i.e error).
-             */
+             * Expired password detected, log user out and redirect to
+             * password reset page.
+             **/
 
-            if ($remember) {
-
-                $query['remember'] = true;
-            }
-
-            $query = $query ? '?' . http_build_query($query) : '';
-
-            $this->auth_model->logout();
-
-            redirect('auth/reset_password/' . $user->id . '/' . md5($user->salt) . $query);
+            $this->resetPassword($user->id, $user->salt, $remember, 'EXPIRED');
 
         } elseif ($this->config->item('authTwoFactorMode')) {
 
@@ -290,6 +275,40 @@ class NAILS_Login extends NAILS_Auth_Controller
 
             redirect($redirectUrl);
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function resetPassword($iUserId, $sUserSalt, $bRemember, $sReason = '')
+    {
+        $aQuery = array();
+
+        if ($this->data['return_to']) {
+
+            $aQuery['return_to'] = $this->data['return_to'];
+        }
+
+        if ($bRemember) {
+
+            $aQuery['remember'] = true;
+        }
+
+        if ($sReason) {
+
+            $aQuery['reason'] = $sReason;
+        }
+
+        $aQuery = $aQuery ? '?' . http_build_query($aQuery) : '';
+
+        /**
+         * Log the user out and remove the 'remember me' cookie - if we don't do this
+         * then the password reset page will see a logged in user and go nuts
+         * (i.e error).
+         */
+
+        $this->auth_model->logout();
+
+        redirect('auth/reset_password/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
     }
 
     // --------------------------------------------------------------------------
@@ -439,7 +458,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
             $socialUser = $adapter->getUserProfile();
 
-        } catch(Exception $e) {
+        } catch (Exception $e) {
 
             //  Failed to fetch from the provider, something must have gone wrong
             log_message('error', 'HybridAuth failed to fetch data from provider.');
@@ -556,7 +575,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
             if ($this->social_signon->save_session(activeUser('id'), $provider)) {
 
-                create_event('did_link_provider',array('provider' => $provider));
+                create_event('did_link_provider', array('provider' => $provider));
                 $this->session->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
 
             } else {
@@ -690,7 +709,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                         $username = $socialUser->username;
 
-                    } elseif($requiredData['first_name'] || $requiredData['last_name']) {
+                    } elseif ($requiredData['first_name'] || $requiredData['last_name']) {
 
                         $username = $requiredData['first_name'] . ' ' . $requiredData['last_name'];
 
@@ -788,7 +807,7 @@ class NAILS_Login extends NAILS_Auth_Controller
 
                                 } else {
 
-                                    log_message('debug', 'Failed to uload user\'s profile image');
+                                    log_message('debug', 'Failed to upload user\'s profile image');
                                     log_message('debug', $this->cdn->last_error());
                                 }
                             }
@@ -803,7 +822,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                     // --------------------------------------------------------------------------
 
                     //  Create an event for this event
-                    create_event('did_register', array('method' => $provider),$newUser->id);
+                    create_event('did_register', array('method' => $provider), $newUser->id);
 
                     // --------------------------------------------------------------------------
 

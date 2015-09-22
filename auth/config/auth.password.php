@@ -36,3 +36,10 @@ $config['authPasswordRules']['contains'][] = 'number';
 $config['authPasswordRules']['isNot']   = array();
 $config['authPasswordRules']['isNot'][] = 'password';
 $config['authPasswordRules']['isNot'][] = '123456789';
+
+/**
+ * Define how long passwords are valid for, in days. Leave
+ * empty to disable this functionality.
+ */
+
+$config['authPasswordExpireAfter'] = 0;
