@@ -45,7 +45,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
      * @param   strgin  hash    The hash to validate against
      * @return  void
      **/
-    protected function _validate($id, $hash)
+    protected function validate($id, $hash)
     {
         //  Check auth credentials
         $user = $this->user_model->get_by_id($id);
@@ -274,7 +274,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
                             }
 
                             //  Log user in and forward to wherever they need to go
-                            if ($this->input->get('return_to')){
+                            if ($this->input->get('return_to')) {
 
                                 redirect($this->input->get('return_to'));
 
@@ -315,7 +315,25 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
             $this->data['return_to'] = $this->input->get('return_to');
             $this->data['remember']  = $this->input->get('remember');
 
-            $this->data['message'] = lang('auth_forgot_temp_message');
+            if (empty($this->data['message'])) {
+
+                switch ($this->input->get('reason')) {
+
+                    case 'EXPIRED' :
+
+                        $this->data['message'] = lang(
+                            'auth_login_pw_expired',
+                            $this->user_password_model->expiresAfter()
+                        );
+                        break;
+
+                    case 'TEMP' :
+                    default :
+
+                        $this->data['message'] = lang('auth_login_pw_temp');
+                        break;
+                }
+            }
 
             // --------------------------------------------------------------------------
 
@@ -341,7 +359,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
      **/
     public function _remap($id)
     {
-        $this->_validate($id, $this->uri->segment(4));
+        $this->validate($id, $this->uri->segment(4));
     }
 }
 

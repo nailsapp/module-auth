@@ -13,6 +13,8 @@
 class NAILS_User_access_token_model extends NAILS_Model
 {
     protected $defaultExpiration;
+    protected $tokenTemplate;
+    protected $tokenCharacters;
 
     // --------------------------------------------------------------------------
 

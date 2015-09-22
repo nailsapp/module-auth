@@ -21,6 +21,7 @@ class NAILS_User_password_model extends CI_Model
     protected $pwCharsetLowerAlpha;
     protected $pwCharsetUpperAlpha;
     protected $pwCharsetNumber;
+    protected $pwExpireAfter;
 
     // --------------------------------------------------------------------------
 
@@ -33,11 +34,17 @@ class NAILS_User_password_model extends CI_Model
 
         // --------------------------------------------------------------------------
 
+        //  Load config
+        $this->config->load('auth/auth');
+
+        // --------------------------------------------------------------------------
+
         //  Set defaults
         $this->pwCharsetSymbol     = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
         $this->pwCharsetLowerAlpha = utf8_encode('abcdefghijklmnopqrstuvwxyz');
         $this->pwCharsetUpperAlpha = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
         $this->pwCharsetNumber     = utf8_encode('0123456789');
+        $this->pwExpireAfter       = $this->config->item('authPasswordExpireAfter');
     }
 
     // --------------------------------------------------------------------------
@@ -104,6 +111,57 @@ class NAILS_User_password_model extends CI_Model
         $hash = sha1(sha1($password) . $result->row()->salt);
 
         return $result->row()->password === $hash;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determines whether a user's password has expired
+     * @param  integer  $userId The user ID to check
+     * @return boolean
+     */
+    public function isExpired($userId)
+    {
+        if (empty($userId) || empty($this->pwExpireAfter)) {
+
+            return false;
+        }
+
+        $this->db->select('u.password_changed');
+        $this->db->where('u.id', $userId);
+        $this->db->limit(1);
+        $result = $this->db->get(NAILS_DB_PREFIX . 'user u');
+
+        if ($result->num_rows() !== 1) {
+
+            return false;
+        }
+
+        $sChanged = $result->row()->password_changed;
+
+        if (is_null($sChanged)) {
+
+            return true;
+
+        } else {
+
+            $oThen = new \DateTime($sChanged);
+            $oNow  = new \DateTime();
+            $oInterval = $oNow->diff($oThen);
+
+            return $oInterval->days >= $this->pwExpireAfter;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns how many days a password is valid for
+     * @return int
+     */
+    public function expiresAfter()
+    {
+        return $this->pwExpireAfter;
     }
 
     // --------------------------------------------------------------------------
@@ -354,8 +412,6 @@ class NAILS_User_password_model extends CI_Model
      */
     protected function getRules()
     {
-        $this->config->load('auth/auth');
-
         $_pw_str     = '';
         $_pw_rules   = $this->config->item('authPasswordRules');
         $_pw_rules   = !is_array($_pw_rules) ? array() : $_pw_rules;
