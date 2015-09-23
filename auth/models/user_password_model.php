@@ -16,12 +16,8 @@ class NAILS_User_password_model extends CI_Model
     use NAILS_COMMON_TRAIT_ERROR_HANDLING;
     use NAILS_COMMON_TRAIT_CACHING;
 
-    protected $user_model;
-    protected $pwCharsetSymbol;
-    protected $pwCharsetLowerAlpha;
-    protected $pwCharsetUpperAlpha;
-    protected $pwCharsetNumber;
-    protected $pwExpireAfter;
+    protected $oUserModel;
+    protected $aCharset;
 
     // --------------------------------------------------------------------------
 
@@ -34,17 +30,12 @@ class NAILS_User_password_model extends CI_Model
 
         // --------------------------------------------------------------------------
 
-        //  Load config
-        $this->config->load('auth/auth');
-
-        // --------------------------------------------------------------------------
-
         //  Set defaults
-        $this->pwCharsetSymbol     = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
-        $this->pwCharsetLowerAlpha = utf8_encode('abcdefghijklmnopqrstuvwxyz');
-        $this->pwCharsetUpperAlpha = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-        $this->pwCharsetNumber     = utf8_encode('0123456789');
-        $this->pwExpireAfter       = $this->config->item('authPasswordExpireAfter');
+        $this->aCharset = array();
+        $this->aCharset['symbol'] = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
+        $this->aCharset['number'] = utf8_encode('0123456789');
+        $this->aCharset['lower_alpha'] = utf8_encode('abcdefghijklmnopqrstuvwxyz');
+        $this->aCharset['upper_alpha'] = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     }
 
     // --------------------------------------------------------------------------
@@ -52,22 +43,22 @@ class NAILS_User_password_model extends CI_Model
     /**
      * Inject the user object, private by convention - only really used by a few
      * core Nails classes
-     * @param stdClass &$user The User Object
+     * @param stdClass &$oUser The User Object
      */
-    public function setUserObject(&$user)
+    public function setUserObject(&$oUser)
     {
-        $this->user_model = $user;
+        $this->oUserModel = $oUser;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Changes a password for a particular user
-     * @param  int    $userId   The user ID whose password to change
-     * @param  string $password The raw, unencrypted new password
+     * @param  int    $iUserId   The user ID whose password to change
+     * @param  string $sPassword The raw, unencrypted new password
      * @return boolean
      */
-    public function change($userId, $password)
+    public function change($iUserId, $sPassword)
     {
         //  @todo
     }
@@ -76,13 +67,13 @@ class NAILS_User_password_model extends CI_Model
 
     /**
      * Determines whether a password is correct for a particular user.
-     * @param  int     $userId   The user ID to check for
-     * @param  string  $password The raw, unencrypted password to check
+     * @param  int     $iUserId   The user ID to check for
+     * @param  string  $sPassword The raw, unencrypted password to check
      * @return boolean
      */
-    public function isCorrect($userId, $password)
+    public function isCorrect($iUserId, $sPassword)
     {
-        if (empty($userId) || empty($password)) {
+        if (empty($iUserId) || empty($sPassword)) {
 
             return false;
         }
@@ -90,13 +81,13 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         $this->db->select('u.password, u.password_engine, u.salt');
-        $this->db->where('u.id', $userId);
+        $this->db->where('u.id', $iUserId);
         $this->db->limit(1);
-        $result = $this->db->get(NAILS_DB_PREFIX . 'user u');
+        $oResult = $this->db->get(NAILS_DB_PREFIX . 'user u');
 
         // --------------------------------------------------------------------------
 
-        if ($result->num_rows() !== 1) {
+        if ($oResult->num_rows() !== 1) {
 
             return false;
         }
@@ -108,36 +99,44 @@ class NAILS_User_password_model extends CI_Model
          * for now, do it the old way
          */
 
-        $hash = sha1(sha1($password) . $result->row()->salt);
+        $sHash = sha1(sha1($sPassword) . $oResult->row()->salt);
 
-        return $result->row()->password === $hash;
+        return $oResult->row()->password === $sHash;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Determines whether a user's password has expired
-     * @param  integer  $userId The user ID to check
+     * @param  integer  $iUserId The user ID to check
      * @return boolean
      */
-    public function isExpired($userId)
+    public function isExpired($iUserId)
     {
-        if (empty($userId) || empty($this->pwExpireAfter)) {
+        if (empty($iUserId)) {
 
             return false;
         }
 
-        $this->db->select('u.password_changed');
-        $this->db->where('u.id', $userId);
+        $this->db->select('u.password_changed,ug.password_rules');
+        $this->db->where('u.id', $iUserId);
+        $this->db->join(NAILS_DB_PREFIX . 'user_group ug', 'ug.id = u.group_id');
         $this->db->limit(1);
-        $result = $this->db->get(NAILS_DB_PREFIX . 'user u');
+        $oResult = $this->db->get(NAILS_DB_PREFIX . 'user u');
 
-        if ($result->num_rows() !== 1) {
+        if ($oResult->num_rows() !== 1) {
 
             return false;
         }
 
-        $sChanged = $result->row()->password_changed;
+        //  Decode the password rules
+        $oGroupPwRules = json_decode($oResult->row()->password_rules);
+
+        if (empty($oGroupPwRules->expiresAfter)) {
+            return false;
+        }
+
+        $sChanged = $oResult->row()->password_changed;
 
         if (is_null($sChanged)) {
 
@@ -149,7 +148,7 @@ class NAILS_User_password_model extends CI_Model
             $oNow  = new \DateTime();
             $oInterval = $oNow->diff($oThen);
 
-            return $oInterval->days >= $this->pwExpireAfter;
+            return $oInterval->days >= $oGroupPwRules->expiresAfter;
         }
     }
 
@@ -159,9 +158,34 @@ class NAILS_User_password_model extends CI_Model
      * Returns how many days a password is valid for
      * @return int
      */
-    public function expiresAfter()
+    public function expiresAfter($iGroupId)
     {
-        return $this->pwExpireAfter;
+        if (empty($iGroupId)) {
+
+            return null;
+        }
+
+        $this->db->select('password_rules');
+        $this->db->where('id', $iGroupId);
+        $this->db->limit(1);
+        $oResult = $this->db->get(NAILS_DB_PREFIX . 'user_group');
+
+        if ($oResult->num_rows() !== 1) {
+
+            return null;
+        }
+
+        //  Decode the password rules
+        $oGroupPwRules = json_decode($oResult->row()->password_rules);
+
+        if (empty($oGroupPwRules->expiresAfter)) {
+
+            return null;
+
+        } else {
+
+            return $oGroupPwRules->expiresAfter;
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -169,12 +193,13 @@ class NAILS_User_password_model extends CI_Model
     /**
      * Create a password hash, checks to ensure a password is strong enough according
      * to the password rules defined by the app.
-     * @param  string $password The raw, unencrypted password
+     * @param integer $iGroupId The group who's rules to fetch
+     * @param  string $sPassword The raw, unencrypted password
      * @return mixed            stdClass on success, false on failure
      */
-    public function generateHash($password)
+    public function generateHash($iGroupId, $sPassword)
     {
-        if (empty($password)) {
+        if (empty($sPassword)) {
 
             $this->_set_error('No password to hash');
             return false;
@@ -183,76 +208,72 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Check password satisfies password rules
-        $aPwRules = $this->getRules();
+        $aPwRules = $this->getRules($iGroupId);
 
-        //  Lgng enough?
-        if (strlen($password) < $aPwRules['min_length']) {
+        //  Long enough?
+        if (!empty($aPwRules['min']) && strlen($sPassword) < $aPwRules['min']) {
 
             $this->_set_error('Password is too short.');
             return false;
         }
 
         //  Too long?
-        if ($aPwRules['max_length']) {
+        if (!empty($aPwRules['max']) && strlen($sPassword) > $aPwRules['max']) {
 
-            if (strlen($password) > $aPwRules['max_length']) {
-
-                $this->_set_error('Password is too long.');
-                return false;
-            }
+            $this->_set_error('Password is too long.');
+            return false;
         }
 
-        //  Contains at least 1 character from each of the charsets
-        foreach ($aPwRules['charsets'] as $slug => $charset) {
+        //  Satisfies all the requirements
+        $aFailedRequirements = array();
+        foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
 
-            $_chars     = str_split($charset);
-            $_is_valid  = false;
+            switch ($sRequirement) {
+                case 'symbol':
 
-            foreach ($_chars as $char) {
-
-                if (strstr($password, $char)) {
-
-                    $_is_valid = true;
+                    if (!$this->strContainsFromCharset($sPassword, 'symbol')) {
+                        $aFailedRequirements[] = 'a symbol';
+                    }
                     break;
-                }
-            }
 
-            if (!$_is_valid) {
+                case 'number':
 
-                switch ($slug) {
+                    if (!$this->strContainsFromCharset($sPassword, 'number')) {
+                        $aFailedRequirements[] = 'a number';
+                    }
+                    break;
 
-                    case 'symbol':
+                case 'lower_alpha':
 
-                        $_item = 'a symbol';
-                        break;
+                    if (!$this->strContainsFromCharset($sPassword, 'lower_alpha')) {
+                        $aFailedRequirements[] = 'a lowercase letter';
+                    }
+                    break;
 
-                    case 'lower_alpha':
+                case 'upper_alpha':
 
-                        $_item = 'a lower case letter';
-                        break;
-
-                    case 'upper_alpha':
-
-                        $_item = 'an upper case letter';
-                        break;
-
-                    case 'number':
-
-                        $_item = 'a number';
-                        break;
-                }
-
-                $this->_set_error('Password must contain ' . $_item . '.');
-                return false;
+                    if (!$this->strContainsFromCharset($sPassword, 'upper_alpha')) {
+                        $aFailedRequirements[] = 'an uppercase letter';
+                    }
+                    break;
             }
         }
 
-        //  Not be a bad password?
-        foreach ($aPwRules['is_not'] as $str) {
+        if (!empty($aFailedRequirements)) {
 
-            if (strtolower($password) == strtolower($str)) {
+            $this->load->helper('string');
+            $sError = 'Password must contain ' . implode(', ', $aFailedRequirements) . '.';
+            $sError = str_lreplace(', ', ' and ', $sError);
+            $this->_set_error($sError);
+            return false;
+        }
 
-                $this->_set_error('Password cannot be "' . $str . '"');
+        //  Not be a banned password?
+        foreach ($aPwRules['banned'] as $sStr) {
+
+            if (trim(strtolower($sPassword)) == strtolower($sStr)) {
+
+                $this->_set_error('Password cannot be "' . $sStr . '"');
                 return false;
             }
         }
@@ -260,7 +281,24 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Password is valid, generate hash object
-        return self::generateHashObject($password);
+        return self::generateHashObject($sPassword);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determines whether a string contains any of the charecters from a defined charset.
+     * @param  string  $sStr     The string to analyse
+     * @param  string  $sCharset The charset to test against
+     * @return boolean
+     */
+    private function strContainsFromCharset($sStr, $sCharset)
+    {
+        if (empty($this->aCharset[$sCharset])) {
+            return true;
+        }
+
+        return preg_match('/[' . preg_quote($this->aCharset[$sCharset], '/') . ']/', $sStr);
     }
 
     // --------------------------------------------------------------------------
@@ -278,80 +316,79 @@ class NAILS_User_password_model extends CI_Model
 
     /**
      * Generates a password hash, no strength checks
-     * @param  string $password The password to generate the hash for
+     * @param  string $sPassword The password to generate the hash for
      * @return stdClass
      */
-    public static function generateHashObject($password)
+    public static function generateHashObject($sPassword)
     {
-        $salt = self::salt();
+        $sSalt = self::salt();
 
         // --------------------------------------------------------------------------
 
-        $_out               = new stdClass();
-        $_out->password     = sha1(sha1($password) . $salt);
-        $_out->password_md5 = md5($_out->password);
-        $_out->salt         = $salt;
-        $_out->engine       = 'NAILS_1';
+        $oOut               = new stdClass();
+        $oOut->password     = sha1(sha1($sPassword) . $sSalt);
+        $oOut->password_md5 = md5($oOut->password);
+        $oOut->salt         = $sSalt;
+        $oOut->engine       = 'NAILS_1';
 
-        return $_out;
+        return $oOut;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Generates a password which is sufficiently secure according to the app's password rules
-     * @param  string  $sSeperator     The seperator to use between segments
-     * @param  integer $iSegmentLength the number of segments the password should contain
+     * @param  integer $iGroupId The group who's rules to fetch
      * @return string
      */
-    public function generate($sSeperator = '-', $iSegmentLength = 4)
+    public function generate($iGroupId)
     {
-        $aPwRules = $this->getRules();
-        $aPwOut   = array();
+        $aPwRules = $this->getRules($iGroupId);
+        $aPwOut = array();
 
         // --------------------------------------------------------------------------
 
         /**
-         * We're generating a password, so ensure that we've got all the charsets;
-         * also make sure we include any additional charsets which have been defined.
+         * We're generating a password, define all the charsets to use, at the very
+         * ;east have the lower_alpha charset.
          */
 
-        $aCharsets                = array();
-        $aCharsets['symbol']      = $this->pwCharsetSymbol;
-        $aCharsets['lower_alpha'] = $this->pwCharsetLowerAlpha;
-        $aCharsets['upper_alpha'] = $this->pwCharsetUpperAlpha;
-        $aCharsets['number']      = $this->pwCharsetNumber;
+        $aCharsets = array();
+        $aCharsets[] = $this->aCharset['lower_alpha'];
 
-        foreach ($aCharsets as $sSet => $sChars) {
+        foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
 
-            if (isset($aPwRules['charsets'][$sSet])) {
+            switch ($sRequirement) {
+                case 'symbol':
 
-                $aPwRules['charsets'][$sSet] = $sChars;
+                    $aCharsets[] = $this->aCharset['symbol'];
+                    break;
+
+                case 'number':
+
+                    $aCharsets[] = $this->aCharset['number'];
+                    break;
+
+                case 'upper_alpha':
+
+                    $aCharsets[] = $this->aCharset['upper_alpha'];
+                    break;
             }
-        }
-
-        //  If there're no charsets defined, then define a default set
-        if (empty($aPwRules['charsets'])) {
-
-            $aPwRules['charsets']['lower_alpha'] = $this->pwCharsetLowerAlpha;
-            $aPwRules['charsets']['upper_alpha'] = $this->pwCharsetUpperAlpha;
-            $aPwRules['charsets']['number']      = $this->pwCharsetNumber;
         }
 
         // --------------------------------------------------------------------------
 
-        //  Work out the max length, if it's not been set
-        if (!$aPwRules['min_length'] && !$aPwRules['max_length']) {
+        //  Work out the min length
+        $iMin = $aPwRules['min'];
+        if (empty($aPwRules['min'])) {
+            $iMin = 8;
+        }
 
-            $aPwRules['max_length'] = count($aPwRules['charsets']) * 2;
+        //  Work out the max length
+        $iMax = $aPwRules['max'];
+        if (empty($iMax) || $iMin > $iMax) {
 
-        } elseif ($aPwRules['min_length'] && !$aPwRules['max_length']) {
-
-            $aPwRules['max_length'] = $aPwRules['min_length'] + count($aPwRules['charsets']);
-
-        } elseif ($aPwRules['min_length'] > $aPwRules['max_length']) {
-
-            $aPwRules['max_length'] = $aPwRules['min_length'] + count($aPwRules['charsets']);
+            $iMax = $iMin + count($aCharsets) * 2;
         }
 
         // --------------------------------------------------------------------------
@@ -360,16 +397,16 @@ class NAILS_User_password_model extends CI_Model
         $bPwValid = true;
         do {
             do {
-                foreach ($aPwRules['charsets'] as $charset) {
+                foreach ($aCharsets as $sCharset) {
 
-                    $sCharacter = rand(0, strlen($charset) - 1);
-                    $aPwOut[]  = $charset[$sCharacter];
+                    $sCharacter = rand(0, strlen($sCharset) - 1);
+                    $aPwOut[] = $sCharset[$sCharacter];
                 }
 
-            } while (count($aPwOut) < $aPwRules['max_length']);
+            } while (count($aPwOut) < $iMax);
 
             //  Check password isn't a prohibited string
-            foreach ($aPwRules['is_not'] as $sString) {
+            foreach ($aPwRules['banned'] as $sString) {
 
                 if (strtolower(implode('', $aPwOut)) == strtolower($sString)) {
 
@@ -382,25 +419,8 @@ class NAILS_User_password_model extends CI_Model
 
         // --------------------------------------------------------------------------
 
-        //  Shuffle the string
+        //  Shuffle the string and return
         shuffle($aPwOut);
-
-        // --------------------------------------------------------------------------
-
-        /**
-         * Replace some characters with the seperator (so as to maintain the correct
-         * password length)
-         */
-
-        $segmentLength = $iSegmentLength + 1;
-        for ($i=0; $i<count($aPwOut); $i++) {
-
-            if (($i % $segmentLength) == ($segmentLength-1)) {
-
-                $aPwOut[$i] = $sSeperator;
-            }
-        }
-
         return implode('', $aPwOut);
     }
 
@@ -408,199 +428,125 @@ class NAILS_User_password_model extends CI_Model
 
     /**
      * Returns the app's raw password rules as an array
+     * @param integer $iGroupId The group who's rules to fetch
      * @return array
      */
-    protected function getRules()
+    protected function getRules($iGroupId)
     {
-        $_pw_str     = '';
-        $_pw_rules   = $this->config->item('authPasswordRules');
-        $_pw_rules   = !is_array($_pw_rules) ? array() : $_pw_rules;
-        $_min_length = 0;
-        $_max_length = false;
-        $_contains   = array();
-        $_is_not     = array();
-
-        foreach ($_pw_rules as $rule => $val) {
-
-            switch ($rule) {
-
-                case 'minLength':
-
-                    $_min_length = (int) $val;
-                    break;
-
-                case 'maxLength':
-
-                    $_max_length = (int) $val;
-                    break;
-
-                case 'contains':
-
-                    foreach ($val as $str) {
-
-                        $_contains[] = (string) $str;
-                    }
-                    break;
-
-                case 'isNot':
-
-                    foreach ($val as $str) {
-
-                        $_is_not[] = (string) $str;
-                    }
-                    break;
-            }
+        $sCacheKey = 'password-rules-' . $iGroupId;
+        $aCacheResult = $this->_get_cache($sCacheKey);
+        if (!empty($aCacheResult)) {
+            return $aCacheResult;
         }
 
-        // --------------------------------------------------------------------------
+        $this->db->select('password_rules');
+        $this->db->where('id', $iGroupId);
+        $oResult = $this->db->get(NAILS_DB_PREFIX . 'user_group');
 
-        $_contains = array_filter($_contains);
-        $_contains = array_unique($_contains);
-
-        $_is_not = array_filter($_is_not);
-        $_is_not = array_unique($_is_not);
-
-        // --------------------------------------------------------------------------
-
-        //  Generate the lsit of characters to use
-        $_chars = array();
-        foreach ($_contains as $charset) {
-
-            switch ($charset) {
-
-                case 'symbol':
-
-                    $_chars[$charset] = $this->pwCharsetSymbol;
-                    break;
-
-                case 'lower_alpha':
-
-                    $_chars[$charset] = $this->pwCharsetLowerAlpha;
-                    break;
-
-                case 'upper_alpha':
-
-                    $_chars[$charset] = $this->pwCharsetUpperAlpha;
-                    break;
-
-                case 'number':
-
-                    $_chars[$charset] = $this->pwCharsetNumber;
-                    break;
-
-
-                /**
-                 * Not a 'special' charset? Whatever this string is just set
-                 * that as the chars to use
-                 */
-
-                default:
-
-                    $_chars[] = utf8_encode($charset);
-                    break;
-            }
+        if ($oResult->num_rows() === 0) {
+            return array();
         }
 
-        // --------------------------------------------------------------------------
+        $oPwRules = json_decode($oResult->row()->password_rules);
 
-        /**
-         * Make sure min_length is >= count($_chars), so we can satisfy the
-         * requirements of the chars
-         */
+        $aOut = array();
+        $aOut['min'] = !empty($oPwRules->min) ? $oPwRules->min : null;
+        $aOut['max'] = !empty($oPwRules->max) ? $oPwRules->max : null;
+        $aOut['expiresAfter'] = !empty($oPwRules->expiresAfter) ? $oPwRules->expiresAfter : null;
+        $aOut['requirements'] = !empty($oPwRules->requirements) ? $oPwRules->requirements : array();
+        $aOut['banned'] = !empty($oPwRules->banned) ? $oPwRules->banned : array();
 
-        $_min_length = $_min_length < count($_chars) ? count($_chars) : $_min_length;
+        $this->_set_cache($sCacheKey, $aOut);
 
-        $_out = array();
-        $_out['min_length'] = $_min_length;
-        $_out['max_length'] = $_max_length;
-        $_out['charsets']   = $_chars;
-        $_out['is_not']     = $_is_not;
-
-        return $_out;
+        return $aOut;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the app's password rules as a formatted string
+     * @param integer $iGroupId The group who's rules to fetch
      * @return string
      */
-    public function getRulesAsString()
+    public function getRulesAsString($iGroupId)
     {
-        $rules  = $this->getRulesAsArray();
+        $aRules = $this->getRulesAsArray($iGroupId);
 
-        if (empty($rules)) {
+        if (empty($aRules)) {
 
             return '';
         }
 
-        $str = 'Passwords must ' . strtolower(implode(', ', $rules)) . '.';
+        $sStr = 'Passwords must ' . strtolower(implode(', ', $aRules)) . '.';
 
         $this->load->helper('string');
-        return str_lreplace(', ', ' and ', $str);
+        return str_lreplace(', ', ' and ', $sStr);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Returns the app's password rules as a formatted string, with each rule as
-     * an array element
+     * Returns the app's password rules as an array of human friendly strings
+     * @param integer $iGroupId The group who's rules to fetch
      * @return array
      */
-    public function getRulesAsArray()
+    public function getRulesAsArray($iGroupId)
     {
-        $rules = $this->getRules();
-        $out   = array();
+        $aRules = $this->getRules($iGroupId);
+        $aOut   = array();
 
-        if (!empty($rules['min_length'])) {
+        if (!empty($aRules['min'])) {
 
-            $out[] = 'Be at least ' . $rules['min_length'] . ' characters';
+            $aOut[] = 'Have at least ' . $aRules['min'] . ' characters';
         }
 
-        if (!empty($rules['max_length'])) {
+        if (!empty($aRules['max'])) {
 
-            $out[] = 'Have at most ' . $rules['max_length'] . ' characters';
+            $aOut[] = 'Have at most ' . $aRules['max'] . ' characters';
         }
 
-        foreach ($rules['charsets'] as $charset => $value) {
+        if (!empty($aRules['requirements'])) {
 
-            switch ($charset) {
+            foreach ($aRules['requirements'] as $sKey => $bValue) {
 
-                case 'symbol':
+                switch ($sKey) {
 
-                    $out[] = 'Contain a symbol';
-                    break;
+                    case 'symbol':
 
-                case 'lower_alpha':
+                        $aOut[] = 'Contain a symbol';
+                        break;
 
-                    $out[] = 'Contain a lowercase letter';
-                    break;
+                    case 'lower_alpha':
 
-                case 'upper_alpha':
+                        $aOut[] = 'Contain a lowercase letter';
+                        break;
 
-                    $out[] = 'Contain an upper case letter';
-                    break;
+                    case 'upper_alpha':
 
-                case 'number':
+                        $aOut[] = 'Contain an upper case letter';
+                        break;
 
-                    $out[] = 'Contain a number';
-                    break;
+                    case 'number':
+
+                        $aOut[] = 'Contain a number';
+                        break;
+                }
             }
         }
 
-        return $out;
+        return $aOut;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Generates a random salt
-     * @param  string $pepper Additional data to inject into the salt
+     * @param  string $sPepper Additional data to inject into the salt
      * @return string
      */
-    public static function salt($pepper = '')
+    public static function salt($sPepper = '')
     {
-        return md5(uniqid($pepper . rand() . DEPLOY_PRIVATE_KEY . APP_PRIVATE_KEY, true));
+        return md5(uniqid($sPepper . rand() . DEPLOY_PRIVATE_KEY . APP_PRIVATE_KEY, true));
     }
 
     // --------------------------------------------------------------------------
@@ -610,9 +556,9 @@ class NAILS_User_password_model extends CI_Model
      * @param string $identifier The identifier to use for setting the token (set by APP_NATIVE_LOGIN_USING)
      * @return boolean
      */
-    public function set_token($identifier)
+    public function set_token($sIdentifier)
     {
-        if (empty($identifier)) {
+        if (empty($sIdentifier)) {
 
             return false;
         }
@@ -620,22 +566,21 @@ class NAILS_User_password_model extends CI_Model
         // --------------------------------------------------------------------------
 
         //  Generate code
-        $_key = sha1(sha1(self::salt()) . self::salt() . APP_PRIVATE_KEY);
-        $_ttl = time() + 86400; // 24 hours.
+        $sKey = sha1(sha1(self::salt()) . self::salt() . APP_PRIVATE_KEY);
+        $iTtl = time() + 86400; // 24 hours.
 
         // --------------------------------------------------------------------------
 
         //  Update the user
-        $_user = $this->user_model->getByIdentifier($identifier);
+        $oUser = $this->oUserModel->getByIdentifier($sIdentifier);
 
-        if ($_user) {
+        if ($oUser) {
 
-            $_data = array(
-
-                'forgotten_password_code' => $_ttl . ':' . $_key
+            $aData = array(
+                'forgotten_password_code' => $iTtl . ':' . $sKey
             );
 
-            return $this->user_model->update($_user->id, $_data);
+            return $this->oUserModel->update($oUser->id, $aData);
 
         } else {
 
@@ -647,61 +592,62 @@ class NAILS_User_password_model extends CI_Model
 
     /**
      * Validate a forgotten password code.
-     * @param  string $code The token to validate
-     * @param  string $generate_new_pw Whetehr or not to generate a new password (only if token is valid)
+     * @param  string $sCode The token to validate
+     * @param  string $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      * @return boolean
      */
-    public function validate_token($code, $generate_new_pw)
+    public function validate_token($sCode, $bGenerateNewPw)
     {
-        if (empty($code)) {
+        if (empty($sCode)) {
 
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        $this->db->like('forgotten_password_code', ':' . $code, 'before');
-        $_q = $this->db->get(NAILS_DB_PREFIX . 'user');
+        $this->db->select('id, group_id, forgotten_password_code');
+        $this->db->like('forgotten_password_code', ':' . $sCode, 'before');
+        $oResult = $this->db->get(NAILS_DB_PREFIX . 'user');
 
         // --------------------------------------------------------------------------
 
-        if ($_q->num_rows() != 1) {
+        if ($oResult->num_rows() != 1) {
 
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        $_user = $_q->row();
-        $_code = explode(':', $_user->forgotten_password_code);
+        $oUser = $oResult->row();
+        $aCode = explode(':', $oUser->forgotten_password_code);
 
         // --------------------------------------------------------------------------
 
         //  Check that the link is still valid
-        if (time() > $_code[0]) {
+        if (time() > $aCode[0]) {
 
             return 'EXPIRED';
 
         } else {
 
             //  Valid hash and hasn't expired.
-            $_out            = array();
-            $_out['user_id'] = $_user->id;
+            $aOut = array();
+            $aOut['user_id'] = $oUser->id;
 
             //  Generate a new password?
-            if ($generate_new_pw) {
+            if ($bGenerateNewPw) {
 
-                $_out['password']   = $this->generate();
+                $aOut['password'] = $this->generate($oUser->group_id);
 
-                if (empty($_out['password'])) {
+                if (empty($aOut['password'])) {
 
                     //  This should never happen, but just in case.
                     return false;
                 }
 
-                $_hash = $this->generateHash($_out['password']);
+                $oHash = $this->generateHash($oUser->group_id, $aOut['password']);
 
-                if (!$_hash) {
+                if (!$oHash) {
 
                     //  Again, this should never happen, but just in case.
                     return false;
@@ -709,26 +655,79 @@ class NAILS_User_password_model extends CI_Model
 
                 // --------------------------------------------------------------------------
 
-                $_data['password']                = $_hash->password;
-                $_data['password_md5']            = $_hash->password_md5;
-                $_data['password_engine']         = $_hash->engine;
-                $_data['salt']                    = $_hash->salt;
-                $_data['temp_pw']                 = true;
-                $_data['forgotten_password_code'] = null;
+                $aData['password'] = $oHash->password;
+                $aData['password_md5'] = $oHash->password_md5;
+                $aData['password_engine'] = $oHash->engine;
+                $aData['salt'] = $oHash->salt;
+                $aData['temp_pw'] = true;
+                $aData['forgotten_password_code'] = null;
 
-                $this->db->where('forgotten_password_code', $_user->forgotten_password_code);
-                $this->db->set($_data);
+                $this->db->where('forgotten_password_code', $oUser->forgotten_password_code);
+                $this->db->set($aData);
                 $this->db->update(NAILS_DB_PREFIX . 'user');
             }
         }
 
-        return $_out;
+        return $aOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Formats an array of permissions into a JSON encoded string suitable for the database
+     * @param  array  $aRules An array of rules to set
+     * @return string
+     */
+    public function processRules($aRules)
+    {
+        if (empty($permissions)) {
+            return null;
+        }
+
+        $aOut = array();
+
+        //  Min/max length
+        $aOut['min'] = !empty($aRules['min']) ? (int) $aRules['min'] : null;
+        $aOut['max'] = !empty($aRules['max']) ? (int) $aRules['max'] : null;
+
+        //  Expiration
+        $aOut['expiresAfter'] = !empty($aRules['expires_after']) ? (int) $aRules['expires_after'] : null;
+
+        //  Requirements
+        $aOut['requirements'] = array();
+        if (!empty($aRules['requirements'])) {
+            $aOut['requirements']['symbol'] = in_array('symbol', $aRules['requirements']);
+            $aOut['requirements']['number'] = in_array('number', $aRules['requirements']);
+            $aOut['requirements']['lower_alpha'] = in_array('lower_alpha', $aRules['requirements']);
+            $aOut['requirements']['upper_alpha'] = in_array('upper_alpha', $aRules['requirements']);
+
+            $aOut['requirements'] = array_filter($aOut['requirements']);
+        }
+
+        //  Banned words
+        $aOut['banned'] = array();
+        if (!empty($aRules['banned'])) {
+
+            $aRules['banned'] = trim($aRules['banned']);
+            $aOut['banned'] = explode(',', $aRules['banned']);
+            $aOut['banned'] = array_map('trim', $aOut['banned']);
+            $aOut['banned'] = array_map('strtolower', $aOut['banned']);
+            $aOut['banned'] = array_filter($aOut['banned']);
+        }
+        $aOut = array_filter($aOut);
+
+        if (empty($aOut)) {
+
+            return null;
+
+        } else {
+
+            return json_encode($aOut);
+        }
     }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' MODELS

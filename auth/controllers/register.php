@@ -61,6 +61,10 @@ class NAILS_Register extends NAILS_Auth_Controller
 
         // --------------------------------------------------------------------------
 
+        $iDefaultGroupId = $this->user_group_model->getDefaultGroupId()
+
+        // --------------------------------------------------------------------------
+
         //  If there's POST data attempt to log user in
         if ($this->input->post()) {
 
@@ -146,7 +150,7 @@ class NAILS_Register extends NAILS_Auth_Controller
                 $aInsertData               = array();
                 $aInsertData['email']      = $this->input->post('email');
                 $aInsertData['username']   = $this->input->post('username');
-                $aInsertData['group_id']   = $this->user_group_model->getDefaultGroupId();
+                $aInsertData['group_id']   = $iDefaultGroupId;
                 $aInsertData['password']   = $this->input->post('password');
                 $aInsertData['first_name'] = $this->input->post('first_name');
                 $aInsertData['last_name']  = $this->input->post('last_name');
@@ -205,7 +209,7 @@ class NAILS_Register extends NAILS_Auth_Controller
 
         $this->data['social_signon_enabled']   = $this->social_signon->is_enabled();
         $this->data['social_signon_providers'] = $this->social_signon->get_providers('ENABLED');
-        $this->data['passwordRulesAsString']   = $this->user_password_model->getRulesAsString();
+        $this->data['passwordRulesAsString']   = $this->user_password_model->getRulesAsString($iDefaultGroupId);
 
         // --------------------------------------------------------------------------
 

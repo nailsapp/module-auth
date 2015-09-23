@@ -312,6 +312,8 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
             $this->data['auth']->id   = $id;
             $this->data['auth']->hash = $hash;
 
+            $this->data['passwordRules'] = $this->user_password_model->getRulesAsString($user->group_id);
+
             $this->data['return_to'] = $this->input->get('return_to');
             $this->data['remember']  = $this->input->get('remember');
 
@@ -323,7 +325,7 @@ class NAILS_Reset_Password extends NAILS_Auth_Controller
 
                         $this->data['message'] = lang(
                             'auth_login_pw_expired',
-                            $this->user_password_model->expiresAfter()
+                            $this->user_password_model->expiresAfter($user->group_id)
                         );
                         break;
 

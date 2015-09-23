@@ -895,6 +895,14 @@ class NAILS_User_model extends NAILS_Model
 
         }
 
+        // --------------------------------------------------------------------------
+
+        $oUser = $this->get_by_id($_uid);
+        if (empty($oUser)) {
+
+            $this->_set_error('Invalid user ID');
+            return false;
+        }
 
         // --------------------------------------------------------------------------
 
@@ -914,20 +922,19 @@ class NAILS_User_model extends NAILS_Model
             //  If we're updating the user's password we should generate a new hash
             if (array_key_exists('password', $data)) {
 
-                $_hash = $this->user_password_model->generateHash($data['password']);
+                $_hash = $this->user_password_model->generateHash($oUser->group_id, $data['password']);
 
                 if (!$_hash) {
 
                     $this->_set_error($this->user_password_model->last_error());
                     return false;
-
                 }
 
-                $data['password']           = $_hash->password;
-                $data['password_md5']       = $_hash->password_md5;
-                $data['password_engine']    = $_hash->engine;
-                $data['password_changed']   = date('Y-m-d H:i:s');
-                $data['salt']               = $_hash->salt;
+                $data['password']         = $_hash->password;
+                $data['password_md5']     = $_hash->password_md5;
+                $data['password_engine']  = $_hash->engine;
+                $data['password_changed'] = date('Y-m-d H:i:s');
+                $data['salt']             = $_hash->salt;
 
                 $_password_updated = true;
 
@@ -1942,42 +1949,6 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        /**
-         * If a password has been passed then generate the encrypted strings, otherwise
-         * have a null password - the user won't be able to login and will be informed
-         * that they need to set a password using forgotten password.
-         */
-
-        if (empty($data['password'])) {
-
-            $_password = $this->user_password_model->generateNullHash();
-
-            if (!$_password) {
-
-                $this->_set_error($this->user_password_model->last_error());
-                return false;
-            }
-
-        } else {
-
-            $_password = $this->user_password_model->generateHash($data['password']);
-
-            if (!$_password) {
-
-                $this->_set_error($this->user_password_model->last_error());
-                return false;
-            }
-        }
-
-        /**
-         * Do we need to inform the user of their password? This might be set if an
-         * admin created the account, or if the system generated a new password
-         */
-
-        $_inform_user_pw = !empty($data['inform_user_pw']) ? true : false;
-
-        // --------------------------------------------------------------------------
-
         //  Check that we're dealing with a valid group
         if (empty($data['group_id'])) {
 
@@ -1999,6 +1970,42 @@ class NAILS_User_model extends NAILS_Model
 
             $_user_data['group_id'] = $_group->id;
         }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * If a password has been passed then generate the encrypted strings, otherwise
+         * have a null password - the user won't be able to login and will be informed
+         * that they need to set a password using forgotten password.
+         */
+
+        if (empty($data['password'])) {
+
+            $_password = $this->user_password_model->generateNullHash();
+
+            if (!$_password) {
+
+                $this->_set_error($this->user_password_model->last_error());
+                return false;
+            }
+
+        } else {
+
+            $_password = $this->user_password_model->generateHash($_user_data['group_id'], $data['password']);
+
+            if (!$_password) {
+
+                $this->_set_error($this->user_password_model->last_error());
+                return false;
+            }
+        }
+
+        /**
+         * Do we need to inform the user of their password? This might be set if an
+         * admin created the account, or if the system generated a new password
+         */
+
+        $_inform_user_pw = !empty($data['inform_user_pw']) ? true : false;
 
         // --------------------------------------------------------------------------
 

@@ -97,11 +97,11 @@
                 <?php
 
                     echo form_password($field, set_value($field), $fieldAttr);
-                    if ($this->user_password_model->getRulesAsArray()) {
+                    if (!empty($passwordRules)) {
 
                         echo '<p class="help-block">';
                             echo '<small>';
-                                echo $this->user_password_model->getRulesAsString();
+                                echo $passwordRules;
                             echo '</small>';
                         echo '</p>';
                     }

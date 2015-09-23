@@ -33,7 +33,7 @@ class Accounts extends \AdminController
             $numSuspended = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
 
             $alerts   = array();
-            $alerts[] = \Nails\Admin\Nav::alertObject($numTotal,     'info', 'Number of Users');
+            $alerts[] = \Nails\Admin\Nav::alertObject($numTotal, 'info', 'Number of Users');
             $alerts[] = \Nails\Admin\Nav::alertObject($numSuspended, 'alert', 'Number of Suspended Users');
             $navGroup->addAction('View All Members', 'index', $alerts, 0);
         }
@@ -251,7 +251,7 @@ class Accounts extends \AdminController
                 if (!$data['password']) {
 
                     //  Password isn't set, generate one
-                    $data['password'] = $this->user_password_model->generate();
+                    $data['password'] = $this->user_password_model->generate($data['group_id']);
                 }
 
                 if ($this->input->post('email')) {
@@ -331,7 +331,12 @@ class Accounts extends \AdminController
 
         //  Get data for the view
         $this->data['groups'] = $this->user_group_model->get_all();
-        $this->data['passwordRulesAsString'] = $this->user_password_model->getRulesAsString();
+        $this->data['passwordRules'] = array();
+
+        foreach ($this->data['groups'] as $oGroup) {
+
+            $this->data['passwordRules'][$oGroup->id] = $this->user_password_model->getRulesAsString($oGroup->id);
+        }
 
         // --------------------------------------------------------------------------
 
@@ -748,6 +753,8 @@ class Accounts extends \AdminController
             }
         }
 
+        $this->data['passwordRules'] = $this->user_password_model->getRulesAsString($user->group_id);
+
         // --------------------------------------------------------------------------
 
         //  Assets
@@ -951,7 +958,8 @@ class Accounts extends \AdminController
             'a',
             'user',
             $uid,
-            '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid,
+            '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name,
+            'admin/auth/accounts/edit/' . $uid,
             'is_suspended',
             $oldValue,
             $newValue,

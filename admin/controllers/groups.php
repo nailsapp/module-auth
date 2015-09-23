@@ -166,8 +166,9 @@ class Groups extends \AdminController
                 $data['default_homepage']      = $this->input->post('default_homepage');
                 $data['registration_redirect'] = $this->input->post('registration_redirect');
 
-                //  Parse ACL's
+                //  Parse ACL's and password rules
                 $data['acl'] = $this->user_group_model->processPermissions($this->input->post('acl'));
+                $data['password_rules'] = $this->user_password_model->processRules($this->input->post('pw'));
 
                 if ($this->user_group_model->update($gid, $data)) {
 

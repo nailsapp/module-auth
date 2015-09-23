@@ -25,6 +25,7 @@
         }
 
         //  Render the group descriptions
+        $iDefaultGroupId = $this->user_group_model->getDefaultGroupId();
         $field['info'] = '<ul id="user-group-descriptions">';
         foreach ($groups as $group) {
 
@@ -35,7 +36,7 @@
 
             // --------------------------------------------------------------------------
 
-            $display = $group->id == $this->user_group_model->getDefaultGroupId() ? 'block' : 'none';
+            $display = $group->id == $iDefaultGroupId ? 'block' : 'none';
             $field['info'] .= '<li class="system-alert notice" id="user-group-' . $group->id . '" style="display:' . $display . ';">';
             $field['info'] .=  $group->description;
             $field['info'] .= '</li>';
@@ -51,7 +52,19 @@
         $field['key']         = 'password';
         $field['label']       = lang('form_label_password');
         $field['placeholder'] = lang('accounts_create_field_password_placeholder');
-        $field['info']        = '<div class="system-alert notice">' . $passwordRulesAsString . '</div>';
+
+        //  Render password rules
+        $field['info'] = '<ul id="user-group-pwrules">';
+        foreach ($passwordRules as $iGroupId => $sRules) {
+
+            if (!empty($sRules)) {
+                $display = $iGroupId == $iDefaultGroupId ? 'block' : 'none';
+                $field['info'] .= '<li class="system-alert notice" id="user-group-pw-' . $iGroupId . '" style="display:' . $display . ';">';
+                $field['info'] .=  $sRules;
+                $field['info'] .= '</li>';
+            }
+        }
+        $field['info'] .= '</ul>';
 
         echo form_field($field, lang('accounts_create_field_password_tip'));
 

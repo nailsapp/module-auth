@@ -46,7 +46,6 @@ $appPath   = FCPATH . APPPATH . 'modules/auth/config/';
 $nailsPath = NAILS_PATH . 'module-auth/auth/config/';
 
 $files = array(
-    'auth.password.php',
     'auth.social.php',
     'auth.twofactor.php',
     'auth.accesstoken.php'

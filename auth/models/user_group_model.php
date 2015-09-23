@@ -197,6 +197,10 @@ class NAILS_User_group_model extends NAILS_Model
      */
     public function processPermissions($permissions)
     {
+        if (empty($permissions)) {
+            return null;
+        }
+
         $out = array();
 
         //  Level 1
@@ -239,6 +243,7 @@ class NAILS_User_group_model extends NAILS_Model
     protected function _format_object(&$obj)
     {
         $obj->acl = json_decode($obj->acl);
+        $obj->password_rules = json_decode($obj->password_rules);
     }
 }
 
