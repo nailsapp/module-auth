@@ -680,7 +680,7 @@ class NAILS_User_password_model extends CI_Model
      */
     public function processRules($aRules)
     {
-        if (empty($permissions)) {
+        if (empty($aRules)) {
             return null;
         }
 
