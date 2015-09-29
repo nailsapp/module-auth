@@ -23,7 +23,7 @@
             <?php
         }
 
-        if (userHasPermission('admin:auth:settings:update:password')) {
+        if (userHasPermission('admin:auth:groups:edit')) {
 
             $active = $this->input->post('activeTab') == 'tab-password' ? 'active' : '';
 
@@ -75,17 +75,14 @@
             <?php
         }
 
-        if (userHasPermission('admin:auth:settings:update:password')) {
+        if (userHasPermission('admin:auth:groups:edit')) {
 
             $display = $this->input->post('activeTab') == 'tab-password' ? 'active' : '';
 
             ?>
             <div class="tab-page tab-password <?=$display?>">
-                <p class="system-alert message">
-                    <strong>Coming soon!</strong>
-                    <br />
-                    Password controls are in the pipeline and will be available soon.
-                </p>
+                Configure user password rules and properties from within the
+                <?=anchor('admin/auth/groups/index', 'Groups')?> section of admin.
             </div>
             <?php
         }
