@@ -424,13 +424,13 @@ class Accounts extends \AdminController
         $this->data['ignored_fields'][] = 'user_id';
 
         /**
-         * If no cols were found, DESCRIBE the user_meta table - where possible you
+         * If no cols were found, DESCRIBE the user_meta_app table - where possible you
          * should manually set columns, including datatypes
          */
 
         if (is_null($this->data['user_meta_cols'])) {
 
-            $describe = $this->db->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta`')->result();
+            $describe = $this->db->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
             $this->data['user_meta_cols'] = array();
 
             foreach ($describe as $col) {
@@ -697,7 +697,7 @@ class Accounts extends \AdminController
 
             $this->db->select(implode(',', array_keys($this->data['user_meta_cols'])));
             $this->db->where('user_id', $user->id);
-            $user_meta = $this->db->get(NAILS_DB_PREFIX . 'user_meta')->row();
+            $user_meta = $this->db->get(NAILS_DB_PREFIX . 'user_meta_app')->row();
 
         } else {
 

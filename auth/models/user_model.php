@@ -592,7 +592,7 @@ class NAILS_User_model extends NAILS_Model
         );
 
         $this->db->join(
-            NAILS_DB_PREFIX . 'user_meta um',
+            NAILS_DB_PREFIX . 'user_meta_app um',
             $this->tablePrefix . '.id = um.user_id',
             'LEFT'
         );
@@ -653,23 +653,13 @@ class NAILS_User_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Defines the list of columns in the `user_meta` table
+     * Defines the list of columns in the `user_meta_app` table
      * @param  string $prefix The prefix to add to the columns
      * @param  array  $cols   Any additional columns to add
      * @return array
      */
     protected function _get_meta_columns($prefix = '', $cols = array())
     {
-        //  Module: shop
-        if (isModuleEnabled('nailsapp/module-shop')) {
-
-            $cols[] = 'shop_basket';
-            $cols[] = 'shop_currency';
-            $cols[] = 'shop_recently_viewed';
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Clean up
         $cols = array_unique($cols);
         $cols = array_filter($cols);
@@ -871,28 +861,17 @@ class NAILS_User_model extends NAILS_Model
     /**
      * Update a user, if $user_id is not set method will attempt to update the
      * active user. If $data is passed then the method will attempt to update
-     * the user and/or user_meta tables
+     * the user and/or user_meta_* tables
      * @return  integer $id   The ID of the user to update
      * @return  array   $data Any data to be updated
      */
     public function update($user_id = null, $data = null)
     {
         $data = (array) $data;
+        $_uid = $this->getUserId($user_id);
+        if (empty($_uid)) {
 
-        //  Get the user ID to update
-        if (!is_null($user_id) && $user_id !== false) {
-
-            $_uid = $user_id;
-
-        } elseif (activeUser('id')) {
-
-            $_uid = $this->activeUser('id');
-
-        } else {
-
-            $this->_set_error('No user ID set');
             return false;
-
         }
 
         // --------------------------------------------------------------------------
@@ -1075,7 +1054,7 @@ class NAILS_User_model extends NAILS_Model
 
                 $this->db->where('user_id', (int) $_uid);
                 $this->db->set($_data_meta);
-                $this->db->update(NAILS_DB_PREFIX . 'user_meta');
+                $this->db->update(NAILS_DB_PREFIX . 'user_meta_app');
             }
 
             // --------------------------------------------------------------------------
@@ -1225,6 +1204,115 @@ class NAILS_User_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         return true;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Fetches a record from a user_meta_* table
+     * @param  string   $sTable   The table to fetch from
+     * @param  integer  $iUserId  The ID of the user the record belongs to
+     * @param  array    $aColumns Any specific columns to select
+     * @return stdClass
+     */
+    public function getMeta($sTable, $iUserId = null, $aColumns = array())
+    {
+        $iUid = $this->getUserId($iUserId);
+        if (empty($iUid)) {
+
+            return false;
+        }
+
+        //  Check cache
+        $sCacheKey = 'user-meta-' . $sTable . '-' . $iUserId;
+        $oCache = $this->_get_cache($sCacheKey);
+        if (!empty($oCache)) {
+            return $oCache;
+        }
+
+        if (!empty($aColumns)) {
+            $this->db->select($aColumns);
+        }
+
+        $this->db->where('user_id', $iUid);
+        $aResult = $this->db->get($sTable)->result();
+
+        if (empty($aResult)) {
+
+            $mOut = null;
+
+        } else {
+
+            $mOut = $aResult[0];
+        }
+
+        return $mOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Updates a user_meta_* table
+     * @param  string  $sTable  The table to update
+     * @param  integer $iUserId The ID of the user the record belongs to
+     * @param  array   $aData   The data to set
+     * @return boolean
+     */
+    public function updateMeta($sTable, $iUserId, $aData)
+    {
+        $iUid = $this->getUserId($iUserId);
+        if (empty($iUid)) {
+
+            return false;
+        }
+
+        //  Safety: Ensure that the user_id is not overridden
+        $aData['user_id'] = $iUid;
+
+        $this->db->where('user_id', $iUid);
+        if ($this->db->count_all_results($sTable)) {
+
+            $this->db->set($aData);
+            $bResult = $this->db->update($sTable);
+
+        } else {
+
+            $this->db->set($aData);
+            $bResult = $this->db->insert($sTable);
+        }
+
+        if ($bResult) {
+
+            $this->_unset_cache('user-meta-' . $sTable . '-' . $iUserId);
+        }
+
+        return $bResult;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Works out the correct user ID, falls back to activeUser()
+     * @param  integer $iUserId The user ID to use
+     * @return integer
+     */
+    protected function getUserId($iUserId = null)
+    {
+        if (!empty($iUserId)) {
+
+            $iUid = $iUserId;
+
+        } elseif ($this->activeUser('id')) {
+
+            $iUid = $this->activeUser('id');
+
+        } else {
+
+            $this->_set_error('No user ID set');
+            return false;
+        }
+
+        return $iUid;
     }
 
     // --------------------------------------------------------------------------
@@ -2112,7 +2200,7 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Create the user_meta record, add any extra data if needed
+        //  Create the user_meta_app record, add any extra data if needed
         $this->db->set('user_id', $_id);
 
         if ($_meta_data) {
@@ -2120,7 +2208,7 @@ class NAILS_User_model extends NAILS_Model
             $this->db->set($_meta_data);
         }
 
-        if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta')) {
+        if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
 
             $this->_set_error('Failed to create user meta data object.');
             $this->db->trans_rollback();
@@ -2393,7 +2481,7 @@ class NAILS_User_model extends NAILS_Model
             return false;
         }
 
-        for($i=0; $i<count($mergeIds); $i++) {
+        for ($i=0; $i<count($mergeIds); $i++) {
 
             if (!is_numeric($mergeIds[$i])) {
                 $this->_set_error('"mergeIDs" must contain only numerical values.');
@@ -2423,7 +2511,7 @@ class NAILS_User_model extends NAILS_Model
 
         $ignoreTables   = array();
         $ignoreTables[] = NAILS_DB_PREFIX . 'user';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_meta';
+        $ignoreTables[] = NAILS_DB_PREFIX . 'user_meta_app';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_code';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_question';
@@ -2441,7 +2529,7 @@ class NAILS_User_model extends NAILS_Model
 
         $result = $this->db->query($query);
 
-        while($table = $result->_fetch_object()) {
+        while ($table = $result->_fetch_object()) {
 
             if (!isset($tables[$table->TABLE_NAME])) {
 
@@ -2456,7 +2544,7 @@ class NAILS_User_model extends NAILS_Model
         $tables = array_values($tables);
 
         //  Grab a count of the number of rows which will be affected
-        for ($i=0; $i<count($tables); $i++) {
+        for ($i = 0; $i < count($tables); $i++) {
 
             $columnConditional = array();
             foreach ($tables[$i]->columns as $column) {
@@ -2537,8 +2625,8 @@ class NAILS_User_model extends NAILS_Model
                 }
             }
 
-            if ($this->db->trans_status() === false)
-            {
+            if ($this->db->trans_status() === false) {
+
                 $this->db->trans_rollback();
                 $out = false;
 
