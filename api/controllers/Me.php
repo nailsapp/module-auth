@@ -26,13 +26,13 @@ class Me extends \ApiController
     {
         return array(
             'user' => array(
-                'id'        => activeUser('id'),
-                'firstName' => activeUser('first_name'),
-                'lastName'  => activeUser('last_name'),
-                'email'     => activeUser('email'),
-                'username'  => activeUser('username'),
-                'avatar'    => cdnAvatar(),
-                'gender'    => activeUser('gender')
+                'id'         => activeUser('id'),
+                'first_name' => activeUser('first_name'),
+                'last_name'  => activeUser('last_name'),
+                'email'      => activeUser('email'),
+                'username'   => activeUser('username'),
+                'avatar'     => cdnAvatar(),
+                'gender'     => activeUser('gender')
             )
         );
     }

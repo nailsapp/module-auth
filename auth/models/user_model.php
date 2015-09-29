@@ -2414,11 +2414,8 @@ class NAILS_User_model extends NAILS_Model
         //  Look for tables which contain a user ID column in them.
         $userCols   = array();
         $userCols[] = 'user_id';
-        $userCols[] = 'userId';
         $userCols[] = 'created_by';
-        $userCols[] = 'createdBy';
         $userCols[] = 'modified_by';
-        $userCols[] = 'modifiedBy';
         $userCols[] = 'author_id';
         $userCols[] = 'authorId';
 

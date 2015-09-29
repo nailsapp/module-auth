@@ -542,7 +542,7 @@ class NAILS_Auth_model extends NAILS_Model
      */
     public function mfaDeviceSecretGet($userId)
     {
-        $this->db->where('userId', $userId);
+        $this->db->where('user_id', $userId);
         $this->db->limit(1);
         $result = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
 
@@ -634,22 +634,22 @@ class NAILS_Auth_model extends NAILS_Model
              * so they can't be used again.
              */
 
-            $this->db->set('userId', $userId);
+            $this->db->set('user_id', $userId);
             $this->db->set('secret', $this->encrypt->encode($secret, APP_PRIVATE_KEY));
             $this->db->set('created', 'NOW()', false);
 
             if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
 
-                $secretId = $this->db->insert_id();
+                $secret_id = $this->db->insert_id();
 
                 $data   = array();
                 $data[] = array(
-                    'secretId' => $secretId,
+                    'secret_id' => $secret_id,
                     'code'      => $code1,
                     'used'      => date('Y-m-d H:i:s')
                 );
                 $data[] = array(
-                    'secretId' => $secretId,
+                    'secret_id' => $secret_id,
                     'code'      => $code2,
                     'used'      => date('Y-m-d H:i:s')
                 );
@@ -691,7 +691,7 @@ class NAILS_Auth_model extends NAILS_Model
         }
 
         //  Has the code been used before?
-        $this->db->where('secretId', $secret->id);
+        $this->db->where('secret_id', $secret->id);
         $this->db->where('code', $code);
 
         if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
@@ -711,7 +711,7 @@ class NAILS_Auth_model extends NAILS_Model
         if ($checkCode) {
 
             //  Log the code so it can't be used again
-            $this->db->set('secretId', $secret->id);
+            $this->db->set('secret_id', $secret->id);
             $this->db->set('code', $code);
             $this->db->set('used', 'NOW()', false);
 
