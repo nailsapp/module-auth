@@ -72,7 +72,7 @@ class NAILS_User_access_token_model extends NAILS_Model
         //  If not specified, generate an expiration date 6 months from now
         if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
 
-            $expires = new DateTime();
+            $expires = \Nails\Factory::factory('DateTime');
             $expires->add(new DateInterval($this->defaultExpiration));
 
             $data['expires'] = $expires->format('Y-m-d H:i:s');
