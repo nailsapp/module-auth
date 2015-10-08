@@ -327,8 +327,6 @@ class NAILS_User_model extends NAILS_Model
          * is, obviously, not gonna detect a spoof.
          */
 
-        $this->load->helper('cookie');
-
         $cookie = get_cookie($this->rememberCookie);
         $cookie = explode('|', $cookie);
 
@@ -687,7 +685,7 @@ class NAILS_User_model extends NAILS_Model
      */
     public function getByIdentifier($identifier)
     {
-        $this->load->helper('email');
+        \Nails\Factory::helper('email');
 
         switch (APP_NATIVE_LOGIN_USING) {
 
@@ -1875,10 +1873,6 @@ class NAILS_User_model extends NAILS_Model
      */
     public function clearRememberCookie()
     {
-        $this->load->helper('cookie');
-
-        // --------------------------------------------------------------------------
-
         delete_cookie($this->rememberCookie);
 
         // --------------------------------------------------------------------------
@@ -2340,7 +2334,7 @@ class NAILS_User_model extends NAILS_Model
      */
     protected function generateReferral()
     {
-        $this->load->helper('string');
+        \Nails\Factory::helper('string');
 
         while (1 > 0) {
 

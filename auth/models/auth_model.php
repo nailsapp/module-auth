@@ -26,12 +26,6 @@ class NAILS_Auth_model extends NAILS_Model
         $this->brute_force_protection['delay']  = 1500000;
         $this->brute_force_protection['limit']  = 10;
         $this->brute_force_protection['expire'] = 900;
-
-        // --------------------------------------------------------------------------
-
-        //  Load helpers
-        $this->load->helper('date');
-        $this->load->helper('cookie');
     }
 
     // --------------------------------------------------------------------------

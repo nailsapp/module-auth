@@ -12,9 +12,10 @@
 
 class NAILS_User_password_model extends CI_Model
 {
-    //  Class traits
-    use NAILS_COMMON_TRAIT_ERROR_HANDLING;
-    use NAILS_COMMON_TRAIT_CACHING;
+    use \Nails\Common\Traits\ErrorHandling;
+    use \Nails\Common\Traits\Caching;
+
+    // --------------------------------------------------------------------------
 
     protected $oUserModel;
     protected $aCharset;
@@ -261,7 +262,7 @@ class NAILS_User_password_model extends CI_Model
 
         if (!empty($aFailedRequirements)) {
 
-            $this->load->helper('string');
+            \Nails\Factory::helper('string');
             $sError = 'Password must contain ' . implode(', ', $aFailedRequirements) . '.';
             $sError = str_lreplace(', ', ' and ', $sError);
             $this->_set_error($sError);
@@ -479,7 +480,7 @@ class NAILS_User_password_model extends CI_Model
 
         $sStr = 'Passwords must ' . strtolower(implode(', ', $aRules)) . '.';
 
-        $this->load->helper('string');
+        \Nails\Factory::helper('string');
         return str_lreplace(', ', ' and ', $sStr);
     }
 

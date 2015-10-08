@@ -145,8 +145,6 @@ class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
         //  Say hello
         if ($this->mfaUser->last_login) {
 
-            $this->load->helper('date');
-
             if ($this->config->item('authShowNicetimeOnLogin')) {
 
                 $lastLogin = niceTime(strtotime($this->mfaUser->last_login));

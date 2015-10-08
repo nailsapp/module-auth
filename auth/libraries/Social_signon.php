@@ -12,9 +12,10 @@
 
 class Social_signon
 {
-    //  Class traits
-    use NAILS_COMMON_TRAIT_ERROR_HANDLING;
-    use NAILS_COMMON_TRAIT_CACHING;
+    use \Nails\Common\Traits\ErrorHandling;
+    use \Nails\Common\Traits\Caching;
+
+    // --------------------------------------------------------------------------
 
     protected $_ci;
     protected $db;

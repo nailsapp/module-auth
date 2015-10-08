@@ -396,11 +396,6 @@ class Accounts extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        //  Load helpers
-        $this->load->helper('date');
-
-        // --------------------------------------------------------------------------
-
         /**
          * Load the user_meta_cols; loaded here because it's needed for both the view
          * and the form validation

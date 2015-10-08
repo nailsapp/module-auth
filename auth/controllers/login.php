@@ -241,8 +241,6 @@ class NAILS_Login extends NAILS_Auth_Controller
             //  Finally! Send this user on their merry way...
             if ($user->last_login) {
 
-                $this->load->helper('date');
-
                 $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
                 if ($this->config->item('authShowLastIpOnLogin')) {
@@ -387,8 +385,6 @@ class NAILS_Login extends NAILS_Auth_Controller
 
             //  Say hello
             if ($user->last_login) {
-
-                $this->load->helper('date');
 
                 $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
