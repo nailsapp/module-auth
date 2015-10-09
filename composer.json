@@ -27,6 +27,7 @@
     "prefer-stable": true,
     "require":
     {
+        "nailsapp/common": "dev-develop",
         "nailsapp/module-curl": "dev-develop",
         "nailsapp/module-cdn": "dev-develop",
         "hybridauth/hybridauth": "~2.4.1",
