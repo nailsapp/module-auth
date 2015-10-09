@@ -785,14 +785,14 @@ class NAILS_Login extends NAILS_Auth_Controller
                         if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200) {
 
                             //  Attempt upload
-                            $this->load->library('cdn/cdn');
+                            $oCdn = \Nails\Factory::service('Cdn', 'nailsapp/module-cdn');
 
                             //  Save file to cache
                             $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;
 
                             if (@file_put_contents($cacheFile, $imgData)) {
 
-                                $_upload = $this->cdn->object_create($cacheFile, 'profile-images', array());
+                                $_upload = $oCdn->object_create($cacheFile, 'profile-images', array());
 
                                 if ($_upload) {
 
@@ -804,7 +804,7 @@ class NAILS_Login extends NAILS_Auth_Controller
                                 } else {
 
                                     log_message('debug', 'Failed to upload user\'s profile image');
-                                    log_message('debug', $this->cdn->last_error());
+                                    log_message('debug', $oCdn->last_error());
                                 }
                             }
                         }
