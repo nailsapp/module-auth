@@ -12,7 +12,7 @@ namespace Nails\Api\Auth;
  * @link
  */
 
-class AccessToken extends \ApiController
+class AccessToken extends \Nails\Api\Controllers\Base
 {
     /**
      * Retrieves an access token for a user
