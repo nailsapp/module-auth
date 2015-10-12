@@ -12,7 +12,10 @@
 
 namespace Nails\Auth\Model;
 
-class User extends \Nails\Common\Model\Base
+use \Nails\Factory;
+use \Nails\Common\Model\Base;
+
+class User extends Base
 {
     protected $me;
     protected $activeUser;
@@ -1084,7 +1087,6 @@ class User extends \Nails\Common\Model\Base
 
                             $this->_set_error('Email is already in use.');
                             $_rollback = true;
-
                         }
 
                     } else {
@@ -1095,7 +1097,6 @@ class User extends \Nails\Common\Model\Base
                          */
 
                         $this->email_add($_data_email, (int) $_uid, true);
-
                     }
 
                 } else {
@@ -1197,96 +1198,9 @@ class User extends \Nails\Common\Model\Base
 
         }
 
-        // --------------------------------------------------------------------------
-
         $this->setCacheUser($_uid);
 
-        // --------------------------------------------------------------------------
-
         return true;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Fetches a record from a user_meta_* table
-     * @param  string   $sTable   The table to fetch from
-     * @param  integer  $iUserId  The ID of the user the record belongs to
-     * @param  array    $aColumns Any specific columns to select
-     * @return stdClass
-     */
-    public function getMeta($sTable, $iUserId = null, $aColumns = array())
-    {
-        $iUid = $this->getUserId($iUserId);
-        if (empty($iUid)) {
-
-            return false;
-        }
-
-        //  Check cache
-        $sCacheKey = 'user-meta-' . $sTable . '-' . $iUserId;
-        $oCache = $this->_get_cache($sCacheKey);
-        if (!empty($oCache)) {
-            return $oCache;
-        }
-
-        if (!empty($aColumns)) {
-            $this->db->select($aColumns);
-        }
-
-        $this->db->where('user_id', $iUid);
-        $aResult = $this->db->get($sTable)->result();
-
-        if (empty($aResult)) {
-
-            $mOut = null;
-
-        } else {
-
-            $mOut = $aResult[0];
-        }
-
-        return $mOut;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Updates a user_meta_* table
-     * @param  string  $sTable  The table to update
-     * @param  integer $iUserId The ID of the user the record belongs to
-     * @param  array   $aData   The data to set
-     * @return boolean
-     */
-    public function updateMeta($sTable, $iUserId, $aData)
-    {
-        $iUid = $this->getUserId($iUserId);
-        if (empty($iUid)) {
-
-            return false;
-        }
-
-        //  Safety: Ensure that the user_id is not overridden
-        $aData['user_id'] = $iUid;
-
-        $this->db->where('user_id', $iUid);
-        if ($this->db->count_all_results($sTable)) {
-
-            $this->db->set($aData);
-            $bResult = $this->db->update($sTable);
-
-        } else {
-
-            $this->db->set($aData);
-            $bResult = $this->db->insert($sTable);
-        }
-
-        if ($bResult) {
-
-            $this->_unset_cache('user-meta-' . $sTable . '-' . $iUserId);
-        }
-
-        return $bResult;
     }
 
     // --------------------------------------------------------------------------

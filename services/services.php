@@ -8,6 +8,9 @@ return array(
         'User' => function () {
             return new \Nails\Auth\Model\User();
         },
+        'UserMeta' => function () {
+            return new \Nails\Auth\Model\User\Meta();
+        },
         'UserAccessToken' => function () {
             return new \Nails\Auth\Model\User\AccessToken();
         },
