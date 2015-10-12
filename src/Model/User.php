@@ -10,7 +10,9 @@
  * @link
  */
 
-class NAILS_User_model extends NAILS_Model
+namespace Nails\Auth\Model;
+
+class User extends \Nails\Common\Model\Base
 {
     protected $me;
     protected $activeUser;
@@ -198,7 +200,7 @@ class NAILS_User_model extends NAILS_Model
      */
     public function clearActiveUser()
     {
-        $this->activeUser = new stdClass();
+        $this->activeUser = new \stdClass();
     }
 
     // --------------------------------------------------------------------------
@@ -1116,7 +1118,7 @@ class NAILS_User_model extends NAILS_Model
                 //  If the user's password was updated send them a notification
                 if ($_password_updated) {
 
-                    $_email                     = new stdClass();
+                    $_email                     = new \stdClass();
                     $_email->type               = 'password_updated';
                     $_email->to_id              = $_uid;
                     $_email->data               = array();
@@ -1555,7 +1557,7 @@ class NAILS_User_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $_email                  = new stdClass();
+        $_email                  = new \stdClass();
         $_email->type            = 'verify_email_' . $_e->group_id;
         $_email->to_id           = $_e->user_id;
         $_email->data            = array();
@@ -2226,7 +2228,7 @@ class NAILS_User_model extends NAILS_Model
             //  Send the user the welcome email
             if ($sendWelcome) {
 
-                $_email        = new stdClass();
+                $_email        = new \stdClass();
                 $_email->type  = 'new_user_' . $_group->id;
                 $_email->to_id = $_id;
                 $_email->data  = array();
@@ -2234,11 +2236,11 @@ class NAILS_User_model extends NAILS_Model
                 //  If this user is created by an admin then take note of that.
                 if ($this->isAdmin()) {
 
-                    $_email->data['admin']              = new stdClass();
+                    $_email->data['admin']              = new \stdClass();
                     $_email->data['admin']->id          = $this->activeUser('id');
                     $_email->data['admin']->first_name  = $this->activeUser('first_name');
                     $_email->data['admin']->last_name   = $this->activeUser('last_name');
-                    $_email->data['admin']->group       = new stdClass();
+                    $_email->data['admin']->group       = new \stdClass();
                     $_email->data['admin']->group->id   = $_group->id;
                     $_email->data['admin']->group->name = $_group->label;
                 }
@@ -2527,7 +2529,7 @@ class NAILS_User_model extends NAILS_Model
 
             if (!isset($tables[$table->TABLE_NAME])) {
 
-                $tables[$table->TABLE_NAME] = new stdClass();
+                $tables[$table->TABLE_NAME] = new \stdClass();
                 $tables[$table->TABLE_NAME]->name = $table->TABLE_NAME;
                 $tables[$table->TABLE_NAME]->columns = array();
             }
@@ -2565,7 +2567,7 @@ class NAILS_User_model extends NAILS_Model
 
         if ($preview) {
 
-            $out = new stdClass;
+            $out = new \stdClass;
             $out->user = $this->get_by_id($userId);
             $out->merge = array();
 
@@ -2680,38 +2682,5 @@ class NAILS_User_model extends NAILS_Model
 
         //  Tidy User meta
         unset($user->user_id);
-    }
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * The following block of code makes it simple to extend one of the core
- * models. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if (!defined('NAILS_ALLOW_EXTENSION_USER_MODEL')) {
-
-    class User_model extends NAILS_User_model
-    {
     }
 }
