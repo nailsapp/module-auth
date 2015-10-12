@@ -776,37 +776,44 @@ class NAILS_Login extends NAILS_Auth_Controller
                     if (!empty($imgUrl)) {
 
                         //  Fetch the image
-                        $ch = curl_init();
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                        curl_setopt($ch, CURLOPT_URL, $imgUrl);
-                        $imgData = curl_exec($ch);
+                        //  @todo Consider streaming directly to the filesystem
+                        $oHttpClient = \Nails\Factory::factory('HttpClient');
 
-                        if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200) {
+                        try {
 
-                            //  Attempt upload
-                            $oCdn = \Nails\Factory::service('Cdn', 'nailsapp/module-cdn');
+                            $oResponse = $oHttpClient->get($imgUrl);
 
-                            //  Save file to cache
-                            $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;
+                            if ($oResponse->getStatusCode() === 200) {
 
-                            if (@file_put_contents($cacheFile, $imgData)) {
+                                //  Attempt upload
+                                $oCdn = \Nails\Factory::service('Cdn', 'nailsapp/module-cdn');
 
-                                $_upload = $oCdn->object_create($cacheFile, 'profile-images', array());
+                                //  Save file to cache
+                                $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;
 
-                                if ($_upload) {
+                                if (@file_put_contents($cacheFile, (string) $oResponse->getBody)) {
 
-                                    $data                = array();
-                                    $data['profile_img'] = $_upload->id;
+                                    $_upload = $oCdn->object_create($cacheFile, 'profile-images', array());
 
-                                    $this->user_model->update($newUser->id, $data);
+                                    if ($_upload) {
 
-                                } else {
+                                        $data                = array();
+                                        $data['profile_img'] = $_upload->id;
 
-                                    log_message('debug', 'Failed to upload user\'s profile image');
-                                    log_message('debug', $oCdn->last_error());
+                                        $this->user_model->update($newUser->id, $data);
+
+                                    } else {
+
+                                        log_message('debug', 'Failed to upload user\'s profile image');
+                                        log_message('debug', $oCdn->last_error());
+                                    }
                                 }
                             }
+
+                        } catch (\Exception $e) {
+
+                            log_message('debug', 'Failed to upload user\'s profile image');
+                            log_message('debug', $e->getMessage());
                         }
                     }
 
