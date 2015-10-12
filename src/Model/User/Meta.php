@@ -43,18 +43,21 @@ class Meta
      * @param  string   $sTable   The table to fetch from
      * @param  integer  $iUserId  The ID of the user the record belongs to
      * @param  array    $aColumns Any specific columns to select
-     * @return stdClass
+     * @return \stdClass
      */
     public function get($sTable, $iUserId, $aColumns = array())
     {
         //  Check cache
         $sCacheKey = 'user-meta-' . $sTable . '-' . $iUserId;
         $oCache = $this->_get_cache($sCacheKey);
+
         if (!empty($oCache)) {
+
             return $oCache;
         }
 
         if (!empty($aColumns)) {
+
             $this->oDb->select($aColumns);
         }
 
@@ -71,6 +74,35 @@ class Meta
         }
 
         return $mOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Fetches records from a user_meta_table which may have many rows
+     * @param  string   $sTable   The table to fetch from
+     * @param  integer  $iUserId  The ID of the user the records belongs to
+     * @param  array    $aColumns Any specific columns to select
+     * @return array
+     */
+    public function getMany($sTable, $iUserId, $aColumns = array())
+    {
+        //  Check cache
+        $sCacheKey = 'user-meta-many-' . $sTable . '-' . $iUserId;
+        $oCache = $this->_get_cache($sCacheKey);
+
+        if (!empty($oCache)) {
+
+            return $oCache;
+        }
+
+        if (!empty($aColumns)) {
+
+            $this->oDb->select($aColumns);
+        }
+
+        $this->oDb->where('user_id', $iUserId);
+        return $this->oDb->get($sTable)->result();
     }
 
     // --------------------------------------------------------------------------
@@ -105,5 +137,47 @@ class Meta
         }
 
         return $bResult;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Updates a user_meta_* table
+     * @param  string  $sTable  The table to update
+     * @param  integer $iUserId The ID of the user ID being updated
+     * @param  array   $aData   An array of rows to update
+     * @return boolean
+     */
+    public function updateMany($sTable, $iUserId, $aData)
+    {
+        $this->oDb->trans_begin();
+        foreach ($aData as $aRow) {
+
+            //  Safety: Ensure that the row ID, and User ID are not overridden
+            unset($aRow['id']);
+            unset($aRow['user_id']);
+
+            $this->oDb->where('id', $iRowId);
+            if ($this->oDb->count_all_results($sTable)) {
+
+                $this->oDb->set($aRow);
+                if (!$this->oDb->update($sTable)) {
+                    $this->odb->trans_rollback();
+                    return false;
+                }
+
+            } else {
+
+                $this->oDb->set($aRow);
+                if (!$this->oDb->insert($sTable)) {
+                    $this->odb->trans_rollback();
+                    return false;
+                }
+            }
+        }
+
+        $this->db->trans_commit();
+        $this->_unset_cache('user-meta-' . $sTable . '-' . $iUserId);
+        return true;
     }
 }
