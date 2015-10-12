@@ -43,7 +43,7 @@
 	$lang['auth_login_social_signin']					= 'Sign in with %s';
 
 	//	Messages
-	$lang['auth_login_ok_elcome']						= '<strong>Welcome, %s!</strong> You last logged in %s.';
+	$lang['auth_login_ok_welcome']						= '<strong>Welcome, %s!</strong> You last logged in %s.';
 	$lang['auth_login_ok_welcome_with_ip']				= '<strong>Welcome, %s!</strong> You last logged in %s from IP address %s.';
 	$lang['auth_login_ok_welcome_notime']				= '<strong>Welcome, %s!</strong> Nice to see you again.';
     $lang['auth_login_pw_expired']						= '<strong>Your password has expired</strong><br />You must update your password every %s days. Please choose a new password and click "Change Password &amp; Log In"';
