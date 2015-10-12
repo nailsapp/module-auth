@@ -1,8 +1,5 @@
 <?php
 
-//  Include NAILS_Auth_Controller; executes common Auth functionality.
-require_once '_auth.php';
-
 /**
  * This class provides some common functionality to the MFA controllers
  *
@@ -13,7 +10,11 @@ require_once '_auth.php';
  * @link
  */
 
-class NAILS_Auth_Mfa_Controller extends NAILS_Auth_Controller
+namespace Nails\Auth\Controller;
+
+use \Nails\Auth\Controller\Base;
+
+class BaseMfa extends Base
 {
     protected $authMfaMode;
     protected $authMfaConfig;

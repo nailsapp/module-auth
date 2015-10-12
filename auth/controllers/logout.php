@@ -1,8 +1,5 @@
 <?php
 
-//  Include NAILS_Auth_Controller; executes common Auth functionality.
-require_once '_auth.php';
-
 /**
  * USer logout facility
  *
@@ -12,143 +9,110 @@ require_once '_auth.php';
  * @author      Nails Dev Team
  * @link
  */
-class NAILS_Logout extends NAILS_Auth_Controller
+
+use \Nails\Auth\Controller\Base;
+
+class Logout extends Base
 {
-	/**
-	 * Log user out and forward to homepage (or via helper method if needed).
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function index()
-	{
-		//	If already logged out just send them silently on their way
-		if ( ! $this->user_model->isLoggedIn() ) :
+    /**
+     * Log user out and forward to homepage (or via helper method if needed).
+     *
+     * @access  public
+     * @param   none
+     * @return  void
+     **/
+    public function index()
+    {
+        //  If already logged out just send them silently on their way
+        if ( ! $this->user_model->isLoggedIn() ) :
 
-			redirect( '/' );
+            redirect( '/' );
 
-		endif;
+        endif;
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Handle flashdata, if there's anything there pass it along as GET variables.
-		//	We're about to destroy the session so they'll go bye-bye unless we do
-		//	something with 'em.
+        //  Handle flashdata, if there's anything there pass it along as GET variables.
+        //  We're about to destroy the session so they'll go bye-bye unless we do
+        //  something with 'em.
 
-		$_flash				= array();
-		$_flash['name']		= activeUser( 'first_name' );
-		$_flash['success']	= $this->session->flashdata( 'success' );
-		$_flash['error']	= $this->session->flashdata( 'error' );
-		$_flash['notice']	= $this->session->flashdata( 'notice' );
-		$_flash['message']	= $this->session->flashdata( 'message' );
+        $_flash             = array();
+        $_flash['name']     = activeUser( 'first_name' );
+        $_flash['success']  = $this->session->flashdata( 'success' );
+        $_flash['error']    = $this->session->flashdata( 'error' );
+        $_flash['notice']   = $this->session->flashdata( 'notice' );
+        $_flash['message']  = $this->session->flashdata( 'message' );
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Generate an event for this log in
-		create_event('did_log_out');
+        //  Generate an event for this log in
+        create_event('did_log_out');
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Log user out
-		$this->auth_model->logout();
+        //  Log user out
+        $this->auth_model->logout();
 
-		//	Log social media out, too
-		$this->load->library( 'auth/social_signon' );
-		$this->social_signon->logout();
+        //  Log social media out, too
+        $this->load->library( 'auth/social_signon' );
+        $this->social_signon->logout();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Redirect via helper method
-		redirect( 'auth/logout/bye?' . http_build_query( $_flash ) );
-	}
-
-
-	// --------------------------------------------------------------------------
+        //  Redirect via helper method
+        redirect( 'auth/logout/bye?' . http_build_query( $_flash ) );
+    }
 
 
-	/**
-	 * Helper function to recreate a session (seeing as we destroyed it
-	 * during logout); allows us to pass a message along if needed.
-	 *
-	 * @access	public
-	 * @param	none
-	 * @return	void
-	 **/
-	public function bye()
-	{
-		//	If there's no 'success' GET set our default log out message
-		//	otherwise keep any which might be coming our way.
+    // --------------------------------------------------------------------------
 
-		$_get = $this->input->get();
 
-		// --------------------------------------------------------------------------
+    /**
+     * Helper function to recreate a session (seeing as we destroyed it
+     * during logout); allows us to pass a message along if needed.
+     *
+     * @access  public
+     * @param   none
+     * @return  void
+     **/
+    public function bye()
+    {
+        //  If there's no 'success' GET set our default log out message
+        //  otherwise keep any which might be coming our way.
 
-		if ( ! empty( $_get['success'] ) ) :
+        $_get = $this->input->get();
 
-			$this->session->set_flashdata( 'success', $_get['success'] );
+        // --------------------------------------------------------------------------
 
-		else :
+        if ( ! empty( $_get['success'] ) ) :
 
-			$this->session->set_flashdata( 'success', lang( 'auth_logout_successful', $_get['name'] ) );
+            $this->session->set_flashdata( 'success', $_get['success'] );
 
-		endif;
+        else :
 
-		// --------------------------------------------------------------------------
+            $this->session->set_flashdata( 'success', lang( 'auth_logout_successful', $_get['name'] ) );
 
-		//	Set any other flashdata which might be needed
-		if ( is_array( $_get ) ) :
+        endif;
 
-			foreach ( $_get as $key => $value ) :
+        // --------------------------------------------------------------------------
 
-				if ( $value ) :
+        //  Set any other flashdata which might be needed
+        if ( is_array( $_get ) ) :
 
-					$this->session->set_flashdata( $key, $value );
+            foreach ( $_get as $key => $value ) :
 
-				endif;
+                if ( $value ) :
 
-			endforeach;
+                    $this->session->set_flashdata( $key, $value );
 
-		endif;
+                endif;
 
-		// --------------------------------------------------------------------------
+            endforeach;
 
-		redirect( '/' );
-	}
+        endif;
+
+        // --------------------------------------------------------------------------
+
+        redirect( '/' );
+    }
 }
-
-
-// --------------------------------------------------------------------------
-
-
-/**
- * OVERLOADING NAILS' AUTH MODULE
- *
- * The following block of code makes it simple to extend one of the core auth
- * controllers. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if ( ! defined( 'NAILS_ALLOW_EXTENSION' ) ) :
-
-	class Logout extends NAILS_Logout
-	{
-	}
-
-endif;

@@ -20,13 +20,12 @@ class AccessToken extends \Nails\Api\Controllers\Base
      */
     public function postIndex()
     {
-        get_instance()->load->model('auth/auth_model');
-
+        $oAuthModel  = \Nails\Factory::model('Auth', 'nailsapp/module-auth');
         $sIdentifier = $this->input->post('identifier');
         $sPassword   = $this->input->post('password');
         $sScope      = $this->input->post('scope');
         $sLabel      = $this->input->post('tokenLabel');
-        $bIsValid    = get_instance()->auth_model->verifyCredentials($sIdentifier, $sPassword);
+        $bIsValid    = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
 
         if ($bIsValid) {
 
