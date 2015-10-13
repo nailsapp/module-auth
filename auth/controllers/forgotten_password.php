@@ -254,9 +254,9 @@ class Forgotten_Password extends Base
         }
 
         //  Load the views
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/password/forgotten', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -325,9 +325,9 @@ class Forgotten_Password extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->load->view('structure/header', $this->data);
+                            $this->load->view('structure/header/blank', $this->data);
                             $this->load->view('auth/password/forgotten_reset', $this->data);
-                            $this->load->view('structure/footer', $this->data);
+                            $this->load->view('structure/footer/blank', $this->data);
                             return;
 
                         } else {
@@ -338,9 +338,9 @@ class Forgotten_Password extends Base
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('structure/header/blank', $this->data);
                     $this->load->view('auth/mfa/question/ask', $this->data);
-                    $this->load->view('structure/footer', $this->data);
+                    $this->load->view('structure/footer/blank', $this->data);
 
                 } else {
 
@@ -360,9 +360,9 @@ class Forgotten_Password extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('structure/header/blank', $this->data);
                     $this->load->view('auth/password/forgotten_reset', $this->data);
-                    $this->load->view('structure/footer', $this->data);
+                    $this->load->view('structure/footer/blank', $this->data);
                 }
 
             } elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') {
@@ -394,7 +394,7 @@ class Forgotten_Password extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->load->view('structure/header', $this->data);
+                            $this->load->view('structure/header/blank', $this->data);
                             $this->load->view('auth/password/forgotten_reset', $this->data);
                             $this->load->view('structure/footer', $this->data);
                             return;
@@ -408,7 +408,7 @@ class Forgotten_Password extends Base
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
-                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('structure/header/blank', $this->data);
                     $this->load->view('auth/mfa/device/ask', $this->data);
                     $this->load->view('structure/footer', $this->data);
 
@@ -430,9 +430,9 @@ class Forgotten_Password extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->load->view('structure/header', $this->data);
+                    $this->load->view('structure/header/blank', $this->data);
                     $this->load->view('auth/password/forgotten_reset', $this->data);
-                    $this->load->view('structure/footer', $this->data);
+                    $this->load->view('structure/footer/blank', $this->data);
                 }
 
             } else {
@@ -451,9 +451,9 @@ class Forgotten_Password extends Base
                 // --------------------------------------------------------------------------
 
                 //  Load the views
-                $this->load->view('structure/header', $this->data);
+                $this->load->view('structure/header/blank', $this->data);
                 $this->load->view('auth/password/forgotten_reset', $this->data);
-                $this->load->view('structure/footer', $this->data);
+                $this->load->view('structure/footer/blank', $this->data);
             }
 
             return;
@@ -462,9 +462,9 @@ class Forgotten_Password extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/password/forgotten', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------

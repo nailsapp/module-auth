@@ -214,9 +214,9 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/register/form', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -295,8 +295,8 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/register/resend', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 }

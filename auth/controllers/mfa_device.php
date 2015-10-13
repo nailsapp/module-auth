@@ -119,9 +119,9 @@ class Mfa_device extends BaseMfa
         //  Render the page
         $this->data['page']->title = 'Set up a new MFA device';
 
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/mfa/device/setup', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -160,8 +160,8 @@ class Mfa_device extends BaseMfa
         //  Render the page
         $this->data['page']->title = 'Enter your Code';
 
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/mfa/device/ask', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 }

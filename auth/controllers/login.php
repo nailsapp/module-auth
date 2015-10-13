@@ -140,10 +140,9 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Load the views
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/login/form', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -985,9 +984,9 @@ class Login extends Base
             $this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
         }
 
-        $this->load->view('structure/header', $this->data);
+        $this->load->view('structure/header/blank', $this->data);
         $this->load->view('auth/register/social_request_data', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        $this->load->view('structure/footer/blank', $this->data);
         echo $this->output->get_output();
         exit();
     }

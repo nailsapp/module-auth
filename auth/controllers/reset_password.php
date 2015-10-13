@@ -338,9 +338,9 @@ class Reset_Password extends Base
             // --------------------------------------------------------------------------
 
             //  Load the views
-            $this->load->view('structure/header', $this->data);
+            $this->load->view('structure/header/blank', $this->data);
             $this->load->view('auth/password/change_temp', $this->data);
-            $this->load->view('structure/footer', $this->data);
+            $this->load->view('structure/footer/blank', $this->data);
 
             return;
         }

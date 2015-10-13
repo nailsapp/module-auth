@@ -23,20 +23,9 @@ class Base extends \NAILS_Controller
     public function __construct()
     {
         parent::__construct();
-
-        // --------------------------------------------------------------------------
-
-        //  Load config
         $this->config->load('auth/auth');
-
-        // --------------------------------------------------------------------------
-
-        //  Load language file
         $this->lang->load('auth/auth');
-
-        // --------------------------------------------------------------------------
-
-        //  Load model
+        $this->asset->load('nails.auth.login.css', 'NAILS');
         $this->auth_model = Factory::model('Auth', 'nailsapp/module-auth');
     }
 }
