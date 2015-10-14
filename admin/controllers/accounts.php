@@ -12,7 +12,9 @@
 
 namespace Nails\Admin\Auth;
 
-class Accounts extends \AdminController
+use Nails\Auth\Controller\BaseAdmin;
+
+class Accounts extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups

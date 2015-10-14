@@ -1,6 +1,6 @@
 <?php
 
-namespace Nails\Common\Model;
+namespace Nails\Auth\Model;
 
 class AuthTest extends \PHPUnit_Framework_TestCase
 {

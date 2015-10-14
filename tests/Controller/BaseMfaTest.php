@@ -1,8 +1,8 @@
 <?php
 
-namespace Nails\Auth\Model;
+namespace Nails\Auth\Controller;
 
-class UserTest extends \PHPUnit_Framework_TestCase
+class BaseMfaTest extends \PHPUnit_Framework_TestCase
 {
     public function testFoo()
     {

@@ -12,7 +12,7 @@ namespace Nails\Api\Auth;
  * @link
  */
 
-class Me extends \Nails\Api\Controllers\Base
+class Me extends \Nails\Api\Controller\Base
 {
     public static $requiresAuthentication = true;
 

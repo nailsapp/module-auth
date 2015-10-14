@@ -12,7 +12,9 @@
 
 namespace Nails\Admin\Auth;
 
-class Merge extends \AdminController
+use Nails\Auth\Controller\BaseAdmin;
+
+class Merge extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
