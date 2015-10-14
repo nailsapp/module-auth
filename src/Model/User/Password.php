@@ -16,8 +16,8 @@ use Nails\Factory;
 
 class Password extends \Nails\Common\Model\Base
 {
-    use Nails\Common\Traits\ErrorHandling;
-    use Nails\Common\Traits\Caching;
+    use \Nails\Common\Traits\ErrorHandling;
+    use \Nails\Common\Traits\Caching;
 
     // --------------------------------------------------------------------------
 

@@ -16,7 +16,7 @@ use Nails\Factory;
 
 class Meta
 {
-    use Nails\Common\Traits\Caching;
+    use \Nails\Common\Traits\Caching;
 
     // --------------------------------------------------------------------------
 
