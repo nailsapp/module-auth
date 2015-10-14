@@ -10,7 +10,8 @@
  * @link
  */
 
-use \Nails\Auth\Controller\Base;
+use Nails\Factory;
+use Nails\Auth\Controller\Base;
 
 class Login extends Base
 {
@@ -776,7 +777,7 @@ class Login extends Base
 
                         //  Fetch the image
                         //  @todo Consider streaming directly to the filesystem
-                        $oHttpClient = \Nails\Factory::factory('HttpClient');
+                        $oHttpClient = Factory::factory('HttpClient');
 
                         try {
 
@@ -785,7 +786,7 @@ class Login extends Base
                             if ($oResponse->getStatusCode() === 200) {
 
                                 //  Attempt upload
-                                $oCdn = \Nails\Factory::service('Cdn', 'nailsapp/module-cdn');
+                                $oCdn = Factory::service('Cdn', 'nailsapp/module-cdn');
 
                                 //  Save file to cache
                                 $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;

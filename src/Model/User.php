@@ -12,8 +12,8 @@
 
 namespace Nails\Auth\Model;
 
-use \Nails\Factory;
-use \Nails\Common\Model\Base;
+use Nails\Factory;
+use Nails\Common\Model\Base;
 
 class User extends Base
 {
@@ -690,7 +690,7 @@ class User extends Base
      */
     public function getByIdentifier($identifier)
     {
-        \Nails\Factory::helper('email');
+        Factory::helper('email');
 
         switch (APP_NATIVE_LOGIN_USING) {
 
@@ -2250,7 +2250,7 @@ class User extends Base
      */
     protected function generateReferral()
     {
-        \Nails\Factory::helper('string');
+        Factory::helper('string');
 
         while (1 > 0) {
 

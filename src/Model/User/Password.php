@@ -12,10 +12,12 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Factory;
+
 class Password extends \Nails\Common\Model\Base
 {
-    use \Nails\Common\Traits\ErrorHandling;
-    use \Nails\Common\Traits\Caching;
+    use Nails\Common\Traits\ErrorHandling;
+    use Nails\Common\Traits\Caching;
 
     // --------------------------------------------------------------------------
 
@@ -264,7 +266,7 @@ class Password extends \Nails\Common\Model\Base
 
         if (!empty($aFailedRequirements)) {
 
-            \Nails\Factory::helper('string');
+            Factory::helper('string');
             $sError = 'Password must contain ' . implode(', ', $aFailedRequirements) . '.';
             $sError = str_lreplace(', ', ' and ', $sError);
             $this->_set_error($sError);
@@ -482,7 +484,7 @@ class Password extends \Nails\Common\Model\Base
 
         $sStr = 'Passwords must ' . strtolower(implode(', ', $aRules)) . '.';
 
-        \Nails\Factory::helper('string');
+        Factory::helper('string');
         return str_lreplace(', ', ' and ', $sStr);
     }
 

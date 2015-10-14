@@ -12,7 +12,7 @@
 
 namespace Nails\Auth\Controller;
 
-use \Nails\Auth\Controller\Base;
+use Nails\Auth\Controller\Base;
 
 class BaseMfa extends Base
 {

@@ -1,7 +1,5 @@
 <?php
 
-namespace Nails\Api\Auth;
-
 /**
  * Returns information about the currently logged in user
  *
@@ -11,6 +9,8 @@ namespace Nails\Api\Auth;
  * @author      Nails Dev Team
  * @link
  */
+
+namespace Nails\Api\Auth;
 
 class Me extends \Nails\Api\Controller\Base
 {

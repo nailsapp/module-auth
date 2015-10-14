@@ -10,7 +10,7 @@
  * @link
  */
 
-use \Nails\Auth\Controller\BaseMfa;
+use Nails\Auth\Controller\BaseMfa;
 
 class Mfa_device extends BaseMfa
 {

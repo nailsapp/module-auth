@@ -12,11 +12,11 @@
 
 namespace Nails\Auth\Model\User;
 
-use \Nails\Factory;
+use Nails\Factory;
 
 class Meta
 {
-    use \Nails\Common\Traits\Caching;
+    use Nails\Common\Traits\Caching;
 
     // --------------------------------------------------------------------------
 

@@ -1,7 +1,5 @@
 <?php
 
-namespace Nails\Api\Auth;
-
 /**
  * Access Token API endpoints
  *
@@ -12,6 +10,10 @@ namespace Nails\Api\Auth;
  * @link
  */
 
+namespace Nails\Api\Auth;
+
+use Nails\Factory;
+
 class AccessToken extends \Nails\Api\Controller\Base
 {
     /**
@@ -20,7 +22,7 @@ class AccessToken extends \Nails\Api\Controller\Base
      */
     public function postIndex()
     {
-        $oAuthModel  = \Nails\Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel  = Factory::model('Auth', 'nailsapp/module-auth');
         $sIdentifier = $this->input->post('identifier');
         $sPassword   = $this->input->post('password');
         $sScope      = $this->input->post('scope');

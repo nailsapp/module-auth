@@ -11,7 +11,7 @@
  * @todo  Refactor this class so that not so much code is being duplicated, especially re: MFA
  */
 
-use \Nails\Auth\Controller\Base;
+use Nails\Auth\Controller\Base;
 
 class Forgotten_Password extends Base
 {

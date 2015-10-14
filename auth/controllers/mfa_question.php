@@ -9,7 +9,7 @@
  * @author      Nails Dev Team
  * @link
  */
-use \Nails\Auth\Controller\BaseMfa;
+use Nails\Auth\Controller\BaseMfa;
 
 class Mfa_question extends BaseMfa
 {

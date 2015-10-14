@@ -10,7 +10,7 @@
  * @link
  */
 
-use \Nails\Auth\Controller\Base;
+use Nails\Auth\Controller\Base;
 
 class Reset_Password extends Base
 {

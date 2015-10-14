@@ -12,6 +12,8 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Factory;
+
 class AccessToken extends \Nails\Common\Model\Base
 {
     protected $defaultExpiration;
@@ -74,7 +76,7 @@ class AccessToken extends \Nails\Common\Model\Base
         //  If not specified, generate an expiration date 6 months from now
         if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
 
-            $expires = \Nails\Factory::factory('DateTime');
+            $expires = Factory::factory('DateTime');
             $expires->add(new DateInterval($this->defaultExpiration));
 
             $data['expires'] = $expires->format('Y-m-d H:i:s');
