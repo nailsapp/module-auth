@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
 class Settings extends BaseAdmin
@@ -250,6 +251,6 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load view
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 }

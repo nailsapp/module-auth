@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
 class Accounts extends BaseAdmin
@@ -133,7 +134,7 @@ class Accounts extends BaseAdmin
 
         if (count($groupsFilter) > 1) {
 
-            $cbFilters[] = \Nails\Admin\Helper::searchFilterObject(
+            $cbFilters[] = Helper::searchFilterObject(
                 $tablePrefix . '.group_id',
                 'User Group',
                 $groupsFilter
@@ -156,18 +157,18 @@ class Accounts extends BaseAdmin
         $this->data['users'] = $this->user_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
-        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
+        $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
         if (userHasPermission('admin:auth:accounts:create')) {
 
-             \Nails\Admin\Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
+             Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
         }
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -349,7 +350,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load views
-        \Nails\Admin\Helper::loadView('create/index');
+        Helper::loadView('create/index');
     }
 
     // --------------------------------------------------------------------------
@@ -761,7 +762,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load views
-        \Nails\Admin\Helper::loadView('edit/index');
+        Helper::loadView('edit/index');
     }
 
     // --------------------------------------------------------------------------
@@ -817,7 +818,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load views
-        \Nails\Admin\Helper::loadView('changeGroup/index');
+        Helper::loadView('changeGroup/index');
     }
 
     // --------------------------------------------------------------------------

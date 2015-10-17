@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
 class Merge extends BaseAdmin
@@ -85,7 +86,7 @@ class Merge extends BaseAdmin
 
                         $this->data['mergeResult'] = $mergeResult;
 
-                        \Nails\Admin\Helper::loadView('preview');
+                        Helper::loadView('preview');
                         return;
 
                     } else {
@@ -115,6 +116,6 @@ class Merge extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load views
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 }

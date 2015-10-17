@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
 class Groups extends BaseAdmin
@@ -90,12 +91,12 @@ class Groups extends BaseAdmin
 
         if (userHasPermission('admin:auth:groups:create')) {
 
-            \Nails\Admin\Helper::addHeaderButton('admin/auth/groups/create', 'Create Group');
+            Helper::addHeaderButton('admin/auth/groups/create', 'Create Group');
         }
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -224,7 +225,7 @@ class Groups extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load views
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
