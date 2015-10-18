@@ -67,7 +67,7 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oSocial                 = Factory::service('SocialSignOn', 'nailsapp/module-auth');
-        $providers               = $oSocial->get_providers();
+        $providers               = $oSocial->getProviders();
         $this->data['providers'] = $providers;
 
         // --------------------------------------------------------------------------
@@ -121,7 +121,7 @@ class Settings extends BaseAdmin
 
                                         }
 
-                                        if ( empty($label1['encrypted'])) {
+                                        if (-empty($label1['encrypted'])) {
 
                                             $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
 
@@ -141,7 +141,7 @@ class Settings extends BaseAdmin
                                         break 2;
                                     }
 
-                                    if ( empty($label['encrypted'])) {
+                                    if (empty($label['encrypted'])) {
 
                                         $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
 

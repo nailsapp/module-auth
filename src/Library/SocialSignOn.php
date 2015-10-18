@@ -12,6 +12,8 @@
 
 namespace Nails\Auth\Library;
 
+use Nails\Factory;
+
 class SocialSignOn
 {
     use \Nails\Common\Traits\ErrorHandling;
@@ -19,10 +21,10 @@ class SocialSignOn
 
     // --------------------------------------------------------------------------
 
-    protected $_ci;
-    protected $db;
-    protected $_providers;
-    protected $_hybrid;
+    protected $oDb;
+    protected $oUserModel;
+    protected $aProviders;
+    protected $oHybridAuth;
 
     // --------------------------------------------------------------------------
 
@@ -31,82 +33,90 @@ class SocialSignOn
      */
     public function __construct()
     {
-        $this->_ci        =& get_instance();
-        $this->db         =& $this->_ci->db;
-        $this->_providers = array('all' => array(), 'enabled' => array(), 'disabled' => array());
+        $oCi              = get_instance();
+        $this->oDb        = Factory::service('Database');
+        $this->oUserModel = Factory::service('User', 'nailsapp/module-auth');
+
+        $this->aProviders = array('all' => array(), 'enabled' => array(), 'disabled' => array());
 
         //  Set up Providers
-        $this->_ci->config->load('auth/auth');
-        $_config = $this->_ci->config->item('auth_social_signon_providers');
+        $oCi->config->load('auth/auth');
+        $aConfig = $oCi->config->item('auth_social_signon_providers');
 
-        if (is_array($_config) && !empty($_config)) {
+        if (is_array($aConfig) && !empty($aConfig)) {
 
-            foreach ($_config as $provider) {
+            foreach ($aConfig as $aProvider) {
 
-                $this->_providers['all'][strtolower($provider['slug'])] = $provider;
+                $this->aProviders['all'][strtolower($aProvider['slug'])] = $aProvider;
 
-                if (app_setting('auth_social_signon_' . $provider['slug'] . '_enabled', 'auth') ) {
+                if (app_setting('auth_social_signon_' . $aProvider['slug'] . '_enabled', 'auth')) {
 
-                    $this->_providers['enabled'][strtolower($provider['slug'])] = $provider;
+                    $this->aProviders['enabled'][strtolower($aProvider['slug'])] = $aProvider;
 
                 } else {
 
-                    $this->_providers['disabled'][strtolower($provider['slug'])] = $provider;
+                    $this->aProviders['disabled'][strtolower($aProvider['slug'])] = $aProvider;
                 }
             }
 
         } else {
 
-            showFatalError('No providers are configured', 'No providers for HybridAuth have been specified or the configuration array is empty.');
+            showFatalError(
+                'No providers are configured',
+                'No providers for HybridAuth have been specified or the configuration array is empty.'
+            );
         }
 
         // --------------------------------------------------------------------------
 
         //  Set up Hybrid Auth
-        $_config               = array();
-        $_config['base_url']   = site_url('vendor/hybridauth/hybridauth/hybridauth/index.php');
-        $_config['providers']  = array();
-        $_config['debug_mode'] = strtoupper(ENVIRONMENT) !== 'PRODUCTION';
-        $_config['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . date('Y-m-d') . '.php';
+        $aConfig               = array();
+        $aConfig['base_url']   = site_url('vendor/hybridauth/hybridauth/hybridauth/index.php');
+        $aConfig['providers']  = array();
+        $aConfig['debug_mode'] = strtoupper(ENVIRONMENT) !== 'PRODUCTION';
+        $aConfig['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . date('Y-m-d') . '.php';
 
-        foreach ($this->_providers['enabled'] as $provider) {
+        foreach ($this->aProviders['enabled'] as $aProvider) {
 
-            $_temp              = array();
-            $_temp['enabled']   = true;
+            $aTemp              = array();
+            $aTemp['enabled']   = true;
 
-            if ($provider['fields']) {
+            if ($aProvider['fields']) {
 
-                foreach ($provider['fields'] as $key => $label) {
+                foreach ($aProvider['fields'] as $key => $label) {
 
-                    if (is_array($label) && !isset($label['label']) ) {
+                    if (is_array($label) && !isset($label['label'])) {
 
-                        $_temp[$key] = array();
+                        $aTemp[$key] = array();
 
                         foreach ($label as $key1 => $label1) {
 
-                            $_temp[$key][$key1] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1, 'auth');
+                            $aTemp[$key][$key1] = app_setting(
+                                'auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1,
+                                'auth'
+                            );
                         }
 
                     } else {
 
-                        $_temp[$key] = app_setting('auth_social_signon_' . $provider['slug'] . '_' . $key, 'auth');
+                        $aTemp[$key] = app_setting('auth_social_signon_' . $aProvider['slug'] . '_' . $key, 'auth');
                     }
                 }
 
-                if (!empty($provider['wrapper'])) {
+                if (!empty($aProvider['wrapper'])) {
 
-                    $_temp['wrapper'] = $provider['wrapper'];
+                    $aTemp['wrapper'] = $aProvider['wrapper'];
                 }
             }
 
-            $_config['providers'][$provider['class']] = $_temp;
+            $aConfig['providers'][$aProvider['class']] = $aTemp;
         }
 
         try {
 
-            $this->_hybrid = new \Hybrid_Auth($_config);
+            $this->oHybridAuth = new \Hybrid_Auth($aConfig);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             /**
              * An exception occurred during instantiation, this is probably a result
@@ -117,11 +127,11 @@ class SocialSignOn
              * *did* happened but results in an unfriendly error screen and potential drop off.
              */
 
-            switch ($this->_ci->config->item('auth_social_signon_init_fail_behaviour')) {
+            switch ($oCi->config->item('auth_social_signon_init_fail_behaviour')) {
 
                 case 'reinit':
 
-                    $this->_hybrid = new \Hybrid_Auth($_config);
+                    $this->oHybridAuth = new \Hybrid_Auth($aConfig);
                     break;
 
                 case 'error':
@@ -139,9 +149,9 @@ class SocialSignOn
      * Determines whether social sign on is enabled or not
      * @return boolean
      */
-    public function is_enabled()
+    public function isEnabled()
     {
-        return app_setting('auth_social_signon_enabled', 'auth') && $this->get_providers('ENABLED');
+        return app_setting('auth_social_signon_enabled', 'auth') && $this->getProviders('ENABLED');
     }
 
     // --------------------------------------------------------------------------
@@ -151,19 +161,19 @@ class SocialSignOn
      * @param  string $status The filter to apply
      * @return array
      */
-    public function get_providers($status = null)
+    public function getProviders($status = null)
     {
         if ($status == 'ENABLED') {
 
-            return $this->_providers['enabled'];
+            return $this->aProviders['enabled'];
 
-        } elseif($status == 'DISABLED') {
+        } elseif ($status == 'DISABLED') {
 
-            return $this->_providers['disabled'];
+            return $this->aProviders['disabled'];
 
         } else {
 
-            return $this->_providers['all'];
+            return $this->aProviders['all'];
         }
     }
 
@@ -174,9 +184,16 @@ class SocialSignOn
      * @param  string $provider The provider to return
      * @return mixed            Array on success, false on failure
      */
-    public function get_provider($provider)
+    public function getProvider($provider)
     {
-        return isset($this->_providers['all'][strtolower($provider)]) ? $this->_providers['all'][strtolower($provider)] : false;
+        if (isset($this->aProviders['all'][strtolower($provider)])) {
+
+            return $this->aProviders['all'][strtolower($provider)];
+
+        } else {
+
+            return false;
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -186,9 +203,9 @@ class SocialSignOn
      * @param  string $provider The provider to return
      * @return mixed            String on success, null on failure
      */
-    protected function _get_provider_class($provider)
+    protected function getProviderClass($provider)
     {
-        $providers = $this->get_providers();
+        $providers = $this->getProviders();
         return isset($providers[strtolower($provider)]['class']) ? $providers[strtolower($provider)]['class'] : null;
     }
 
@@ -199,9 +216,9 @@ class SocialSignOn
      * @param  string  $provider The provider to check
      * @return boolean
      */
-    public function is_valid_provider($provider)
+    public function isValidProvider($provider)
     {
-        return !empty($this->_providers['enabled'][strtolower($provider)]);
+        return !empty($this->aProviders['enabled'][strtolower($provider)]);
     }
 
     // --------------------------------------------------------------------------
@@ -216,10 +233,10 @@ class SocialSignOn
     {
         try {
 
-            $provider = $this->_get_provider_class($provider);
-            return $this->_hybrid->authenticate($provider, $params);
+            $provider = $this->getProviderClass($provider);
+            return $this->oHybridAuth->authenticate($provider, $params);
 
-        } catch(Exception $e) {
+        } catch (\Exception $e) {
             $this->_set_error('Provider Error: ' . $e->getMessage());
             return false;
         }
@@ -232,7 +249,7 @@ class SocialSignOn
      * @param  sting $provider The name of the provider.
      * @return mixed           Hybrid_User_Profile on success, false on failure
      */
-    public function get_user_profile($provider)
+    public function getUserProfile($provider)
     {
         $adapter = $this->authenticate($provider);
 
@@ -240,7 +257,7 @@ class SocialSignOn
 
             return $adapter->getUserProfile();
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             $this->_set_error('Provider Error: ' . $e->getMessage());
             return false;
@@ -255,7 +272,7 @@ class SocialSignOn
      */
     public function logout()
     {
-        $this->_hybrid->logoutAllProviders();
+        $this->oHybridAuth->logoutAllProviders();
     }
 
     // --------------------------------------------------------------------------
@@ -266,20 +283,20 @@ class SocialSignOn
      * @param  string  $identifier The provider's user ID
      * @return mixed               stdClass on success, false on failure
      */
-    public function get_user_by_provider_identifier($provider, $identifier)
+    public function getUserByProviderId($provider, $identifier)
     {
-        $this->db->select('user_id');
-        $this->db->where('provider', $provider);
-        $this->db->where('identifier', $identifier);
+        $this->oDb->select('user_id');
+        $this->oDb->where('provider', $provider);
+        $this->oDb->where('identifier', $identifier);
 
-        $_user = $this->db->get(NAILS_DB_PREFIX . 'user_social')->row();
+        $oUser = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->row();
 
-        if (empty($_user)) {
+        if (empty($oUser)) {
 
             return false;
         }
 
-        return $this->_ci->user_model->get_by_id($_user->user_id, $extended);
+        return $this->oUserModel->get_by_id($oUser->user_id, $extended);
     }
 
     // --------------------------------------------------------------------------
@@ -290,7 +307,7 @@ class SocialSignOn
      * @param  string $provider The providers to save
      * @return boolean
      */
-    public function save_session($user_id = null, $provider = array())
+    public function saveSession($user_id = null, $provider = array())
     {
         if (empty($user_id)) {
 
@@ -303,7 +320,7 @@ class SocialSignOn
             return false;
         }
 
-        $_user = $this->_ci->user_model->get_by_id($user_id);
+        $_user = $this->oUserModel->get_by_id($user_id);
 
         if (!$_user) {
 
@@ -326,7 +343,7 @@ class SocialSignOn
 
         // --------------------------------------------------------------------------
 
-        $_session     = $this->_hybrid->getSessionData();
+        $_session     = $this->oHybridAuth->getSessionData();
         $_session     = unserialize($_session);
         $_save        = array();
         $_identifiers = array();
@@ -361,7 +378,7 @@ class SocialSignOn
             }
 
             //  Conencted?
-            if (!$this->is_connected_with($provider)) {
+            if (!$this->isConnectedWith($provider)) {
 
                 unset($_save[$provider]);
                 continue;
@@ -370,7 +387,7 @@ class SocialSignOn
             //  Got an identifier?
             try {
 
-                $_adapter = $this->_hybrid->getAdapter($provider);
+                $_adapter = $this->oHybridAuth->getAdapter($provider);
                 $_profile = $_adapter->getUserProfile();
 
                 if (!empty($_profile->identifier)) {
@@ -378,7 +395,7 @@ class SocialSignOn
                     $_identifiers[$provider] = $_profile->identifier;
                 }
 
-            } catch(Exception $e) {
+            } catch (\Exception $e) {
 
                 unset($_save[$provider]);
                 continue;
@@ -392,8 +409,8 @@ class SocialSignOn
          * updating their data
          */
 
-        $this->db->where('user_id', $user_id);
-        $_existing  = $this->db->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $this->oDb->where('user_id', $user_id);
+        $_existing  = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
         $_exists    = array();
 
         foreach ($_existing as $existing) {
@@ -404,7 +421,7 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Save data
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         foreach ($_save as $provider => $keys) {
 
@@ -416,9 +433,9 @@ class SocialSignOn
                 $_data['session_data']  = serialize($keys);
                 $_data['modified']      = date('Y-m-d H:i{s');
 
-                $this->db->set($_data);
-                $this->db->where('id',  $_exists[$provider]);
-                $this->db->update(NAILS_DB_PREFIX . 'user_social');
+                $this->oDb->set($_data);
+                $this->oDb->where('id', $_exists[$provider]);
+                $this->oDb->update(NAILS_DB_PREFIX . 'user_social');
 
             } else {
 
@@ -431,21 +448,21 @@ class SocialSignOn
                 $_data['created']       = date('Y-m-d H:i:s');
                 $_data['modified']      = $_data['created'];
 
-                $this->db->set($_data);
-                $this->db->insert(NAILS_DB_PREFIX . 'user_social');
+                $this->oDb->set($_data);
+                $this->oDb->insert(NAILS_DB_PREFIX . 'user_social');
             }
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->db->trans_status() === false) {
+        if ($this->oDb->trans_status() === false) {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
 
         } else {
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return true;
         }
     }
@@ -457,7 +474,7 @@ class SocialSignOn
      * @param  mixed $user_id The User's ID (if null, then the active user ID is used)
      * @return boolean
      */
-    public function restore_session($user_id = null)
+    public function restoreSession($user_id = null)
     {
         if (empty($user_id)) {
 
@@ -470,7 +487,7 @@ class SocialSignOn
             return false;
         }
 
-        $_user = $this->_ci->user_model->get_by_id($user_id);
+        $_user = $oUserModel->get_by_id($user_id);
 
         if (!$_user) {
 
@@ -481,12 +498,12 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Clean slate
-        $this->_hybrid->logoutAllProviders();
+        $this->oHybridAuth->logoutAllProviders();
 
         // --------------------------------------------------------------------------
 
-        $this->db->where('user_id', $_user->id);
-        $_sessions  = $this->db->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $this->oDb->where('user_id', $_user->id);
+        $_sessions  = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
         $_restore   = array();
 
         foreach ($_sessions as $session) {
@@ -495,7 +512,7 @@ class SocialSignOn
             $_restore = array_merge($_restore, $session->session_data);
         }
 
-        return $this->_hybrid->restoreSessionData(serialize($_restore));
+        return $this->oHybridAuth->restoreSessionData(serialize($_restore));
     }
 
     // --------------------------------------------------------------------------
@@ -505,10 +522,10 @@ class SocialSignOn
      * @param  string  $provider the provider to test for
      * @return boolean
      */
-    public function is_connected_with($provider)
+    public function isConnectedWith($provider)
     {
-        $provider = $this->_get_provider_class($provider);
-        return $this->_hybrid->isConnectedWith($provider);
+        $provider = $this->getProviderClass($provider);
+        return $this->oHybridAuth->isConnectedWith($provider);
     }
 
     // --------------------------------------------------------------------------
@@ -517,9 +534,9 @@ class SocialSignOn
      * Returns an array of connected providers (for the active user)
      * @return array
      */
-    public function get_connected_providers()
+    public function getConnectedProviders()
     {
-        return $this->_hybrid->getConnectedProviders();
+        return $this->oHybridAuth->getConnectedProviders();
     }
 
     // --------------------------------------------------------------------------
@@ -532,7 +549,7 @@ class SocialSignOn
      */
     public function api($provider, $call = '')
     {
-        if (!  $this->is_connected_with($provider)) {
+        if (!  $this->isConnectedWith($provider)) {
 
             $this->_set_error('Not connected with provider "' . $provider . '"');
             return false;
@@ -540,11 +557,11 @@ class SocialSignOn
 
         try {
 
-            $_provider = $this->_get_provider_class($provider);
-            $_provider = $this->_hybrid->getAdapter($_provider);
+            $_provider = $this->getProviderClass($provider);
+            $_provider = $this->oHybridAuth->getAdapter($_provider);
             return $_provider->api()->api($call);
 
-        } catch(Exception $e) {
+        } catch (\Exception $e) {
 
             $this->_set_error('Provider Error: ' . $e->getMessage());
             return false;

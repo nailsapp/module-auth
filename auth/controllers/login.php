@@ -144,8 +144,8 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->data['social_signon_enabled']   = $this->oSocial->is_enabled();
-        $this->data['social_signon_providers'] = $this->oSocial->get_providers('ENABLED');
+        $this->data['social_signon_enabled']   = $this->oSocial->isEnabled();
+        $this->data['social_signon_providers'] = $this->oSocial->getProviders('ENABLED');
 
         // --------------------------------------------------------------------------
 
@@ -453,7 +453,7 @@ class Login extends Base
     {
         //  Get the adapter, HybridAuth will handle the redirect
         $adapter  = $this->oSocial->authenticate($provider);
-        $provider = $this->oSocial->get_provider($provider);
+        $provider = $this->oSocial->getProvider($provider);
 
         // --------------------------------------------------------------------------
 
@@ -495,7 +495,7 @@ class Login extends Base
             redirect($redirectUrl);
         }
 
-        $user = $this->oSocial->get_user_by_provider_identifier($provider['slug'], $socialUser->identifier);
+        $user = $this->oSocial->getUserByProviderId($provider['slug'], $socialUser->identifier);
 
         // --------------------------------------------------------------------------
 
@@ -553,7 +553,7 @@ class Login extends Base
 
                 //  Fab, user exists, try to log them in
                 $this->user_model->setLoginData($user->id);
-                $this->oSocial->save_session($user->id);
+                $this->oSocial->saveSession($user->id);
 
                 if (!$this->_login($user)) {
 
@@ -577,7 +577,7 @@ class Login extends Base
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($this->oSocial->save_session(activeUser('id'), $provider)) {
+            if ($this->oSocial->saveSession(activeUser('id'), $provider)) {
 
                 create_event('did_link_provider', array('provider' => $provider));
                 $this->session->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
@@ -768,7 +768,7 @@ class Login extends Base
                      * - Upload profile image if available
                      */
 
-                    $this->oSocial->save_session($newUser->id, $provider);
+                    $this->oSocial->saveSession($newUser->id, $provider);
 
                     if (!empty($socialUser->photoURL)) {
 
@@ -1017,7 +1017,7 @@ class Login extends Base
         } else {
 
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
-            if ($this->oSocial->is_valid_provider($method)) {
+            if ($this->oSocial->isValidProvider($method)) {
 
                 $this->socialSignon($method);
 

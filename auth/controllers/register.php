@@ -209,8 +209,8 @@ class Register extends Base
 
         $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
 
-        $this->data['social_signon_enabled']   = $oSocial->is_enabled();
-        $this->data['social_signon_providers'] = $oSocial->get_providers('ENABLED');
+        $this->data['social_signon_enabled']   = $oSocial->isEnabled();
+        $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');
         $this->data['passwordRulesAsString']   = $this->user_password_model->getRulesAsString($iDefaultGroupId);
 
         // --------------------------------------------------------------------------
