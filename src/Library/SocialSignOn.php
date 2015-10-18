@@ -10,7 +10,9 @@
  * @link
  */
 
-class Social_signon
+namespace Nails\Auth\Library;
+
+class SocialSignOn
 {
     use \Nails\Common\Traits\ErrorHandling;
     use \Nails\Common\Traits\Caching;
@@ -102,7 +104,7 @@ class Social_signon
 
         try {
 
-            $this->_hybrid = new Hybrid_Auth($_config);
+            $this->_hybrid = new \Hybrid_Auth($_config);
 
         } catch (Exception $e) {
 
@@ -119,7 +121,7 @@ class Social_signon
 
                 case 'reinit':
 
-                    $this->_hybrid = new Hybrid_Auth($_config);
+                    $this->_hybrid = new \Hybrid_Auth($_config);
                     break;
 
                 case 'error':

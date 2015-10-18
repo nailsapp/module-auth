@@ -16,6 +16,14 @@ use Nails\Auth\Controller\Base;
 class Login extends Base
 {
     /**
+     * The social sign on instance
+     * @var \Nails\Auth\Library\SocialSignOn
+     */
+    private $oSocial;
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()
@@ -26,7 +34,7 @@ class Login extends Base
 
         //  Load libraries
         $this->load->library('form_validation');
-        $this->load->library('auth/social_signon');
+        $this->oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
 
         // --------------------------------------------------------------------------
 
@@ -136,8 +144,8 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->data['social_signon_enabled']   = $this->social_signon->is_enabled();
-        $this->data['social_signon_providers'] = $this->social_signon->get_providers('ENABLED');
+        $this->data['social_signon_enabled']   = $this->oSocial->is_enabled();
+        $this->data['social_signon_providers'] = $this->oSocial->get_providers('ENABLED');
 
         // --------------------------------------------------------------------------
 
@@ -444,8 +452,8 @@ class Login extends Base
     protected function socialSignon($provider)
     {
         //  Get the adapter, HybridAuth will handle the redirect
-        $adapter  = $this->social_signon->authenticate($provider);
-        $provider = $this->social_signon->get_provider($provider);
+        $adapter  = $this->oSocial->authenticate($provider);
+        $provider = $this->oSocial->get_provider($provider);
 
         // --------------------------------------------------------------------------
 
@@ -487,7 +495,7 @@ class Login extends Base
             redirect($redirectUrl);
         }
 
-        $user = $this->social_signon->get_user_by_provider_identifier($provider['slug'], $socialUser->identifier);
+        $user = $this->oSocial->get_user_by_provider_identifier($provider['slug'], $socialUser->identifier);
 
         // --------------------------------------------------------------------------
 
@@ -545,7 +553,7 @@ class Login extends Base
 
                 //  Fab, user exists, try to log them in
                 $this->user_model->setLoginData($user->id);
-                $this->social_signon->save_session($user->id);
+                $this->oSocial->save_session($user->id);
 
                 if (!$this->_login($user)) {
 
@@ -569,7 +577,7 @@ class Login extends Base
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($this->social_signon->save_session(activeUser('id'), $provider)) {
+            if ($this->oSocial->save_session(activeUser('id'), $provider)) {
 
                 create_event('did_link_provider', array('provider' => $provider));
                 $this->session->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
@@ -760,7 +768,7 @@ class Login extends Base
                      * - Upload profile image if available
                      */
 
-                    $this->social_signon->save_session($newUser->id, $provider);
+                    $this->oSocial->save_session($newUser->id, $provider);
 
                     if (!empty($socialUser->photoURL)) {
 
@@ -1009,7 +1017,7 @@ class Login extends Base
         } else {
 
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
-            if ($this->social_signon->is_valid_provider($method)) {
+            if ($this->oSocial->is_valid_provider($method)) {
 
                 $this->socialSignon($method);
 

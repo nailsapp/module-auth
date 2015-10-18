@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Register extends Base
@@ -33,7 +34,6 @@ class Register extends Base
 
         //  Load libraries
         $this->load->library('form_validation');
-        $this->load->library('auth/social_signon');
 
         // --------------------------------------------------------------------------
 
@@ -207,8 +207,10 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->data['social_signon_enabled']   = $this->social_signon->is_enabled();
-        $this->data['social_signon_providers'] = $this->social_signon->get_providers('ENABLED');
+        $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+
+        $this->data['social_signon_enabled']   = $oSocial->is_enabled();
+        $this->data['social_signon_providers'] = $oSocial->get_providers('ENABLED');
         $this->data['passwordRulesAsString']   = $this->user_password_model->getRulesAsString($iDefaultGroupId);
 
         // --------------------------------------------------------------------------

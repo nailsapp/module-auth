@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Logout extends Base
@@ -54,8 +55,8 @@ class Logout extends Base
         $this->auth_model->logout();
 
         //  Log social media out, too
-        $this->load->library( 'auth/social_signon' );
-        $this->social_signon->logout();
+        $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+        $oSocial->logout();
 
         // --------------------------------------------------------------------------
 

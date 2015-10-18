@@ -1,6 +1,22 @@
 <?php
 
 return array(
+    'services' => array(
+        'Session' => function () {
+            if (class_exists('\App\Auth\Library\Session')) {
+                return new \App\Auth\Library\Session();
+            } else {
+                return new \Nails\Auth\Library\Session();
+            }
+        },
+        'SocialSignOn' => function () {
+            if (class_exists('\App\Auth\Library\SocialSignOn')) {
+                return new \App\Auth\Library\SocialSignOn();
+            } else {
+                return new \Nails\Auth\Library\SocialSignOn();
+            }
+        }
+    ),
     'models' => array(
         'Auth' => function () {
             if (class_exists('\App\Auth\Model\Auth')) {
