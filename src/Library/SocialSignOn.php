@@ -487,7 +487,7 @@ class SocialSignOn
             return false;
         }
 
-        $_user = $oUserModel->get_by_id($user_id);
+        $_user = $this->oUserModel->get_by_id($user_id);
 
         if (!$_user) {
 
