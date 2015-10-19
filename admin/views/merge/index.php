@@ -9,14 +9,18 @@
         <p>
             This user account is the one you wish to merge other user's data into.
         </p>
-        <input type="text" id="userId" name="userId" />
+        <p>
+            <input type="text" id="userId" name="userId" />
+        </p>
     </fieldset>
     <fieldset>
         <legend>Users to merge</legend>
         <p>
             These accounts will have their data merged into the above user and then be deleted.
         </p>
-        <input type="text" id="mergeIds" name="mergeIds" />
+        <p>
+            <input type="text" id="mergeIds" name="mergeIds" />
+        </p>
     </fieldset>
     <?=form_submit('submit', 'Preview Merge', 'class="awesome green"')?>
     <?=form_close()?>

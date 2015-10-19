@@ -190,7 +190,6 @@
             <p>
                 <?=lang('accounts_groups_edit_permission_intro')?>
             </p>
-            <hr />
             <?php
 
             //  Enable Super User status for this user group
@@ -216,7 +215,7 @@
             $sDisplay = $aField['default'] ? 'none' : 'block';
 
             ?>
-            <div id="adminPermissions" class="permissionGroups" style="display:<?=$sDisplay?>;">
+            <div id="adminPermissions" class="permission-groups" style="display:<?=$sDisplay?>;">
                 <div class="search" id="permissionSearch">
                     <div class="search-text">
                         <?=form_input('', '', 'autocomplete="off" placeholder="Type to filter permissions"')?>
@@ -231,7 +230,7 @@
                     $sPermissionSlug = $permissions[$i]->slug;
 
                     ?>
-                    <fieldset class="permissionGroup">
+                    <fieldset class="permission-group">
                         <legend><?=$permissions[$i]->label?></legend>
                         <table>
                             <thead>

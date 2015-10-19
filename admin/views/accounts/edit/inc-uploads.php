@@ -3,7 +3,7 @@
 if (isModuleEnabled('nailsapp/module-cdn')) {
 
     ?>
-    <fieldset  id="edit-user-uploads" class="uploads">
+    <fieldset id="edit-user-uploads" class="uploads">
         <legend><?=lang('accounts_edit_upload_legend')?></legend>
         <ul>
         <?php
