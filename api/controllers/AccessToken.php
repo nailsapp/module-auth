@@ -22,19 +22,19 @@ class AccessToken extends \Nails\Api\Controller\Base
      */
     public function postIndex()
     {
-        $oAuthModel  = Factory::model('Auth', 'nailsapp/module-auth');
-        $sIdentifier = $this->input->post('identifier');
-        $sPassword   = $this->input->post('password');
-        $sScope      = $this->input->post('scope');
-        $sLabel      = $this->input->post('tokenLabel');
-        $bIsValid    = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
+        $oAuthModel        = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
+        $sIdentifier       = $this->input->post('identifier');
+        $sPassword         = $this->input->post('password');
+        $sScope            = $this->input->post('scope');
+        $sLabel            = $this->input->post('tokenLabel');
+        $bIsValid          = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
 
         if ($bIsValid) {
 
             $oUser = $this->user_model->getByIdentifier($sIdentifier);
 
-            $this->load->model('auth/user_access_token_model');
-            $oToken = $this->user_access_token_model->create(
+            $oToken = $oAccessTokenModel->create(
                 array(
                     'user_id' => $oUser->id,
                     'label'   => $sLabel,
@@ -53,7 +53,7 @@ class AccessToken extends \Nails\Api\Controller\Base
 
                 $aOut = array(
                     'status' => 500,
-                    'error'  => 'Failed to generate access token. ' . $this->user_access_token_model->last_error()
+                    'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->last_error()
                 );
             }
 
@@ -76,7 +76,8 @@ class AccessToken extends \Nails\Api\Controller\Base
      */
     public function postRevoke()
     {
-        $aOut = array();
+        $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
+        $aOut              = array();
 
         if ($this->user_model->isLoggedIn()) {
 
@@ -84,11 +85,11 @@ class AccessToken extends \Nails\Api\Controller\Base
 
             if (!empty($sAccessToken)) {
 
-                if (!$this->user_access_token_model->revoke(activeUser('id'), $sAccessToken)) {
+                if (!$oAccessTokenModel->revoke(activeUser('id'), $sAccessToken)) {
 
                     $aOut = array(
                         'status' => 500,
-                        'error' => 'Failed to revoke access token. ' . $this->user_access_token_model->last_error()
+                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->last_error()
                     );
                 }
 

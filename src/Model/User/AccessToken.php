@@ -77,7 +77,7 @@ class AccessToken extends \Nails\Common\Model\Base
         if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
 
             $expires = Factory::factory('DateTime');
-            $expires->add(new DateInterval($this->defaultExpiration));
+            $expires->add(new \DateInterval($this->defaultExpiration));
 
             $data['expires'] = $expires->format('Y-m-d H:i:s');
         }
