@@ -281,7 +281,7 @@ class Password extends \Nails\Common\Model\Base
         // --------------------------------------------------------------------------
 
         //  Password is valid, generate hash object
-        return self::generateHashObject($sPassword);
+        return $this->generateHashObject($sPassword);
     }
 
     // --------------------------------------------------------------------------
@@ -309,7 +309,7 @@ class Password extends \Nails\Common\Model\Base
      */
     public function generateNullHash()
     {
-        return self::generateHashObject(null);
+        return $this->generateHashObject(null);
     }
 
     // --------------------------------------------------------------------------
@@ -319,9 +319,9 @@ class Password extends \Nails\Common\Model\Base
      * @param  string $sPassword The password to generate the hash for
      * @return stdClass
      */
-    public static function generateHashObject($sPassword)
+    public function generateHashObject($sPassword)
     {
-        $sSalt = self::salt();
+        $sSalt = $this->salt();
 
         // --------------------------------------------------------------------------
 
@@ -544,7 +544,7 @@ class Password extends \Nails\Common\Model\Base
      * @param  string $sPepper Additional data to inject into the salt
      * @return string
      */
-    public static function salt($sPepper = '')
+    public function salt($sPepper = '')
     {
         return md5(uniqid($sPepper . rand() . DEPLOY_PRIVATE_KEY . APP_PRIVATE_KEY, true));
     }
@@ -566,7 +566,7 @@ class Password extends \Nails\Common\Model\Base
         // --------------------------------------------------------------------------
 
         //  Generate code
-        $sKey = sha1(sha1(self::salt()) . self::salt() . APP_PRIVATE_KEY);
+        $sKey = sha1(sha1($this->salt()) . $this->salt() . APP_PRIVATE_KEY);
         $iTtl = time() + 86400; // 24 hours.
 
         // --------------------------------------------------------------------------

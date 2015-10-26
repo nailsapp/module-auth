@@ -12,6 +12,8 @@
 
 namespace Nails\Auth\Model;
 
+use Nails\Factory;
+
 class Auth extends \Nails\Common\Model\Base
 {
     /**
@@ -283,10 +285,11 @@ class Auth extends \Nails\Common\Model\Base
      */
     public function mfaTokenGenerate($userId)
     {
-        $salt    = NAILS_User_password_model::salt();
-        $ip      = $this->input->ip_address();
-        $created = date('Y-m-d H:i:s');
-        $expires = date('Y-m-d H:i:s', strtotime('+10 MINS'));
+        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $salt           = $oPasswordModel->salt();
+        $ip             = $this->input->ip_address();
+        $created        = date('Y-m-d H:i:s');
+        $expires        = date('Y-m-d H:i:s', strtotime('+10 MINS'));
 
         $token          = array();
         $token['token'] = sha1(sha1(APP_PRIVATE_KEY . $userId . $created . $expires . $ip) . $salt);
@@ -491,14 +494,15 @@ class Auth extends \Nails\Common\Model\Base
             $this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
 
-        $questionData = array();
-        $counter      = 0;
+        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $questionData   = array();
+        $counter        = 0;
 
         foreach ($data as $d) {
 
             $questionData[$counter]             = array();
             $questionData[$counter]['user_id']  = $userId;
-            $questionData[$counter]['salt']     = NAILS_User_password_model::salt();
+            $questionData[$counter]['salt']     = $oPasswordModel->salt();
             $questionData[$counter]['question'] = $this->encrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
             $questionData[$counter]['answer']   = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
             $questionData[$counter]['created']  = date('Y-m-d H:i:s');

@@ -1364,7 +1364,8 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $_code = NAILS_User_password_model::salt();
+        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $_code          = $oPasswordModel->salt();
 
         $this->db->set('user_id', $_u->id);
         $this->db->set('email', $_email);
