@@ -719,7 +719,8 @@ class Login extends Base
 
                     } else {
 
-                        $username = 'user' . date('YmdHis');
+                        $oDate    = Factory::factory('DateTime');
+                        $username = 'user' . $oDate->format('YmdHis');
                     }
 
                     $basename = url_title($username, '-', true);

@@ -286,10 +286,11 @@ class Auth extends \Nails\Common\Model\Base
     public function mfaTokenGenerate($userId)
     {
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oDate          = Factory::factory('DateTime');
         $salt           = $oPasswordModel->salt();
         $ip             = $this->input->ip_address();
-        $created        = date('Y-m-d H:i:s');
-        $expires        = date('Y-m-d H:i:s', strtotime('+10 MINS'));
+        $created        = $oDate->format('Y-m-d H:i:s');
+        $expires        = $oDate->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
 
         $token          = array();
         $token['token'] = sha1(sha1(APP_PRIVATE_KEY . $userId . $created . $expires . $ip) . $salt);
@@ -497,6 +498,8 @@ class Auth extends \Nails\Common\Model\Base
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
         $questionData   = array();
         $counter        = 0;
+        $oDate          = Factory::factory('DateTime');
+        $sDateTime      = $oDate->format('Y-m-d H:i:s');
 
         foreach ($data as $d) {
 
@@ -505,7 +508,7 @@ class Auth extends \Nails\Common\Model\Base
             $questionData[$counter]['salt']     = $oPasswordModel->salt();
             $questionData[$counter]['question'] = $this->encrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
             $questionData[$counter]['answer']   = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
-            $questionData[$counter]['created']  = date('Y-m-d H:i:s');
+            $questionData[$counter]['created']  = $sDateTime;
 
             $counter++;
         }
@@ -641,17 +644,18 @@ class Auth extends \Nails\Common\Model\Base
             if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
 
                 $secret_id = $this->db->insert_id();
+                $oDate     = Factory::factory('DateTime');
 
                 $data   = array();
                 $data[] = array(
                     'secret_id' => $secret_id,
                     'code'      => $code1,
-                    'used'      => date('Y-m-d H:i:s')
+                    'used'      => $oDate->format('Y-m-d H:i:s')
                 );
                 $data[] = array(
                     'secret_id' => $secret_id,
                     'code'      => $code2,
-                    'used'      => date('Y-m-d H:i:s')
+                    'used'      => $oDate->format('Y-m-d H:i:s')
                 );
 
                 $this->db->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $data);

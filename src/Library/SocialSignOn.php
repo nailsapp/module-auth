@@ -70,11 +70,12 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Set up Hybrid Auth
+        $oDate                 = Factory::factory('DateTime');
         $aConfig               = array();
         $aConfig['base_url']   = site_url('vendor/hybridauth/hybridauth/hybridauth/index.php');
         $aConfig['providers']  = array();
         $aConfig['debug_mode'] = strtoupper(ENVIRONMENT) !== 'PRODUCTION';
-        $aConfig['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . date('Y-m-d') . '.php';
+        $aConfig['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php';
 
         foreach ($this->aProviders['enabled'] as $aProvider) {
 
@@ -423,6 +424,8 @@ class SocialSignOn
         //  Save data
         $this->oDb->trans_begin();
 
+        $oDate = Factory::factory('DateTime');
+
         foreach ($_save as $provider => $keys) {
 
             if (isset($_exists[$provider])) {
@@ -431,7 +434,7 @@ class SocialSignOn
                 $_data                  = array();
                 $_data['identifier']    = $_identifiers[$provider];
                 $_data['session_data']  = serialize($keys);
-                $_data['modified']      = date('Y-m-d H:i{s');
+                $_data['modified']      = $oDate->format('Y-m-d H:i{s');
 
                 $this->oDb->set($_data);
                 $this->oDb->where('id', $_exists[$provider]);
@@ -445,7 +448,7 @@ class SocialSignOn
                 $_data['provider']      = $provider;
                 $_data['identifier']    = $_identifiers[$provider];
                 $_data['session_data']  = serialize($keys);
-                $_data['created']       = date('Y-m-d H:i:s');
+                $_data['created']       = $oDate->format('Y-m-d H:i:s');
                 $_data['modified']      = $_data['created'];
 
                 $this->oDb->set($_data);

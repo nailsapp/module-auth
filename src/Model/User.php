@@ -870,8 +870,9 @@ class User extends Base
      */
     public function update($user_id = null, $data = null)
     {
-        $data = (array) $data;
-        $_uid = $this->getUserId($user_id);
+        $oDate = Factory::factory('DateTime');
+        $data  = (array) $data;
+        $_uid  = $this->getUserId($user_id);
         if (empty($_uid)) {
 
             return false;
@@ -915,7 +916,7 @@ class User extends Base
                 $data['password']         = $_hash->password;
                 $data['password_md5']     = $_hash->password_md5;
                 $data['password_engine']  = $_hash->engine;
-                $data['password_changed'] = date('Y-m-d H:i:s');
+                $data['password_changed'] = $oDate->format('Y-m-d H:i:s');
                 $data['salt']             = $_hash->salt;
 
                 $_password_updated = true;
@@ -923,7 +924,6 @@ class User extends Base
             } else {
 
                 $_password_updated = false;
-
             }
 
             //  Set the data
@@ -1123,8 +1123,11 @@ class User extends Base
                     $_email->type               = 'password_updated';
                     $_email->to_id              = $_uid;
                     $_email->data               = array();
-                    $_email->data['updated_at'] = date('Y-m-d H:i:s');
-                    $_email->data['updated_by'] = array('id' => $this->activeUser('id'), 'name' => $this->activeUser('first_name,last_name'));
+                    $_email->data['updated_at'] = $oDate->format('Y-m-d H:i:s');
+                    $_email->data['updated_by'] = array(
+                        'id' => $this->activeUser('id'),
+                        'name' => $this->activeUser('first_name,last_name')
+                    );
                     $_email->data['ip_address'] = $this->input->ip_address();
 
                     $this->emailer->send($_email, true);
@@ -1154,7 +1157,7 @@ class User extends Base
         //  If we just updated the active user we should probably update their session info
         if ($_uid == $this->activeUser('id')) {
 
-            $this->activeUser->last_update = date('Y-m-d H:i:s');
+            $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
             if ($data) {
 
@@ -1403,14 +1406,15 @@ class User extends Base
             //  Update the activeUser
             if ($_u->id == $this->activeUser('id')) {
 
-                $this->activeUser->last_update = date('Y-m-d H:i:s');
+                $oDate = Factory::factory('DateTime');
+                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 if ($is_primary) {
 
                     $this->activeUser->email = $_email;
                     $this->activeUser->email_verification_code = $_code;
                     $this->activeUser->email_is_verified = (bool) $is_verified;
-                    $this->activeUser->email_is_verified_on = (bool) $is_verified ? date('Y-m-d H:i:s') : null;
+                    $this->activeUser->email_is_verified_on = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
                 }
             }
 
@@ -1594,7 +1598,8 @@ class User extends Base
             //  Update the activeUser
             if ($_u->id == $this->activeUser('id')) {
 
-                $this->activeUser->last_update = date('Y-m-d H:i:s');
+                $oDate = Factory::factory('DateTime');
+                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
             }
@@ -1667,7 +1672,8 @@ class User extends Base
             //  Update the activeUser
             if ($_email->user_id == $this->activeUser('id')) {
 
-                $this->activeUser->last_update = date('Y-m-d H:i:s');
+                $oDate = Factory::factory('DateTime');
+                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
             }
@@ -1687,8 +1693,11 @@ class User extends Base
      */
     public function incrementFailedLogin($user_id, $expires = 300)
     {
+        $oDate = Factory::factory('DateTime');
+        $oDate->add(new \DateInterval('PT' . $expires . 'S'));
+
         $this->db->set('failed_login_count', '`failed_login_count`+1', false);
-        $this->db->set('failed_login_expires', date('Y-m-d H:i:s', time() + $expires));
+        $this->db->set('failed_login_expires', $oDate->format('Y-m-d H:i:s'));
         return $this->update($user_id);
     }
 
@@ -1885,6 +1894,8 @@ class User extends Base
      */
     public function create($data, $sendWelcome = true)
     {
+        $oDate = Factory::factory('DateTime');
+
         //  Has an email or a username been submitted?
         if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
@@ -2025,8 +2036,8 @@ class User extends Base
         $_user_data['salt']            = $_password->salt;
         $_user_data['ip_address']      = $this->input->ip_address();
         $_user_data['last_ip']         = $_user_data['ip_address'];
-        $_user_data['created']         = date('Y-m-d H:i:s');
-        $_user_data['last_update']     = date('Y-m-d H:i:s');
+        $_user_data['created']         = $oDate->format('Y-m-d H:i:s');
+        $_user_data['last_update']     = $oDate->format('Y-m-d H:i:s');
         $_user_data['is_suspended']    = !empty($data['is_suspended']);
         $_user_data['temp_pw']         = !empty($data['temp_pw']);
 

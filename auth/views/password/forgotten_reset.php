@@ -5,18 +5,18 @@
 
     ?>
     <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
+        <div class="col-sm-4 col-sm-offset-4">
             <div class="well well-lg">
-                <p>
+                <p class="Center">
                     <?=lang( 'auth_forgot_reset_ok' )?>
                 </p>
                 <div class="row">
-                    <div class="col-md-offset-4 col-md-4">
+                    <div class="col-md-12">
                         <input type="text" value="<?=htmlentities( $new_password )?>" class="form-control" id="temp-password" style="font-size:1.5em;text-align:center;" />
                     </div>
                 </div>
                 <p style="margin-top:1em;">
-                    <?=anchor( 'auth/login', lang( 'auth_forgot_action_proceed' ), 'class="btn btn-primary"' )?>
+                    <?=anchor( 'auth/login', lang( 'auth_forgot_action_proceed' ), 'class="btn btn-primary btn-block"' )?>
                 </p>
             </div>
         </div>
