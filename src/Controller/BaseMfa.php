@@ -157,7 +157,7 @@ class BaseMfa extends Base
 
             if ($this->config->item('authShowLastIpOnLogin')) {
 
-                $status  = 'message';
+                $status  = 'positive';
                 $message = lang(
                     'auth_login_ok_welcome_with_ip',
                     array(
@@ -169,7 +169,7 @@ class BaseMfa extends Base
 
             } else {
 
-                $status  = 'message';
+                $status  = 'positive';
                 $message = lang(
                     'auth_login_ok_welcome',
                     array(
@@ -181,7 +181,7 @@ class BaseMfa extends Base
 
         } else {
 
-            $status  = 'message';
+            $status  = 'positive';
             $message = lang(
                 'auth_login_ok_welcome_notime',
                 array(
@@ -190,7 +190,17 @@ class BaseMfa extends Base
             );
         }
 
-        $this->session->set_flashdata($status, $message);
+        if (function_exists('cdnAvatar')) {
+
+            $sAvatarUrl   = cdnAvatar($this->mfaUser->id, 100, 100);
+            $sloginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
+
+        } else {
+
+            $sloginAvatar = '';
+        }
+
+        $this->session->set_flashdata($status, $sloginAvatar . $message);
 
         // --------------------------------------------------------------------------
 

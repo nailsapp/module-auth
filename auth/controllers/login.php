@@ -253,22 +253,32 @@ class Login extends Base
 
                 if ($this->config->item('authShowLastIpOnLogin')) {
 
-                    $status  = 'message';
+                    $status  = 'positive';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
 
                 } else {
 
-                    $status  = 'message';
+                    $status  = 'positive';
                     $message = lang('auth_login_ok_welcome', array($user->first_name, $lastLogin));
                 }
 
             } else {
 
-                $status  = 'message';
+                $status  = 'positive';
                 $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
             }
 
-            $this->session->set_flashdata($status, $message);
+            if (function_exists('cdnAvatar')) {
+
+                $sAvatarUrl   = cdnAvatar($user->id, 100, 100);
+                $sloginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
+
+            } else {
+
+                $sloginAvatar = '';
+            }
+
+            $this->session->set_flashdata($status, $sloginAvatar . $message);
 
             $redirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $user->group_homepage;
 
@@ -398,22 +408,32 @@ class Login extends Base
 
                 if ($this->config->item('authShowLastIpOnLogin')) {
 
-                    $status  = 'message';
+                    $status  = 'positive';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
 
                 } else {
 
-                    $status  = 'message';
+                    $status  = 'positive';
                     $message = lang('auth_login_ok_welcome', array($user->first_name, $user->last_login));
                 }
 
             } else {
 
-                $status  = 'message';
+                $status  = 'positive';
                 $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
             }
 
-            $this->session->set_flashdata($status, $message);
+            if (function_exists('cdnAvatar')) {
+
+                $sAvatarUrl   = cdnAvatar($user->id, 100, 100);
+                $sloginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
+
+            } else {
+
+                $sloginAvatar = '';
+            }
+
+            $this->session->set_flashdata($status, $sloginAvatar . $message);
 
             // --------------------------------------------------------------------------
 

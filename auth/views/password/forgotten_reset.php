@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-sm-4 col-sm-offset-4">
             <div class="well well-lg">
-                <p class="Center">
+                <p class="center">
                     <?=lang( 'auth_forgot_reset_ok' )?>
                 </p>
                 <div class="row">

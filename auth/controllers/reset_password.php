@@ -230,7 +230,7 @@ class Reset_Password extends Base
 
                                 if ($this->config->item('authShowLastIpOnLogin')) {
 
-                                    $status  = 'message';
+                                    $status  = 'positive';
                                     $message = lang(
                                         'auth_login_ok_welcome_with_ip',
                                         array(
@@ -242,7 +242,7 @@ class Reset_Password extends Base
 
                                 } else {
 
-                                    $status  = 'message';
+                                    $status  = 'positive';
                                     $message = lang(
                                         'auth_login_ok_welcome',
                                         array(
@@ -254,7 +254,7 @@ class Reset_Password extends Base
 
                             } else {
 
-                                $status  = 'message';
+                                $status  = 'positive';
                                 $message = lang(
                                     'auth_login_ok_welcome_notime',
                                     array(
@@ -263,7 +263,17 @@ class Reset_Password extends Base
                                 );
                             }
 
-                            $this->session->set_flashdata($status, $message);
+                            if (function_exists('cdnAvatar')) {
+
+                                $sAvatarUrl   = cdnAvatar($loginUser->id, 100, 100);
+                                $sloginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
+
+                            } else {
+
+                                $sloginAvatar = '';
+                            }
+
+                            $this->session->set_flashdata($status, $sloginAvatar . $message);
 
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($this->config->item('authTwoFactorMode')) {
