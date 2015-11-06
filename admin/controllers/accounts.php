@@ -12,11 +12,16 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
 class Accounts extends BaseAdmin
 {
+    protected $oChangeLogModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Announces this controller's navGroups
      * @return stdClass
@@ -75,6 +80,7 @@ class Accounts extends BaseAdmin
     {
         parent::__construct();
         $this->lang->load('admin_accounts');
+        $this->oChangeLogModel = Factory::model('ChangeLog', 'nailsapp/module-admin');
     }
 
     // --------------------------------------------------------------------------
@@ -305,7 +311,7 @@ class Accounts extends BaseAdmin
                         $name .= ' ' . $new_user->last_name;
                     }
 
-                    $this->admin_changelog_model->add('created', 'a', 'user', $new_user->id, $name, 'admin/auth/accounts/edit/' . $new_user->id);
+                    $this->oChangeLogModel->add('created', 'a', 'user', $new_user->id, $name, 'admin/auth/accounts/edit/' . $new_user->id);
 
                     // --------------------------------------------------------------------------
 
@@ -653,7 +659,7 @@ class Accounts extends BaseAdmin
 
                             if (isset($user->$field)) {
 
-                                $this->admin_changelog_model->add(
+                                $this->oChangeLogModel->add(
                                     'updated',
                                     'a',
                                     'user',
@@ -867,17 +873,33 @@ class Accounts extends BaseAdmin
         //  Define messages
         if (!$user->is_suspended) {
 
-            $this->session->set_flashdata('error', lang('accounts_suspend_error', title_case($user->first_name . ' ' . $user->last_name)));
+            $this->session->set_flashdata(
+                'error',
+                lang('accounts_suspend_error', title_case($user->first_name . ' ' . $user->last_name))
+            );
 
         } else {
 
-            $this->session->set_flashdata('success', lang('accounts_suspend_success', title_case($user->first_name . ' ' . $user->last_name)));
+            $this->session->set_flashdata(
+                'success',
+                lang('accounts_suspend_success', title_case($user->first_name . ' ' . $user->last_name))
+            );
         }
 
         // --------------------------------------------------------------------------
 
         //  Update admin changelog
-        $this->admin_changelog_model->add('suspended', 'a', 'user', $uid, '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name, 'admin/auth/accounts/edit/' . $uid, 'is_suspended', $oldValue, $newValue, false);
+        $this->oChangeLogModel->add(
+            'suspended',
+            'a',
+            'user',
+            $uid,
+            '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name,
+            'admin/auth/accounts/edit/' . $uid, 'is_suspended',
+            $oldValue,
+            $newValue,
+            false
+        );
 
         // --------------------------------------------------------------------------
 
@@ -951,7 +973,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Update admin changelog
-        $this->admin_changelog_model->add(
+        $this->oChangeLogModel->add(
             'unsuspended',
             'a',
             'user',
@@ -1019,14 +1041,26 @@ class Accounts extends BaseAdmin
         //  Define messages
         if ($this->user_model->destroy($uid)) {
 
-            $this->session->set_flashdata('success', lang('accounts_delete_success', title_case($user->first_name . ' ' . $user->last_name)));
+            $this->session->set_flashdata(
+                'success',
+                lang('accounts_delete_success', title_case($user->first_name . ' ' . $user->last_name))
+            );
 
             //  Update admin changelog
-            $this->admin_changelog_model->add('deleted', 'a', 'user', $uid, '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name);
+            $this->oChangeLogModel->add(
+                'deleted',
+                'a',
+                'user',
+                $uid,
+                '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name
+            );
 
         } else {
 
-            $this->session->set_flashdata('error', lang('accounts_delete_error', title_case($user->first_name . ' ' . $user->last_name)));
+            $this->session->set_flashdata(
+                'error',
+                lang('accounts_delete_error', title_case($user->first_name . ' ' . $user->last_name))
+            );
         }
 
         // --------------------------------------------------------------------------
