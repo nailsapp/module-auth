@@ -636,7 +636,6 @@ class User extends Base
         $cols[] = 'last_update';
         $cols[] = 'user_acl';
         $cols[] = 'login_count';
-        $cols[] = 'admin_data';
         $cols[] = 'referral';
         $cols[] = 'referred_by';
         $cols[] = 'salutation';
