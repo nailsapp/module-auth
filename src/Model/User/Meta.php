@@ -123,6 +123,7 @@ class Meta
         if ($this->oDb->count_all_results($sTable)) {
 
             $this->oDb->set($aData);
+            $this->oDb->where('user_id', $iUserId);
             $bResult = $this->oDb->update($sTable);
 
         } else {
