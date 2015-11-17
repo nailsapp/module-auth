@@ -11,6 +11,7 @@
  * @todo  Refactor this class so that not so much code is being duplicated, especially re: MFA
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Forgotten_Password extends Base
@@ -22,11 +23,6 @@ class Forgotten_Password extends Base
     public function __construct()
     {
         parent::__construct();
-
-        // --------------------------------------------------------------------------
-
-        //  Load libraries
-        $this->load->library('form_validation');
 
         // --------------------------------------------------------------------------
 
@@ -74,34 +70,36 @@ class Forgotten_Password extends Base
              * The rules vary depending on what login method is enabled.
              */
 
+            $oFormValidation = Factory::service('FormValidation');
+
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL' :
 
-                    $this->form_validation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME' :
 
-                    $this->form_validation->set_rules('identifier', '', 'required|xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim');
                     break;
 
                 default:
 
-                    $this->form_validation->set_rules('identifier', '', 'xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'xss_clean|trim');
                     break;
             }
 
             // --------------------------------------------------------------------------
 
             //  Override default messages
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('valid_email',  lang('fv_valid_email'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('valid_email',  lang('fv_valid_email'));
 
             // --------------------------------------------------------------------------
 
             //  Run validation
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 /**
                  * Some apps may want the forgotten password tool to always return as successfull,

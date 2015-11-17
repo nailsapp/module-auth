@@ -33,7 +33,6 @@ class Login extends Base
         // --------------------------------------------------------------------------
 
         //  Load libraries
-        $this->load->library('form_validation');
         $this->oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
 
         // --------------------------------------------------------------------------
@@ -92,32 +91,33 @@ class Login extends Base
         if ($this->input->post()) {
 
             //  Validate input
+            $oFormValidation = Factory::service('FormValidation');
 
             //  The rules vary depending on what login methods are enabled.
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL':
 
-                    $this->form_validation->set_rules('identifier', 'Email', 'required|xss_clean|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', 'Email', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME':
 
-                    $this->form_validation->set_rules('identifier', 'Username', 'required|xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', 'Username', 'required|xss_clean|trim');
                     break;
 
                 default:
 
-                    $this->form_validation->set_rules('identifier', 'Username or Email', 'xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', 'Username or Email', 'xss_clean|trim');
                     break;
             }
 
             //  Password is always required, obviously.
-            $this->form_validation->set_rules('password', 'Password', 'required|xss_clean');
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
+            $oFormValidation->set_rules('password', 'Password', 'required|xss_clean');
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Attempt the log in
                 $identifier = $this->input->post('identifier');
@@ -917,45 +917,45 @@ class Login extends Base
     {
         if ($this->input->post()) {
 
+            $oFormValidation = Factory::service('FormValidation');
+
             if (isset($requiredData['email'])) {
 
-                $this->form_validation->set_rules('email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
+                $oFormValidation->set_rules('email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
             }
 
             if (isset($requiredData['username'])) {
 
-                $this->form_validation->set_rules('username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
+                $oFormValidation->set_rules('username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
             }
 
             if (empty($requiredData['first_name'])) {
 
-                $this->form_validation->set_rules('first_name', '', 'xss_clean|trim|required');
+                $oFormValidation->set_rules('first_name', '', 'xss_clean|trim|required');
             }
 
             if (empty($requiredData['last_name'])) {
 
-                $this->form_validation->set_rules('last_name', '', 'xss_clean|trim|required');
+                $oFormValidation->set_rules('last_name', '', 'xss_clean|trim|required');
             }
 
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-                $this->form_validation->set_message('is_unique', lang('fv_email_already_registered', site_url('auth/forgotten_password')));
+                $oFormValidation->set_message('is_unique', lang('fv_email_already_registered', site_url('auth/forgotten_password')));
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $this->form_validation->set_message('is_unique', lang('fv_username_already_registered', site_url('auth/forgotten_password')));
+                $oFormValidation->set_message('is_unique', lang('fv_username_already_registered', site_url('auth/forgotten_password')));
 
             } else {
 
-                $this->form_validation->set_message('is_unique', lang('fv_identity_already_registered', site_url('auth/forgotten_password')));
+                $oFormValidation->set_message('is_unique', lang('fv_identity_already_registered', site_url('auth/forgotten_password')));
             }
 
-            $this->load->library('form_validation');
-
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Valid!Ensure required data is set correctly then allow system to move on.
                 if (isset($requiredData['email'])) {

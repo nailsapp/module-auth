@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
 class Mfa_device extends BaseMfa
@@ -54,15 +55,15 @@ class Mfa_device extends BaseMfa
     {
         if ($this->input->post()) {
 
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
-            $this->form_validation->set_rules('mfaSecret', '', 'xss_clean|required');
-            $this->form_validation->set_rules('mfaCode1', '', 'xss_clean|required');
-            $this->form_validation->set_rules('mfaCode2', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaSecret', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaCode1', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaCode2', '', 'xss_clean|required');
 
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 $secret = $this->input->post('mfaSecret');
                 $code1  = $this->input->post('mfaCode1');
@@ -130,12 +131,12 @@ class Mfa_device extends BaseMfa
     {
         if ($this->input->post()) {
 
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
-            $this->form_validation->set_rules('mfaCode', '', 'xss_clean|required');
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_rules('mfaCode', '', 'xss_clean|required');
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 $code = $this->input->post('mfaCode');
 

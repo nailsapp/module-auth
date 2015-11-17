@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Reset_Password extends Base
@@ -150,28 +151,26 @@ class Reset_Password extends Base
             if ($mfaValid && $this->input->post()) {
 
                 // Validate data
-                $this->load->library('form_validation');
-
-                // --------------------------------------------------------------------------
+                $oFormValidation = Factory::service('FormValidation');
 
                 /**
                  * Define rules - I know it's not usual to give fields names, but in this case
                  * it allows the matches message to have more context (a name, rather than a
                  * field name)
                  */
-                $this->form_validation->set_rules('new_password', 'Password', 'required|matches[confirm_pass]');
-                $this->form_validation->set_rules('confirm_pass', 'Confirm Password', 'required');
+                $oFormValidation->set_rules('new_password', 'Password', 'required|matches[confirm_pass]');
+                $oFormValidation->set_rules('confirm_pass', 'Confirm Password', 'required');
 
                 // --------------------------------------------------------------------------
 
                 //  Set custom messages
-                $this->form_validation->set_message('required', lang('fv_required'));
-                $this->form_validation->set_message('matches', lang('fv_matches'));
+                $oFormValidation->set_message('required', lang('fv_required'));
+                $oFormValidation->set_message('matches', lang('fv_matches'));
 
                 // --------------------------------------------------------------------------
 
                 //  Run validation
-                if ($this->form_validation->run()) {
+                if ($oFormValidation->run()) {
 
                     //  Validated, update user and login.
                     $data                            = array();

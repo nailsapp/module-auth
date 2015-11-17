@@ -9,6 +9,8 @@
  * @author      Nails Dev Team
  * @link
  */
+
+use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
 class Mfa_question extends BaseMfa
@@ -101,17 +103,17 @@ class Mfa_question extends BaseMfa
 
                 if ($this->input->post()) {
 
-                    $this->load->library('form_validation');
+                    $oFormValidation = Factory::service('FormValidation');
 
                     for ($i = 0; $i < $this->data['num_questions']; $i++) {
 
-                        $this->form_validation->set_rules(
+                        $oFormValidation->set_rules(
                             'question[' . $i . '][question]',
                             '',
                             'xss_clean|required|is_natural_no_zero'
                         );
 
-                        $this->form_validation->set_rules(
+                        $oFormValidation->set_rules(
                             'question[' . $i . '][answer]',
                             '',
                             'xss_clean|trim|required'
@@ -120,23 +122,23 @@ class Mfa_question extends BaseMfa
 
                     for ($i = 0; $i < $this->data['num_custom_questions']; $i++) {
 
-                        $this->form_validation->set_rules(
+                        $oFormValidation->set_rules(
                             'custom_question[' . $i . '][question]',
                             '',
                             'xss_clean|trim|required'
                         );
 
-                        $this->form_validation->set_rules(
+                        $oFormValidation->set_rules(
                             'custom_question[' . $i . '][answer]',
                             '',
                             'xss_clean|trim|required'
                         );
                     }
 
-                    $this->form_validation->set_message('required', lang('fv_required'));
-                    $this->form_validation->set_message('is_natural_no_zero', lang('fv_required'));
+                    $oFormValidation->set_message('required', lang('fv_required'));
+                    $oFormValidation->set_message('is_natural_no_zero', lang('fv_required'));
 
-                    if ($this->form_validation->run()) {
+                    if ($oFormValidation->run()) {
 
                         //  Make sure that we have different questions
                         $questionIndex = array();

@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
@@ -147,20 +148,20 @@ class Groups extends BaseAdmin
         if ($this->input->post()) {
 
             //  Load library
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
             //  Define rules
-            $this->form_validation->set_rules('slug', '', 'xss_clean|unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['group']->slug . ']');
-            $this->form_validation->set_rules('label', '', 'xss_clean|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean|required');
-            $this->form_validation->set_rules('default_homepage', '', 'xss_clean|required');
-            $this->form_validation->set_rules('registration_redirect', '', 'xss_clean');
+            $oFormValidation->set_rules('slug', '', 'xss_clean|unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['group']->slug . ']');
+            $oFormValidation->set_rules('label', '', 'xss_clean|required');
+            $oFormValidation->set_rules('description', '', 'xss_clean|required');
+            $oFormValidation->set_rules('default_homepage', '', 'xss_clean|required');
+            $oFormValidation->set_rules('registration_redirect', '', 'xss_clean');
 
             //  Set messages
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('required', lang('fv_unique_if_diff'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('required', lang('fv_unique_if_diff'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 $data                          = array();
                 $data['slug']                  = $this->input->post('slug');

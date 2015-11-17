@@ -201,15 +201,15 @@ class Accounts extends BaseAdmin
         //  Attempt to create the new user account
         if ($this->input->post()) {
 
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
             //  Set rules
-            $this->form_validation->set_rules('group_id', '', 'xss_clean|required|is_natural_no_zero');
-            $this->form_validation->set_rules('password', '', 'xss_clean');
-            $this->form_validation->set_rules('send_activation', '', 'xss_clean');
-            $this->form_validation->set_rules('temp_pw', '', 'xss_clean');
-            $this->form_validation->set_rules('first_name', '', 'xss_clean|required');
-            $this->form_validation->set_rules('last_name', '', 'xss_clean|required');
+            $oFormValidation->set_rules('group_id', '', 'xss_clean|required|is_natural_no_zero');
+            $oFormValidation->set_rules('password', '', 'xss_clean');
+            $oFormValidation->set_rules('send_activation', '', 'xss_clean');
+            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
+            $oFormValidation->set_rules('first_name', '', 'xss_clean|required');
+            $oFormValidation->set_rules('last_name', '', 'xss_clean|required');
 
             $emailRules   = array();
             $emailRules[] = 'xss_clean';
@@ -219,38 +219,38 @@ class Accounts extends BaseAdmin
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-                $this->form_validation->set_rules('email', '', implode('|', $emailRules));
+                $oFormValidation->set_rules('email', '', implode('|', $emailRules));
 
                 if ($this->input->post('username')) {
 
-                    $this->form_validation->set_rules('username', '', 'xss_clean');
+                    $oFormValidation->set_rules('username', '', 'xss_clean');
                 }
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $this->form_validation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'xss_clean|required');
 
                 if ($this->input->post('email')) {
 
-                    $this->form_validation->set_rules('email', '', implode('|', $emailRules));
+                    $oFormValidation->set_rules('email', '', implode('|', $emailRules));
                 }
 
             } else {
 
-                $this->form_validation->set_rules('email', '', implode('|', $emailRules));
-                $this->form_validation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('email', '', implode('|', $emailRules));
+                $oFormValidation->set_rules('username', '', 'xss_clean|required');
             }
 
             //  Set messages
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('min_length', lang('fv_min_length'));
-            $this->form_validation->set_message('alpha_dash_period', lang('fv_alpha_dash_period'));
-            $this->form_validation->set_message('is_natural_no_zero', lang('fv_required'));
-            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
-            $this->form_validation->set_message('is_unique', lang('fv_email_already_registered'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('min_length', lang('fv_min_length'));
+            $oFormValidation->set_message('alpha_dash_period', lang('fv_alpha_dash_period'));
+            $oFormValidation->set_message('is_natural_no_zero', lang('fv_required'));
+            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
+            $oFormValidation->set_message('is_unique', lang('fv_email_already_registered'));
 
             //  Execute
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Success
                 $data             = array();
@@ -485,23 +485,23 @@ class Accounts extends BaseAdmin
         if ($this->input->post()) {
 
             //  Load validation library
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
             // --------------------------------------------------------------------------
 
             //  Define user table rules
-            $this->form_validation->set_rules('username', '', 'xss-clean');
-            $this->form_validation->set_rules('first_name', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('last_name', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('gender', '', 'xss_clean|required');
-            $this->form_validation->set_rules('dob', '', 'xss_clean|valid_date');
-            $this->form_validation->set_rules('timezone', '', 'xss_clean|required');
-            $this->form_validation->set_rules('datetime_format_date', '', 'xss_clean|required');
-            $this->form_validation->set_rules('datetime_format_time', '', 'xss_clean|required');
-            $this->form_validation->set_rules('password', '', 'xss_clean');
-            $this->form_validation->set_rules('temp_pw', '', 'xss_clean');
-            $this->form_validation->set_rules('reset_mfa_question', '', 'xss_clean');
-            $this->form_validation->set_rules('reset_mfa_device', '', 'xss_clean');
+            $oFormValidation->set_rules('username', '', 'xss-clean');
+            $oFormValidation->set_rules('first_name', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('last_name', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('gender', '', 'xss_clean|required');
+            $oFormValidation->set_rules('dob', '', 'xss_clean|valid_date');
+            $oFormValidation->set_rules('timezone', '', 'xss_clean|required');
+            $oFormValidation->set_rules('datetime_format_date', '', 'xss_clean|required');
+            $oFormValidation->set_rules('datetime_format_time', '', 'xss_clean|required');
+            $oFormValidation->set_rules('password', '', 'xss_clean');
+            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
+            $oFormValidation->set_rules('reset_mfa_question', '', 'xss_clean');
+            $oFormValidation->set_rules('reset_mfa_device', '', 'xss_clean');
 
             // --------------------------------------------------------------------------
 
@@ -519,11 +519,11 @@ class Accounts extends BaseAdmin
                         //  Dates must validate
                         if (isset($value['validation'])) {
 
-                            $this->form_validation->set_rules($col, $label, 'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']');
+                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']');
 
                         } else {
 
-                            $this->form_validation->set_rules($col, $label, 'xss_clean|valid_date[' . $col . ']');
+                            $oFormValidation->set_rules($col, $label, 'xss_clean|valid_date[' . $col . ']');
                         }
                         break;
 
@@ -536,11 +536,11 @@ class Accounts extends BaseAdmin
 
                         if (isset($value['validation'])) {
 
-                            $this->form_validation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
+                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
 
                         } else {
 
-                            $this->form_validation->set_rules($col, $label, 'xss_clean');
+                            $oFormValidation->set_rules($col, $label, 'xss_clean');
                         }
                         break;
                 }
@@ -550,17 +550,17 @@ class Accounts extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Set messages
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('min_length', lang('fv_min_length'));
-            $this->form_validation->set_message('alpha_dash_period', lang('fv_alpha_dash_period'));
-            $this->form_validation->set_message('is_natural_no_zero', lang('fv_required'));
-            $this->form_validation->set_message('valid_date', lang('fv_valid_date'));
-            $this->form_validation->set_message('valid_datetime', lang('fv_valid_datetime'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('min_length', lang('fv_min_length'));
+            $oFormValidation->set_message('alpha_dash_period', lang('fv_alpha_dash_period'));
+            $oFormValidation->set_message('is_natural_no_zero', lang('fv_required'));
+            $oFormValidation->set_message('valid_date', lang('fv_valid_date'));
+            $oFormValidation->set_message('valid_datetime', lang('fv_valid_datetime'));
 
             // --------------------------------------------------------------------------
 
             //  Data is valid; ALL GOOD :]
-            if ($this->form_validation->run($this)) {
+            if ($oFormValidation->run($this)) {
 
                 //  Define the data var
                 $data = array();

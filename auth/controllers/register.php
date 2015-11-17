@@ -32,11 +32,6 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Load libraries
-        $this->load->library('form_validation');
-
-        // --------------------------------------------------------------------------
-
         //  Specify a default title for this page
         $this->data['page']->title = lang('auth_title_register');
     }
@@ -69,13 +64,14 @@ class Register extends Base
         if ($this->input->post()) {
 
             //  Validate input
-            $this->form_validation->set_rules('first_name', '', 'required|xss_clean');
-            $this->form_validation->set_rules('last_name', '', 'required|xss_clean');
-            $this->form_validation->set_rules('password', '', 'required|xss_clean');
+            $oFormValidation = Factory::service('FormValidation');
+            $oFormValidation->set_rules('first_name', '', 'required|xss_clean');
+            $oFormValidation->set_rules('last_name', '', 'required|xss_clean');
+            $oFormValidation->set_rules('password', '', 'required|xss_clean');
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-                $this->form_validation->set_rules(
+                $oFormValidation->set_rules(
                     'email',
                     '',
                     'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
@@ -83,16 +79,16 @@ class Register extends Base
 
                 if ($this->input->post('username')) {
 
-                    $this->form_validation->set_rules('email', '', 'xss_clean');
+                    $oFormValidation->set_rules('email', '', 'xss_clean');
                 }
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $this->form_validation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'xss_clean|required');
 
                 if ($this->input->post('email')) {
 
-                    $this->form_validation->set_rules(
+                    $oFormValidation->set_rules(
                         'email',
                         '',
                         'xss_clean|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
@@ -101,12 +97,12 @@ class Register extends Base
 
             } else {
 
-                $this->form_validation->set_rules(
+                $oFormValidation->set_rules(
                     'email',
                     '',
                     'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                 );
-                $this->form_validation->set_rules(
+                $oFormValidation->set_rules(
                     'username',
                     '',
                     'xss_clean|required'
@@ -116,26 +112,26 @@ class Register extends Base
             // --------------------------------------------------------------------------
 
             //  Change default messages
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('valid_email', lang('fv_valid_email'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
-                $this->form_validation->set_message(
+                $oFormValidation->set_message(
                     'is_unique',
                     lang('auth_register_email_is_unique', site_url('auth/forgotten_password'))
                 );
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $this->form_validation->set_message(
+                $oFormValidation->set_message(
                     'is_unique',
                     lang('auth_register_username_is_unique', site_url('auth/forgotten_password'))
                 );
 
             } else {
 
-                $this->form_validation->set_message(
+                $oFormValidation->set_message(
                     'is_unique',
                     lang('auth_register_identity_is_unique', site_url('auth/forgotten_password'))
                 );
@@ -144,7 +140,7 @@ class Register extends Base
             // --------------------------------------------------------------------------
 
             //  Run validation
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Attempt the registration
                 $aInsertData               = array();
