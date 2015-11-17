@@ -16,8 +16,8 @@ namespace Nails\Database\Migration\Nailsapp\ModuleAuth;
 
 use Nails\Common\Console\Migrate\Base;
 
-class Migration_6 extends Base {
-
+class Migration6 extends Base
+{
     /**
      * Execute the migration
      * @return Void
