@@ -29,7 +29,7 @@
                     </td>
                     <?php
 
-                        echo \Nails\Admin\Helper::loadBoolCell($group->is_default);
+                        echo adminHelper('loadBoolCell', $group->is_default);
 
                     ?>
                     <td class="actions">

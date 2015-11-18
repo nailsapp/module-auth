@@ -26,7 +26,7 @@
 
                 echo '<tr>';
                     echo '<td class="userId">' . number_format($theUser->id) . '</td>';
-                    echo \Nails\Admin\Helper::loadUserCell($theUser);
+                    echo adminHelper('loadUserCell', $theUser);
                     echo '<td>' . $theUser->group_name . '</td>';
                 echo '</tr>';
 

@@ -24,7 +24,9 @@ class Settings extends BaseAdmin
      */
     public static function announce()
     {
-        $navGroup = new \Nails\Admin\Nav('Settings', 'fa-wrench');
+        $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $navGroup->setLabel('Settings');
+        $navGroup->setIcon('fa-wrench');
 
         if (userHasPermission('admin:auth:settings:update:.*')) {
 

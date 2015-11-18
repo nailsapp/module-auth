@@ -26,7 +26,9 @@ class Groups extends BaseAdmin
     {
         if (userHasPermission('admin:auth:groups:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
+            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $navGroup->setLabel('Members');
+            $navGroup->setIcon('fa-users');
             $navGroup->addAction('Manage User Groups');
             return $navGroup;
         }

@@ -28,7 +28,9 @@ class Accounts extends BaseAdmin
      */
     public static function announce()
     {
-        $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
+        $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $navGroup->setLabel('Members');
+        $navGroup->setIcon('fa-users');
 
         if (userHasPermission('admin:auth:accounts:browse')) {
 
@@ -36,14 +38,18 @@ class Accounts extends BaseAdmin
 
             $ci->db->where('is_suspended', false);
             $numTotal = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+            $oAlertTotal = Factory::factory('NavAlert', 'nailsapp/module-admin');
+            $oAlertTotal->setValue($numTotal);
+            $oAlertTotal->setLabel('Number of Users');
 
             $ci->db->where('is_suspended', true);
             $numSuspended = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+            $oAlertSuspended = Factory::factory('NavAlert', 'nailsapp/module-admin');
+            $oAlertSuspended->setValue($numSuspended);
+            $oAlertSuspended->setSeverity('danger');
+            $oAlertSuspended->setLabel('Number of Suspended Users');
 
-            $alerts   = array();
-            $alerts[] = \Nails\Admin\Nav::alertObject($numTotal, 'info', 'Number of Users');
-            $alerts[] = \Nails\Admin\Nav::alertObject($numSuspended, 'alert', 'Number of Suspended Users');
-            $navGroup->addAction('View All Members', 'index', $alerts, 0);
+            $navGroup->addAction('View All Members', 'index', array($oAlertTotal, $oAlertSuspended), 0);
         }
 
         return $navGroup;

@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 
@@ -25,7 +26,9 @@ class Merge extends BaseAdmin
     {
         if (userHasPermission('admin:auth:merge:users')) {
 
-            $navGroup = new \Nails\Admin\Nav('Members', 'fa-users');
+            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $navGroup->setLabel('Members');
+            $navGroup->setIcon('fa-users');
             $navGroup->addAction('Merge Users');
             return $navGroup;
         }
