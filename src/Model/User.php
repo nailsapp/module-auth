@@ -650,7 +650,7 @@ class User extends Base
         $aCols[] = 'datetime_format_time';
         $aCols[] = 'language';
 
-        return $this->prepareDbColumns($aCols);
+        return $this->prepareDbColumns($sPrefix, $aCols);
     }
 
     // --------------------------------------------------------------------------
@@ -663,7 +663,7 @@ class User extends Base
      */
     protected function getMetaColumns($sPrefix = '', $aCols = array())
     {
-        return $this->prepareDbColumns($aCols);
+        return $this->prepareDbColumns($sPrefix, $aCols);
     }
 
     // --------------------------------------------------------------------------
