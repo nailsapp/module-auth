@@ -63,7 +63,7 @@ class User extends \Nails\Api\Controller\Base
                 $oResult = $oUserModel->search($sKeywords);
                 $aOut    = array();
 
-                foreach ($oResult->results as $oUser) {
+                foreach ($oResult->data as $oUser) {
                     $aOut[] = array(
                         'id'    => $oUser->id,
                         'name'  => $oUser->first_name . ' ' . $oUser->last_name,

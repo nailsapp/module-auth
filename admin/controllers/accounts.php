@@ -1168,7 +1168,7 @@ class Accounts extends BaseAdmin
                 } else {
 
                     $status   = 'error';
-                    $message  = 'Failed to add email "' . $email . '". ';
+                    $message  = 'Failed to add email. ';
                     $message .= $this->user_model->last_error();
                 }
                 break;

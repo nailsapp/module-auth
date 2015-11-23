@@ -581,7 +581,7 @@ class User extends Base
         $this->db->select($this->tablePrefix . '.*');
         $this->db->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
         $this->db->select('ue.date_verified email_is_verified_on');
-        $this->db->select($this->_get_meta_columns('um'));
+        $this->db->select($this->getMetaColumns('um'));
         $this->db->select('ug.slug group_slug,ug.label group_name,ug.default_homepage group_homepage,ug.acl group_acl');
 
         // --------------------------------------------------------------------------
@@ -610,73 +610,84 @@ class User extends Base
 
     /**
      * Defines the list of columns in the `user` table
+     * @param  string $sPrefix The prefix to add to the columns
+     * @param  array  $aCols   Any additional columns to add
      * @return array
      */
-    protected function _get_user_columns()
+    protected function getUserColumns($sPrefix = '', $aCols = array())
     {
-        $cols   = array();
-        $cols[] = 'group_id';
-        $cols[] = 'ip_address';
-        $cols[] = 'last_ip';
-        $cols[] = 'password';
-        $cols[] = 'password_md5';
-        $cols[] = 'password_engine';
-        $cols[] = 'password_changed';
-        $cols[] = 'salt';
-        $cols[] = 'forgotten_password_code';
-        $cols[] = 'remember_code';
-        $cols[] = 'created';
-        $cols[] = 'last_login';
-        $cols[] = 'last_seen';
-        $cols[] = 'is_suspended';
-        $cols[] = 'temp_pw';
-        $cols[] = 'failed_login_count';
-        $cols[] = 'failed_login_expires';
-        $cols[] = 'last_update';
-        $cols[] = 'user_acl';
-        $cols[] = 'login_count';
-        $cols[] = 'referral';
-        $cols[] = 'referred_by';
-        $cols[] = 'salutation';
-        $cols[] = 'first_name';
-        $cols[] = 'last_name';
-        $cols[] = 'gender';
-        $cols[] = 'dob';
-        $cols[] = 'profile_img';
-        $cols[] = 'timezone';
-        $cols[] = 'datetime_format_date';
-        $cols[] = 'datetime_format_time';
-        $cols[] = 'language';
+        $aCols   = array();
+        $aCols[] = 'group_id';
+        $aCols[] = 'ip_address';
+        $aCols[] = 'last_ip';
+        $aCols[] = 'password';
+        $aCols[] = 'password_md5';
+        $aCols[] = 'password_engine';
+        $aCols[] = 'password_changed';
+        $aCols[] = 'salt';
+        $aCols[] = 'forgotten_password_code';
+        $aCols[] = 'remember_code';
+        $aCols[] = 'created';
+        $aCols[] = 'last_login';
+        $aCols[] = 'last_seen';
+        $aCols[] = 'is_suspended';
+        $aCols[] = 'temp_pw';
+        $aCols[] = 'failed_login_count';
+        $aCols[] = 'failed_login_expires';
+        $aCols[] = 'last_update';
+        $aCols[] = 'user_acl';
+        $aCols[] = 'login_count';
+        $aCols[] = 'referral';
+        $aCols[] = 'referred_by';
+        $aCols[] = 'salutation';
+        $aCols[] = 'first_name';
+        $aCols[] = 'last_name';
+        $aCols[] = 'gender';
+        $aCols[] = 'dob';
+        $aCols[] = 'profile_img';
+        $aCols[] = 'timezone';
+        $aCols[] = 'datetime_format_date';
+        $aCols[] = 'datetime_format_time';
+        $aCols[] = 'language';
 
-        return $cols;
+        return $this->prepareDbColumns($aCols);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Defines the list of columns in the `user_meta_app` table
-     * @param  string $prefix The prefix to add to the columns
-     * @param  array  $cols   Any additional columns to add
+     * @param  string $sPrefix The prefix to add to the columns
+     * @param  array  $aCols   Any additional columns to add
      * @return array
      */
-    protected function _get_meta_columns($prefix = '', $cols = array())
+    protected function getMetaColumns($sPrefix = '', $aCols = array())
+    {
+        return $this->prepareDbColumns($aCols);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Filter out duplicates and prefix column names if nessecary
+     * @var string
+     */
+    protected function prepareDbColumns($sPrefix = '', $aCols = array())
     {
         //  Clean up
-        $cols = array_unique($cols);
-        $cols = array_filter($cols);
-
-        // --------------------------------------------------------------------------
+        $aCols = array_unique($aCols);
+        $aCols = array_filter($aCols);
 
         //  Prefix all the values, if needed
-        if ($prefix) {
+        if ($sPrefix) {
 
-            foreach ($cols as $key => &$value) {
+            foreach ($aCols as $key => &$value) {
 
-                $value = $prefix . '.' . $value;
+                $value = $sPrefix . '.' . $value;
             }
         }
 
-        return $cols;
+        return $aCols;
     }
 
     // --------------------------------------------------------------------------
@@ -918,7 +929,7 @@ class User extends Base
         if ($data) {
 
             //  Set the cols in `user` (rather than querying the DB)
-            $_cols = $this->_get_user_columns();
+            $_cols = $this->getUserColumns();
 
             //  Safety first, no updating of user's ID.
             unset($data->id);
@@ -2099,7 +2110,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set Meta data
-        $_meta_cols = $this->_get_meta_columns();
+        $_meta_cols = $this->getMetaColumns();
         $_meta_data = array();
 
         foreach ($data as $key => $val) {
