@@ -534,11 +534,10 @@ class User extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param string $data    Data passed from the calling method
-     * @param string $_caller The name of the calling method
+     * @param string $data Data passed from the calling method
      * @return void
      */
-    protected function _getcount_common($data = array(), $_caller = null)
+    protected function _getcount_common($data = array())
     {
         //  If there's a search term, then we better get %LIKING%
         if (!empty($data['keywords'])) {
@@ -574,7 +573,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Let the parent method handle sorting, etc
-        parent::_getcount_common($data, $_caller);
+        parent::_getcount_common($data);
 
         // --------------------------------------------------------------------------
 
@@ -856,6 +855,30 @@ class User extends Base
         $this->db->order_by('is_primary', 'DESC');
         $this->db->order_by('email', 'ASC');
         return $this->db->get(NAILS_DB_PREFIX . 'user_email')->result();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Searches for objects, optionally paginated.
+     * @param  string    $sKeywords       The search term
+     * @param  int       $iPage           The page number of the results, if null then no pagination
+     * @param  int       $iPerPage        How many items per page of paginated results
+     * @param  mixed     $aData           Any data to pass to _getcount_common()
+     * @param  bool      $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
+     * @return \stdClass
+     */
+    public function search($sKeywords, $iPage = null, $iPerPage = null, $aData = array(), $bIncludeDeleted = false)
+    {
+        $aData['keywords'] = $sKeywords;
+
+        $oOut          = new \stdClass();
+        $oOut->page    = $iPage;
+        $oOut->perPage = $iPerPage;
+        $oOut->total   = $this->count_all($aData);
+        $oOut->results = $this->get_all($iPage, $iPerPage, $aData);
+
+        return $oOut;
     }
 
     // --------------------------------------------------------------------------
