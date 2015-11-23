@@ -25,7 +25,7 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Is registration enabled
-        if (!app_setting('user_registration_enabled', 'auth')) {
+        if (!appSetting('user_registration_enabled', 'auth')) {
 
             show_404();
         }

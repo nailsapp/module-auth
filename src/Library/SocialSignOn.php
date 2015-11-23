@@ -49,7 +49,7 @@ class SocialSignOn
 
                 $this->aProviders['all'][strtolower($aProvider['slug'])] = $aProvider;
 
-                if (app_setting('auth_social_signon_' . $aProvider['slug'] . '_enabled', 'auth')) {
+                if (appSetting('auth_social_signon_' . $aProvider['slug'] . '_enabled', 'auth')) {
 
                     $this->aProviders['enabled'][strtolower($aProvider['slug'])] = $aProvider;
 

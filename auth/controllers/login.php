@@ -616,7 +616,7 @@ class Login extends Base
              * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
              */
 
-            if (app_setting('user_registration_enabled', 'auth')) {
+            if (appSetting('user_registration_enabled', 'auth')) {
 
                 $requiredData = array();
                 $optionalData = array();
