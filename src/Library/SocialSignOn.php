@@ -92,7 +92,7 @@ class SocialSignOn
 
                         foreach ($label as $key1 => $label1) {
 
-                            $aTemp[$key][$key1] = app_setting(
+                            $aTemp[$key][$key1] = appSetting(
                                 'auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1,
                                 'auth'
                             );
@@ -100,7 +100,7 @@ class SocialSignOn
 
                     } else {
 
-                        $aTemp[$key] = app_setting('auth_social_signon_' . $aProvider['slug'] . '_' . $key, 'auth');
+                        $aTemp[$key] = appSetting('auth_social_signon_' . $aProvider['slug'] . '_' . $key, 'auth');
                     }
                 }
 
@@ -152,7 +152,7 @@ class SocialSignOn
      */
     public function isEnabled()
     {
-        return app_setting('auth_social_signon_enabled', 'auth') && $this->getProviders('ENABLED');
+        return appSetting('auth_social_signon_enabled', 'auth') && $this->getProviders('ENABLED');
     }
 
     // --------------------------------------------------------------------------
