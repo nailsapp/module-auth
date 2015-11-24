@@ -53,7 +53,7 @@ class AccessToken extends \Nails\Api\Controller\Base
 
                 $aOut = array(
                     'status' => 500,
-                    'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->last_error()
+                    'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->lastError()
                 );
             }
 
@@ -89,7 +89,7 @@ class AccessToken extends \Nails\Api\Controller\Base
 
                     $aOut = array(
                         'status' => 500,
-                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->last_error()
+                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->lastError()
                     );
                 }
 

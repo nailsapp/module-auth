@@ -192,7 +192,7 @@ class Register extends Base
 
                 } else {
 
-                    $this->data['error'] = 'Could not create new user account. ' . $this->user_model->last_error();
+                    $this->data['error'] = 'Could not create new user account. ' . $this->user_model->lastError();
                 }
 
             } else {

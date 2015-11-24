@@ -225,7 +225,7 @@ class Mfa_question extends BaseMfa
                             } else {
 
                                 $this->data['error']  = lang('auth_twofactor_question_set_fail');
-                                $this->data['error'] .= ' ' . $this->user_model->last_error();
+                                $this->data['error'] .= ' ' . $this->user_model->lastError();
                             }
 
                         } else {

@@ -127,7 +127,7 @@ class Reset_Password extends Base
                                 } else {
 
                                     $this->data['error']  = '<strong>Sorry,</strong> that code could not be validated. ';
-                                    $this->data['error'] .= $this->auth_model->last_error();
+                                    $this->data['error'] .= $this->auth_model->lastError();
                                 }
                             }
 
@@ -301,7 +301,7 @@ class Reset_Password extends Base
 
                     } else {
 
-                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->last_error());
+                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->lastError());
                     }
 
                 } else {

@@ -133,7 +133,7 @@ class Login extends Base
                 } else {
 
                     //  Login failed
-                    $this->data['error'] = $this->auth_model->last_error();
+                    $this->data['error'] = $this->auth_model->lastError();
                 }
 
             } else {
@@ -834,7 +834,7 @@ class Login extends Base
                                     } else {
 
                                         log_message('debug', 'Failed to upload user\'s profile image');
-                                        log_message('debug', $oCdn->last_error());
+                                        log_message('debug', $oCdn->lastError());
                                     }
                                 }
                             }

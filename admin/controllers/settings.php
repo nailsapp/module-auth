@@ -199,7 +199,7 @@ class Settings extends BaseAdmin
 
                         if (!$this->app_setting_model->set($settings, 'auth')) {
 
-                            $error    = $this->app_setting_model->last_error();
+                            $error    = $this->app_setting_model->lastError();
                             $rollback = true;
                         }
                     }
@@ -208,7 +208,7 @@ class Settings extends BaseAdmin
 
                         if (!$this->app_setting_model->set($settingsEncrypted, 'auth', null, true)) {
 
-                            $error    = $this->app_setting_model->last_error();
+                            $error    = $this->app_setting_model->lastError();
                             $rollback = true;
                         }
                     }

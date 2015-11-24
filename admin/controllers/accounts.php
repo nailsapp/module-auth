@@ -293,11 +293,11 @@ class Accounts extends BaseAdmin
                      * might happen along the way
                      */
 
-                    if ($this->user_model->get_errors()) {
+                    if ($this->user_model->getErrors()) {
 
                         $message  = '<strong>Please Note,</strong> while the user was created successfully, the ';
                         $message .= 'following issues were encountered:';
-                        $message .= '<ul><li>' . implode('</li><li>', $this->user_model->get_errors()) . '</li></ul>';
+                        $message .= '<ul><li>' . implode('</li><li>', $this->user_model->getErrors()) . '</li></ul>';
 
                         $this->session->set_flashdata('message', $message);
                     }
@@ -332,13 +332,13 @@ class Accounts extends BaseAdmin
 
                     $this->data['error']  = 'There was an error when creating the user ';
                     $this->data['error'] .= 'account:<br />&rsaquo; ';
-                    $this->data['error'] .= implode('<br />&rsaquo; ', $this->user_model->get_errors());
+                    $this->data['error'] .= implode('<br />&rsaquo; ', $this->user_model->getErrors());
                 }
 
             } else {
 
                 $this->data['error']  = 'There was an error when creating the user account. ';
-                $this->data['error'] .= $this->user_model->last_error();
+                $this->data['error'] .= $this->user_model->lastError();
             }
         }
 
@@ -584,7 +584,7 @@ class Accounts extends BaseAdmin
 
                     } else {
 
-                        $this->data['upload_error'] = $this->cdn->get_errors();
+                        $this->data['upload_error'] = $this->cdn->getErrors();
                         $this->data['error']        = lang('accounts_edit_error_profile_img');
                     }
                 }
@@ -688,7 +688,7 @@ class Accounts extends BaseAdmin
                     //  The account failed to update, feedback to user
                     } else {
 
-                        $this->data['error'] = lang('accounts_edit_fail', implode(', ', $this->user_model->get_errors()));
+                        $this->data['error'] = lang('accounts_edit_fail', implode(', ', $this->user_model->getErrors()));
                     }
                 }
 
@@ -823,7 +823,7 @@ class Accounts extends BaseAdmin
 
             } else {
 
-                $this->data['error'] = 'Failed to update user group. ' . $this->user_group_model->last_error();
+                $this->data['error'] = 'Failed to update user group. ' . $this->user_group_model->lastError();
             }
         }
 
@@ -1127,7 +1127,7 @@ class Accounts extends BaseAdmin
 
                 } else {
 
-                    $this->session->set_flashdata('error', lang('accounts_delete_img_error', implode('", "', $this->cdn->get_errors())));
+                    $this->session->set_flashdata('error', lang('accounts_delete_img_error', implode('", "', $this->cdn->getErrors())));
                 }
 
             } else {
@@ -1169,7 +1169,7 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to add email. ';
-                    $message .= $this->user_model->last_error();
+                    $message .= $this->user_model->lastError();
                 }
                 break;
 
@@ -1184,7 +1184,7 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to delete email "' . $email . '". ';
-                    $message .= $this->user_model->last_error();
+                    $message .= $this->user_model->lastError();
                 }
                 break;
 
@@ -1199,7 +1199,7 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to mark "' . $email . '" as the primary address. ';
-                    $message .= $this->user_model->last_error();
+                    $message .= $this->user_model->lastError();
                 }
                 break;
 
@@ -1232,7 +1232,7 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to mark "' . $email . '" as verified. ';
-                    $message .= $this->user_model->last_error();
+                    $message .= $this->user_model->lastError();
                 }
                 break;
 

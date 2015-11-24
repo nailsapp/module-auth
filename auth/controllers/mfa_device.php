@@ -103,7 +103,7 @@ class Mfa_device extends BaseMfa
 
             $status   = 'error';
             $message  = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
-            $message .= $this->auth_model->last_error();
+            $message .= $this->auth_model->lastError();
 
             $this->session->set_flashdata($status, $message);
 
@@ -149,7 +149,7 @@ class Mfa_device extends BaseMfa
                 } else {
 
                     $this->data['error']  = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
-                    $this->data['error'] .= $this->auth_model->last_error();
+                    $this->data['error'] .= $this->auth_model->lastError();
                 }
 
             } else {

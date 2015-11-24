@@ -49,7 +49,7 @@ class Meta
     {
         //  Check cache
         $sCacheKey = 'user-meta-' . $sTable . '-' . $iUserId;
-        $oCache = $this->_get_cache($sCacheKey);
+        $oCache = $this->getCache($sCacheKey);
 
         if (!empty($oCache)) {
 
@@ -89,7 +89,7 @@ class Meta
     {
         //  Check cache
         $sCacheKey = 'user-meta-many-' . $sTable . '-' . $iUserId;
-        $oCache = $this->_get_cache($sCacheKey);
+        $oCache = $this->getCache($sCacheKey);
 
         if (!empty($oCache)) {
 
@@ -134,7 +134,7 @@ class Meta
 
         if ($bResult) {
 
-            $this->_unset_cache('user-meta-' . $sTable . '-' . $iUserId);
+            $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
         }
 
         return $bResult;
@@ -178,7 +178,7 @@ class Meta
         }
 
         $this->db->trans_commit();
-        $this->_unset_cache('user-meta-' . $sTable . '-' . $iUserId);
+        $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
         return true;
     }
 }

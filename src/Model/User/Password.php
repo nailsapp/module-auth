@@ -201,7 +201,7 @@ class Password extends \Nails\Common\Model\Base
     {
         if (empty($sPassword)) {
 
-            $this->_set_error('No password to hash');
+            $this->setError('No password to hash');
             return false;
         }
 
@@ -213,14 +213,14 @@ class Password extends \Nails\Common\Model\Base
         //  Long enough?
         if (!empty($aPwRules['min']) && strlen($sPassword) < $aPwRules['min']) {
 
-            $this->_set_error('Password is too short.');
+            $this->setError('Password is too short.');
             return false;
         }
 
         //  Too long?
         if (!empty($aPwRules['max']) && strlen($sPassword) > $aPwRules['max']) {
 
-            $this->_set_error('Password is too long.');
+            $this->setError('Password is too long.');
             return false;
         }
 
@@ -264,7 +264,7 @@ class Password extends \Nails\Common\Model\Base
             Factory::helper('string');
             $sError = 'Password must contain ' . implode(', ', $aFailedRequirements) . '.';
             $sError = str_lreplace(', ', ' and ', $sError);
-            $this->_set_error($sError);
+            $this->setError($sError);
             return false;
         }
 
@@ -273,7 +273,7 @@ class Password extends \Nails\Common\Model\Base
 
             if (trim(strtolower($sPassword)) == strtolower($sStr)) {
 
-                $this->_set_error('Password cannot be "' . $sStr . '"');
+                $this->setError('Password cannot be "' . $sStr . '"');
                 return false;
             }
         }
@@ -434,7 +434,7 @@ class Password extends \Nails\Common\Model\Base
     protected function getRules($iGroupId)
     {
         $sCacheKey = 'password-rules-' . $iGroupId;
-        $aCacheResult = $this->_get_cache($sCacheKey);
+        $aCacheResult = $this->getCache($sCacheKey);
         if (!empty($aCacheResult)) {
             return $aCacheResult;
         }
@@ -456,7 +456,7 @@ class Password extends \Nails\Common\Model\Base
         $aOut['requirements'] = !empty($oPwRules->requirements) ? $oPwRules->requirements : array();
         $aOut['banned'] = !empty($oPwRules->banned) ? $oPwRules->banned : array();
 
-        $this->_set_cache($sCacheKey, $aOut);
+        $this->setCache($sCacheKey, $aOut);
 
         return $aOut;
     }

@@ -47,7 +47,7 @@ class Group extends \Nails\Common\Model\Base
 
         if (!$group) {
 
-            $this->_set_error('Invalid Group');
+            $this->setError('Invalid Group');
         }
 
         // --------------------------------------------------------------------------
@@ -140,7 +140,7 @@ class Group extends \Nails\Common\Model\Base
 
         if (empty($group)) {
 
-            $this->_set_error('"' . $newGroupId . '" is not a valid group ID.');
+            $this->setError('"' . $newGroupId . '" is not a valid group ID.');
             return false;
         }
 
@@ -159,7 +159,7 @@ class Group extends \Nails\Common\Model\Base
 
                     $this->db->trans_rollback();
                     $msg = '"' . $preMethod. '()" returned false for user ' . $user->id . ', rolling back changes';
-                    $this->_set_error($msg);
+                    $this->setError($msg);
                     return false;
                 }
             }
@@ -169,7 +169,7 @@ class Group extends \Nails\Common\Model\Base
 
                 $this->db->trans_rollback();
                 $msg = 'Failed to update group ID for user ' . $user->id;
-                $this->_set_error($msg);
+                $this->setError($msg);
                 return false;
             }
 
@@ -179,7 +179,7 @@ class Group extends \Nails\Common\Model\Base
 
                     $this->db->trans_rollback();
                     $msg = '"' . $postMethod. '()" returned false for user ' . $user->id . ', rolling back changes';
-                    $this->_set_error($msg);
+                    $this->setError($msg);
                     return false;
                 }
             }

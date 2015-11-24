@@ -58,7 +58,7 @@ class AccessToken extends \Nails\Common\Model\Base
         //  User ID is a required field
         if (empty($data['user_id'])) {
 
-            $this->_set_error('A user ID must be supplied.');
+            $this->setError('A user ID must be supplied.');
             return false;
         }
 
@@ -67,7 +67,7 @@ class AccessToken extends \Nails\Common\Model\Base
         //  Scope is a required field
         if (empty($data['scope'])) {
 
-            $this->_set_error('A scope must be supplied.');
+            $this->setError('A scope must be supplied.');
             return false;
         }
 
@@ -98,7 +98,7 @@ class AccessToken extends \Nails\Common\Model\Base
 
             if (empty($this->scopeHandler[$sScope])) {
 
-                $this->_set_error('"' . $sScope . '" is not a valid token scope.');
+                $this->setError('"' . $sScope . '" is not a valid token scope.');
                 return false;
 
             } else {
@@ -107,12 +107,12 @@ class AccessToken extends \Nails\Common\Model\Base
 
                 if (!is_callable(array($this, $sScopeHandler))) {
 
-                    $this->_set_error('"' . $this->scopeHandler[$sScope] . '" is not a valid token scope callback.');
+                    $this->setError('"' . $this->scopeHandler[$sScope] . '" is not a valid token scope callback.');
                     return false;
 
                 } elseif (!$this->{$sScopeHandler}($data['user_id'], $sScope)) {
 
-                    $this->_set_error('No permission to request a token with scope "' . $sScope . '".');
+                    $this->setError('No permission to request a token with scope "' . $sScope . '".');
                     return false;
                 }
             }
@@ -184,7 +184,7 @@ class AccessToken extends \Nails\Common\Model\Base
 
             } else {
 
-                $this->_set_error('Not authorised to revoke that token.');
+                $this->setError('Not authorised to revoke that token.');
                 return false;
             }
 
@@ -204,7 +204,7 @@ class AccessToken extends \Nails\Common\Model\Base
      */
     public function update($id, $data)
     {
-        $this->_set_error('Access tokens cannot be amended once created.');
+        $this->setError('Access tokens cannot be amended once created.');
         return false;
     }
 

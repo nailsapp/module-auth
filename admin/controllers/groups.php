@@ -183,7 +183,7 @@ class Groups extends BaseAdmin
 
                 } else {
 
-                    $this->data['error'] = 'I was unable to update the group. ' . $this->user_group_model->last_error();
+                    $this->data['error'] = 'I was unable to update the group. ' . $this->user_group_model->lastError();
                 }
 
             } else {
@@ -271,7 +271,7 @@ class Groups extends BaseAdmin
 
         } else {
 
-            $this->session->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->last_error());
+            $this->session->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->lastError());
         }
 
         redirect('admin/auth/groups');

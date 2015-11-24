@@ -400,7 +400,7 @@ class Forgotten_Password extends Base
                         } else {
 
                             $this->data['error']  = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
-                            $this->data['error'] .= $this->auth_model->last_error();
+                            $this->data['error'] .= $this->auth_model->lastError();
                         }
                     }
 

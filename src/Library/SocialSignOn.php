@@ -238,7 +238,7 @@ class SocialSignOn
             return $this->oHybridAuth->authenticate($provider, $params);
 
         } catch (\Exception $e) {
-            $this->_set_error('Provider Error: ' . $e->getMessage());
+            $this->setError('Provider Error: ' . $e->getMessage());
             return false;
         }
     }
@@ -260,7 +260,7 @@ class SocialSignOn
 
         } catch (\Exception $e) {
 
-            $this->_set_error('Provider Error: ' . $e->getMessage());
+            $this->setError('Provider Error: ' . $e->getMessage());
             return false;
         }
     }
@@ -317,7 +317,7 @@ class SocialSignOn
 
         if (empty($user_id)) {
 
-            $this->_set_error('Must specify which user ID\'s session to save.');
+            $this->setError('Must specify which user ID\'s session to save.');
             return false;
         }
 
@@ -325,7 +325,7 @@ class SocialSignOn
 
         if (!$_user) {
 
-            $this->_set_error('Invalid User ID');
+            $this->setError('Invalid User ID');
             return false;
         }
 
@@ -486,7 +486,7 @@ class SocialSignOn
 
         if (empty($user_id)) {
 
-            $this->_set_error('Must specify which user ID\'s session to restore.');
+            $this->setError('Must specify which user ID\'s session to restore.');
             return false;
         }
 
@@ -494,7 +494,7 @@ class SocialSignOn
 
         if (!$_user) {
 
-            $this->_set_error('Invalid User ID');
+            $this->setError('Invalid User ID');
             return false;
         }
 
@@ -554,7 +554,7 @@ class SocialSignOn
     {
         if (!  $this->isConnectedWith($provider)) {
 
-            $this->_set_error('Not connected with provider "' . $provider . '"');
+            $this->setError('Not connected with provider "' . $provider . '"');
             return false;
         }
 
@@ -566,7 +566,7 @@ class SocialSignOn
 
         } catch (\Exception $e) {
 
-            $this->_set_error('Provider Error: ' . $e->getMessage());
+            $this->setError('Provider Error: ' . $e->getMessage());
             return false;
         }
     }

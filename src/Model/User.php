@@ -230,13 +230,13 @@ class User extends Base
 
             } else {
 
-                $this->_set_error('Invalid User email.');
+                $this->setError('Invalid User email.');
                 return false;
             }
 
         } else {
 
-            $this->_set_error('Invalid user ID or email.');
+            $this->setError('Invalid user ID or email.');
             return false;
         }
 
@@ -245,12 +245,12 @@ class User extends Base
         //  Test user
         if (!$user) {
 
-            $this->_set_error($error);
+            $this->setError($error);
             return false;
 
         } elseif ($user->is_suspended) {
 
-            $this->_set_error('User is suspended.');
+            $this->setError('User is suspended.');
             return false;
 
         } else {
@@ -916,7 +916,7 @@ class User extends Base
         $oUser = $this->get_by_id($_uid);
         if (empty($oUser)) {
 
-            $this->_set_error('Invalid user ID');
+            $this->setError('Invalid user ID');
             return false;
         }
 
@@ -942,7 +942,7 @@ class User extends Base
 
                 if (!$_hash) {
 
-                    $this->_set_error($this->user_password_model->last_error());
+                    $this->setError($this->user_password_model->lastError());
                     return false;
                 }
 
@@ -1047,7 +1047,7 @@ class User extends Base
 
                     $this->db->trans_rollback();
 
-                    $this->_set_error('could not reset user\'s Multi Factor Authentication questions.');
+                    $this->setError('could not reset user\'s Multi Factor Authentication questions.');
 
                     return false;
                 }
@@ -1064,7 +1064,7 @@ class User extends Base
 
                     $this->db->trans_rollback();
 
-                    $this->_set_error('could not reset user\'s Multi Factor Authentication device.');
+                    $this->setError('could not reset user\'s Multi Factor Authentication device.');
 
                     return false;
                 }
@@ -1118,7 +1118,7 @@ class User extends Base
 
                         } else {
 
-                            $this->_set_error('Email is already in use.');
+                            $this->setError('Email is already in use.');
                             $_rollback = true;
                         }
 
@@ -1135,7 +1135,7 @@ class User extends Base
                 } else {
 
                     //  Error, not a valid email; roll back transaction
-                    $this->_set_error('"' . $_data_email . '" is not a valid email address.');
+                    $this->setError('"' . $_data_email . '" is not a valid email address.');
                     $_rollback = true;
                 }
             }
@@ -1258,7 +1258,7 @@ class User extends Base
 
         } else {
 
-            $this->_set_error('No user ID set');
+            $this->setError('No user ID set');
             return false;
         }
 
@@ -1274,7 +1274,7 @@ class User extends Base
      */
     public function getCacheUser($userId)
     {
-        return $this->_get_cache('user-' . $userId);
+        return $this->getCache('user-' . $userId);
     }
 
     // --------------------------------------------------------------------------
@@ -1307,7 +1307,7 @@ class User extends Base
      */
     protected function setCacheUserObj($userObj)
     {
-        $this->_set_cache('user-' . $userObj->id, $userObj);
+        $this->setCache('user-' . $userObj->id, $userObj);
     }
 
     // --------------------------------------------------------------------------
@@ -1319,7 +1319,7 @@ class User extends Base
      */
     public function unsetCacheUser($userId)
     {
-        $this->_unset_cache('user-' . $userId);
+        $this->unsetCache('user-' . $userId);
     }
 
     // --------------------------------------------------------------------------
@@ -1341,7 +1341,7 @@ class User extends Base
 
         if (!$_u) {
 
-            $this->_set_error('Invalid User ID');
+            $this->setError('Invalid User ID');
             return false;
         }
 
@@ -1350,7 +1350,7 @@ class User extends Base
         //  Make sure the email is valid
         if (!valid_email($_email)) {
 
-            $this->_set_error('"' . $_email . '" is not a valid email address');
+            $this->setError('"' . $_email . '" is not a valid email address');
             return false;
         }
 
@@ -1393,7 +1393,7 @@ class User extends Base
             } else {
 
                 //  In use, but belongs to another user
-                $this->_set_error('Email in use by another user.');
+                $this->setError('Email in use by another user.');
                 return false;
             }
         }
@@ -1495,14 +1495,14 @@ class User extends Base
 
         if (!$_e) {
 
-            $this->_set_error('Invalid Email.');
+            $this->setError('Invalid Email.');
             return false;
 
         }
 
         if ($_e->is_verified) {
 
-            $this->_set_error('Email is already verified.');
+            $this->setError('Email is already verified.');
             return false;
 
         }
@@ -1524,7 +1524,7 @@ class User extends Base
             if (!$this->emailer->send($_email, true)) {
 
                 //  Email failed to send, for now, do nothing.
-                $this->_set_error('The verification email failed to send.');
+                $this->setError('The verification email failed to send.');
                 return false;
             }
         }
@@ -1596,7 +1596,7 @@ class User extends Base
 
         if (!$user) {
 
-            $this->_set_error('User does not exist.');
+            $this->setError('User does not exist.');
             return false;
         }
 
@@ -1609,7 +1609,7 @@ class User extends Base
 
         if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
 
-            $this->_set_error('Email has already been verified.');
+            $this->setError('Email has already been verified.');
             return false;
         }
 
@@ -1935,7 +1935,7 @@ class User extends Base
             //  Email defined?
             if (empty($data['email'])) {
 
-                $this->_set_error('An email address must be supplied.');
+                $this->setError('An email address must be supplied.');
                 return false;
             }
 
@@ -1943,7 +1943,7 @@ class User extends Base
             $this->db->where('email', $data['email']);
             if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
 
-                $this->_set_error('This email is already in use.');
+                $this->setError('This email is already in use.');
                 return false;
             }
 
@@ -1952,7 +1952,7 @@ class User extends Base
             //  Username defined?
             if (empty($data['username'])) {
 
-                $this->_set_error('A username must be supplied.');
+                $this->setError('A username must be supplied.');
                 return false;
             }
 
@@ -1966,7 +1966,7 @@ class User extends Base
             //  Both a username and an email must be supplied
             if (empty($data['email']) || empty($data['username'])) {
 
-                $this->_set_error('An email address and a username must be supplied.');
+                $this->setError('An email address and a username must be supplied.');
                 return false;
             }
 
@@ -1974,7 +1974,7 @@ class User extends Base
             $this->db->where('email', $data['email']);
             if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
 
-                $this->_set_error('This email is already in use.');
+                $this->setError('This email is already in use.');
                 return false;
             }
 
@@ -2006,7 +2006,7 @@ class User extends Base
 
         if (!$_group) {
 
-            $this->_set_error('Invalid Group ID specified.');
+            $this->setError('Invalid Group ID specified.');
             return false;
 
         } else {
@@ -2028,7 +2028,7 @@ class User extends Base
 
             if (!$_password) {
 
-                $this->_set_error($this->user_password_model->last_error());
+                $this->setError($this->user_password_model->lastError());
                 return false;
             }
 
@@ -2038,7 +2038,7 @@ class User extends Base
 
             if (!$_password) {
 
-                $this->_set_error($this->user_password_model->last_error());
+                $this->setError($this->user_password_model->lastError());
                 return false;
             }
         }
@@ -2129,7 +2129,7 @@ class User extends Base
 
         if (!$this->db->insert(NAILS_DB_PREFIX . 'user')) {
 
-            $this->_set_error('Failed to create base user object.');
+            $this->setError('Failed to create base user object.');
             $this->db->trans_rollback();
             return false;
         }
@@ -2148,7 +2148,7 @@ class User extends Base
 
         if (!$this->db->update(NAILS_DB_PREFIX . 'user')) {
 
-            $this->_set_error('Failed to update base user object.');
+            $this->setError('Failed to update base user object.');
             $this->db->trans_rollback();
             return false;
         }
@@ -2165,7 +2165,7 @@ class User extends Base
 
         if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
 
-            $this->_set_error('Failed to create user meta data object.');
+            $this->setError('Failed to create user meta data object.');
             $this->db->trans_rollback();
             return false;
         }
@@ -2232,7 +2232,7 @@ class User extends Base
                         $_error  = 'Failed to send welcome email.';
                         $_error .= !empty($_inform_user_pw) ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
 
-                        $this->_set_error($_error);
+                        $this->setError($_error);
                     }
                 }
             }
@@ -2380,7 +2380,7 @@ class User extends Base
 
             $msg = 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
 
-            $this->_set_error($msg);
+            $this->setError($msg);
             return false;
         }
 
@@ -2389,7 +2389,7 @@ class User extends Base
         //  Check length
         if (strlen($username) < $minLength) {
 
-            $this->_set_error('Usernames msut be at least ' . $minLength . ' characters long.');
+            $this->setError('Usernames msut be at least ' . $minLength . ' characters long.');
             return false;
         }
 
@@ -2406,7 +2406,7 @@ class User extends Base
 
             if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user')) {
 
-                $this->_set_error('Username is already in use.');
+                $this->setError('Username is already in use.');
                 return false;
             }
         }
@@ -2426,20 +2426,20 @@ class User extends Base
     {
         if (!is_numeric($userId)) {
 
-            $this->_set_error('"userId" must be numeric.');
+            $this->setError('"userId" must be numeric.');
             return false;
         }
 
         if (!is_array($mergeIds)) {
 
-            $this->_set_error('"mergeIDs" must be an array.');
+            $this->setError('"mergeIDs" must be an array.');
             return false;
         }
 
         for ($i=0; $i<count($mergeIds); $i++) {
 
             if (!is_numeric($mergeIds[$i])) {
-                $this->_set_error('"mergeIDs" must contain only numerical values.');
+                $this->setError('"mergeIDs" must contain only numerical values.');
                 return false;
             }
 
@@ -2448,7 +2448,7 @@ class User extends Base
 
         if (in_array($userId, $mergeIds)) {
 
-            $this->_set_error('"userId" cannot be listed as a merge user.');
+            $this->setError('"userId" cannot be listed as a merge user.');
             return false;
         }
 
@@ -2561,7 +2561,7 @@ class User extends Base
                     if (!$this->db->update($tables[$i]->name)) {
 
                         $errMsg = 'Failed to migrate column "' . $column . '" in table "' . $tables[$i]->name . '"';
-                        $this->_set_error($errMsg);
+                        $this->setError($errMsg);
                         $this->db->trans_rollback();
                         return false;
                     }
@@ -2574,7 +2574,7 @@ class User extends Base
                 if (!$this->destroy($mergeIds[$i])) {
 
                     $errMsg = 'Failed to delete user "' . $mergeIds[$i] . '" ';
-                    $this->_set_error($errMsg);
+                    $this->setError($errMsg);
                     $this->db->trans_rollback();
                     return false;
                 }

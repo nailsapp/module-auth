@@ -54,7 +54,7 @@ class Auth extends \Nails\Common\Model\Base
         if (empty($identifier) || empty($password)) {
 
             $error = lang('auth_login_fail_missing_field');
-            $this->_set_error($error);
+            $this->setError($error);
             return false;
         }
 
@@ -104,7 +104,7 @@ class Auth extends \Nails\Common\Model\Base
                         $blockTime = ceil($this->brute_force_protection['expire']/60);
 
                         $error = lang('auth_login_fail_blocked', $blockTime);
-                        $this->_set_error($error);
+                        $this->setError($error);
                         return false;
                     }
                 }
@@ -156,7 +156,7 @@ class Auth extends \Nails\Common\Model\Base
                 }
 
                 $error = lang('auth_login_fail_social', site_url('auth/forgotten_password?identifier=' . $identifier));
-                $this->_set_error($error);
+                $this->setError($error);
 
                 return false;
 
@@ -175,7 +175,7 @@ class Auth extends \Nails\Common\Model\Base
 
                         $blockTime = ceil($this->brute_force_protection['expire']/60);
                         $error     = lang('auth_login_fail_blocked', $blockTime);
-                        $this->_set_error($error);
+                        $this->setError($error);
                         return false;
                     }
 
@@ -201,12 +201,12 @@ class Auth extends \Nails\Common\Model\Base
         if (empty($changedRecently)) {
 
             $error = lang('auth_login_fail_general');
-            $this->_set_error($error);
+            $this->setError($error);
 
         } else {
 
             $error = lang('auth_login_fail_general_recent', $changedRecently);
-            $this->_set_error($error);
+            $this->setError($error);
         }
 
         return false;
@@ -312,7 +312,7 @@ class Auth extends \Nails\Common\Model\Base
         } else {
 
             $error = lang('auth_twofactor_token_could_not_generate');
-            $this->_set_error($error);
+            $this->setError($error);
             return false;
         }
     }
@@ -339,19 +339,19 @@ class Auth extends \Nails\Common\Model\Base
         if (!$token) {
 
             $error = lang('auth_twofactor_token_invalid');
-            $this->_set_error($error);
+            $this->setError($error);
             return false;
 
         } elseif (strtotime($token->expires) <= time()) {
 
             $error = lang('auth_twofactor_token_expired');
-            $this->_set_error($error);
+            $this->setError($error);
             $return = false;
 
         } elseif ($token->ip != $ip) {
 
             $error = lang('auth_twofactor_token_bad_ip');
-            $this->_set_error($error);
+            $this->setError($error);
             $return = false;
         }
 
@@ -390,7 +390,7 @@ class Auth extends \Nails\Common\Model\Base
 
         if (!$questions) {
 
-            $this->_set_error('No security questions available for this user.');
+            $this->setError('No security questions available for this user.');
             return false;
         }
 
@@ -422,7 +422,7 @@ class Auth extends \Nails\Common\Model\Base
         } else {
 
             //  Derp.
-            $this->_set_error('Could not determine security question.');
+            $this->setError('Could not determine security question.');
             return false;
         }
 
@@ -480,7 +480,7 @@ class Auth extends \Nails\Common\Model\Base
 
             if (empty($d->question) || empty($d->answer)) {
 
-                $this->_set_error('Malformed question/answer data.');
+                $this->setError('Malformed question/answer data.');
                 return false;
             }
         }
@@ -531,7 +531,7 @@ class Auth extends \Nails\Common\Model\Base
         } else {
 
             $this->db->trans_rollback();
-            $this->_set_error('No data to save.');
+            $this->setError('No data to save.');
             return false;
         }
     }
@@ -575,7 +575,7 @@ class Auth extends \Nails\Common\Model\Base
 
         if (!$user) {
 
-            $this->_set_error('User does not exist.');
+            $this->setError('User does not exist.');
             return false;
         }
 
@@ -664,13 +664,13 @@ class Auth extends \Nails\Common\Model\Base
 
             } else {
 
-                $this->_set_error('Could not save secret.');
+                $this->setError('Could not save secret.');
                 return false;
             }
 
         } else {
 
-            $this->_set_error('Codes did not validate.');
+            $this->setError('Codes did not validate.');
             return false;
         }
     }
@@ -690,7 +690,7 @@ class Auth extends \Nails\Common\Model\Base
 
         if (!$secret) {
 
-            $this->_set_error('Invalid User');
+            $this->setError('Invalid User');
             return false;
         }
 
@@ -700,7 +700,7 @@ class Auth extends \Nails\Common\Model\Base
 
         if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
 
-            $this->_set_error('Code has already been used.');
+            $this->setError('Code has already been used.');
             return false;
         }
 

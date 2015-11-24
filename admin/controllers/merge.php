@@ -102,7 +102,7 @@ class Merge extends BaseAdmin
 
                 } else {
 
-                    $this->data['error'] = 'Failed to merge users. ' . $this->user_model->last_error();
+                    $this->data['error'] = 'Failed to merge users. ' . $this->user_model->lastError();
                 }
 
             } else {
