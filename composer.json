@@ -58,7 +58,8 @@
                     {
                         "session": "Session"
                     }
-                ]
+                ],
+                "helpers": ["user"]
             }
         }
     }
