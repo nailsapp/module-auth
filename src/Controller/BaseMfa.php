@@ -44,7 +44,7 @@ class BaseMfa extends Base
         $this->returnTo = $this->input->get('return_to', true);
         $this->remember = $this->input->get('remember', true);
         $userId         = $this->uri->segment(3);
-        $this->mfaUser  = $this->user_model->get_by_id($userId);
+        $this->mfaUser  = $this->user_model->getById($userId);
 
         if (!$this->mfaUser) {
 

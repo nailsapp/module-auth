@@ -43,7 +43,7 @@ class Group extends \Nails\Common\Model\Base
      */
     public function setAsDefault($group_id_slug)
     {
-        $group = $this->get_by_id_or_slug($group_id_slug);
+        $group = $this->getByIdOrSlug($group_id_slug);
 
         if (!$group) {
 
@@ -103,7 +103,7 @@ class Group extends \Nails\Common\Model\Base
         $data['where']   = array();
         $data['where'][] = array('column' => 'is_default', 'value' => true);
 
-        $group = $this->get_all(null, null, $data);
+        $group = $this->getAll(null, null, $data);
 
         if (!$group) {
 
@@ -136,7 +136,7 @@ class Group extends \Nails\Common\Model\Base
      */
     public function changeUserGroup($userIds, $newGroupId)
     {
-        $group = $this->get_by_id($newGroupId);
+        $group = $this->getById($newGroupId);
 
         if (empty($group)) {
 
@@ -144,7 +144,7 @@ class Group extends \Nails\Common\Model\Base
             return false;
         }
 
-        $users = $this->user_model->get_by_ids((array) $userIds);
+        $users = $this->user_model->getByIds((array) $userIds);
 
         $this->db->trans_begin();
 
@@ -242,7 +242,7 @@ class Group extends \Nails\Common\Model\Base
      * @param  stdClass &$obj the group object to format
      * @return void
      */
-    protected function _format_object(&$obj)
+    protected function formatObject(&$obj)
     {
         $obj->acl = json_decode($obj->acl);
         $obj->password_rules = json_decode($obj->password_rules);

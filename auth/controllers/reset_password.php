@@ -49,7 +49,7 @@ class Reset_Password extends Base
     protected function validate($id, $hash)
     {
         //  Check auth credentials
-        $user = $this->user_model->get_by_id($id);
+        $user = $this->user_model->getById($id);
 
         // --------------------------------------------------------------------------
 

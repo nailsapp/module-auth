@@ -167,7 +167,7 @@ class Register extends Base
                 if ($oNewUser) {
 
                     //  Fetch user and group data
-                    $oGroup = $this->user_group_model->get_by_id($aInsertData['group_id']);
+                    $oGroup = $this->user_group_model->getById($aInsertData['group_id']);
 
                     // --------------------------------------------------------------------------
 
@@ -240,7 +240,7 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Valid user?
-        $oUser = $this->user_model->get_by_id($iId);
+        $oUser = $this->user_model->getById($iId);
 
         if (!$oUser) {
 

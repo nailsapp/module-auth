@@ -133,7 +133,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $groupsFlat   = $this->user_group_model->get_all_flat();
+        $groupsFlat   = $this->user_group_model->getAllFlat();
         $groupsFilter = array();
 
         foreach ($groupsFlat as $id => $label) {
@@ -165,8 +165,8 @@ class Accounts extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->user_model->count_all($data);
-        $this->data['users'] = $this->user_model->get_all($page, $perPage, $data);
+        $totalRows           = $this->user_model->countAll($data);
+        $this->data['users'] = $this->user_model->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
@@ -345,7 +345,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data for the view
-        $this->data['groups'] = $this->user_group_model->get_all();
+        $this->data['groups'] = $this->user_group_model->getAll();
         $this->data['passwordRules'] = array();
 
         foreach ($this->data['groups'] as $oGroup) {
@@ -385,7 +385,7 @@ class Accounts extends BaseAdmin
          * (we need to know the group of the user so we can pull up the correct cols/rules)
          */
 
-        $user = $this->user_model->get_by_id($this->uri->segment(5));
+        $user = $this->user_model->getById($this->uri->segment(5));
 
         if (!$user) {
 
@@ -683,7 +683,7 @@ class Accounts extends BaseAdmin
                         // --------------------------------------------------------------------------
 
                         //  refresh the user object
-                        $user = $this->user_model->get_by_id($this->input->post('id'));
+                        $user = $this->user_model->getById($this->input->post('id'));
 
                     //  The account failed to update, feedback to user
                     } else {
@@ -728,7 +728,7 @@ class Accounts extends BaseAdmin
         $this->data['page']->title = lang('accounts_edit_title', title_case($user->first_name . ' ' . $user->last_name));
 
         //  Get the groups, timezones and languages
-        $this->data['groups']       = $this->user_group_model->get_all();
+        $this->data['groups']       = $this->user_group_model->getAll();
         $this->data['timezones']    = $this->datetime_model->getAllTimezone();
         $this->data['date_formats'] = $this->datetime_model->getAllDateFormat();
         $this->data['time_formats'] = $this->datetime_model->getAllTimeFormat();
@@ -793,7 +793,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $userIds             = explode(',', $this->input->get('users'));
-        $this->data['users'] = $this->user_model->get_by_ids($userIds);
+        $this->data['users'] = $this->user_model->getByIds($userIds);
 
         if (!$this->data['users']) {
 
@@ -810,7 +810,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['userGroups'] = $this->user_group_model->get_all_flat();
+        $this->data['userGroups'] = $this->user_group_model->getAllFlat();
 
         // --------------------------------------------------------------------------
 
@@ -850,7 +850,7 @@ class Accounts extends BaseAdmin
 
         //  Get the user's details
         $uid       = $this->uri->segment(5);
-        $user      = $this->user_model->get_by_id($uid);
+        $user      = $this->user_model->getById($uid);
         $oldValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
@@ -870,7 +870,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user      = $this->user_model->get_by_id($uid);
+        $user      = $this->user_model->getById($uid);
         $newValue = $user->is_suspended;
 
 
@@ -901,7 +901,8 @@ class Accounts extends BaseAdmin
             'user',
             $uid,
             '#' . number_format($uid) . ' ' . $user->first_name . ' ' . $user->last_name,
-            'admin/auth/accounts/edit/' . $uid, 'is_suspended',
+            'admin/auth/accounts/edit/' . $uid,
+            'is_suspended',
             $oldValue,
             $newValue,
             false
@@ -929,7 +930,7 @@ class Accounts extends BaseAdmin
 
         //  Get the user's details
         $uid       = $this->uri->segment(5);
-        $user      = $this->user_model->get_by_id($uid);
+        $user      = $this->user_model->getById($uid);
         $oldValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
@@ -949,7 +950,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user     = $this->user_model->get_by_id($uid);
+        $user     = $this->user_model->getById($uid);
         $newValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
@@ -1014,7 +1015,7 @@ class Accounts extends BaseAdmin
 
         //  Get the user's details
         $uid  = $this->uri->segment(5);
-        $user = $this->user_model->get_by_id($uid);
+        $user = $this->user_model->getById($uid);
 
         // --------------------------------------------------------------------------
 
@@ -1028,7 +1029,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Delete user
-        $user = $this->user_model->get_by_id($uid);
+        $user = $this->user_model->getById($uid);
 
         if (!$user) {
 
@@ -1090,7 +1091,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $uid      = $this->uri->segment(5);
-        $user     = $this->user_model->get_by_id($uid);
+        $user     = $this->user_model->getById($uid);
         $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
 
         // --------------------------------------------------------------------------

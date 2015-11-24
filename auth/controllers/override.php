@@ -44,7 +44,7 @@ class Override extends Base
         //  Perform lookup of user
         $hashId = $this->uri->segment(4);
         $hashPw = $this->uri->segment(5);
-        $user   = $this->user_model->get_by_hashes($hashId, $hashPw);
+        $user   = $this->user_model->getByHashes($hashId, $hashPw);
 
         if (!$user) {
 

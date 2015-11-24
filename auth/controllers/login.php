@@ -390,7 +390,7 @@ class Login extends Base
          * if all is ok otherwise we report an error.
          */
 
-        $user = $this->user_model->get_by_hashes($hash['id'], $hash['pw']);
+        $user = $this->user_model->getByHashes($hash['id'], $hash['pw']);
 
         // --------------------------------------------------------------------------
 
@@ -694,7 +694,7 @@ class Login extends Base
                 //  Check email
                 if (isset($requiredData['email'])) {
 
-                    $check = $this->user_model->get_by_email($requiredData['email']);
+                    $check = $this->user_model->getByEmail($requiredData['email']);
 
                     if ($check) {
 
@@ -713,7 +713,7 @@ class Login extends Base
                      * throw an error.
                      */
 
-                    $check = $this->user_model->get_by_username($requiredData['username']);
+                    $check = $this->user_model->getByUsername($requiredData['username']);
 
                     if ($check) {
 
@@ -746,12 +746,12 @@ class Login extends Base
                     $basename = url_title($username, '-', true);
                     $requiredData['username'] = $basename;
 
-                    $user = $this->user_model->get_by_username($requiredData['username']);
+                    $user = $this->user_model->getByUsername($requiredData['username']);
 
                     while ($user) {
 
                         $requiredData['username'] = increment_string($basename, '');
-                        $user = $this->user_model->get_by_username($requiredData['username']);
+                        $user = $this->user_model->getByUsername($requiredData['username']);
                     }
                 }
 
@@ -866,7 +866,7 @@ class Login extends Base
                      * of what else has been set
                      */
 
-                    $group     = $this->user_group_model->get_by_id($newUser->group_id);
+                    $group     = $this->user_group_model->getById($newUser->group_id);
                     $redirectUrl  = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
 
                     redirect($redirectUrl);

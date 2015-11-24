@@ -213,7 +213,7 @@ class AccessToken extends \Nails\Common\Model\Base
     /**
      * Returns a token by it's token
      * @param  string $token The token to return
-     * @param  array  $data  Data to pass to get_all()
+     * @param  array  $data  Data to pass to getAll()
      * @return mixed         false on failure, stdClass on success
      */
     public function getByToken($token, $data = array())
@@ -225,7 +225,7 @@ class AccessToken extends \Nails\Common\Model\Base
 
         $data['where'][] = array($this->tablePrefix . '.token', hash('sha256', $token . APP_PRIVATE_KEY));
 
-        $token = $this->get_all(null, null, $data);
+        $token = $this->getAll(null, null, $data);
 
         if ($token) {
 
@@ -267,7 +267,7 @@ class AccessToken extends \Nails\Common\Model\Base
     {
         if (is_numeric($mToken)) {
 
-            $oToken = $this->get_by_id($mToken);
+            $oToken = $this->getById($mToken);
 
         } else {
 
@@ -289,16 +289,16 @@ class AccessToken extends \Nails\Common\Model\Base
     /**
      * Formats a single object
      *
-     * The get_all() method iterates over each returned item with this method so as to
+     * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to typecast ID's and/or organise data into objects.
      *
      * @param  object $obj  A reference to the object being formatted.
      * @param  array  $data The same data array which is passed to _getcount_common, for reference if needed
      * @return void
      */
-    protected function _format_object(&$obj, $data = array(), $integers = array(), $bools = array(), $floats = array())
+    protected function formatObject(&$obj, $data = array(), $integers = array(), $bools = array(), $floats = array())
     {
-        parent::_format_object($obj, $data, $integers, $bools, $floats);
+        parent::formatObject($obj, $data, $integers, $bools, $floats);
         $obj->scope = explode(',', $obj->scope);
     }
 }

@@ -94,7 +94,7 @@ class Forgotten_Password extends Base
 
             //  Override default messages
             $oFormValidation->set_message('required', lang('fv_required'));
-            $oFormValidation->set_message('valid_email',  lang('fv_valid_email'));
+            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             // --------------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ class Forgotten_Password extends Base
 
                         case 'EMAIL' :
 
-                            $this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
+                            $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
 
                             //  User provided an email, send to that email
                             $sendToEmail = $_identifier;
@@ -124,7 +124,7 @@ class Forgotten_Password extends Base
 
                         case 'USERNAME' :
 
-                            $this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
+                            $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
 
                             /**
                              * Can't email a username, send to their ID and let the email library
@@ -138,14 +138,14 @@ class Forgotten_Password extends Base
 
                             if (valid_email($_identifier)) {
 
-                                $this->data['reset_user'] = $this->user_model->get_by_email($_identifier);
+                                $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
 
                                 //  User provided an email, send to that email
                                 $sendToEmail = $_identifier;
 
                             } else {
 
-                                $this->data['reset_user'] = $this->user_model->get_by_username($_identifier);
+                                $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
 
                                 /**
                                  * Can't email a username, send to their ID and let the email library handle

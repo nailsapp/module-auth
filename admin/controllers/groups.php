@@ -88,7 +88,7 @@ class Groups extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['groups'] = $this->user_group_model->get_all();
+        $this->data['groups'] = $this->user_group_model->getAll();
 
         // --------------------------------------------------------------------------
 
@@ -138,7 +138,7 @@ class Groups extends BaseAdmin
 
         $gid = $this->uri->segment(5, null);
 
-        $this->data['group'] = $this->user_group_model->get_by_id($gid);
+        $this->data['group'] = $this->user_group_model->getById($gid);
 
         if (!$this->data['group']) {
 

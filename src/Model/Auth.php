@@ -65,23 +65,23 @@ class Auth extends \Nails\Common\Model\Base
 
             case 'EMAIL':
 
-                $user = $this->user_model->get_by_email($identifier);
+                $user = $this->user_model->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
 
-                $user = $this->user_model->get_by_username($identifier);
+                $user = $this->user_model->getByUsername($identifier);
                 break;
 
             default:
 
                 if (valid_email($identifier)) {
 
-                    $user = $this->user_model->get_by_email($identifier);
+                    $user = $this->user_model->getByEmail($identifier);
 
                 } else {
 
-                    $user = $this->user_model->get_by_username($identifier);
+                    $user = $this->user_model->getByUsername($identifier);
                 }
                 break;
         }
@@ -298,11 +298,11 @@ class Auth extends \Nails\Common\Model\Base
 
         //  Add this to the DB
         $this->db->set('user_id', $userId);
-        $this->db->set('token',   $token['token']);
-        $this->db->set('salt',    $token['salt']);
+        $this->db->set('token', $token['token']);
+        $this->db->set('salt', $token['salt']);
         $this->db->set('created', $created);
         $this->db->set('expires', $expires);
-        $this->db->set('ip',      $ip);
+        $this->db->set('ip', $ip);
 
         if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) {
 
@@ -571,7 +571,7 @@ class Auth extends \Nails\Common\Model\Base
     public function mfaDeviceSecretGenerate($userId, $existingSecret = null)
     {
         //  Get an identifier for the user
-        $user = $this->user_model->get_by_id($userId);
+        $user = $this->user_model->getById($userId);
 
         if (!$user) {
 

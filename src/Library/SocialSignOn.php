@@ -297,7 +297,7 @@ class SocialSignOn
             return false;
         }
 
-        return $this->oUserModel->get_by_id($oUser->user_id, $extended);
+        return $this->oUserModel->getById($oUser->user_id, $extended);
     }
 
     // --------------------------------------------------------------------------
@@ -321,7 +321,7 @@ class SocialSignOn
             return false;
         }
 
-        $_user = $this->oUserModel->get_by_id($user_id);
+        $_user = $this->oUserModel->getById($user_id);
 
         if (!$_user) {
 
@@ -490,7 +490,7 @@ class SocialSignOn
             return false;
         }
 
-        $_user = $this->oUserModel->get_by_id($user_id);
+        $_user = $this->oUserModel->getById($user_id);
 
         if (!$_user) {
 

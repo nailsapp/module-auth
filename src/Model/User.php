@@ -98,7 +98,7 @@ class User extends Base
             if ($email && $code) {
 
                 //  Look up the user so we can cross-check the codes
-                $user = $this->get_by_email($email, true);
+                $user = $this->getByEmail($email, true);
 
                 if ($user && $code === $user->remember_code) {
 
@@ -218,14 +218,14 @@ class User extends Base
         //  Valid user?
         if (is_numeric($idEmail)) {
 
-            $user  = $this->get_by_id($idEmail);
+            $user  = $this->getById($idEmail);
             $error = 'Invalid User ID.';
 
         } elseif (is_string($idEmail)) {
 
             if (valid_email($idEmail)) {
 
-                $user  = $this->get_by_email($idEmail);
+                $user  = $this->getByEmail($idEmail);
                 $error = 'Invalid User email.';
 
             } else {
@@ -470,7 +470,7 @@ class User extends Base
         //  Fetch the correct ACL
         if (is_numeric($user)) {
 
-            $userObject = $this->get_by_id($user);
+            $userObject = $this->getById($user);
 
             if (isset($userObject->acl)) {
 
@@ -537,7 +537,7 @@ class User extends Base
      * @param string $data Data passed from the calling method
      * @return void
      */
-    protected function _getcount_common($data = array())
+    protected function getCountCommon($data = array())
     {
         //  If there's a search term, then we better get %LIKING%
         if (!empty($data['keywords'])) {
@@ -573,7 +573,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Let the parent method handle sorting, etc
-        parent::_getcount_common($data);
+        parent::getCountCommon($data);
 
         // --------------------------------------------------------------------------
 
@@ -705,23 +705,23 @@ class User extends Base
 
             case 'EMAIL':
 
-                $user = $this->get_by_email($identifier);
+                $user = $this->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
 
-                $user = $this->get_by_username($identifier);
+                $user = $this->getByUsername($identifier);
                 break;
 
             default:
 
                 if (valid_email($identifier)) {
 
-                    $user = $this->get_by_email($identifier);
+                    $user = $this->getByEmail($identifier);
 
                 } else {
 
-                    $user = $this->get_by_username($identifier);
+                    $user = $this->getByUsername($identifier);
                 }
                 break;
         }
@@ -736,7 +736,7 @@ class User extends Base
      * @param  string $email The user's email address
      * @return mixed         stdClass on success, false on failure
      */
-    public function get_by_email($email)
+    public function getByEmail($email)
     {
         if (!is_string($email)) {
 
@@ -752,7 +752,7 @@ class User extends Base
 
         if ($user) {
 
-            return $this->get_by_id($user->user_id);
+            return $this->getById($user->user_id);
 
         } else {
 
@@ -767,7 +767,7 @@ class User extends Base
      * @param  string $username The user's username
      * @return mixed            stdClass on success, false on failure
      */
-    public function get_by_username($username)
+    public function getByUsername($username)
     {
         if (!is_string($username)) {
 
@@ -785,7 +785,7 @@ class User extends Base
             )
         );
 
-        $user = $this->get_all(null, null, $data);
+        $user = $this->getAll(null, null, $data);
 
         return empty($user) ? false : $user[0];
     }
@@ -798,7 +798,7 @@ class User extends Base
      * @param  string $md5Pw The MD5 hash of their password
      * @return mixed         stdClass on success, false on failure
      */
-    public function get_by_hashes($md5Id, $md5Pw)
+    public function getByHashes($md5Id, $md5Pw)
     {
         if (empty($md5Id) || empty($md5Pw)) {
 
@@ -818,7 +818,7 @@ class User extends Base
             )
         );
 
-        $user = $this->get_all(null, null, $data);
+        $user = $this->getAll(null, null, $data);
 
         return empty($user) ? false : $user[0];
     }
@@ -830,7 +830,7 @@ class User extends Base
      * @param  string $referralCode The user's referral code
      * @return mixed                stdClass on success, false on failure
      */
-    public function get_by_referral($referralCode)
+    public function getByReferral($referralCode)
     {
         if (!is_string($referralCode)) {
 
@@ -848,7 +848,7 @@ class User extends Base
             )
         );
 
-        $user = $this->get_all(null, null, $data);
+        $user = $this->getAll(null, null, $data);
 
         return empty($user) ? false : $user[0];
     }
@@ -875,7 +875,7 @@ class User extends Base
      * @param  string    $sKeywords       The search term
      * @param  int       $iPage           The page number of the results, if null then no pagination
      * @param  int       $iPerPage        How many items per page of paginated results
-     * @param  mixed     $aData           Any data to pass to _getcount_common()
+     * @param  mixed     $aData           Any data to pass to getCountCommon()
      * @param  bool      $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      * @return \stdClass
      */
@@ -886,8 +886,8 @@ class User extends Base
         $oOut          = new \stdClass();
         $oOut->page    = $iPage;
         $oOut->perPage = $iPerPage;
-        $oOut->total   = $this->count_all($aData);
-        $oOut->results = $this->get_all($iPage, $iPerPage, $aData);
+        $oOut->total   = $this->countAll($aData);
+        $oOut->results = $this->getAll($iPage, $iPerPage, $aData);
 
         return $oOut;
     }
@@ -913,7 +913,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oUser = $this->get_by_id($_uid);
+        $oUser = $this->getById($_uid);
         if (empty($oUser)) {
 
             $this->setError('Invalid user ID');
@@ -1286,7 +1286,7 @@ class User extends Base
      */
     public function setCacheUser($userId)
     {
-        $user = $this->get_by_id($userId, false, true);
+        $user = $this->getById($userId, false, true);
 
         if (empty($user)) {
 
@@ -1337,7 +1337,7 @@ class User extends Base
     {
         $_user_id   = empty($user_id) ? $this->activeUser('id') : $user_id;
         $_email     = trim(strtolower($email));
-        $_u         = $this->get_by_id($_user_id);
+        $_u         = $this->getById($_user_id);
 
         if (!$_u) {
 
@@ -1587,11 +1587,11 @@ class User extends Base
         //  Check user exists
         if (is_numeric($idEmail)) {
 
-            $user = $this->get_by_id($idEmail);
+            $user = $this->getById($idEmail);
 
         } else {
 
-            $user = $this->get_by_email($idEmail);
+            $user = $this->getByEmail($idEmail);
         }
 
         if (!$user) {
@@ -1878,7 +1878,7 @@ class User extends Base
             }
         }
 
-        $me = $this->get_by_id($me);
+        $me = $this->getById($me);
 
         // --------------------------------------------------------------------------
 
@@ -2002,7 +2002,7 @@ class User extends Base
             $_user_data['group_id'] = $data['group_id'];
         }
 
-        $_group = $this->user_group_model->get_by_id($_user_data['group_id']);
+        $_group = $this->user_group_model->getById($_user_data['group_id']);
 
         if (!$_group) {
 
@@ -2244,7 +2244,7 @@ class User extends Base
         if ($this->db->trans_status() !== false) {
 
             $this->db->trans_commit();
-            return $this->get_by_id($_id);
+            return $this->getById($_id);
 
         } else {
 
@@ -2527,12 +2527,12 @@ class User extends Base
         if ($preview) {
 
             $out = new \stdClass;
-            $out->user = $this->get_by_id($userId);
+            $out->user = $this->getById($userId);
             $out->merge = array();
 
             foreach ($mergeIds as $mergeUserId) {
 
-                $out->merge[] = $this->get_by_id($mergeUserId);
+                $out->merge[] = $this->getById($mergeUserId);
             }
 
             $out->tables = $tables;
@@ -2602,9 +2602,9 @@ class User extends Base
      * @param  stdClass &$user The user object to format
      * @return void
      */
-    protected function _format_object(&$user)
+    protected function formatObject(&$user)
     {
-        parent::_format_object($user);
+        parent::formatObject($user);
 
         // --------------------------------------------------------------------------
 
