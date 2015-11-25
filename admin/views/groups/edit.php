@@ -1,5 +1,5 @@
 <div class="group-accounts groups edit">
-    <div class="system-alert message">
+    <div class="alert alert-warning">
         <div class="padder">
             <p>
                 <?=lang('accounts_groups_edit_warning')?>
@@ -184,7 +184,7 @@
             <legend>
                 <?=lang('accounts_groups_edit_permission_legend')?>
             </legend>
-            <p class="system-alert message">
+            <p class="alert alert-warning">
                 <?=lang('accounts_groups_edit_permission_warn')?>
             </p>
             <p>
@@ -289,7 +289,7 @@
                 </div>
         </fieldset>
         <p>
-            <?=form_submit('submit', lang('action_save_changes'), 'class="awesome"')?>
+            <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
         </p>
     <?=form_close()?>
 </div>

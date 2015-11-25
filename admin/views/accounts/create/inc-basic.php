@@ -37,7 +37,7 @@
         // --------------------------------------------------------------------------
 
         $display = $group->id == $iDefaultGroupId ? 'block' : 'none';
-        $field['info'] .= '<li class="system-alert notice" id="user-group-' . $group->id . '" style="display:' . $display . ';">';
+        $field['info'] .= '<li class="alert alert-info" id="user-group-' . $group->id . '" style="display:' . $display . ';">';
         $field['info'] .=  $group->description;
         $field['info'] .= '</li>';
     }
@@ -59,7 +59,7 @@
 
         if (!empty($sRules)) {
             $display = $iGroupId == $iDefaultGroupId ? 'block' : 'none';
-            $field['info'] .= '<li class="system-alert notice" id="user-group-pw-' . $iGroupId . '" style="display:' . $display . ';">';
+            $field['info'] .= '<li class="alert alert-info" id="user-group-pw-' . $iGroupId . '" style="display:' . $display . ';">';
             $field['info'] .=  $sRules;
             $field['info'] .= '</li>';
         }
@@ -155,7 +155,7 @@
     $field['label']       = lang('form_label_username');
     $field['required']    = APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL';
     $field['placeholder'] = lang('accounts_create_field_username_placeholder');
-    $field['info']        = '<div class="system-alert notice">Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).</div>';
+    $field['info']        = '<div class="alert alert-info">Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).</div>';
 
     echo form_field($field);
 

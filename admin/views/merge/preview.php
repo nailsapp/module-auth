@@ -1,5 +1,5 @@
 <div class="group-accounts merge merge-preview">
-    <p class="system-alert message">
+    <p class="alert alert-warning">
         <strong>1.</strong> The following user will be kept.
     </p>
     <table>
@@ -16,7 +16,7 @@
             </tr>
         </tbody>
     </table>
-    <p class="system-alert message">
+    <p class="alert alert-warning">
         <strong>2.</strong> Data in the tables listed below will be merged into the above user.
         <?php
 
@@ -53,7 +53,7 @@
         ?>
         </tbody>
     </table>
-    <p class="system-alert message">
+    <p class="alert alert-warning">
         <strong>3.</strong> The following users will be deleted after data is merged.
     </p>
     <table>
@@ -84,5 +84,5 @@
     echo form_hidden('userId', $this->input->post('userId'));
     echo form_hidden('mergeIds', $this->input->post('mergeIds'));
     echo form_hidden('doMerge', true);
-    echo form_submit('submit', 'Perform Merge', 'class="awesome green"');
+    echo form_submit('submit', 'Perform Merge', 'class="btn btn-success"');
     echo form_close();

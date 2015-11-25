@@ -129,7 +129,7 @@
 
                                     echo '<div class="toggle toggle-modern"></div>';
                                     echo form_checkbox($field['key'], true, $selected);
-                                    echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="awesome orange fancybox">Configure</a>' : '';
+                                    echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="btn btn-warning fancybox">Configure</a>' : '';
                                     echo form_error($field['key'], '<span class="error">', '</span>');
 
                                     ?>
@@ -188,7 +188,7 @@
     ?>
     </section>
     <p>
-        <?=form_submit('submit', lang('action_save_changes'), 'class="awesome"')?>
+        <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
     </p>
     <?=form_close()?>
 </div>

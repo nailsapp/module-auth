@@ -37,7 +37,7 @@
                         } else {
 
                             ?>
-                            <td class="isPrimary error">';
+                            <td class="isPrimary error">
                                 <b class="fa fa-times-circle fa-lg"></b>
                             </td>
                             <?php
@@ -62,7 +62,7 @@
                         }
 
                         ?>
-                        <td class="dateAdded">';
+                        <td class="dateAdded">
                             <?=toUserDatetime($email->date_added)?>
                         </td>
                         <td class="dateVerified">
@@ -83,7 +83,7 @@
 
                             ?>
                         </td>
-                        <td class="actions">';
+                        <td class="actions">
                             <?php
 
                             if (!$email->is_primary) {
@@ -91,12 +91,12 @@
                                 echo anchor(
                                     '',
                                     'Make Primary',
-                                    'data-action="makePrimary" class="awesome small green"'
+                                    'data-action="makePrimary" class="btn btn-xs btn-primary"'
                                 );
                                 echo anchor(
                                     '',
                                     'Delete',
-                                    'data-action="delete" class="awesome small red"'
+                                    'data-action="delete" class="btn btn-xs btn-danger"'
                                 );
 
                             }
@@ -106,7 +106,7 @@
                                 echo anchor(
                                     '',
                                     'Verify',
-                                    'data-action="verify" class="awesome small green"'
+                                    'data-action="verify" class="btn btn-xs btn-success"'
                                 );
                             }
 
@@ -134,7 +134,7 @@
                         <span class="text-muted">&mdash;</span>
                     </td>
                     <td class="actions">
-                        <a href="#" class="submit awesome small green">Add Email</a>
+                        <a href="#" class="submit btn btn-xs btn-success">Add Email</a>
                     </td>
                 </tr>
             </tbody>

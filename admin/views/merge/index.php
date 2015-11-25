@@ -22,6 +22,6 @@
             <input type="text" id="mergeIds" name="mergeIds" />
         </p>
     </fieldset>
-    <?=form_submit('submit', 'Preview Merge', 'class="awesome green"')?>
+    <?=form_submit('submit', 'Preview Merge', 'class="btn btn-success"')?>
     <?=form_close()?>
 </div>

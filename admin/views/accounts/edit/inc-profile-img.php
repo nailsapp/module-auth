@@ -31,7 +31,7 @@
             echo anchor(
                 'admin/auth/accounts/delete_profile_img/' . $user_edit->id . $return,
                 lang('action_delete'),
-                'class="awesome small red confirm" data-body="This action is not undoable."'
+                'class="btn btn-xs btn-danger confirm" data-body="This action is not undoable."'
             );
             echo '</p>';
         }

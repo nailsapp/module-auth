@@ -27,7 +27,7 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
 
     $url = site_url('auth/override/login_as/' . md5($user_edit->id) . '/' . md5($user_edit->password) . $returnString);
 
-    $buttons[] = anchor($url, lang('admin_login_as') . ' ' . $user_edit->first_name, 'class="awesome" target="_parent"');
+    $buttons[] = anchor($url, lang('admin_login_as') . ' ' . $user_edit->first_name, 'class="btn btn-primary" target="_parent"');
 }
 
 // --------------------------------------------------------------------------
@@ -41,7 +41,7 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
     $buttons[] = anchor(
         'admin/auth/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode('admin/auth/accounts'),
         lang('action_delete'),
-        'class="awesome red confirm" data-title="' . $title . '" data-body="' . $body . '"'
+        'class="btn btn-danger confirm" data-title="' . $title . '" data-body="' . $body . '"'
     );
 }
 
@@ -55,7 +55,7 @@ if ($user_edit->is_suspended) {
         $buttons[] = anchor(
             'admin/auth/accounts/unsuspend/' . $user_edit->id . $returnString,
             lang('action_unsuspend'),
-            'class="awesome"'
+            'class="btn btn-primary"'
         );
     }
 
@@ -66,7 +66,7 @@ if ($user_edit->is_suspended) {
         $buttons[] = anchor(
             'admin/auth/accounts/suspend/' . $user_edit->id . $returnString,
             lang('action_suspend'),
-            'class="awesome red"'
+            'class="btn btn-danger"'
         );
     }
 }

@@ -26,7 +26,7 @@
 
                 foreach ($users as $member) {
 
-                    $sPermPrefix    = $sPermPrefix . '';
+                    $sPermPrefix    = 'admin:auth:accounts:';
                     $bIsActiveUser  = $member->id == activeUser('id');
                     $bActiveIsSuper = $this->user_model->isSuperuser();
                     $bMemberIsSuper = $this->user_model->isSuperuser($member);
@@ -119,7 +119,7 @@
                             <?php
 
                             //  Actions, only super users can do anything to other superusers
-                            if (!$bActiveIsSuper && $bMemberisSuper) {
+                            if (!$bActiveIsSuper && $bMemberIsSuper) {
 
                                 //  Member is a superuser and the admin is not a super user, no editing facility
                                 ?>
@@ -164,7 +164,7 @@
                                         'auth/override/login_as/' . md5($member->id) . '/' . md5($member->password) . $return_string
                                     );
 
-                                    $buttons[] = anchor($url, lang('admin_login_as'), 'class="awesome small"');
+                                    $buttons[] = anchor($url, lang('admin_login_as'), 'class="btn btn-xs btn-warning"');
                                 }
 
                                 // --------------------------------------------------------------------------
@@ -175,7 +175,7 @@
                                     $buttons[] = anchor(
                                         'admin/auth/accounts/edit/' . $member->id . $return,
                                         lang('action_edit'),
-                                        'data-fancybox-type="iframe" class="edit awesome small"'
+                                        'data-fancybox-type="iframe" class="edit btn btn-xs btn-primary"'
                                     );
                                 }
 
@@ -189,7 +189,7 @@
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/unsuspend/' . $member->id . $return,
                                             lang('action_unsuspend'),
-                                            'class="awesome small green"'
+                                            'class="btn btn-xs btn-success"'
                                         );
                                     }
 
@@ -200,7 +200,7 @@
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/suspend/' . $member->id . $return,
                                             lang('action_suspend'),
-                                            'class="awesome small red"'
+                                            'class="btn btn-xs btn-danger"'
                                         );
                                     }
                                 }
@@ -208,10 +208,10 @@
                                 // --------------------------------------------------------------------------
 
                                 //  Delete user
-                                if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'delete') && !$bMemberisSuper) {
+                                if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'delete') && !$bMemberIsSuper) {
 
                                     $aAttr = array(
-                                        'class="confirm awesome small red"',
+                                        'class="confirm btn btn-xs btn-danger"',
                                         'data-title="Delete user &quot;' . $sMemberNameFL . '&quot?"',
                                         'data-body="Are you sure you want to delete this user? This cannot be undone."'
                                     );
@@ -233,7 +233,7 @@
                                      * then don't allow this option
                                      */
 
-                                    if ($bMemberisSuper && !$bActiveIsSuper) {
+                                    if ($bMemberIsSuper && !$bActiveIsSuper) {
 
                                         //  Nothing
 
@@ -242,7 +242,7 @@
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/change_group?users=' . $member->id,
                                             'Edit Group',
-                                            'class="awesome small"'
+                                            'class="btn btn-xs btn-primary"'
                                         );
                                     }
                                 }
@@ -257,7 +257,7 @@
                                         $buttons[] = anchor(
                                             $button['url'] . $return,
                                             $button['label'],
-                                            'class="awesome small ' . $button['class'] . '"'
+                                            'class="btn btn-xs btn-default ' . $button['class'] . '"'
                                         );
                                     }
                                 }

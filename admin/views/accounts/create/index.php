@@ -9,7 +9,7 @@
 
         ?>
         <p>
-            <?=form_submit('submit', lang('accounts_create_submit'), 'class="awesome"')?>
+            <?=form_submit('submit', lang('accounts_create_submit'), 'class="btn btn-primary"')?>
         </p>
     <?=form_close()?>
 </div>

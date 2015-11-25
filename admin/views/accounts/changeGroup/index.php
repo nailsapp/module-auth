@@ -53,7 +53,7 @@
     </fieldset>
     <?php
 
-        echo form_submit('submit', 'Update User Groups', 'class="awesome green"');
+        echo form_submit('submit', 'Update User Groups', 'class="btn btn-success"');
         echo form_close();
 
     ?>

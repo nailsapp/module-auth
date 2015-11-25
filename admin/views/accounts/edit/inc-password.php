@@ -14,7 +14,7 @@
     $aField['placeholder'] = lang('accounts_edit_password_field_password_placeholder');
 
     //  PAssword rules
-    $aField['info']  = '<div class="system-alert notice" style="margin:0;">';
+    $aField['info']  = '<div class="alert alert-info" style="margin:0;">';
     $aField['info'] .= lang('accounts_edit_password_field_password_tip');
     $aField['info'] .= '<br />' . $passwordRules;
     $aField['info'] .= '</div>';
