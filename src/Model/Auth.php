@@ -288,7 +288,7 @@ class Auth extends \Nails\Common\Model\Base
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
         $oDate          = Factory::factory('DateTime');
         $salt           = $oPasswordModel->salt();
-        $ip             = $this->input->ip_address();
+        $ip             = $this->input->ipAddress();
         $created        = $oDate->format('Y-m-d H:i:s');
         $expires        = $oDate->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
 
@@ -431,7 +431,7 @@ class Auth extends \Nails\Common\Model\Base
 
         //  Update the last requested details
         $this->db->set('last_requested', 'NOW()', false);
-        $this->db->set('last_requested_ip', $this->input->ip_address());
+        $this->db->set('last_requested_ip', $this->input->ipAddress());
         $this->db->where('id', $out->id);
         $this->db->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
 

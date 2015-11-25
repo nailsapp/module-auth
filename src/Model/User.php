@@ -1161,7 +1161,7 @@ class User extends Base
                         'id' => $this->activeUser('id'),
                         'name' => $this->activeUser('first_name,last_name')
                     );
-                    $_email->data['ip_address'] = $this->input->ip_address();
+                    $_email->data['ip_address'] = $this->input->ipAddress();
 
                     $this->emailer->send($_email, true);
                 }
@@ -1912,7 +1912,7 @@ class User extends Base
 
         //  Update user's `last_seen` and `last_ip` properties
         $this->db->set('last_seen', 'NOW()', false);
-        $this->db->set('last_ip', $this->input->ip_address());
+        $this->db->set('last_ip', $this->input->ipAddress());
         $this->db->where('id', $me->id);
         $this->db->update(NAILS_DB_PREFIX . 'user');
     }
@@ -2067,7 +2067,7 @@ class User extends Base
         $_user_data['password_md5']    = $_password->password_md5;
         $_user_data['password_engine'] = $_password->engine;
         $_user_data['salt']            = $_password->salt;
-        $_user_data['ip_address']      = $this->input->ip_address();
+        $_user_data['ip_address']      = $this->input->ipAddress();
         $_user_data['last_ip']         = $_user_data['ip_address'];
         $_user_data['created']         = $oDate->format('Y-m-d H:i:s');
         $_user_data['last_update']     = $oDate->format('Y-m-d H:i:s');

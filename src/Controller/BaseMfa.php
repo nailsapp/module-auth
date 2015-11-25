@@ -62,7 +62,7 @@ class BaseMfa extends Base
 
         $salt              = $this->uri->segment(4);
         $token             = $this->uri->segment(5);
-        $ipAddress         = $this->input->ip_address();
+        $ipAddress         = $this->input->ipAddress();
         $this->loginMethod = $this->uri->segment(6) ? $this->uri->segment(6) : 'native';
 
         //  Safety first
