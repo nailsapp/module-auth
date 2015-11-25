@@ -28,9 +28,9 @@ class Accounts extends BaseAdmin
      */
     public static function announce()
     {
-        $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-        $navGroup->setLabel('Members');
-        $navGroup->setIcon('fa-users');
+        $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $oNavGroup->setLabel('Members');
+        $oNavGroup->setIcon('fa-users');
 
         if (userHasPermission('admin:auth:accounts:browse')) {
 
@@ -49,10 +49,10 @@ class Accounts extends BaseAdmin
             $oAlertSuspended->setSeverity('danger');
             $oAlertSuspended->setLabel('Number of Suspended Users');
 
-            $navGroup->addAction('View All Members', 'index', array($oAlertTotal, $oAlertSuspended), 0);
+            $oNavGroup->addAction('View All Members', 'index', array($oAlertTotal, $oAlertSuspended), 0);
         }
 
-        return $navGroup;
+        return $oNavGroup;
     }
 
     // --------------------------------------------------------------------------

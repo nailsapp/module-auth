@@ -26,11 +26,11 @@ class Merge extends BaseAdmin
     {
         if (userHasPermission('admin:auth:merge:users')) {
 
-            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-            $navGroup->setLabel('Members');
-            $navGroup->setIcon('fa-users');
-            $navGroup->addAction('Merge Users');
-            return $navGroup;
+            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup->setLabel('Members');
+            $oNavGroup->setIcon('fa-users');
+            $oNavGroup->addAction('Merge Users');
+            return $oNavGroup;
         }
     }
 
