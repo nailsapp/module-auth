@@ -1,29 +1,29 @@
 <?php
 
-    $query              = array();
-    $query['return_to'] = isset($return_to) ? $return_to : '';
-    $query['remember']  = isset($remember) ? $remember : '';
+$query              = array();
+$query['return_to'] = isset($return_to) ? $return_to : '';
+$query['remember']  = isset($remember) ? $remember : '';
 
-    $query = array_filter($query);
+$query = array_filter($query);
 
-    if ($query) {
+if ($query) {
 
-        $query = '?' . http_build_query($query);
+    $query = '?' . http_build_query($query);
 
-    } else {
+} else {
 
-        $query = '';
-    }
+    $query = '';
+}
 
-    if (!isset($user_id) || !isset($token)) {
+if (!isset($user_id) || !isset($token)) {
 
-        $formUrl = null;
+    $formUrl = null;
 
-    } else {
+} else {
 
-        $formUrl = 'auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
-        $formUrl = site_url($formUrl);
-    }
+    $formUrl = 'auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
+    $formUrl = site_url($formUrl);
+}
 
 ?>
 <div class="container nails-module-auth mfa mfa-device mfa-device-ask">

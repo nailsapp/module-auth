@@ -22,15 +22,15 @@
             <tbody>
             <?php
 
-                foreach ($users as $theUser) {
+            foreach ($users as $theUser) {
 
                 echo '<tr>';
-                    echo '<td class="userId">' . number_format($theUser->id) . '</td>';
-                    echo adminHelper('loadUserCell', $theUser);
-                    echo '<td>' . $theUser->group_name . '</td>';
+                echo '<td class="userId">' . number_format($theUser->id) . '</td>';
+                echo adminHelper('loadUserCell', $theUser);
+                echo '<td>' . $theUser->group_name . '</td>';
                 echo '</tr>';
 
-                }
+            }
 
             ?>
             </tbody>
@@ -44,7 +44,7 @@
         foreach ($userGroups as $id => $label) {
 
             echo '<option value="' . $id. '">';
-                echo $label;
+            echo $label;
             echo '</option>';
         }
 

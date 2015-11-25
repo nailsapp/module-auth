@@ -15,63 +15,63 @@
             </legend>
             <?php
 
-                //  Display Name
-                $aField                = array();
-                $aField['key']         = 'label';
-                $aField['label']       = lang('accounts_groups_edit_basic_field_label_label');
-                $aField['default']     = $group->label;
-                $aField['required']    = true;
-                $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_label');
+            //  Display Name
+            $aField                = array();
+            $aField['key']         = 'label';
+            $aField['label']       = lang('accounts_groups_edit_basic_field_label_label');
+            $aField['default']     = $group->label;
+            $aField['required']    = true;
+            $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_label');
 
-                echo form_field($aField);
+            echo form_field($aField);
 
-                // --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-                //  Name
-                $aField                = array();
-                $aField['key']         = 'slug';
-                $aField['label']       = lang('accounts_groups_edit_basic_field_label_slug');
-                $aField['default']     = $group->slug;
-                $aField['required']    = true;
-                $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_slug');
+            //  Name
+            $aField                = array();
+            $aField['key']         = 'slug';
+            $aField['label']       = lang('accounts_groups_edit_basic_field_label_slug');
+            $aField['default']     = $group->slug;
+            $aField['required']    = true;
+            $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_slug');
 
-                echo form_field($aField);
+            echo form_field($aField);
 
-                // --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-                //  Description
-                $aField                = array();
-                $aField['key']         = 'description';
-                $aField['label']       = lang('accounts_groups_edit_basic_field_label_description');
-                $aField['default']     = $group->description;
-                $aField['required']    = true;
-                $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_description');
+            //  Description
+            $aField                = array();
+            $aField['key']         = 'description';
+            $aField['label']       = lang('accounts_groups_edit_basic_field_label_description');
+            $aField['default']     = $group->description;
+            $aField['required']    = true;
+            $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_description');
 
-                echo form_field($aField);
+            echo form_field($aField);
 
-                // --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-                //  Default Homepage
-                $aField                = array();
-                $aField['key']         = 'default_homepage';
-                $aField['label']       = lang('accounts_groups_edit_basic_field_label_homepage');
-                $aField['default']     = $group->default_homepage;
-                $aField['required']    = true;
-                $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_homepage');
+            //  Default Homepage
+            $aField                = array();
+            $aField['key']         = 'default_homepage';
+            $aField['label']       = lang('accounts_groups_edit_basic_field_label_homepage');
+            $aField['default']     = $group->default_homepage;
+            $aField['required']    = true;
+            $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_homepage');
 
-                echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_homepage'));
+            echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_homepage'));
 
-                // --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-                //  Registration Redirect
-                $aField                = array();
-                $aField['key']         = 'registration_redirect';
-                $aField['label']       = lang('accounts_groups_edit_basic_field_label_registration');
-                $aField['default']     = $group->registration_redirect;
-                $aField['required']    = false;
-                $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_registration');
+            //  Registration Redirect
+            $aField                = array();
+            $aField['key']         = 'registration_redirect';
+            $aField['label']       = lang('accounts_groups_edit_basic_field_label_registration');
+            $aField['default']     = $group->registration_redirect;
+            $aField['required']    = false;
+            $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_registration');
 
-                echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_registration'));
+            echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_registration'));
 
             ?>
         </fieldset>

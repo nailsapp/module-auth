@@ -1,13 +1,15 @@
-<?php
+<div class="group-accounts create">
+    <?=form_open()?>
+        <p>
+            <?=lang('accounts_create_intro')?>
+        </p>
+        <?php
 
-echo '<div class="group-accounts create">';
-echo form_open();
+        $this->load->view('accounts/create/inc-basic');
 
-echo '<p>' . lang('accounts_create_intro') .'</p>';
-
-$this->load->view('accounts/create/inc-basic');
-
-echo '<p>' . form_submit('submit', lang('accounts_create_submit'), 'class="awesome"') . '</p>';
-
-echo form_close();
-echo '</div>';
+        ?>
+        <p>
+            <?=form_submit('submit', lang('accounts_create_submit'), 'class="awesome"')?>
+        </p>
+    <?=form_close()?>
+</div>

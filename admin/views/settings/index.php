@@ -110,70 +110,73 @@
                         <hr />
                         <?php
 
-                            foreach ($providers as $provider) {
+                        foreach ($providers as $provider) {
 
-                                $field            = array();
-                                $field['key']     = 'auth_social_signon_' . $provider['slug'] . '_enabled';
-                                $field['label']   = $provider['label'];
-                                $field['default'] = appSetting($field['key'], 'auth') ? true : false;
+                            $field            = array();
+                            $field['key']     = 'auth_social_signon_' . $provider['slug'] . '_enabled';
+                            $field['label']   = $provider['label'];
+                            $field['default'] = appSetting($field['key'], 'auth') ? true : false;
 
-                                echo '<div class="field checkbox boolean configure-provider">';
+                            ?>
+                            <div class="field checkbox boolean configure-provider">
+                                <span class="label">
+                                    <?=$field['label']?>
+                                </span>
+                                <span class="input">
+                                    <?php
 
-                                    echo '<span class="label">';
-                                        echo $field['label'];
-                                    echo '</span>';
-                                    echo '<span class="input">';
+                                    $selected = set_value($field['key'], (bool) $field['default']);
 
-                                        $selected = set_value($field['key'], (bool) $field['default']);
+                                    echo '<div class="toggle toggle-modern"></div>';
+                                    echo form_checkbox($field['key'], true, $selected);
+                                    echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="awesome orange fancybox">Configure</a>' : '';
+                                    echo form_error($field['key'], '<span class="error">', '</span>');
 
-                                        echo '<div class="toggle toggle-modern"></div>';
-                                        echo form_checkbox($field['key'], true, $selected);
-                                        echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="awesome orange fancybox">Configure</a>' : '';
-                                        echo form_error($field['key'], '<span class="error">', '</span>');
+                                    ?>
+                                </span>
+                                <div id="configure-provider-<?=$provider['slug']?>" class="configure-provider-fancybox" style="min-width:500px;display:none;">
+                                    <p style="text-align:center;">
+                                        Please provide the following information. Fields marked with a * are required.
+                                    </p>
+                                    <?php
 
-                                    echo '</span>';
+                                    foreach ($provider['fields'] as $key => $label) {
 
-                                    echo '<div id="configure-provider-' . $provider['slug'] . '" class="configure-provider-fancybox" style="min-width:500px;display:none;">';
+                                        /**
+                                         * Secondary conditional detects an actual array fo fields rather than
+                                         * just the label/required array. Design could probably be improved...
+                                         **/
 
-                                        echo '<p style="text-align:center;">';
-                                            echo 'Please provide the following information. Fields marked with a * are required.';
-                                        echo '</p>';
+                                        if (is_array($label) && !isset($label['label'])) {
 
-                                        foreach ($provider['fields'] as $key => $label) {
-
-                                            /**
-                                             * Secondary conditional detects an actual array fo fields rather than
-                                             * just the label/required array. Design could probably be improved...
-                                             **/
-
-                                            if (is_array($label) && !isset($label['label'])) {
-
-                                                foreach ($label as $key1 => $label1) {
-
-                                                    $field             = array();
-                                                    $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1;
-                                                    $field['label']    = $label1['label'];
-                                                    $field['required'] = $label1['required'];
-                                                    $field['default']  = appSetting($field['key'], 'auth');
-
-                                                    echo form_field($field);
-                                                }
-
-                                            } else {
+                                            foreach ($label as $key1 => $label1) {
 
                                                 $field             = array();
-                                                $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key;
-                                                $field['label']    = $label['label'];
-                                                $field['required'] = $label['required'];
+                                                $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1;
+                                                $field['label']    = $label1['label'];
+                                                $field['required'] = $label1['required'];
                                                 $field['default']  = appSetting($field['key'], 'auth');
 
                                                 echo form_field($field);
                                             }
-                                        }
 
-                                    echo '</div>';
-                                echo '</div>';
-                            }
+                                        } else {
+
+                                            $field             = array();
+                                            $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key;
+                                            $field['label']    = $label['label'];
+                                            $field['required'] = $label['required'];
+                                            $field['default']  = appSetting($field['key'], 'auth');
+
+                                            echo form_field($field);
+                                        }
+                                    }
+
+                                    ?>
+                                </div>
+                            </div>
+                            <?php
+                        }
 
                         ?>
                     </div>

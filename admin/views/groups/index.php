@@ -35,20 +35,20 @@
                     <td class="actions">
                     <?php
 
-                        if (userHasPermission('admin:auth:groups:edit')) {
+                    if (userHasPermission('admin:auth:groups:edit')) {
 
-                            echo anchor('admin/auth/groups/edit/' . $group->id, lang('action_edit'), 'class="awesome small"');
-                        }
+                        echo anchor('admin/auth/groups/edit/' . $group->id, lang('action_edit'), 'class="awesome small"');
+                    }
 
-                        if (userHasPermission('admin:auth:groups:delete')) {
+                    if (userHasPermission('admin:auth:groups:delete')) {
 
-                            echo anchor('admin/auth/groups/delete/' . $group->id, lang('action_delete'), 'class="awesome small red confirm" data-body="This action is also not undoable." data-title="Confirm Delete"');
-                        }
+                        echo anchor('admin/auth/groups/delete/' . $group->id, lang('action_delete'), 'class="awesome small red confirm" data-body="This action is also not undoable." data-title="Confirm Delete"');
+                    }
 
-                        if (userHasPermission('admin:auth:groups:setDefault') && ! $group->is_default) {
+                    if (userHasPermission('admin:auth:groups:setDefault') && ! $group->is_default) {
 
-                            echo anchor('admin/auth/groups/set_default/' . $group->id, lang('accounts_groups_index_action_set_default'), 'class="awesome green small"');
-                        }
+                        echo anchor('admin/auth/groups/set_default/' . $group->id, lang('accounts_groups_index_action_set_default'), 'class="awesome green small"');
+                    }
 
                     ?>
                     </td>

@@ -5,5 +5,5 @@
 	of our database.
 </p>
 <p>
-	<?=anchor( 'email/verify/' . $user_id . '/' . $code, 'Verify Email' )?>
+	<?=anchor('email/verify/' . $user_id . '/' . $code, 'Verify Email')?>
 </p>

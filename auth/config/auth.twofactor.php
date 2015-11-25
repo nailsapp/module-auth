@@ -21,8 +21,8 @@
 $config['authTwoFactorMode'] = false;
 
 $config['authTwoFactor'] = array(
-	'QUESTION' => array(),
-	'DEVICE'   => array()
+    'QUESTION' => array(),
+    'DEVICE'   => array()
 );
 
 // --------------------------------------------------------------------------
@@ -38,7 +38,7 @@ $config['authTwoFactor']['QUESTION']['numQuestions'] = 1;
 // The number of user questions a user must have
 $config['authTwoFactor']['QUESTION']['numUserQuestions'] = 0;
 
-//	The questions the system can use
+//  The questions the system can use
 $config['authTwoFactor']['QUESTION']['questions'] = array();
 $config['authTwoFactor']['QUESTION']['questions'][] = 'What was your childhood nickname? ';
 $config['authTwoFactor']['QUESTION']['questions'][] = 'In what city did you meet your spouse/significant other?';

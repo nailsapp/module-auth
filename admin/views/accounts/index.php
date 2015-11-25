@@ -1,12 +1,9 @@
 <div class="group-accounts all">
+    <p>
+        This section lists all users registered on site. You can browse or search this  list using
+        the search facility below.
+    </p>
     <?php
-
-        echo '<p>';
-
-            echo 'This section lists all users registered on site. You can browse or search this ';
-            echo 'list using the search facility below.';
-
-        echo '</p>';
 
         echo adminHelper('loadSearch', $search);
         echo adminHelper('loadPagination', $pagination);
@@ -29,12 +26,20 @@
 
                 foreach ($users as $member) {
 
-                    echo '<tr>';
-                        echo '<td class="id">';
-                            echo number_format($member->id);
-                        echo '</td>';
+                    $sPermPrefix    = $sPermPrefix . '';
+                    $bIsActiveUser  = $member->id == activeUser('id');
+                    $bActiveIsSuper = $this->user_model->isSuperuser();
+                    $bMemberIsSuper = $this->user_model->isSuperuser($member);
+                    $sMemberNameFL  = $member->first_name . ' ' . $member->last_name;
+                    $sMemberNameLF  = $member->last_name . ', ' . $member->first_name;
 
-                        echo '<td class="details">';
+                    ?>
+                    <tr>
+                        <td class="id">
+                            <?=number_format($member->id)?>
+                        </td>
+                        <td class="details">
+                            <?php
 
                             if ($member->profile_img) {
 
@@ -55,62 +60,73 @@
                                 ));
                             }
 
-                            echo '<div>';
+                            ?>
+                            <div>
+                                <?php
 
-                            switch ($this->input->get('sort')) {
+                                switch ($this->input->get('sort')) {
 
-                                case 'u.last_name':
+                                    case 'u.last_name':
 
-                                    echo '<strong>' . $member->last_name . ', ' . $member->first_name . '</strong>';
-                                    break;
+                                        echo '<strong>' . $sMemberNameLF . '</strong>';
+                                        break;
 
-                                default:
+                                    default:
 
-                                    echo '<strong>' . $member->first_name . ' ' . $member->last_name . '</strong>';
-                                    break;
-                            }
-
-                            echo '<small>';
-
-                                echo $member->email;
-
-                                if ($member->email_is_verified) {
-
-                                    echo '<span class="verified" rel="tipsy" title="Verified email address">';
-                                        echo '&nbsp;<span class="fa fa-check-circle"></span>';
-                                    echo '<span>';
+                                        echo '<strong>' . $sMemberNameFL . '</strong>';
+                                        break;
                                 }
 
-                            echo '</small>';
+                                ?>
+                                <small>
+                                    <?php
 
-                            echo '<small>';
-                            if ($member->last_login) {
+                                    echo $member->email;
 
-                                echo 'Last login: ';
-                                echo '<span class="nice-time">' . toUserDate($member->last_login, 'Y-m-d H:i:s') . '</span> ';
-                                echo '(' . $member->login_count . ' logins)';
+                                    if ($member->email_is_verified) {
 
-                            } else {
+                                        echo '<span class="verified" rel="tipsy" title="Verified email address">';
+                                            echo '&nbsp;<span class="fa fa-check-circle"></span>';
+                                        echo '<span>';
+                                    }
 
-                                echo 'Last login: Never Logged In';
-                            }
-                            echo '</small>';
-                            echo '</div>';
+                                    ?>
+                            </small>
+                            <small>
+                                Last login:
+                                <?php
 
-                        echo '</td>';
-                        echo '<td class="group">';
-                            echo $member->group_name;
-                        echo '</td>';
+                                if ($member->last_login) {
 
-                        echo '<td class="actions">';
+                                    echo '<span class="nice-time">';
+                                    echo toUserDate($member->last_login, 'Y-m-d H:i:s');
+                                    echo '</span> ';
+                                    echo '(' . $member->login_count . ' logins)';
+
+                                } else {
+
+                                    echo 'Never Logged In';
+                                }
+
+                                ?>
+                            </small>
+                            </div>
+                        </td>
+                        <td class="group">
+                            <?=$member->group_name?>
+                        </td>
+                        <td class="actions">
+                            <?php
 
                             //  Actions, only super users can do anything to other superusers
-                            if (!$this->user_model->isSuperuser() && $this->user_model->isSuperuser($member)) {
+                            if (!$bActiveIsSuper && $bMemberisSuper) {
 
                                 //  Member is a superuser and the admin is not a super user, no editing facility
-                                echo '<span class="not-editable">';
-                                    echo 'You do not have permission to perform manipulations on this user.';
-                                echo '</span>';
+                                ?>
+                                <span class="not-editable">
+                                    You do not have permission to perform manipulations on this user.
+                                </span>
+                                <?php
 
                             } else {
 
@@ -119,14 +135,18 @@
                                 $buttons = array();
 
                                 //  Login as?
-                                if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
+                                if (!$bIsActiveUser && userHasPermission($sPermPrefix. 'loginAs')) {
 
                                     //  Generate the return string
                                     $url = uri_string();
 
                                     if ($this->input->get()) {
 
-                                        //  Remove common problematic GET vars (for instance, we don't want isModal when we return)
+                                        /**
+                                         * Remove common problematic GET vars (for instance, we don't want
+                                         * isModal when we return)
+                                         */
+
                                         $params = $this->input->get();
                                         unset($params['isModal']);
 
@@ -140,7 +160,9 @@
 
                                     // --------------------------------------------------------------------------
 
-                                    $url = site_url('auth/override/login_as/' . md5($member->id) . '/' . md5($member->password) . $return_string);
+                                    $url = site_url(
+                                        'auth/override/login_as/' . md5($member->id) . '/' . md5($member->password) . $return_string
+                                    );
 
                                     $buttons[] = anchor($url, lang('admin_login_as'), 'class="awesome small"');
                                 }
@@ -148,7 +170,7 @@
                                 // --------------------------------------------------------------------------
 
                                 //  Edit
-                                if ($member->id == activeUser('id') || userHasPermission('admin:auth:accounts:editOthers')) {
+                                if ($bIsActiveUser || userHasPermission($sPermPrefix . 'editOthers')) {
 
                                     $buttons[] = anchor(
                                         'admin/auth/accounts/edit/' . $member->id . $return,
@@ -162,7 +184,7 @@
                                 //  Suspend user
                                 if ($member->is_suspended) {
 
-                                    if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:unsuspend')) {
+                                    if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'unsuspend')) {
 
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/unsuspend/' . $member->id . $return,
@@ -173,7 +195,7 @@
 
                                 } else {
 
-                                    if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:suspend')) {
+                                    if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'suspend')) {
 
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/suspend/' . $member->id . $return,
@@ -186,23 +208,37 @@
                                 // --------------------------------------------------------------------------
 
                                 //  Delete user
-                                if ($member->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete') && !$this->user_model->isSuperuser($member->id)) {
+                                if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'delete') && !$bMemberisSuper) {
+
+                                    $aAttr = array(
+                                        'class="confirm awesome small red"',
+                                        'data-title="Delete user &quot;' . $sMemberNameFL . '&quot?"',
+                                        'data-body="Are you sure you want to delete this user? This cannot be undone."'
+                                    );
 
                                     $buttons[] = anchor(
                                         'admin/auth/accounts/delete/' . $member->id . $return,
                                         lang('action_delete'),
-                                        'class="confirm awesome small red" data-title="Delete user &quot;' . $member->first_name . ' ' . $member->last_name . '&quot?" data-body="Are you sure you want to delete this user? This action is not undoable."'
+                                        implode(' ', $aAttr)
                                     );
                                 }
 
                                 // --------------------------------------------------------------------------
 
                                 //  Update user's group
-                                if (userHasPermission('admin:auth:accounts:changeUserGroup')) {
-                                    //  If this user is a super user and the current user is not a super user then don't allow this option
-                                    if ($this->user_model->isSuperuser($member->id) && !$this->user_model->isSuperuser()) {
+                                if (userHasPermission($sPermPrefix . 'changeUserGroup')) {
+
+                                    /**
+                                     * If this user is a super user and the current user is not a super user
+                                     * then don't allow this option
+                                     */
+
+                                    if ($bMemberisSuper && !$bActiveIsSuper) {
+
                                         //  Nothing
+
                                     } else {
+
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/change_group?users=' . $member->id,
                                             'Edit Group',
@@ -242,18 +278,23 @@
                                 }
                             }
 
-                        echo '</td>';
-                    echo '</tr>';
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
                 }
 
             } else {
 
-                echo '<tr>';
-                    echo '<td colspan="4" class="no-data">';
-                        echo '<p>No Users Found</p>';
-                    echo '</td>';
-                echo '</tr>';
+                ?>
+                <tr>
+                    <td colspan="4" class="no-data">
+                        <p>No Users Found</p>
+                    </td>
+                </tr>
+                <?php
             }
+
             ?>
             </tbody>
         </table>

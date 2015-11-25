@@ -20,12 +20,15 @@
         <strong>2.</strong> Data in the tables listed below will be merged into the above user.
         <?php
 
-            if (!empty($mergeResult->ignoreTables)) {
+        if (!empty($mergeResult->ignoreTables)) {
 
-                echo 'Please note that the following tables will not be merged and any data in them which belongs to ';
-                echo 'the users listed below will be deleted: <br />';
-                echo '<code>' . implode('</code>, <code>', $mergeResult->ignoreTables) . '</code>';
-            }
+            ?>
+            Please note that the following tables will not be merged and any data in them which belongs to
+            the users listed below will be deleted:
+            <br />
+            <code><?implode('</code>, <code>', $mergeResult->ignoreTables)?></code>';
+            <?php
+        }
 
         ?>
     </p>
@@ -39,13 +42,13 @@
         <tbody>
         <?php
 
-            foreach ($mergeResult->tables as $table) {
+        foreach ($mergeResult->tables as $table) {
 
-                echo '<tr>';
-                    echo '<td class="tableName">' . $table->name . '</td>';
-                    echo '<td class="tableRows">' . $table->numRows . '</td>';
-                echo '</tr>';
-            }
+            echo '<tr>';
+                echo '<td class="tableName">' . $table->name . '</td>';
+                echo '<td class="tableRows">' . $table->numRows . '</td>';
+            echo '</tr>';
+        }
 
         ?>
         </tbody>
@@ -63,13 +66,13 @@
         <tbody>
         <?php
 
-            foreach ($mergeResult->merge as $mergeUser) {
+        foreach ($mergeResult->merge as $mergeUser) {
 
-                echo '<tr>';
-                    echo '<td class="userId">' . number_format($mergeUser->id) . '</td>';
-                    echo adminHelper('loadUserCell', $mergeUser);
-                echo '</tr>';
-            }
+            echo '<tr>';
+                echo '<td class="userId">' . number_format($mergeUser->id) . '</td>';
+                echo adminHelper('loadUserCell', $mergeUser);
+            echo '</tr>';
+        }
 
         ?>
         </tbody>

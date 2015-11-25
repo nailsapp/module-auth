@@ -2,43 +2,38 @@ Your password has been changed, if you made this request you can safely ignore t
 
 <?php
 
-	echo 'The request was made at ' . toUserDatetime( $updated_at );
-	echo ! empty( $updated_by['id'] ) && $updated_by['id'] != $sent_to->id ? ' by ' . strtoupper( $updated_by['name'] ) : '';
-	echo ! empty( $ip_address ) ? ' from IP address ' . $ip_address: '';
-	echo '.';
+    echo 'The request was made at ' . toUserDatetime($updated_at);
+    echo ! empty($updated_by['id']) && $updated_by['id'] != $sent_to->id ? ' by ' . strtoupper($updated_by['name']) : '';
+    echo ! empty($ip_address) ? ' from IP address ' . $ip_address: '';
+    echo '.';
 ?>
 
 
-If it was not you who made this change, or you didn't request it, please IMMEDIATELY reset your password using the forgotten password facility (link below) and please let us know of any fraudulent activity on your account.
+If it was not you who made this change, or you didn't request it, please IMMEDIATELY reset your password
+using the forgotten password facility (link below) and please let us know of any fraudulent activity on
+your account.
 
 <?php
 
-	switch ( APP_NATIVE_LOGIN_USING ) :
+switch (APP_NATIVE_LOGIN_USING) {
 
-		case 'EMAIL' :
+    case 'EMAIL' :
 
-			$_identifier = $sent_to->email;
+        $_identifier = $sent_to->email;
+        break;
 
-		break;
+    case 'USERNAME' :
 
-		// --------------------------------------------------------------------------
+        $_identifier = $sent_to->username;
+        break;
 
-		case 'USERNAME' :
+    default :
 
-			$_identifier = $sent_to->username;
+        $_identifier = $sent_to->email;
+        break;
 
-		break;
-
-		// --------------------------------------------------------------------------
-
-		default :
-
-			$_identifier = $sent_to->email;
-
-		break;
-
-	endswitch;
+}
 
 ?>
 
-{unwrap}<?=site_url( 'auth/forgotten_password?identifier=' . urlencode( $_identifier ) )?>{/unwrap}
+{unwrap}<?=site_url('auth/forgotten_password?identifier=' . urlencode($_identifier))?>{/unwrap}

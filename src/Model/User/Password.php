@@ -556,7 +556,7 @@ class Password extends \Nails\Common\Model\Base
      * @param string $identifier The identifier to use for setting the token (set by APP_NATIVE_LOGIN_USING)
      * @return boolean
      */
-    public function set_token($sIdentifier)
+    public function setToken($sIdentifier)
     {
         if (empty($sIdentifier)) {
 
@@ -596,7 +596,7 @@ class Password extends \Nails\Common\Model\Base
      * @param  string $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      * @return boolean
      */
-    public function validate_token($sCode, $bGenerateNewPw)
+    public function validateToken($sCode, $bGenerateNewPw)
     {
         if (empty($sCode)) {
 

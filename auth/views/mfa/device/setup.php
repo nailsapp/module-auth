@@ -1,19 +1,19 @@
 <?php
 
-    $query              = array();
-    $query['return_to'] = $return_to;
-    $query['remember']  = $remember;
+$query              = array();
+$query['return_to'] = $return_to;
+$query['remember']  = $remember;
 
-    $query = array_filter($query);
+$query = array_filter($query);
 
-    if ($query) {
+if ($query) {
 
-        $query = '?' . http_build_query($query);
+    $query = '?' . http_build_query($query);
 
-    } else {
+} else {
 
-        $query = '';
-    }
+    $query = '';
+}
 
 ?>
 <div class="container nails-module-auth mfa mfa-device mfa-device-setup">

@@ -74,18 +74,22 @@ if ($user_edit->is_suspended) {
 
 if ($buttons) {
 
-    echo '<fieldset id="edit-user-actions">';
-        echo '<legend>';
-            echo lang('accounts_edit_actions_legend');
-        echo '</legend>';
-        echo '<p>';
+    ?>
+    <fieldset id="edit-user-actions">
+        <legend>
+            <?=lang('accounts_edit_actions_legend')?>
+        </legend>
+        <p>
+            <?php
 
-        foreach ($buttons as $button) {
+            foreach ($buttons as $button) {
 
-            echo $button;
-        }
+                echo $button;
+            }
 
-        echo '</p>';
-        echo '<div class="clear"></div>';
-    echo '</fieldset>';
+            ?>
+        </p>
+        <div class="clear"></div>
+    </fieldset>
+    <?php
 }

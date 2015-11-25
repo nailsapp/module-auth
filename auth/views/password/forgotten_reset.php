@@ -8,15 +8,15 @@
         <div class="col-sm-4 col-sm-offset-4">
             <div class="well well-lg">
                 <p class="center">
-                    <?=lang( 'auth_forgot_reset_ok' )?>
+                    <?=lang('auth_forgot_reset_ok')?>
                 </p>
                 <div class="row">
                     <div class="col-md-12">
-                        <input type="text" value="<?=htmlentities( $new_password )?>" class="form-control" id="temp-password" style="font-size:1.5em;text-align:center;" />
+                        <input type="text" value="<?=htmlentities($new_password)?>" class="form-control" id="temp-password" style="font-size:1.5em;text-align:center;" />
                     </div>
                 </div>
                 <p style="margin-top:1em;">
-                    <?=anchor( 'auth/login', lang( 'auth_forgot_action_proceed' ), 'class="btn btn-primary btn-block"' )?>
+                    <?=anchor('auth/login', lang('auth_forgot_action_proceed'), 'class="btn btn-primary btn-block"')?>
                 </p>
             </div>
         </div>
@@ -29,7 +29,7 @@
 </div>
 <script type="text/javascript">
 
-    var textBox = document.getElementById( 'temp-password' );
+    var textBox = document.getElementById('temp-password');
     textBox.onfocus = function()
     {
         textBox.select();

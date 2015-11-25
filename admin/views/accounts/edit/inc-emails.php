@@ -1,5 +1,7 @@
 <fieldset id="edit-user-emails" class="emails">
-    <legend><?=lang('accounts_edit_emails_legend')?></legend>
+    <legend>
+        <?=lang('accounts_edit_emails_legend')?>
+    </legend>
     <div class="box-container">
         <table>
             <thead>
@@ -17,65 +19,101 @@
 
                 foreach ($user_emails as $email) {
 
-                    echo '<tr data-email="' . $email->email . '" class="existingEmail">';
-                    echo '<td class="email">';
-                        echo mailto($email->email);
-                    echo '</td>';
-                    if ($email->is_primary) {
+                    ?>
+                    <tr data-email="<?=$email->email?>" class="existingEmail">
+                        <td class="email">
+                            <?=mailto($email->email)?>
+                        </td>
+                        <?php
 
-                        echo '<td class="isPrimary success">';
-                            echo  '<b class="fa fa-check-circle fa-lg"></b>';
-                        echo '</td>';
+                        if ($email->is_primary) {
 
-                    } else {
-
-                        echo '<td class="isPrimary error">';
-                            echo  '<b class="fa fa-times-circle fa-lg"></b>';
-                        echo '</td>';
-                    }
-                    if ($email->is_verified) {
-
-                        echo '<td class="isVerified success">';
-                            echo  '<b class="fa fa-check-circle fa-lg"></b>';
-                        echo '</td>';
-
-                    } else {
-
-                        echo '<td class="isVerified error">';
-                            echo  '<b class="fa fa-times-circle fa-lg"></b>';
-                        echo '</td>';
-                    }
-                    echo '<td class="dateAdded">';
-                        echo toUserDatetime($email->date_added);
-                    echo '</td>';
-                    echo '<td class="dateVerified">';
-                        if ($email->is_verified) {
-
-                            echo toUserDatetime($email->date_added);
+                            ?>
+                            <td class="isPrimary success">
+                                <b class="fa fa-check-circle fa-lg"></b>
+                            </td>
+                            <?php
 
                         } else {
 
-                            echo '<span class="text-muted">';
-                                echo lang('accounts_edit_emails_td_not_verified');
-                            echo '</span>';
-                        }
-                    echo '</td>';
-                    echo '<td class="actions">';
-
-                        if (!$email->is_primary) {
-
-                            echo anchor('', 'Make Primary', 'data-action="makePrimary" class="awesome small green"');
-                            echo anchor('', 'Delete', 'data-action="delete" class="awesome small red"');
+                            ?>
+                            <td class="isPrimary error">';
+                                <b class="fa fa-times-circle fa-lg"></b>
+                            </td>
+                            <?php
 
                         }
+                        if ($email->is_verified) {
 
-                        if (!$email->is_verified) {
+                            ?>
+                            <td class="isVerified success">
+                                <b class="fa fa-check-circle fa-lg"></b>
+                            </td>
+                            <?php
 
-                            echo anchor('', 'Verify', 'data-action="verify" class="awesome small green"');
+                        } else {
+
+                            ?>
+                            <td class="isVerified error">
+                                <b class="fa fa-times-circle fa-lg"></b>
+                            </td>
+                            <?php
+
                         }
 
-                    echo '</td>';
-                    echo '</tr>';
+                        ?>
+                        <td class="dateAdded">';
+                            <?=toUserDatetime($email->date_added)?>
+                        </td>
+                        <td class="dateVerified">
+                            <?php
+
+                            if ($email->is_verified) {
+
+                                echo toUserDatetime($email->date_added);
+
+                            } else {
+
+                                ?>
+                                <span class="text-muted">
+                                    <?=lang('accounts_edit_emails_td_not_verified')?>
+                                </span>
+                                <?php
+                            }
+
+                            ?>
+                        </td>
+                        <td class="actions">';
+                            <?php
+
+                            if (!$email->is_primary) {
+
+                                echo anchor(
+                                    '',
+                                    'Make Primary',
+                                    'data-action="makePrimary" class="awesome small green"'
+                                );
+                                echo anchor(
+                                    '',
+                                    'Delete',
+                                    'data-action="delete" class="awesome small red"'
+                                );
+
+                            }
+
+                            if (!$email->is_verified) {
+
+                                echo anchor(
+                                    '',
+                                    'Verify',
+                                    'data-action="verify" class="awesome small green"'
+                                );
+                            }
+
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
                 }
 
                 ?>

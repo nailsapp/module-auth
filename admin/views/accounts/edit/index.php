@@ -1,6 +1,6 @@
-<?php
+<div class="group-accounts edit">
+    <?php
 
-    echo '<div class="group-accounts edit">';
     echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $this->input->server('QUERY_STRING'));
     echo form_hidden('id', $user_edit->id);
     echo form_hidden('email_orig', $user_edit->email);
@@ -18,13 +18,11 @@
     $this->config->load('auth/auth');
 
     if ($this->config->item('authTwoFactorMode') == 'QUESTION') {
-
         $this->load->view('accounts/edit/inc-mfa-question');
     }
 
 
     if ($this->config->item('authTwoFactorMode') == 'DEVICE') {
-
         $this->load->view('accounts/edit/inc-mfa-device');
     }
 
@@ -32,22 +30,19 @@
     $this->load->view('accounts/edit/inc-profile-img');
     $this->load->view('accounts/edit/inc-uploads');
 
+    ?>
+    <p>
+        <?=form_submit('submit', lang('action_save_changes'), 'class="awesome"')?>
+    </p>
+    <?=form_close()?>
+</div>
+<?php
 
-    echo '<p>' . form_submit('submit', lang('action_save_changes'), 'class="awesome"') . '</p>';
-
-    echo form_close();
-    echo '</div>';
-
-
-    // --------------------------------------------------------------------------
-
-    //  email forms
-    echo form_open('admin/auth/accounts/email', 'id="emailForm"');
-        echo form_hidden('id', $user_edit->id);
-        echo form_hidden('return', uri_string() . '?' . $this->input->server('QUERY_STRING'));
-        echo form_hidden('email');
-        echo form_hidden('action');
-        echo form_hidden('isPrimary');
-        echo form_hidden('isVerified');
-    echo form_close();
-
+echo form_open('admin/auth/accounts/email', 'id="emailForm"');
+echo form_hidden('id', $user_edit->id);
+echo form_hidden('return', uri_string() . '?' . $this->input->server('QUERY_STRING'));
+echo form_hidden('email');
+echo form_hidden('action');
+echo form_hidden('isPrimary');
+echo form_hidden('isVerified');
+echo form_close();

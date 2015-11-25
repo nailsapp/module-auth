@@ -109,7 +109,7 @@ class Forgotten_Password extends Base
                 $alwaysSucceed = $this->config->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
-                if ($this->user_password_model->set_token($_identifier)) {
+                if ($this->user_password_model->setToken($_identifier)) {
 
                     //  Send email to user
                     switch (APP_NATIVE_LOGIN_USING) {
@@ -273,7 +273,7 @@ class Forgotten_Password extends Base
 
         $generateNewPw = !$this->config->item('authTwoFactorMode');
 
-        $newPw = $this->user_password_model->validate_token($code, $generateNewPw);
+        $newPw = $this->user_password_model->validateToken($code, $generateNewPw);
 
         // --------------------------------------------------------------------------
 
@@ -308,7 +308,7 @@ class Forgotten_Password extends Base
                         if ($isValid) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $this->user_password_model->validate_token($code, true);
+                            $newPw = $this->user_password_model->validateToken($code, true);
 
                             $this->data['new_password'] = $newPw['password'];
 
@@ -343,7 +343,7 @@ class Forgotten_Password extends Base
                 } else {
 
                     //  No questions, reset and load views
-                    $newPw = $this->user_password_model->validate_token($code, true);
+                    $newPw = $this->user_password_model->validateToken($code, true);
 
                     $this->data['new_password'] = $newPw['password'];
 
@@ -377,7 +377,7 @@ class Forgotten_Password extends Base
                         if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $this->user_password_model->validate_token($code, true);
+                            $newPw = $this->user_password_model->validateToken($code, true);
 
                             $this->data['new_password'] = $newPw['password'];
 
@@ -413,7 +413,7 @@ class Forgotten_Password extends Base
                 } else {
 
                     //  No devices, reset and load views
-                    $newPw = $this->user_password_model->validate_token($code, true);
+                    $newPw = $this->user_password_model->validateToken($code, true);
 
                     $this->data['new_password'] = $newPw['password'];
 

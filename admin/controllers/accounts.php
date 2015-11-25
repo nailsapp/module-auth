@@ -717,7 +717,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's email addresses
-        $this->data['user_emails'] = $this->user_model->get_emails_for_user($user->id);
+        $this->data['user_emails'] = $this->user_model->getEmailsForUser($user->id);
 
         // --------------------------------------------------------------------------
 
@@ -1161,7 +1161,7 @@ class Accounts extends BaseAdmin
                 $isPrimary  = (bool) $this->input->post('isPrimary');
                 $isVerified = (bool) $this->input->post('isVerified');
 
-                if ($this->user_model->email_add($email, $id, $isPrimary, $isVerified)) {
+                if ($this->user_model->emailAdd($email, $id, $isPrimary, $isVerified)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was added successfully. ';
@@ -1176,7 +1176,7 @@ class Accounts extends BaseAdmin
 
             case 'delete':
 
-                if ($this->user_model->email_delete($email, $id)) {
+                if ($this->user_model->emailDelete($email, $id)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was deleted successfully. ';
@@ -1191,7 +1191,7 @@ class Accounts extends BaseAdmin
 
             case 'makePrimary':
 
-                if ($this->user_model->email_make_primary($email, $id)) {
+                if ($this->user_model->emailMakePrimary($email, $id)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was set as the primary email.';
@@ -1207,7 +1207,7 @@ class Accounts extends BaseAdmin
             case 'verify':
 
                 //  Get the code for this email
-                $userEmails = $this->user_model->get_emails_for_user($id);
+                $userEmails = $this->user_model->getEmailsForUser($id);
                 $code       = '';
 
                 foreach ($userEmails as $userEmail) {
@@ -1218,7 +1218,7 @@ class Accounts extends BaseAdmin
                     }
                 }
 
-                if (!empty($code) && $this->user_model->email_verify($id, $code)) {
+                if (!empty($code) && $this->user_model->emailVerify($id, $code)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was verified successfully.';
