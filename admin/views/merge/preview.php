@@ -26,7 +26,7 @@
             Please note that the following tables will not be merged and any data in them which belongs to
             the users listed below will be deleted:
             <br />
-            <code><?implode('</code>, <code>', $mergeResult->ignoreTables)?></code>';
+            <code><?=implode('</code>, <code>', $mergeResult->ignoreTables)?></code>';
             <?php
         }
 

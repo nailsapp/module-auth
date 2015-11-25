@@ -19,6 +19,7 @@ class AccessToken extends \Nails\Common\Model\Base
     protected $defaultExpiration;
     protected $tokenTemplate;
     protected $tokenCharacters;
+    protected $scopeHandler;
 
     // --------------------------------------------------------------------------
 

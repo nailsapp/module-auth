@@ -6,7 +6,7 @@ $query['remember']  = $remember;
 
 $query = array_filter($query);
 
-if ($query) {
+if (!empty($query)) {
 
     $query = '?' . http_build_query($query);
 
@@ -38,10 +38,12 @@ if ($query) {
                                 <div class="col-xs-5">
                                 <?php
 
-                                    echo img(array(
-                                        'src'    => $secret['url'],
-                                        'class'  => 'img-responsive img-thumbnail'
-                                    ))
+                                    echo img(
+                                        array(
+                                            'src' => $secret['url'],
+                                            'class' => 'img-responsive img-thumbnail'
+                                        )
+                                    );
 
                                 ?>
                                 </div>
@@ -78,10 +80,7 @@ if ($query) {
                             </div>
                         </div>
                     </div>
-                    <?
-
-                echo form_close()
-                ?>
+                <?=form_close()?>
                 <hr />
                 <p>
                     <small>

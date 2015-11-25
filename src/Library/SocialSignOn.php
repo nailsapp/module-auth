@@ -297,7 +297,7 @@ class SocialSignOn
             return false;
         }
 
-        return $this->oUserModel->getById($oUser->user_id, $extended);
+        return $this->oUserModel->getById($oUser->user_id);
     }
 
     // --------------------------------------------------------------------------

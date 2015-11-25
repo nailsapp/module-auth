@@ -49,7 +49,7 @@ class Login extends Base
             if (!empty($returnTo['query'])) {
 
                 //  Break it apart and glue it together (urlencoded)
-                $query = parse_str($returnTo['query'], $query_ar);
+                parse_str($returnTo['query'], $query_ar);
                 $returnTo['query'] = http_build_query($query_ar);
             }
 
@@ -348,7 +348,7 @@ class Login extends Base
 
         if (empty($hash['id']) || empty($hash['pw'])) {
 
-            show_error($lang['auth_with_hashes_incomplete_creds']);
+            show_error(lang('auth_with_hashes_incomplete_creds'));
         }
 
         // --------------------------------------------------------------------------

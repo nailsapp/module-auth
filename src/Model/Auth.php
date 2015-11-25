@@ -16,6 +16,10 @@ use Nails\Factory;
 
 class Auth extends \Nails\Common\Model\Base
 {
+    protected $aBruteProtection;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Constructor
      */
@@ -23,13 +27,11 @@ class Auth extends \Nails\Common\Model\Base
     {
         parent::__construct();
 
-        // --------------------------------------------------------------------------
-
-        //  Set variables
-        $this->brute_force_protection           = array();
-        $this->brute_force_protection['delay']  = 1500000;
-        $this->brute_force_protection['limit']  = 10;
-        $this->brute_force_protection['expire'] = 900;
+        $this->aBruteProtection = array(
+            'delay' => 1500000,
+            'limit' => 10,
+            'expire' => 900
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -46,7 +48,7 @@ class Auth extends \Nails\Common\Model\Base
         //  Delay execution for a moment (reduces brute force efficiently)
         if (strtoupper(ENVIRONMENT) !== 'DEVELOPMENT') {
 
-            usleep($this->brute_force_protection['delay']);
+            usleep($this->aBruteProtection['delay']);
         }
 
         // --------------------------------------------------------------------------
@@ -96,12 +98,12 @@ class Auth extends \Nails\Common\Model\Base
                 //  Password accepted! Final checks...
 
                 //  Exceeded login count, temporarily blocked
-                if ($user->failed_login_count >= $this->brute_force_protection['limit']) {
+                if ($user->failed_login_count >= $this->aBruteProtection['limit']) {
 
                     //  Check if the block has expired
                     if (time() < strtotime($user->failed_login_expires)) {
 
-                        $blockTime = ceil($this->brute_force_protection['expire']/60);
+                        $blockTime = ceil($this->aBruteProtection['expire']/60);
 
                         $error = lang('auth_login_fail_blocked', $blockTime);
                         $this->setError($error);
@@ -165,15 +167,15 @@ class Auth extends \Nails\Common\Model\Base
                 //  User was recognised but the password was wrong
 
                 //  Increment the user's failed login count
-                $this->user_model->incrementFailedLogin($user->id, $this->brute_force_protection['expire']);
+                $this->user_model->incrementFailedLogin($user->id, $this->aBruteProtection['expire']);
 
                 //  Are we already blocked? Let them know...
-                if ($user->failed_login_count >= $this->brute_force_protection['limit']) {
+                if ($user->failed_login_count >= $this->aBruteProtection['limit']) {
 
                     //  Check if the block has expired
                     if (time() < strtotime($user->failed_login_expires)) {
 
-                        $blockTime = ceil($this->brute_force_protection['expire']/60);
+                        $blockTime = ceil($this->aBruteProtection['expire']/60);
                         $error     = lang('auth_login_fail_blocked', $blockTime);
                         $this->setError($error);
                         return false;

@@ -22,6 +22,7 @@ class User extends Base
     protected $rememberCookie;
     protected $isRemembered;
     protected $isLoggedIn;
+    protected $adminRecoveryField;
 
     // --------------------------------------------------------------------------
 
@@ -1629,7 +1630,7 @@ class User extends Base
             $this->setCacheUser($user->id);
 
             //  Update the activeUser
-            if ($_u->id == $this->activeUser('id')) {
+            if ($user->id == $this->activeUser('id')) {
 
                 $oDate = Factory::factory('DateTime');
                 $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
@@ -1783,9 +1784,9 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!$id || !$password || !$email) {
+        if (empty($id) || empty($password) || empty($email)) {
 
-            if (!activeUser('id') ||  !activeUser('password') || !activeUser('email')) {
+            if (!activeUser('id') || !activeUser('password') || !activeUser('email')) {
 
                 return false;
 
