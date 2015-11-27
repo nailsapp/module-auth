@@ -576,7 +576,7 @@ class Accounts extends BaseAdmin
                 //  If we have a profile image, attempt to upload it
                 if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
-                    $object = $this->cdn->object_replace($user->profile_img, 'profile-images', 'profile_img');
+                    $object = $this->cdn->objectReplace($user->profile_img, 'profile-images', 'profile_img');
 
                     if ($object) {
 
@@ -737,7 +737,7 @@ class Accounts extends BaseAdmin
         //  Fetch any user uploads
         if (isModuleEnabled('nailsapp/module-cdn')) {
 
-            $this->data['user_uploads'] = $this->cdn->get_objects_for_user($user->id);
+            $this->data['user_uploads'] = $this->cdn->getObjectsForUser($user->id);
         }
 
         // --------------------------------------------------------------------------
@@ -1114,7 +1114,7 @@ class Accounts extends BaseAdmin
 
             if ($user->profile_img) {
 
-                if ($this->cdn->object_delete($user->profile_img, 'profile-images')) {
+                if ($this->cdn->objectDelete($user->profile_img, 'profile-images')) {
 
                     //  Update the user
                     $data = array();

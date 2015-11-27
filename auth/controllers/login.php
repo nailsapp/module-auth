@@ -822,7 +822,7 @@ class Login extends Base
 
                                 if (@file_put_contents($cacheFile, (string) $oResponse->getBody)) {
 
-                                    $_upload = $oCdn->object_create($cacheFile, 'profile-images', array());
+                                    $_upload = $oCdn->objectCreate($cacheFile, 'profile-images', array());
 
                                     if ($_upload) {
 
