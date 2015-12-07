@@ -32,35 +32,70 @@ class AccessToken extends \Nails\Api\Controller\Base
 
         if ($bIsValid) {
 
-            $oUser = $this->user_model->getByIdentifier($sIdentifier);
+            /**
+             * User credentials are valid, but a few other tests are still required:
+             * - User is not suspended
+             * - Password is not temporary
+             * - Password is not expired
+             * - @todo: handle 2FA, perhaps?
+             */
 
-            $oToken = $oAccessTokenModel->create(
-                array(
-                    'user_id' => $oUser->id,
-                    'label'   => $sLabel,
-                    'scope'   => $sScope
-                )
-            );
+            $oUser        = $this->user_model->getByIdentifier($sIdentifier);
+            $bIsSuspended = $oUser->is_suspended;
+            $bPwIsTemp    = $oUser->temp_pw;
+            $bPwIsExpired = $this->user_password_model->isExpired($oUser->id);
 
-            if ($oToken) {
+            if ($bIsSuspended) {
 
                 $aOut = array(
-                    'token'   => $oToken->token,
-                    'expires' => $oToken->expires
+                    'status' => 401,
+                    'error'  => 'User account is suspended.'
+                );
+
+            } elseif ($bPwIsTemp) {
+
+                $aOut = array(
+                    'status' => 400,
+                    'error'  => 'Password is temporary.'
+                );
+
+            } elseif ($bPwIsExpired) {
+
+                $aOut = array(
+                    'status' => 400,
+                    'error'  => 'Password has expired.'
                 );
 
             } else {
 
-                $aOut = array(
-                    'status' => 500,
-                    'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->lastError()
+                $oToken = $oAccessTokenModel->create(
+                    array(
+                        'user_id' => $oUser->id,
+                        'label'   => $sLabel,
+                        'scope'   => $sScope
+                    )
                 );
+
+                if ($oToken) {
+
+                    $aOut = array(
+                        'token'   => $oToken->token,
+                        'expires' => $oToken->expires
+                    );
+
+                } else {
+
+                    $aOut = array(
+                        'status' => 500,
+                        'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->last_error()
+                    );
+                }
             }
 
         } else {
 
             $aOut = array(
-                'status' => 400,
+                'status' => 401,
                 'error'  => 'Invalid login credentials.'
             );
         }
@@ -89,7 +124,7 @@ class AccessToken extends \Nails\Api\Controller\Base
 
                     $aOut = array(
                         'status' => 500,
-                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->lastError()
+                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->last_error()
                     );
                 }
 
