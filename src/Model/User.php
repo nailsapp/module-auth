@@ -1153,16 +1153,15 @@ class User extends Base
                 //  If the user's password was updated send them a notification
                 if ($_password_updated) {
 
-                    $_email                     = new \stdClass();
-                    $_email->type               = 'password_updated';
-                    $_email->to_id              = $_uid;
-                    $_email->data               = array();
-                    $_email->data['updated_at'] = $oDate->format('Y-m-d H:i:s');
-                    $_email->data['updated_by'] = array(
-                        'id' => $this->activeUser('id'),
-                        'name' => $this->activeUser('first_name,last_name')
-                    );
-                    $_email->data['ip_address'] = $this->input->ipAddress();
+                    $_email                           = new \stdClass();
+                    $_email->type                     = 'password_updated';
+                    $_email->to_id                    = $_uid;
+                    $_email->data                     = array();
+                    $_email->data['ip_address']       = $this->input->ipAddress();
+                    $_email->data['updated_at']       = $oDate->format('Y-m-d H:i:s');
+                    $_email->data['updated_by']       = new \stdClass();
+                    $_email->data['updated_by']->id   = $this->activeUser('id');
+                    $_email->data['updated_by']->name = $this->activeUser('first_name,last_name');
 
                     $this->emailer->send($_email, true);
                 }
