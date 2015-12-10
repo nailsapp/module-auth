@@ -73,6 +73,8 @@ class Meta
             $mOut = $aResult[0];
         }
 
+        $this->setCache($sCacheKey, $mOut);
+
         return $mOut;
     }
 
@@ -102,7 +104,11 @@ class Meta
         }
 
         $this->oDb->where('user_id', $iUserId);
-        return $this->oDb->get($sTable)->result();
+        $aResult = $this->oDb->get($sTable)->result();
+
+        $this->setCache($sCacheKey, $aResult);
+
+        return $aResult;
     }
 
     // --------------------------------------------------------------------------
@@ -154,31 +160,34 @@ class Meta
         $this->oDb->trans_begin();
         foreach ($aData as $aRow) {
 
-            //  Safety: Ensure that the row ID, and User ID are not overridden
-            unset($aRow['id']);
-            unset($aRow['user_id']);
+            if (empty($aRow['id'])) {
 
-            $this->oDb->where('id', $iRowId);
-            if ($this->oDb->count_all_results($sTable)) {
-
+                //  Safety: Don't allow setting of the row ID
+                unset($aRow['id']);
+                //  Safety: overrwrite any user_id which may be passed
+                $aRow['user_id'] = $iUserId;
                 $this->oDb->set($aRow);
-                if (!$this->oDb->update($sTable)) {
-                    $this->odb->trans_rollback();
+                if (!$this->oDb->insert($sTable)) {
+                    $this->oDb->trans_rollback();
                     return false;
                 }
 
             } else {
 
+                //  Safety: Ensure that the row ID, and User ID are not overridden
+                unset($aRow['id']);
+                unset($aRow['user_id']);
+
                 $this->oDb->set($aRow);
-                if (!$this->oDb->insert($sTable)) {
-                    $this->odb->trans_rollback();
+                if (!$this->oDb->update($sTable)) {
+                    $this->oDb->trans_rollback();
                     return false;
                 }
             }
         }
 
-        $this->db->trans_commit();
-        $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
+        $this->oDb->trans_commit();
+        $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
         return true;
     }
 }
