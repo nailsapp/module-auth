@@ -92,7 +92,7 @@
                         $field['error'] = implode(' ', ${'upload_error_' . $field['key']});
                     }
 
-                    echo form_field_mm($field);
+                    echo form_field_cdn_object_picker($field);
                     break;
 
                 case 'string':
