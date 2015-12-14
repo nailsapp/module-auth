@@ -64,15 +64,11 @@ class User extends \Nails\Api\Controller\Base
                 $aOut    = array();
 
                 foreach ($oResult->data as $oUser) {
-                    $aOut[] = array(
-                        'id'    => $oUser->id,
-                        'name'  => $oUser->first_name . ' ' . $oUser->last_name,
-                        'email' => $oUser->email
-                    );
+                    $aOut[] = $this->formatUser($oUser);
                 }
 
                 return array(
-                    'results' => $aOut
+                    'data' => $aOut
                 );
 
             } else {
@@ -108,8 +104,19 @@ class User extends \Nails\Api\Controller\Base
         } else {
 
             return array(
-                'data' => $oUser
+                'data' => $this->formatUser($oUser)
             );
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function formatUser($oUser)
+    {
+        return array(
+            'id'    => $oUser->id,
+            'name'  => $oUser->first_name . ' ' . $oUser->last_name,
+            'email' => $oUser->email
+        );
     }
 }

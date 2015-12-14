@@ -60,6 +60,13 @@
                     }
                 ],
                 "helpers": ["user"]
+            },
+            "data": {
+                "adminAutoLoad": {
+                    "js": [
+                        ["nails.admin.auth.usersearch.min.js", "NAILS"]
+                    ]
+                }
             }
         }
     }

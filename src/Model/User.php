@@ -45,6 +45,19 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
+        //  Define searchable fields, resetting it
+        $this->searchableFields = array(
+            $this->tablePrefix . '.id',
+            $this->tablePrefix . '.username',
+            'ue.email',
+            array(
+                $this->tablePrefix . '.first_name',
+                $this->tablePrefix . '.last_name'
+            )
+        );
+
+        // --------------------------------------------------------------------------
+
         //  Clear the activeUser
         $this->clearActiveUser();
     }
@@ -540,39 +553,6 @@ class User extends Base
      */
     protected function getCountCommon($data = array())
     {
-        //  If there's a search term, then we better get %LIKING%
-        if (!empty($data['keywords'])) {
-
-            if (empty($data['or_like'])) {
-
-                $data['or_like'] = array();
-            }
-
-            $keywordAsId = (int) preg_replace('/[^0-9]/', '', $data['keywords']);
-
-            if ($keywordAsId) {
-
-                $data['or_like'][] = array(
-                    'column' => 'u.id',
-                    'value'  => $keywordAsId
-                );
-            }
-            $data['or_like'][] = array(
-                'column' => 'ue.email',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
-                'column' => 'u.username',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
-                'column' => array('u.first_name', 'u.last_name'),
-                'value'  => $data['keywords']
-            );
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Let the parent method handle sorting, etc
         parent::getCountCommon($data);
 
@@ -867,30 +847,6 @@ class User extends Base
         $this->db->order_by('is_primary', 'DESC');
         $this->db->order_by('email', 'ASC');
         return $this->db->get(NAILS_DB_PREFIX . 'user_email')->result();
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Searches for objects, optionally paginated.
-     * @param  string    $sKeywords       The search term
-     * @param  int       $iPage           The page number of the results, if null then no pagination
-     * @param  int       $iPerPage        How many items per page of paginated results
-     * @param  mixed     $aData           Any data to pass to getCountCommon()
-     * @param  bool      $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
-     * @return \stdClass
-     */
-    public function search($sKeywords, $iPage = null, $iPerPage = null, $aData = array(), $bIncludeDeleted = false)
-    {
-        $aData['keywords'] = $sKeywords;
-
-        $oOut          = new \stdClass();
-        $oOut->page    = $iPage;
-        $oOut->perPage = $iPerPage;
-        $oOut->total   = $this->countAll($aData);
-        $oOut->results = $this->getAll($iPage, $iPerPage, $aData);
-
-        return $oOut;
     }
 
     // --------------------------------------------------------------------------
@@ -1471,7 +1427,15 @@ class User extends Base
     public function emailAddSendVerify($email_id, $user_id = null)
     {
         //  Fetch the email and the user's group
-        $this->db->select('ue.id,ue.code,ue.is_verified,ue.user_id,u.group_id');
+        $this->db->select(
+            array(
+                'ue.id',
+                'ue.code',
+                'ue.is_verified',
+                'ue.user_id',
+                $this->tablePrefix . '.group_id'
+            )
+        );
 
         if (is_numeric($email_id)) {
 
@@ -1489,7 +1453,7 @@ class User extends Base
 
         }
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ue.user_id');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tablePrefix . '.id = ue.user_id');
 
         $_e = $this->db->get(NAILS_DB_PREFIX . 'user_email ue')->row();
 
