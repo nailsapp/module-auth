@@ -194,10 +194,9 @@ class Forgotten_Password extends Base
                         //  Add data for the email view
                         $_code = explode(':', $this->data['reset_user']->forgotten_password_code);
 
-                        $_data->data                            = array();
-                        $_data->data['first_name']              = title_case($this->data['reset_user']->first_name);
-                        $_data->data['forgotten_password_code'] = $_code[1];
-                        $_data->data['identifier']              = $_identifier;
+                        $_data->data             = new \stdClass();
+                        $_data->data->url        = site_url('auth/forgotten_password/' . $_code[1]);
+                        $_data->data->identifier = $_identifier;
 
                         // --------------------------------------------------------------------------
 

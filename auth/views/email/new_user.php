@@ -1,54 +1,35 @@
-<?php
-
-if (!empty($admin->id) && $admin->id != $sent_to->id) {
-
-    ?>
+{{#admin.id}}
     <p>
-        <?=$admin->first_name . ' ' . $admin->last_name?>, an administrator for <?=APP_NAME?>, has just created a
-        new <em><?=$admin->group->name?></em> account for you.
+        {{#admin.first_name}} {{#admin.last_name}}, an administrator for <?=APP_NAME?>, has just created a
+        new <em>{{#admin.group.name}}</em> account for you.
     </p>
-    <?php
-
-} else {
-
-    ?>
+{{/admin.id}}
+{{^admin.id}}
     <p>
         Thank you for registering at the <?=APP_NAME?> website.
     </p>
-    <?php
-
-}
-
-if (!empty($password)) {
-
-    ?>
+{{/admin.id}}
+{{#password}}
     <p>
-        Your password is shown below<?=!empty($temp_pw) ? ', you will be asked to set this to something more memorable when you log in' : ''?>.
+        Your password is shown below.
+        {{#temp_pw}}
+        You will be asked to set this to something more memorable when you log in.
+        {{/temp_pw}}
     </p>
     <p class="heads-up" style="font-weight:bold;font-size:1.5em;text-align:center;font-family:LucidaConsole, Monaco, monospace;">
-        <?=$password?>
+        {{password}}
     </p>
-    <?php
-
-}
-
-?>
+{{/password}}
 <p>
-    <?=anchor('auth/login', 'Click here to log in', 'class="button large"')?>
+    <?=anchor('auth/login', 'Click here to log in', 'class="btn"')?>
 </p>
-<?php
-
-if (!empty($verification_code)) {
-
-    ?>
+{{#verifyUrl}}
     <hr />
     <p>
         Additionally, we would appreciate it if you could verify your email address by clicking the button below,
         we do this to maintain the integrity of our database.
     </p>
     <p>
-        <?=anchor('email/verify/' . $sent_to->id . '/' . $verification_code, 'Verify Email', 'class="button small"')?>
+        <a href="{{verifyUrl}}" class="btn small">Verify Email</a>
     </p>
-    <?php
-
-}
+{{/verifyUrl}}

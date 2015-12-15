@@ -1109,15 +1109,16 @@ class User extends Base
                 //  If the user's password was updated send them a notification
                 if ($_password_updated) {
 
-                    $_email                           = new \stdClass();
-                    $_email->type                     = 'password_updated';
-                    $_email->to_id                    = $_uid;
-                    $_email->data                     = array();
-                    $_email->data['ip_address']       = $this->input->ipAddress();
-                    $_email->data['updated_at']       = $oDate->format('Y-m-d H:i:s');
-                    $_email->data['updated_by']       = new \stdClass();
-                    $_email->data['updated_by']->id   = $this->activeUser('id');
-                    $_email->data['updated_by']->name = $this->activeUser('first_name,last_name');
+                    $_email                  = new \stdClass();
+                    $_email->type            = 'password_updated';
+                    $_email->to_id           = $_uid;
+                    $_email->data            = new \stdClass();
+                    $_email->data->ipAddress = $this->input->ipAddress();
+                    $_email->data->updatedAt = $oDate->format('Y-m-d H:i:s');
+
+                    if ($this->activeUser('id')) {
+                        $_email->data->updatedBy = $this->activeUser('first_name,last_name');
+                    }
 
                     $this->emailer->send($_email, true);
                 }
@@ -1473,12 +1474,11 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $_email                  = new \stdClass();
-        $_email->type            = 'verify_email_' . $_e->group_id;
-        $_email->to_id           = $_e->user_id;
-        $_email->data            = array();
-        $_email->data['user_id'] = $_e->user_id;
-        $_email->data['code']    = $_e->code;
+        $_email              = new \stdClass();
+        $_email->type        = 'verify_email_' . $_e->group_id;
+        $_email->to_id       = $_e->user_id;
+        $_email->data        = array();
+        $_email->data['url'] = site_url('email/verify/' . $_e->user_id . '/' . $_e->code);
 
         if (!$this->emailer->send($_email, true)) {
 
@@ -2154,35 +2154,35 @@ class User extends Base
                 $_email        = new \stdClass();
                 $_email->type  = 'new_user_' . $_group->id;
                 $_email->to_id = $_id;
-                $_email->data  = array();
+                $_email->data  = new \srdClass();
 
                 //  If this user is created by an admin then take note of that.
-                if ($this->isAdmin()) {
+                if ($this->isAdmin() && $this->activeUser('id') != $_id) {
 
-                    $_email->data['admin']              = new \stdClass();
-                    $_email->data['admin']->id          = $this->activeUser('id');
-                    $_email->data['admin']->first_name  = $this->activeUser('first_name');
-                    $_email->data['admin']->last_name   = $this->activeUser('last_name');
-                    $_email->data['admin']->group       = new \stdClass();
-                    $_email->data['admin']->group->id   = $_group->id;
-                    $_email->data['admin']->group->name = $_group->label;
+                    $_email->data->admin              = new \stdClass();
+                    $_email->data->admin->id          = $this->activeUser('id');
+                    $_email->data->admin->first_name  = $this->activeUser('first_name');
+                    $_email->data->admin->last_name   = $this->activeUser('last_name');
+                    $_email->data->admin->group       = new \stdClass();
+                    $_email->data->admin->group->id   = $_group->id;
+                    $_email->data->admin->group->name = $_group->label;
                 }
 
                 if (!empty($data['password']) && !empty($_inform_user_pw)) {
 
-                    $_email->data['password'] = $data['password'];
+                    $_email->data->password = $data['password'];
 
                     //  Is this a temp password? We should let them know that too
                     if ($_user_data['temp_pw']) {
 
-                        $_email->data['temp_pw'] = !empty($_user_data['temp_pw']);
+                        $_email->data->isTemp = !empty($_user_data['temp_pw']);
                     }
                 }
 
                 //  If the email isn't verified we'll want to include a note asking them to do so
                 if (!$_email_is_verified) {
 
-                    $_email->data['verification_code']  = $_code;
+                    $_email->data->verifyUrl  = site_url('email/verify/' . $_id . '/' . $_code);
                 }
 
                 if (!$this->emailer->send($_email, true)) {
