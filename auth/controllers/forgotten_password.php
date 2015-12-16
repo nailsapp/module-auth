@@ -195,7 +195,7 @@ class Forgotten_Password extends Base
                         $_code = explode(':', $this->data['reset_user']->forgotten_password_code);
 
                         $_data->data             = new \stdClass();
-                        $_data->data->url        = site_url('auth/forgotten_password/' . $_code[1]);
+                        $_data->data->resetUrl   = site_url('auth/forgotten_password/' . $_code[1]);
                         $_data->data->identifier = $_identifier;
 
                         // --------------------------------------------------------------------------

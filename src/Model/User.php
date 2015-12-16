@@ -1473,11 +1473,11 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oEmail            = new \stdClass();
-        $oEmail->type      = 'verify_email_' . $oEmailRow->group_id;
-        $oEmail->to_id     = $oEmailRow->user_id;
-        $oEmail->data      = new \stdClass();
-        $oEmail->data->url = site_url('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
+        $oEmail                  = new \stdClass();
+        $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
+        $oEmail->to_id           = $oEmailRow->user_id;
+        $oEmail->data            = new \stdClass();
+        $oEmail->data->verifyUrl = site_url('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
 
         if (!$this->emailer->send($oEmail, true)) {
 

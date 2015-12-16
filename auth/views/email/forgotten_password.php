@@ -6,7 +6,7 @@
 	and follow the instructions on screen. Please note, this link expires in 24 hours.
 </p>
 <p>
-	<a href="{{url}}" class="button">Reset your Password</a>
+	<a href="{{resetUrl}}" class="button">Reset your Password</a>
 </p>
 <p>
 	If you did not make this request, please disregard this email - your password will remain the same.

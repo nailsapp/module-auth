@@ -3,7 +3,7 @@
     second to verify it using the link below, we do this to ensure the integrity of our database.
 </p>
 <p>
-    <a href="{{url}}" class="btn">
+    <a href="{{verifyUrl}}" class="btn">
         Verify Email
     </a>
 </p>

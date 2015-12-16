@@ -74,7 +74,6 @@ class Password extends \Nails\Common\Model\Base
     public function isCorrect($iUserId, $sPassword)
     {
         if (empty($iUserId) || empty($sPassword)) {
-
             return false;
         }
 
@@ -88,7 +87,6 @@ class Password extends \Nails\Common\Model\Base
         // --------------------------------------------------------------------------
 
         if ($oResult->num_rows() !== 1) {
-
             return false;
         }
 
