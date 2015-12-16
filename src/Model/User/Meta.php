@@ -190,4 +190,53 @@ class Meta
         $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
         return true;
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Deletes a user_meta_* row
+     * @param  string  $sTable  The table to delete from
+     * @param  integer $iUserId The ID of the user the record belongs to
+     * @return boolean
+     */
+    public function delete($sTable, $iUserId)
+    {
+        $this->oDb->where('user_id', $iUserId);
+        if (!$this->oDb->delete($sTable)) {
+            return false;
+        }
+
+        $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
+        return $bResult;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Deletes from a user_meta_* table
+     * @param  string        $sTable  The table to delete from
+     * @param  integer       $iUserId The ID of the user the record belongs to
+     * @param  integer|array $mRowIds An array of row IDs to delete (or a single row ID)
+     * @return boolean
+     */
+    public function deleteMany($sTable, $iUserId, $mRowIds = null)
+    {
+        $this->oDb->where('user_id', $iUserId);
+
+        if (is_numeric($mRowIds)) {
+
+            $this->oDb->where('id', $mRowIds);
+
+        } elseif (is_array($mRowIds)) {
+
+            $this->oDb->where_in('id', $mRowIds);
+        }
+
+        if (!$this->oDb->delete($sTable)) {
+            return false;
+        }
+
+        $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
+        return $bResult;
+    }
 }
