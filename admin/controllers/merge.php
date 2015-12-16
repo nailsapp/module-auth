@@ -113,7 +113,7 @@ class Merge extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->asset->load('nails.admin.accounts.merge.min.js', 'NAILS');
+        $this->asset->load('admin.accounts.merge.min.js', 'nailsapp/module-auth');
         $this->asset->inline('var _accountsMerge = new NAILS_Admin_Accounts_Merge()', 'JS');
 
         // --------------------------------------------------------------------------

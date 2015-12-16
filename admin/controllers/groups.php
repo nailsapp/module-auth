@@ -222,7 +222,7 @@ class Groups extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.auth.groups.min.js', 'NAILS');
+        $this->asset->load('admin.groups.min.js', 'nailsapp/module-auth');
         $this->asset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
 
         // --------------------------------------------------------------------------

@@ -1,0 +1,254 @@
+/* --------------------------------------------------------------
+   Nails Auth Module Admin Styles
+-------------------------------------------------------------- */
+
+.group-accounts {
+    &.all {
+        table {
+            margin-bottom: 1em;
+            th,
+            td {
+                &.id,
+                &.group {
+                    text-align: center;
+                }
+                &.id {
+                    width: 50px;
+                    min-width: 50px;
+                }
+                &.group {
+                    width: 150px;
+                    min-width: 150px;
+                }
+                &.actions {
+                    width: 225px;
+                    min-width: 225px;
+                    text-align: center;
+                }
+            }
+            td {
+                &.details {
+                    img {
+                        &.profile-img {
+                            float: left;
+                            margin-right: 10px;
+                            width: 65px;
+                            height: 65px;
+                            background: #CCCCCC;
+                            border: 1px solid #CCCCCC;
+                            border-radius: 2px;
+                        }
+                        &.verified {
+                            margin-left: 5px;
+                            width: 10px;
+                            height: 10px;
+                            position: relative;
+                            top: 2px;
+                        }
+                    }
+                }
+                &.id,
+                &.group {
+                    vertical-align: middle;
+                    color: #666666;
+                }
+                &.profile.zero {
+                    color: #CCCCCC;
+                }
+                &.actions {
+                    .not-editable {
+                        color: #AAAAAA;
+                    }
+                }
+                .awesome {
+                    margin-right: 5px;
+                    margin-bottom: 5px;
+                    padding: 8px 5px 6px 5px;
+                }
+                div {
+                    float: left;
+                    small {
+                        display: block;
+                    }
+                }
+            }
+        }
+    }
+    &.create {
+        #user-group-descriptions,
+        #user-group-pwrules {
+            li {
+                margin: 0;
+            }
+        }
+    }
+    &.edit {
+        .social {
+            .icon {
+                float: left;
+                border: 1px solid #999999;
+                border-radius: 3px;
+                background: #F3F3F3;
+                padding: 5px;
+                margin-right: 15px;
+                padding-left: 42px;
+                line-height: 16px;
+                background-position: 5px center;
+                background-repeat: no-repeat;
+                word-wrap: break-word;
+            }
+            p {
+                margin-top: 5px;
+            }
+        }
+        .uploads {
+            ul {
+                max-height: 500px;
+                overflow: auto;
+                li {
+                    vertical-align: middle;
+                    display: block;
+                    margin-bottom: 0;
+                    a {
+                        padding: 1em;
+                        display: block;
+                        position: relative;
+                        min-height: 51px;
+                        background: #EFEFEF;
+                        background-clip: padding-box;
+                        text-decoration: none;
+                        small {
+                            display: block;
+                        }
+                        &.image {
+                            padding-left: 55px;
+                            img {
+                                position: absolute;
+                                left: 5px;
+                                top: 5px;
+                                width: 35px;
+                                height: 35px;
+                                border: 1px solid #CCCCCC;
+                                margin: 0;
+                                margin-right: 10px;
+                                vertical-align: middle;
+                                padding: 2px;
+                                background: #FFFFFF;
+                                border-radius: 2px;
+                            }
+                        }
+                    }
+                    &.no-data {
+                        color: #777777;
+                    }
+                }
+            }
+        }
+        .emails {
+            table {
+                th,
+                td {
+                    &.email {
+                        input {
+                            width: 100%;
+                            box-sizing: border-box;
+                        }
+                    }
+                    &.isPrimary,
+                    &.isVerified {
+                        width: 50px;
+                        text-align: center;
+                    }
+                    &.dateAdded,
+                    &.dateVerified {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    &.actions {
+                        width: 220px;
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+    &.groups {
+        table {
+            th,
+            td {
+                vertical-align: middle;
+                &.actions,
+                &.actions {
+                    min-width: 220px;
+                    text-align: center;
+                }
+                &.default,
+                &.default {
+                    width: 50px;
+                    text-align: center;
+                    span {
+                        font-size: 1.5em;
+                    }
+                }
+            }
+        }
+        &.edit {
+            .permission-groups {
+                .permission-group {
+                    th.enabled {
+                        width: 50px;
+                    }
+                    td {
+                        cursor: pointer;
+                        &.enabled {
+                            padding: 0;
+                            label {
+                                width: 100%;
+                                height: 100%;
+                                cursor: pointer;
+                                line-height: 40px;
+                            }
+                        }
+                    }
+                }
+            }
+            .search {
+                border: none;
+                border-bottom: 1px solid #EFEFEF;
+                .search-text {
+                    margin: 0;
+                }
+            }
+        }
+    }
+    &.merge {
+        &.merge-preview {
+            table {
+                margin-bottom: 1.5em;
+                th.userId,
+                td.userId {
+                    text-align: center;
+                    width: 50px;
+                }
+                th.user-cell,
+                td.user-cell {
+                    width: auto;
+                }
+                th.tableRows,
+                td.tableRows {
+                    text-align: center;
+                    width: 100px;
+                }
+            }
+        }
+    }
+    &.change-group {
+        table {
+            th.userId,
+            td.userId {
+                text-align: center;
+                width: 50px;
+            }
+        }
+    }
+}

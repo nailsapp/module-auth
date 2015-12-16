@@ -25,7 +25,7 @@ class Base extends \NAILS_Controller
         parent::__construct();
         $this->config->load('auth/auth');
         $this->lang->load('auth/auth');
-        $this->asset->load('nails.auth.login.css', 'NAILS');
+        $this->asset->load('styles.css', 'nailsapp/module-auth');
         $this->auth_model = Factory::model('Auth', 'nailsapp/module-auth');
     }
 }

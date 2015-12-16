@@ -62,10 +62,14 @@
                 "helpers": ["user"]
             },
             "data": {
-                "adminAutoLoad": {
-                    "js": [
-                        ["nails.admin.auth.usersearch.min.js", "NAILS"]
-                    ]
+                "nailsapp/module-admin": {
+                    "autoload": {
+                        "assets": {
+                            "js": [
+                                ["admin.usersearch.min.js", "nailsapp/module-auth"]
+                            ]
+                        }
+                    }
                 }
             }
         }

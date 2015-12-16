@@ -356,7 +356,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.accounts.create.min.js', true);
+        $this->asset->load('admin.accounts.create.min.js', 'nailsapp/module-auth');
         $this->asset->inline('_nailsAdminAccountsCreate = new NAILS_Admin_Accounts_Create();', 'JS');
 
         // --------------------------------------------------------------------------
@@ -768,7 +768,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.accounts.edit.min.js', true);
+        $this->asset->load('admin.accounts.edit.min.js', 'nailsapp/module-auth');
         $this->asset->inline('_nailsAdminAccountsEdit = new NAILS_Admin_Accounts_Edit();', 'JS');
 
         // --------------------------------------------------------------------------
