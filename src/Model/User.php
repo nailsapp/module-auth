@@ -843,7 +843,7 @@ class User extends Base
     public function getEmailsForUser($id)
     {
         $this->db->where('user_id', $id);
-        $this->db->order_by('is_primary', 'DESC');
+        $this->db->order_by('date_added');
         $this->db->order_by('email', 'ASC');
         return $this->db->get(NAILS_DB_PREFIX . 'user_email')->result();
     }
