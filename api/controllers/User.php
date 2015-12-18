@@ -16,7 +16,10 @@ use Nails\Factory;
 
 class User extends \Nails\Api\Controller\Base
 {
-    public static $requiresAuthentication = true;
+    /**
+     * Require the user be authenticated to use any endpoint
+     */
+    const REQUIRE_AUTH = true;
 
     // --------------------------------------------------------------------------
 
