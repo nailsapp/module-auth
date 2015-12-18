@@ -47,8 +47,7 @@ class Override extends Base
         $user   = $this->user_model->getByHashes($hashId, $hashPw);
 
         if (!$user) {
-
-            show_error(lang('auth_override_invalid'));
+            show_404();
         }
 
         // --------------------------------------------------------------------------
@@ -75,11 +74,11 @@ class Override extends Base
 
                 } elseif ($isCloning) {
 
-                    show_error(lang('auth_override_fail_cloning'));
+                    show_404();
 
                 } elseif ($isSuperuser) {
 
-                    show_error(lang('auth_override_fail_superuser'));
+                    show_404();
                 }
             }
         }

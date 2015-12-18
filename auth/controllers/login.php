@@ -12,6 +12,7 @@
 
 use Nails\Factory;
 use Nails\Auth\Controller\Base;
+use Nails\Common\Exception\NailsException;
 
 class Login extends Base
 {
@@ -347,8 +348,7 @@ class Login extends Base
         $hash['pw'] = $this->uri->segment(5);
 
         if (empty($hash['id']) || empty($hash['pw'])) {
-
-            show_error(lang('auth_with_hashes_incomplete_creds'));
+            throw new NailsException(lang('auth_with_hashes_incomplete_creds'), 1);
         }
 
         // --------------------------------------------------------------------------
