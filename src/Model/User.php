@@ -474,37 +474,37 @@ class User extends Base
 
     /**
      * Determines whether the specified user has a certain ACL permission
-     * @param   string  $search The permission to check for
-     * @param   mixed   $user   The user to check for; if null uses activeUser, if numeric, fetches suer, if object uses that object
+     * @param   string  $sSearch The permission to check for
+     * @param   mixed   $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
      * @return  boolean
      */
-    public function hasPermission($search, $user = null)
+    public function hasPermission($sSearch, $mUser = null)
     {
         //  Fetch the correct ACL
-        if (is_numeric($user)) {
+        if (is_numeric($mUser)) {
 
-            $userObject = $this->getById($user);
+            $oUser = $this->getById($mUser);
 
-            if (isset($userObject->acl)) {
+            if (isset($oUser->acl)) {
 
-                $acl = $userObject->acl;
-                unset($userObject);
+                $aAcl = $oUser->acl;
+                unset($oUser);
 
             } else {
 
                 return false;
             }
 
-        } elseif (isset($user->acl)) {
+        } elseif (isset($mUser->acl)) {
 
-            $acl = $user->acl;
+            $aAcl = $mUser->acl;
 
         } else {
 
-            $acl = $this->activeUser('acl');
+            $aAcl = $this->activeUser('acl');
         }
 
-        if (!$acl) {
+        if (!$aAcl) {
 
             return false;
         }
@@ -512,8 +512,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         // Super users or CLI users can do anything their heart's desire
-        if (in_array('admin:superuser', $acl) || $this->input->is_cli_request()) {
-
+        if (in_array('admin:superuser', $aAcl) || $this->input->is_cli_request()) {
             return true;
         }
 
@@ -521,25 +520,32 @@ class User extends Base
 
         /**
          * Test the ACL
-         * We're going to use regular experessios here so we can allow for some
+         * We're going to use regular experessions here so we can allow for some
          * flexability in the search, i.e admin:* would return true if the user has
          * access to any of admin.
          */
 
-        $hasPermission = false;
-        foreach ($acl as $permission) {
+        $bHasPermission = false;
 
-            $pattern = '/^' . $search . '$/';
-            $match   = preg_match($pattern, $permission);
+        /**
+         * Replace :* with :.* - this is a common mistake when using the permission
+         * system (i.e., assuming that star on it's own will match)
+         */
 
-            if ($match) {
+        $sSearch = preg_replace('/:\*/', ':.*', $sSearch);
 
-                $hasPermission = true;
+        foreach ($aAcl as $sPermission) {
+
+            $sPattern = '/^' . $sSearch . '$/';
+            $bMatch   = preg_match($sPattern, $sPermission);
+
+            if ($bMatch) {
+                $bHasPermission = true;
                 break;
             }
         }
 
-        return $hasPermission;
+        return $bHasPermission;
     }
 
     // --------------------------------------------------------------------------
