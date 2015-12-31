@@ -2155,7 +2155,7 @@ class User extends Base
                 $oEmail        = new \stdClass();
                 $oEmail->type  = 'new_user_' . $oGroup->id;
                 $oEmail->to_id = $iId;
-                $oEmail->data  = new \srdClass();
+                $oEmail->data  = new \stdClass();
 
                 //  If this user is created by an admin then take note of that.
                 if ($this->isAdmin() && $this->activeUser('id') != $iId) {
