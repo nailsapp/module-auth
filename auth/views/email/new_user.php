@@ -1,7 +1,7 @@
 {{#admin.id}}
     <p>
-        {{#admin.first_name}} {{#admin.last_name}}, an administrator for <?=APP_NAME?>, has just created a
-        new <em>{{#admin.group.name}}</em> account for you.
+        {{admin.first_name}} {{admin.last_name}}, an administrator for <?=APP_NAME?>, has just created a
+        new <em>{{admin.group.name}}</em> account for you.
     </p>
 {{/admin.id}}
 {{^admin.id}}

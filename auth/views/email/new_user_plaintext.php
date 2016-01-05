@@ -1,5 +1,5 @@
 {{#admin.id}}
-{{#admin.first_name}} {{#admin.last_name}}, an administrator for the <?=APP_NAME?> website, has just created a new {{#admin.group.name}} account for you.
+{{admin.first_name}} {{admin.last_name}}, an administrator for the <?=APP_NAME?> website, has just created a new {{admin.group.name}} account for you.
 {{/admin.id}}
 {{^admin.id}}
 Thank you for registering at the <?=APP_NAME?> website.
