@@ -553,16 +553,11 @@ class User extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param array $data Data passed from the calling method
+     * @param array $aData Data passed from the calling method
      * @return void
      */
-    protected function getCountCommon($data = array())
+    protected function getCountCommon($aData = array())
     {
-        //  Let the parent method handle sorting, etc
-        parent::getCountCommon($data);
-
-        // --------------------------------------------------------------------------
-
         //  Define the selects
         $this->db->select($this->tablePrefix . '.*');
         $this->db->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
@@ -590,6 +585,33 @@ class User extends Base
             $this->tablePrefix . '.group_id = ug.id',
             'LEFT'
         );
+
+        // --------------------------------------------------------------------------
+
+        if (!empty($aData['keywords'])) {
+
+            if (empty($aData['or_like'])) {
+                $aData['or_like'] = array();
+            }
+
+            $aData['or_like'][] = array(
+                'column' => $this->tablePrefix . '.id',
+                'value'  => $aData['keywords']
+            );
+
+            $aData['or_like'][] = array(
+                'column' => array($this->tablePrefix . '.first_name', $this->tablePrefix . '.last_name'),
+                'value'  => $aData['keywords']
+            );
+
+            $aData['or_like'][] = array(
+                'column' => 'ue.email',
+                'value'  => $aData['keywords']
+            );
+        }
+
+        //  Let the parent method handle sorting, etc
+        parent::getCountCommon($aData);
     }
 
     // --------------------------------------------------------------------------
