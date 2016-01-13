@@ -42,6 +42,8 @@ class User extends Base
         $this->rememberCookie     = 'nailsrememberme';
         $this->adminRecoveryField = 'nailsAdminRecoveryData';
         $this->isRemembered       = null;
+        $this->defaultSortColumn  = $this->tableIdColumn;
+        $this->defaultSortOrder   = 'DESC';
 
         // --------------------------------------------------------------------------
 
