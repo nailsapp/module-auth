@@ -207,7 +207,7 @@ class Meta
         }
 
         $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
-        return $bResult;
+        return true;
     }
 
     // --------------------------------------------------------------------------
@@ -237,6 +237,6 @@ class Meta
         }
 
         $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
-        return $bResult;
+        return true;
     }
 }
