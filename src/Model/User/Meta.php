@@ -175,9 +175,11 @@ class Meta
             } else {
 
                 //  Safety: Ensure that the row ID, and User ID are not overridden
+                $iId = $aRow['id'];
                 unset($aRow['id']);
-                unset($aRow['user_id']);
 
+                $this->oDb->where('id', $iId);
+                $this->oDb->where('user_id', $iUserId);
                 $this->oDb->set($aRow);
                 if (!$this->oDb->update($sTable)) {
                     $this->oDb->trans_rollback();
