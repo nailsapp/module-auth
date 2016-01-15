@@ -14,7 +14,7 @@ if (isModuleEnabled('nailsapp/module-cdn')) {
 
                 echo '<li class="file">';
 
-                switch ($file->mime) {
+                switch ($file->file->mime) {
 
                     case 'image/jpg':
                     case 'image/jpeg':
@@ -23,14 +23,14 @@ if (isModuleEnabled('nailsapp/module-cdn')) {
 
                         echo '<a href="' . cdnServe($file->id) . '" class="fancybox image">';
                         echo img(cdnCrop($file->id, 35, 35));
-                        echo $file->filename_display;
+                        echo $file->file->name->human;
                         echo '<small>Bucket: ' . $file->bucket->slug . '</small>';
                         echo '</a>';
                         break;
 
                     default:
 
-                        echo anchor(cdnServe($file->id) . '?dl=1', $file->filename_display . '<small>Bucket: ' . $file->bucket->slug . '</small>');
+                        echo anchor(cdnServe($file->id) . '?dl=1', $file->file->name->human . '<small>Bucket: ' . $file->bucket->slug . '</small>');
                         break;
                 }
 
