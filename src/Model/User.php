@@ -1946,7 +1946,6 @@ class User extends Base
             }
 
             if (!$this->isValidUsername($data['username'], true)) {
-
                 return false;
             }
 
@@ -1969,7 +1968,6 @@ class User extends Base
 
             //  Check username
             if (!$this->isValidUsername($data['username'], true)) {
-
                 return false;
             }
         }
@@ -2016,7 +2014,6 @@ class User extends Base
             $oPassword = $this->user_password_model->generateNullHash();
 
             if (!$oPassword) {
-
                 $this->setError($this->user_password_model->lastError());
                 return false;
             }
@@ -2026,7 +2023,6 @@ class User extends Base
             $oPassword = $this->user_password_model->generateHash($aUserData['group_id'], $data['password']);
 
             if (!$oPassword) {
-
                 $this->setError($this->user_password_model->lastError());
                 return false;
             }
@@ -2042,7 +2038,6 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         if (!empty($data['username'])) {
-
             $aUserData['username'] = strtolower($data['username']);
         }
 
@@ -2069,30 +2064,25 @@ class User extends Base
         //  Other data
         $aUserData['salutation'] = !empty($data['salutation']) ? $data['salutation'] : null ;
         $aUserData['first_name'] = !empty($data['first_name']) ? $data['first_name'] : null ;
-        $aUserData['last_name']  = !empty($data['last_name']) ? $data['last_name'] : null ;
+        $aUserData['last_name']  = !empty($data['last_name'])  ? $data['last_name']  : null ;
 
         if (isset($data['gender'])) {
-
             $aUserData['gender'] = $data['gender'];
         }
 
         if (isset($data['timezone'])) {
-
             $aUserData['timezone'] = $data['timezone'];
         }
 
         if (isset($data['datetime_format_date'])) {
-
             $aUserData['datetime_format_date'] = $data['datetime_format_date'];
         }
 
         if (isset($data['datetime_format_time'])) {
-
             $aUserData['datetime_format_time'] = $data['datetime_format_time'];
         }
 
         if (isset($data['language'])) {
-
             $aUserData['language'] = $data['language'];
         }
 
