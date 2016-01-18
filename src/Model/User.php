@@ -79,7 +79,6 @@ class User extends Base
 
         //  If no user is logged in, see if there's a remembered user to be logged in
         if (!$this->isLoggedIn()) {
-
             $this->loginRememberedUser();
         }
     }
@@ -96,7 +95,6 @@ class User extends Base
         $this->config->load('auth/auth');
 
         if (!$this->config->item('authEnableRememberMe')) {
-
             return false;
         }
 
@@ -140,7 +138,6 @@ class User extends Base
     {
         //  Only look for a value if we're logged in
         if (!$this->isLoggedIn()) {
-
             return false;
         }
 
