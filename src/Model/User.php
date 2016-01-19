@@ -197,14 +197,16 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
+        $oDateTimeModel = Factory::model('DateTime');
+
         //  Set the user's date/time formats
         $sFormatDate = $this->activeUser('pref_date_format');
-        $sFormatDate = $sFormatDate ? $sFormatDate : $this->datetime_model->getDateFormatDefaultSlug();
+        $sFormatDate = $sFormatDate ? $sFormatDate : $oDateTimeModel->getDateFormatDefaultSlug();
 
         $sFormatTime = $this->activeUser('pref_time_format');
-        $sFormatTime = $sFormatTime ? $sFormatTime : $this->datetime_model->getTimeFormatDefaultSlug();
+        $sFormatTime = $sFormatTime ? $sFormatTime : $oDateTimeModel->getTimeFormatDefaultSlug();
 
-        $this->datetime_model->setFormats($sFormatDate, $sFormatTime);
+        $oDateTimeModel->setFormats($sFormatDate, $sFormatTime);
     }
 
     // --------------------------------------------------------------------------
@@ -1188,20 +1190,20 @@ class User extends Base
             //  Do we need to update any timezone/date/time preferences?
             if (isset($data['timezone'])) {
 
-                $this->datetime_model->setUserTimezone($data['timezone']);
-
+                $oDateTimeModel = Factory::model('DateTime');
+                $oDateTimeModel->setUserTimezone($data['timezone']);
             }
 
             if (isset($data['datetime_format_date'])) {
 
-                $this->datetime_model->setDateFormat($data['datetime_format_date']);
-
+                $oDateTimeModel = Factory::model('DateTime');
+                $oDateTimeModel->setDateFormat($data['datetime_format_date']);
             }
 
             if (isset($data['datetime_format_time'])) {
 
-                $this->datetime_model->setTimeFormat($data['datetime_format_time']);
-
+                $oDateTimeModel = Factory::model('DateTime');
+                $oDateTimeModel->setTimeFormat($data['datetime_format_time']);
             }
 
             // --------------------------------------------------------------------------

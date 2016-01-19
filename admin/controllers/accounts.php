@@ -729,10 +729,13 @@ class Accounts extends BaseAdmin
 
         //  Get the groups, timezones and languages
         $this->data['groups']       = $this->user_group_model->getAll();
-        $this->data['timezones']    = $this->datetime_model->getAllTimezone();
-        $this->data['date_formats'] = $this->datetime_model->getAllDateFormat();
-        $this->data['time_formats'] = $this->datetime_model->getAllTimeFormat();
         $this->data['languages']    = $this->language_model->getAllEnabledFlat();
+
+        $oDateTimeModel = Factory::model('DateTime');
+        $this->data['timezones']        = $oDateTimeModel->getAllTimezone();
+        $this->data['date_formats']     = $oDateTimeModel->getAllDateFormat();
+        $this->data['time_formats']     = $oDateTimeModel->getAllTimeFormat();
+        $this->data['default_timezone'] = $oDateTimeModel->getTimezoneDefault();
 
         //  Fetch any user uploads
         if (isModuleEnabled('nailsapp/module-cdn')) {

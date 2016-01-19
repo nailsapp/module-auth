@@ -78,7 +78,7 @@
     $_field                 = array();
     $_field['key']          = 'timezone';
     $_field['label']        = lang('accounts_edit_basic_field_timezone_label');
-    $_field['default']      = $user_edit->timezone ? $user_edit->timezone : $this->datetime_model->getTimezoneDefault();
+    $_field['default']      = $user_edit->timezone ? $user_edit->timezone : $default_timezone;
     $_field['required']     = false;
     $_field['class']        = 'select2';
 
