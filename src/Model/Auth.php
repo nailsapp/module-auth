@@ -13,6 +13,7 @@
 namespace Nails\Auth\Model;
 
 use Nails\Factory;
+use Nails\Environment;
 
 class Auth extends \Nails\Common\Model\Base
 {
@@ -28,8 +29,8 @@ class Auth extends \Nails\Common\Model\Base
         parent::__construct();
 
         $this->aBruteProtection = array(
-            'delay' => 1500000,
-            'limit' => 10,
+            'delay'  => 1500000,
+            'limit'  => 10,
             'expire' => 900
         );
     }
@@ -46,8 +47,7 @@ class Auth extends \Nails\Common\Model\Base
     public function login($identifier, $password, $remember = false)
     {
         //  Delay execution for a moment (reduces brute force efficiently)
-        if (strtoupper(ENVIRONMENT) !== 'DEVELOPMENT') {
-
+        if (Environment::not('DEVELOPMENT')) {
             usleep($this->aBruteProtection['delay']);
         }
 
@@ -66,17 +66,14 @@ class Auth extends \Nails\Common\Model\Base
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-
                 $user = $this->user_model->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
-
                 $user = $this->user_model->getByUsername($identifier);
                 break;
 
             default:
-
                 if (valid_email($identifier)) {
 
                     $user = $this->user_model->getByEmail($identifier);
@@ -126,7 +123,6 @@ class Auth extends \Nails\Common\Model\Base
 
                     //  If we're remembering this user set a cookie
                     if ($remember) {
-
                         $this->user_model->setRememberCookie($user->id, $user->password, $user->email);
                     }
 
@@ -142,17 +138,14 @@ class Auth extends \Nails\Common\Model\Base
                 switch (APP_NATIVE_LOGIN_USING) {
 
                     case 'EMAIL':
-
                         $identifier = $user->email;
                         break;
 
                     case 'USERNAME':
-
                         $identifier = $user->username;
                         break;
 
                     default:
-
                         $identifier = $user->email;
                         break;
                 }
@@ -269,7 +262,6 @@ class Auth extends \Nails\Common\Model\Base
 
         //  Destroy PHP session if it exists
         if (session_id()) {
-
             session_destroy();
         }
 
@@ -457,7 +449,6 @@ class Auth extends \Nails\Common\Model\Base
         $question = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
 
         if (!$question) {
-
             return false;
         }
 
@@ -552,7 +543,6 @@ class Auth extends \Nails\Common\Model\Base
         $result = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
 
         if (empty($result)) {
-
             return false;
         }
 

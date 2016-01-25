@@ -13,6 +13,7 @@
 namespace Nails\Auth\Library;
 
 use Nails\Factory;
+use Nails\Environment;
 
 class SocialSignOn
 {
@@ -74,7 +75,7 @@ class SocialSignOn
         $aConfig               = array();
         $aConfig['base_url']   = site_url('vendor/hybridauth/hybridauth/hybridauth/index.php');
         $aConfig['providers']  = array();
-        $aConfig['debug_mode'] = strtoupper(ENVIRONMENT) !== 'PRODUCTION';
+        $aConfig['debug_mode'] = Environment::not('PRODUCTION');
         $aConfig['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php';
 
         foreach ($this->aProviders['enabled'] as $aProvider) {
