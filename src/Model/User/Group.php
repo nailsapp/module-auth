@@ -238,13 +238,29 @@ class Group extends \Nails\Common\Model\Base
     // --------------------------------------------------------------------------
 
     /**
-     * Formats a group object
-     * @param  stdClass &$obj the group object to format
+     * Formats a single object
+     *
+     * The getAll() method iterates over each returned item with this method so as to
+     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     *
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function formatObject(&$obj)
-    {
-        $obj->acl = json_decode($obj->acl);
-        $obj->password_rules = json_decode($obj->password_rules);
+    protected function formatObject(
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
+    ) {
+
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
+
+        $oObj->acl            = json_decode($oObj->acl);
+        $oObj->password_rules = json_decode($oObj->password_rules);
     }
 }

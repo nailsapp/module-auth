@@ -460,17 +460,14 @@ class Accounts extends BaseAdmin
                 switch (strtolower($col->Type)) {
 
                     case 'text':
-
                         $type = 'textarea';
                         break;
 
                     case 'date':
-
                         $datatype = 'date';
                         break;
 
                     case 'tinyint(1) unsigned':
-
                         $datatype = 'bool';
                         break;
                 }
@@ -521,7 +518,6 @@ class Accounts extends BaseAdmin
                 switch ($datatype) {
 
                     case 'date':
-
                         //  Dates must validate
                         if (isset($value['validation'])) {
 
@@ -539,7 +535,6 @@ class Accounts extends BaseAdmin
                     case 'upload':
                     case 'string':
                     default:
-
                         if (isset($value['validation'])) {
 
                             $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
@@ -608,7 +603,6 @@ class Accounts extends BaseAdmin
                     $data['datetime_format_time'] = $this->input->post('datetime_format_time');
 
                     if ($this->input->post('password')) {
-
                         $data['password']  = $this->input->post('password');
                     }
 
@@ -619,20 +613,17 @@ class Accounts extends BaseAdmin
 
                             case 'bool':
                             case 'boolean':
-
                                 //  Convert all to boolean from string
                                 $data[$col] = stringToBoolean($this->input->post($col));
                                 break;
 
                             case 'file':
                             case 'upload':
-
                                 //  File uploads should be an integer, or if empty, null
                                 $data[$col] = (int) $this->input->post($col) ? (int) $this->input->post($col) : null;
                                 break;
 
                             default:
-
                                 $data[$col] = $this->input->post($col);
                                 break;
                         }
@@ -688,7 +679,10 @@ class Accounts extends BaseAdmin
                     //  The account failed to update, feedback to user
                     } else {
 
-                        $this->data['error'] = lang('accounts_edit_fail', implode(', ', $this->user_model->getErrors()));
+                        $this->data['error'] = lang(
+                            'accounts_edit_fail',
+                            implode(', ', $this->user_model->getErrors())
+                        );
                     }
                 }
 
@@ -725,11 +719,16 @@ class Accounts extends BaseAdmin
         $this->data['user_meta'] = $user_meta;
 
         //  Page Title
-        $this->data['page']->title = lang('accounts_edit_title', title_case($user->first_name . ' ' . $user->last_name));
+        $this->data['page']->title = lang(
+            'accounts_edit_title',
+            title_case($user->first_name . ' ' . $user->last_name)
+        );
 
         //  Get the groups, timezones and languages
         $this->data['groups']       = $this->user_group_model->getAll();
-        $this->data['languages']    = $this->language_model->getAllEnabledFlat();
+
+        $oLanguageModel = Factory::model('Language');
+        $this->data['languages'] = $oLanguageModel->getAllEnabledFlat();
 
         $oDateTimeModel = Factory::model('DateTime');
         $this->data['timezones']        = $oDateTimeModel->getAllTimezone();
@@ -750,17 +749,14 @@ class Accounts extends BaseAdmin
             switch (strtolower(activeUser('gender'))) {
 
                 case 'male':
-
                     $this->data['notice'] = lang('accounts_edit_editing_self_m');
                     break;
 
                 case 'female':
-
                     $this->data['notice'] = lang('accounts_edit_editing_self_f');
                     break;
 
                 default:
-
                     $this->data['notice'] = lang('accounts_edit_editing_self_u');
                     break;
             }
@@ -1160,7 +1156,6 @@ class Accounts extends BaseAdmin
         switch ($action) {
 
             case 'add':
-
                 $isPrimary  = (bool) $this->input->post('isPrimary');
                 $isVerified = (bool) $this->input->post('isVerified');
 
@@ -1178,7 +1173,6 @@ class Accounts extends BaseAdmin
                 break;
 
             case 'delete':
-
                 if ($this->user_model->emailDelete($email, $id)) {
 
                     $status  = 'success';
@@ -1193,7 +1187,6 @@ class Accounts extends BaseAdmin
                 break;
 
             case 'makePrimary':
-
                 if ($this->user_model->emailMakePrimary($email, $id)) {
 
                     $status  = 'success';
@@ -1208,7 +1201,6 @@ class Accounts extends BaseAdmin
                 break;
 
             case 'verify':
-
                 //  Get the code for this email
                 $userEmails = $this->user_model->getEmailsForUser($id);
                 $code       = '';
@@ -1241,7 +1233,6 @@ class Accounts extends BaseAdmin
                 break;
 
             default:
-
                 $status  = 'error';
                 $message = 'Unknown action: "' . $action . '"';
                 break;

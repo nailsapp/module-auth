@@ -713,17 +713,14 @@ class User extends Base
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-
                 $user = $this->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
-
                 $user = $this->getByUsername($identifier);
                 break;
 
             default:
-
                 if (valid_email($identifier)) {
 
                     $user = $this->getByEmail($identifier);
@@ -961,12 +958,10 @@ class User extends Base
                     switch ($key) {
 
                         case 'profile_img':
-
                             $aDataUser[$key] = $val ? $val : null;
                             break;
 
                         default:
-
                             $aDataUser[$key] = $val;
                             break;
                     }
@@ -2527,7 +2522,6 @@ class User extends Base
                     switch ($tables[$i]->name) {
 
                         case NAILS_DB_PREFIX . 'user_email':
-
                             $this->db->set('is_primary', false);
                             break;
                     }
@@ -2574,48 +2568,62 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Format a user object
-     * @param  stdClass &$user The user object to format
+     * Formats a single object
+     *
+     * The getAll() method iterates over each returned item with this method so as to
+     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     *
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function formatObject(&$user)
-    {
-        parent::formatObject($user);
+    protected function formatObject(
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
+    ) {
+
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
         // --------------------------------------------------------------------------
 
-        $user->group_acl = json_decode($user->group_acl);
+        $oObj->group_acl = json_decode($oObj->group_acl);
 
         //  If the user has an ACL set then we'll need to extract and merge that
-        if ($user->user_acl) {
+        if ($oObj->user_acl) {
 
-            $user->user_acl = json_decode($user->user_acl);
-            $user->acl      = array_merge($user->group_acl, $user->user_acl);
-            $user->acl      = array_filter($user->acl);
-            $user->acl      = array_unique($user->acl);
+            $oObj->user_acl = json_decode($oObj->user_acl);
+            $oObj->acl      = array_merge($oObj->group_acl, $oObj->user_acl);
+            $oObj->acl      = array_filter($oObj->acl);
+            $oObj->acl      = array_unique($oObj->acl);
 
         } else {
 
-            $user->acl = $user->group_acl;
+            $oObj->acl = $oObj->group_acl;
         }
 
         // --------------------------------------------------------------------------
 
         //  Ints
-        $user->id                 = (int) $user->id;
-        $user->group_id           = (int) $user->group_id;
-        $user->login_count        = (int) $user->login_count;
-        $user->referred_by        = (int) $user->referred_by;
-        $user->failed_login_count = (int) $user->failed_login_count;
+        $oObj->id                 = (int) $oObj->id;
+        $oObj->group_id           = (int) $oObj->group_id;
+        $oObj->login_count        = (int) $oObj->login_count;
+        $oObj->referred_by        = (int) $oObj->referred_by;
+        $oObj->failed_login_count = (int) $oObj->failed_login_count;
 
         //  Bools
-        $user->temp_pw           = (bool) $user->temp_pw;
-        $user->is_suspended      = (bool) $user->is_suspended;
-        $user->email_is_verified = (bool) $user->email_is_verified;
+        $oObj->temp_pw           = (bool) $oObj->temp_pw;
+        $oObj->is_suspended      = (bool) $oObj->is_suspended;
+        $oObj->email_is_verified = (bool) $oObj->email_is_verified;
 
         // --------------------------------------------------------------------------
 
         //  Tidy User meta
-        unset($user->user_id);
+        unset($oObj->user_id);
     }
 }

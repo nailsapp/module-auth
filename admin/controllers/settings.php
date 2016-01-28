@@ -193,27 +193,29 @@ class Settings extends BaseAdmin
                 if (empty($error)) {
 
                     $this->db->trans_begin();
-                    $rollback = false;
+
+                    $bRollback        = false;
+                    $oAppSettingModel = Factory::model('AppSetting');
 
                     if (!empty($settings)) {
 
-                        if (!$this->app_setting_model->set($settings, 'auth')) {
+                        if (!$oAppSettingModel->set($settings, 'auth')) {
 
-                            $error    = $this->app_setting_model->lastError();
-                            $rollback = true;
+                            $error    = $oAppSettingModel->lastError();
+                            $bRollback = true;
                         }
                     }
 
                     if (!empty($settingsEncrypted)) {
 
-                        if (!$this->app_setting_model->set($settingsEncrypted, 'auth', null, true)) {
+                        if (!$oAppSettingModel->set($settingsEncrypted, 'auth', null, true)) {
 
-                            $error    = $this->app_setting_model->lastError();
-                            $rollback = true;
+                            $error    = $oAppSettingModel->lastError();
+                            $bRollback = true;
                         }
                     }
 
-                    if ($rollback) {
+                    if ($bRollback) {
 
                         $this->db->trans_rollback();
                         $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;

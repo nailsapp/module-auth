@@ -291,15 +291,24 @@ class AccessToken extends \Nails\Common\Model\Base
      * Formats a single object
      *
      * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to typecast ID's and/or organise data into objects.
+     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $obj  A reference to the object being formatted.
-     * @param  array  $data The same data array which is passed to _getcount_common, for reference if needed
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function formatObject(&$obj, $data = array(), $integers = array(), $bools = array(), $floats = array())
-    {
-        parent::formatObject($obj, $data, $integers, $bools, $floats);
-        $obj->scope = explode(',', $obj->scope);
+    protected function formatObject(
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
+    ) {
+
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
+        $oObj->scope = explode(',', $oObj->scope);
     }
 }

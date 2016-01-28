@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file provides langauge user helper functions
+ * This file provides language user helper functions
  *
  * @package     Nails
  * @subpackage  common
