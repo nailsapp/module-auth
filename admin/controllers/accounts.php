@@ -415,8 +415,9 @@ class Accounts extends BaseAdmin
          * Load the user_meta_cols; loaded here because it's needed for both the view
          * and the form validation
          */
+        $oConfig = Factory::service('Config');
 
-        $user_meta_cols = $this->config->item('user_meta_cols');
+        $user_meta_cols = $oConfig->item('user_meta_cols');
         $group_id       = $this->input->post('group_id') ? $this->input->post('group_id') : $user->group_id;
 
         if (isset($user_meta_cols[$group_id])) {

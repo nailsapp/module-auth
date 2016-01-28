@@ -15,14 +15,16 @@
     $this->load->view('accounts/edit/inc-emails');
     $this->load->view('accounts/edit/inc-password');
 
-    $this->config->load('auth/auth');
+    $oConfig = nailsFactory('service', 'Config');
 
-    if ($this->config->item('authTwoFactorMode') == 'QUESTION') {
+    $oConfig->load('auth/auth');
+
+    if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
         $this->load->view('accounts/edit/inc-mfa-question');
     }
 
 
-    if ($this->config->item('authTwoFactorMode') == 'DEVICE') {
+    if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
         $this->load->view('accounts/edit/inc-mfa-device');
     }
 

@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Controller;
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class BaseMfa extends Base
@@ -32,8 +33,10 @@ class BaseMfa extends Base
     {
         parent::__construct();
 
-        $this->authMfaMode = $this->config->item('authTwoFactorMode');
-        $config = $this->config->item('authTwoFactor');
+        $oConfig = Factory::service('Config');
+
+        $this->authMfaMode   = $oConfig->item('authTwoFactorMode');
+        $config              = $oConfig->item('authTwoFactor');
         $this->authMfaConfig = $config[$this->authMfaMode];
     }
 
@@ -72,12 +75,10 @@ class BaseMfa extends Base
             case 'twitter':
             case 'linkedin':
             case 'native':
-
                 //  All good, homies.
                 break;
 
             default:
-
                 $this->loginMethod = 'native';
                 break;
         }
@@ -146,7 +147,9 @@ class BaseMfa extends Base
         //  Say hello
         if ($this->mfaUser->last_login) {
 
-            if ($this->config->item('authShowNicetimeOnLogin')) {
+            $oConfig = Factory::service('Config');
+
+            if ($oConfig->item('authShowNicetimeOnLogin')) {
 
                 $lastLogin = niceTime(strtotime($this->mfaUser->last_login));
 
@@ -155,7 +158,7 @@ class BaseMfa extends Base
                 $lastLogin = toUserDatetime($this->mfaUser->last_login);
             }
 
-            if ($this->config->item('authShowLastIpOnLogin')) {
+            if ($oConfig->item('authShowLastIpOnLogin')) {
 
                 $status  = 'positive';
                 $message = lang(

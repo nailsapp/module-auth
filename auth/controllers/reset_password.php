@@ -48,6 +48,8 @@ class Reset_Password extends Base
      **/
     protected function validate($id, $hash)
     {
+        $oConfig = Factory::service('Config');
+
         //  Check auth credentials
         $user = $this->user_model->getById($id);
 
@@ -56,7 +58,7 @@ class Reset_Password extends Base
         if ($user !== false && isset($user->salt) && $hash == md5($user->salt)) {
 
             //  Valid combination, is there MFA on the account?
-            if ($this->config->item('authTwoFactorMode')) {
+            if ($oConfig->item('authTwoFactorMode')) {
 
                 /**
                  * This variable will stop the password resetting until we're confident
@@ -70,10 +72,9 @@ class Reset_Password extends Base
                  * require that they pass that before allowing the password to be reset
                  */
 
-                switch ($this->config->item('authTwoFactorMode')) {
+                switch ($oConfig->item('authTwoFactorMode')) {
 
                     case 'QUESTION':
-
                         $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($user->id);
 
                         if ($this->data['mfaQuestion']) {
@@ -107,7 +108,6 @@ class Reset_Password extends Base
                         break;
 
                     case 'DEVICE':
-
                         $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($user->id);
 
                         if ($this->data['mfaDevice']) {
@@ -186,7 +186,6 @@ class Reset_Password extends Base
                         switch (APP_NATIVE_LOGIN_USING) {
 
                             case 'EMAIL' :
-
                                 $loginUser = $this->auth_model->login(
                                     $user->email,
                                     $this->input->post('new_password'),
@@ -195,7 +194,6 @@ class Reset_Password extends Base
                                 break;
 
                             case 'USERNAME' :
-
                                 $loginUser = $this->auth_model->login(
                                     $user->username,
                                     $this->input->post('new_password'),
@@ -204,7 +202,6 @@ class Reset_Password extends Base
                                 break;
 
                             default :
-
                                 $loginUser = $this->auth_model->login(
                                     $user->email,
                                     $this->input->post('new_password'),
@@ -218,7 +215,7 @@ class Reset_Password extends Base
                             //  Say hello
                             if ($loginUser->last_login) {
 
-                                if ($this->config->item('authShowNicetimeOnLogin')) {
+                                if ($oConfig->item('authShowNicetimeOnLogin')) {
 
                                     $lastLogin = niceTime(strtotime($loginUser->last_login));
 
@@ -227,7 +224,7 @@ class Reset_Password extends Base
                                     $lastLogin = toUserDatetime($loginUser->last_login);
                                 }
 
-                                if ($this->config->item('authShowLastIpOnLogin')) {
+                                if ($oConfig->item('authShowLastIpOnLogin')) {
 
                                     $status  = 'positive';
                                     $message = lang(
@@ -275,7 +272,7 @@ class Reset_Password extends Base
                             $this->session->set_flashdata($status, $sloginAvatar . $message);
 
                             //  If MFA is setup then we'll need to set the user's session data
-                            if ($this->config->item('authTwoFactorMode')) {
+                            if ($oConfig->item('authTwoFactorMode')) {
 
                                 $this->user_model->setLoginData($user->id);
                             }
@@ -329,7 +326,6 @@ class Reset_Password extends Base
                 switch ($this->input->get('reason')) {
 
                     case 'EXPIRED' :
-
                         $this->data['message'] = lang(
                             'auth_login_pw_expired',
                             $this->user_password_model->expiresAfter($user->group_id)
@@ -338,7 +334,6 @@ class Reset_Password extends Base
 
                     case 'TEMP' :
                     default :
-
                         $this->data['message'] = lang('auth_login_pw_temp');
                         break;
                 }

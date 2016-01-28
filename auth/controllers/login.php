@@ -98,17 +98,14 @@ class Login extends Base
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL':
-
                     $oFormValidation->set_rules('identifier', 'Email', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME':
-
                     $oFormValidation->set_rules('identifier', 'Username', 'required|xss_clean|trim');
                     break;
 
                 default:
-
                     $oFormValidation->set_rules('identifier', 'Username or Email', 'xss_clean|trim');
                     break;
             }
@@ -166,6 +163,8 @@ class Login extends Base
      */
     protected function _login($user, $remember = false, $provider = 'native')
     {
+        $oConfig = Factory::service('Config');
+
         if ($user->is_suspended) {
 
             $this->data['error'] = lang('auth_login_fail_suspended');
@@ -190,7 +189,7 @@ class Login extends Base
 
             $this->resetPassword($user->id, $user->salt, $remember, 'EXPIRED');
 
-        } elseif ($this->config->item('authTwoFactorMode')) {
+        } elseif ($oConfig->item('authTwoFactorMode')) {
 
             //  Generate token
             $twoFactorToken = $this->auth_model->mfaTokenGenerate($user->id);
@@ -218,15 +217,13 @@ class Login extends Base
             $query = $query ? '?' . http_build_query($query) : '';
 
             //  Where we sending the user?
-            switch ($this->config->item('authTwoFactorMode')) {
+            switch ($oConfig->item('authTwoFactorMode')) {
 
                 case 'QUESTION':
-
                     $controller = 'mfa_question';
                     break;
 
                 case 'DEVICE':
-
                     $controller = 'mfa_device';
                     break;
             }
@@ -250,9 +247,9 @@ class Login extends Base
             //  Finally! Send this user on their merry way...
             if ($user->last_login) {
 
-                $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
+                $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-                if ($this->config->item('authShowLastIpOnLogin')) {
+                if ($oConfig->item('authShowLastIpOnLogin')) {
 
                     $status  = 'positive';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
@@ -337,7 +334,9 @@ class Login extends Base
      **/
     public function with_hashes()
     {
-        if (!$this->config->item('authEnableHashedLogin')) {
+        $oConfig = Factory::service('Config');
+
+        if (!$oConfig->item('authEnableHashedLogin')) {
 
             show_404();
         }
@@ -404,9 +403,9 @@ class Login extends Base
             //  Say hello
             if ($user->last_login) {
 
-                $lastLogin = $this->config->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
+                $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
-                if ($this->config->item('authShowLastIpOnLogin')) {
+                if ($oConfig->item('authShowLastIpOnLogin')) {
 
                     $status  = 'positive';
                     $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
@@ -625,17 +624,14 @@ class Login extends Base
                 switch (APP_NATIVE_LOGIN_USING) {
 
                     case 'EMAIL':
-
                         $requiredData['email'] = trim($socialUser->email);
                         break;
 
                     case 'USERNAME':
-
                         $requiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
                         break;
 
                     default:
-
                         $requiredData['email']    = trim($socialUser->email);
                         $requiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
                         break;
@@ -657,12 +653,10 @@ class Login extends Base
                 switch (strtoupper($socialUser->gender)) {
 
                     case 'MALE' :
-
                         $optionalData['gender'] = 'MALE';
                         break;
 
                     case 'FEMALE' :
-
                         $optionalData['gender'] = 'FEMALE';
                         break;
                 }

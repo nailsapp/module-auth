@@ -116,7 +116,9 @@ class Auth extends \Nails\Common\Model\Base
                  * next process will confirm the login and set this.
                  */
 
-                if (!$this->config->item('authTwoFactorMode')) {
+                $oConfig = Factory::service('Config');
+
+                if (!$oConfig->item('authTwoFactorMode')) {
 
                     //  Set login data for this user
                     $this->user_model->setLoginData($user->id);

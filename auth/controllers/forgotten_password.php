@@ -75,17 +75,14 @@ class Forgotten_Password extends Base
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL' :
-
                     $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME' :
-
                     $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim');
                     break;
 
                 default:
-
                     $oFormValidation->set_rules('identifier', '', 'xss_clean|trim');
                     break;
             }
@@ -106,7 +103,8 @@ class Forgotten_Password extends Base
                  * even if it wasn't. Bad UX, if you ask me, but I'm not the client.
                  */
 
-                $alwaysSucceed = $this->config->item('authForgottenPassAlwaysSucceed');
+                $oConfig       = Factory::service('Config');
+                $alwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
                 if ($this->user_password_model->setToken($_identifier)) {
@@ -115,7 +113,6 @@ class Forgotten_Password extends Base
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL' :
-
                             $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
 
                             //  User provided an email, send to that email
@@ -123,7 +120,6 @@ class Forgotten_Password extends Base
                             break;
 
                         case 'USERNAME' :
-
                             $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
 
                             /**
@@ -135,7 +131,6 @@ class Forgotten_Password extends Base
                             break;
 
                         default:
-
                             if (valid_email($_identifier)) {
 
                                 $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
@@ -224,21 +219,18 @@ class Forgotten_Password extends Base
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL':
-
                             $this->data['error'] = lang('auth_forgot_code_not_set_email', $_identifier);
                             break;
 
                         // --------------------------------------------------------------------------
 
                         case 'USERNAME':
-
                             $this->data['error'] = lang('auth_forgot_code_not_set_username', $_identifier);
                             break;
 
                         // --------------------------------------------------------------------------
 
                         default:
-
                             $this->data['error'] = lang('auth_forgot_code_not_set');
                             break;
                     }
@@ -265,14 +257,15 @@ class Forgotten_Password extends Base
      */
     public function _validate($code)
     {
+        $oConfig = Factory::service('Config');
+
         /**
          * Attempt to verify code, if two factor auth is enabled then don't generate a
          * new password, we'll need the user to jump through some hoops first.
          */
 
-        $generateNewPw = !$this->config->item('authTwoFactorMode');
-
-        $newPw = $this->user_password_model->validateToken($code, $generateNewPw);
+        $generateNewPw = !$oConfig->item('authTwoFactorMode');
+        $newPw         = $this->user_password_model->validateToken($code, $generateNewPw);
 
         // --------------------------------------------------------------------------
 
@@ -289,7 +282,7 @@ class Forgotten_Password extends Base
 
         } else {
 
-            if ($this->config->item('authTwoFactorMode') == 'QUESTION') {
+            if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
                 $this->data['question'] = $this->auth_model->mfaQuestionGet($newPw['user_id']);
@@ -362,7 +355,7 @@ class Forgotten_Password extends Base
                     $this->load->view('structure/footer/blank', $this->data);
                 }
 
-            } elseif ($this->config->item('authTwoFactorMode') == 'DEVICE') {
+            } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
                 $secret = $this->auth_model->mfaDeviceSecretGet($newPw['user_id']);
 

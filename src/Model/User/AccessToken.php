@@ -29,15 +29,18 @@ class AccessToken extends \Nails\Common\Model\Base
     public function __construct()
     {
         parent::__construct();
+
         $this->table       = NAILS_DB_PREFIX . 'user_auth_access_token';
         $this->tablePrefix = 'uaat';
 
         //  Load the config file and specify values
-        $this->config->load('auth/auth');
+        $oConfig = Factory::service('Config');
 
-        $this->defaultExpiration = $this->config->item('authAccessTokenDefaultExpiration');
-        $this->tokenTemplate     = $this->config->item('authAccessTokenTemplate');
-        $this->tokenCharacters   = $this->config->item('authAccessTokenCharacters');
+        $oConfig->load('auth/auth');
+
+        $this->defaultExpiration = $oConfig->item('authAccessTokenDefaultExpiration');
+        $this->tokenTemplate     = $oConfig->item('authAccessTokenTemplate');
+        $this->tokenCharacters   = $oConfig->item('authAccessTokenCharacters');
 
         /**
          * Define an array of handlers for checking whether a specified user can

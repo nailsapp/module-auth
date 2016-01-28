@@ -23,6 +23,7 @@ class User extends Base
     protected $isRemembered;
     protected $isLoggedIn;
     protected $adminRecoveryField;
+    protected $oConfig;
 
     // --------------------------------------------------------------------------
 
@@ -62,6 +63,10 @@ class User extends Base
 
         //  Clear the activeUser
         $this->clearActiveUser();
+
+        // --------------------------------------------------------------------------
+
+        $this->oConfig = Factory::service('Config');
     }
 
     // --------------------------------------------------------------------------
@@ -92,9 +97,9 @@ class User extends Base
     protected function loginRememberedUser()
     {
         //  Is remember me functionality enabled?
-        $this->config->load('auth/auth');
+        $this->oConfig->load('auth/auth');
 
-        if (!$this->config->item('authEnableRememberMe')) {
+        if (!$this->oConfig->item('authEnableRememberMe')) {
             return false;
         }
 
@@ -1013,9 +1018,9 @@ class User extends Base
             // --------------------------------------------------------------------------
 
             //  Resetting security questions?
-            $this->config->load('auth/auth');
+            $this->oConfig->load('auth/auth');
 
-            if ($this->config->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
+            if ($this->oConfig->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
 
                 $this->db->where('user_id', $iUserId);
                 if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
@@ -1032,7 +1037,7 @@ class User extends Base
                     return false;
                 }
 
-            } elseif ($this->config->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
+            } elseif ($this->oConfig->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
 
                 $this->db->where('user_id', $iUserId);
                 if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
@@ -1760,9 +1765,9 @@ class User extends Base
     public function setRememberCookie($id = null, $password = null, $email = null)
     {
         //  Is remember me functionality enabled?
-        $this->config->load('auth/auth');
+        $this->oConfig->load('auth/auth');
 
-        if (!$this->config->item('authEnableRememberMe')) {
+        if (!$this->oConfig->item('authEnableRememberMe')) {
 
             return false;
         }
