@@ -116,7 +116,7 @@ class AccessToken extends \Nails\Api\Controller\Base
 
         if ($this->user_model->isLoggedIn()) {
 
-            $sAccessToken = $this->input->post('accessToken');
+            $sAccessToken = $this->input->post('access_token');
 
             if (!empty($sAccessToken)) {
 
