@@ -13,16 +13,10 @@
 namespace Nails\Api\Auth;
 
 use Nails\Factory;
+use Nails\Api\Controller\Base;
 
-class User extends \Nails\Api\Controller\Base
+class User extends Base
 {
-    /**
-     * Require the user be authenticated to use any endpoint
-     */
-    const REQUIRE_AUTH = true;
-
-    // --------------------------------------------------------------------------
-
     /**
      * Returns basic details about the currently logged in user
      * @return array
@@ -88,17 +82,48 @@ class User extends \Nails\Api\Controller\Base
 
     /**
      * Returns a user by their ID
+     * @param  string $iId The user's email ID
      * @return array
      */
     public function getId($iId = null)
     {
-        if (empty($iId)) {
+        $sId = $this->input->get('id');
 
+        if (empty($sId)) {
             return array();
         }
 
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
         $oUser      = $oUserModel->getById($iId);
+
+        if (empty($oUser)) {
+
+            return array();
+
+        } else {
+
+            return array(
+                'data' => $this->formatUser($oUser)
+            );
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a user by their email
+     * @return array
+     */
+    public function getEmail()
+    {
+        $sEmail = $this->input->get('email');
+
+        if (empty($sEmail)) {
+            return array();
+        }
+
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUser      = $oUserModel->getByEmail($sEmail);
 
         if (empty($oUser)) {
 
