@@ -90,7 +90,9 @@ class User extends Base
         $sId = $this->input->get('id');
 
         if (empty($sId)) {
-            return array();
+            return array(
+                'status' => 404
+            );
         }
 
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
@@ -98,7 +100,9 @@ class User extends Base
 
         if (empty($oUser)) {
 
-            return array();
+            return array(
+                'status' => 404
+            );
 
         } else {
 
@@ -119,7 +123,15 @@ class User extends Base
         $sEmail = $this->input->get('email');
 
         if (empty($sEmail)) {
-            return array();
+            return array(
+                'status' => 404
+            );
+        }
+
+        if (!valid_email($sEmail)) {
+            return array(
+                'status' => 400
+            );
         }
 
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
@@ -127,7 +139,9 @@ class User extends Base
 
         if (empty($oUser)) {
 
-            return array();
+            return array(
+                'status' => 404
+            );
 
         } else {
 
