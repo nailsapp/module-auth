@@ -44,13 +44,16 @@ _AUTH_USERSEARCH = function()
                 if (id !== '') {
 
                     $.ajax({
-                        url: window.SITE_URL + 'api/auth/user/id/' + id,
+                        url: window.SITE_URL + 'api/auth/user',
+                        data: {
+                            'id': id
+                        },
                         dataType: 'json'
                     }).done(function(data) {
 
                         var out = {
-                            'id': data.data.id,
-                            'text': data.data.name + ' (' + data.data.email + ')'
+                            'id': data.user.id,
+                            'text': data.user.first_name + ' ' + data.user.last_name + ' (' + data.user.email + ')'
                         };
 
                         callback(out);
