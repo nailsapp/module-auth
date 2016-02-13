@@ -37,7 +37,7 @@ class Session
      */
     public function __construct()
     {
-        if (php_sapi_name() !== 'cli') {
+        if (!isCli()) {
 
             /**
              * STOP! Before we load the session library, we need to check if we're using
