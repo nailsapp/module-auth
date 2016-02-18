@@ -17,6 +17,7 @@ use Nails\Factory;
 class Meta
 {
     use \Nails\Common\Traits\Caching;
+    use \Nails\Common\Traits\ErrorHandling;
 
     // --------------------------------------------------------------------------
 
@@ -150,47 +151,71 @@ class Meta
 
     /**
      * Updates a user_meta_* table
-     * @param  string  $sTable  The table to update
-     * @param  integer $iUserId The ID of the user ID being updated
-     * @param  array   $aData   An array of rows to update
+     * @param  string  $sTable           The table to update
+     * @param  integer $iUserId          The ID of the user ID being updated
+     * @param  array   $aData            An array of rows to update
+     * @param  boolean $bDeleteUntouched Whether to delete records whichw ere not updated or created
      * @return boolean
      */
-    public function updateMany($sTable, $iUserId, $aData)
+    public function updateMany($sTable, $iUserId, $aData, $bDeleteUntouched = true)
     {
-        $this->oDb->trans_begin();
-        foreach ($aData as $aRow) {
+        try {
 
-            if (empty($aRow['id'])) {
+            $aTouchedIds = array();
 
-                //  Safety: Don't allow setting of the row ID
-                unset($aRow['id']);
-                //  Safety: overrwrite any user_id which may be passed
-                $aRow['user_id'] = $iUserId;
-                $this->oDb->set($aRow);
-                if (!$this->oDb->insert($sTable)) {
-                    $this->oDb->trans_rollback();
-                    return false;
-                }
+            $this->oDb->trans_begin();
+            foreach ($aData as $aRow) {
 
-            } else {
+                if (empty($aRow['id'])) {
 
-                //  Safety: Ensure that the row ID, and User ID are not overridden
-                $iId = $aRow['id'];
-                unset($aRow['id']);
+                    //  Safety: Don't allow setting of the row ID
+                    unset($aRow['id']);
+                    //  Safety: overrwrite any user_id which may be passed
+                    $aRow['user_id'] = $iUserId;
+                    $this->oDb->set($aRow);
+                    if (!$this->oDb->insert($sTable)) {
+                        throw new \Exception('Failed to create item.', 1);
+                    }
 
-                $this->oDb->where('id', $iId);
-                $this->oDb->where('user_id', $iUserId);
-                $this->oDb->set($aRow);
-                if (!$this->oDb->update($sTable)) {
-                    $this->oDb->trans_rollback();
-                    return false;
+                    $aTouchedIds[] = $this->oDb->insert_id();
+
+                } else {
+
+                    //  Safety: Ensure that the row ID, and User ID are not overridden
+                    $iId = $aRow['id'];
+                    unset($aRow['id']);
+
+                    $this->oDb->where('id', $iId);
+                    $this->oDb->where('user_id', $iUserId);
+                    $this->oDb->set($aRow);
+                    if (!$this->oDb->update($sTable)) {
+                        throw new \Exception('Failed to update item.', 1);
+                    }
+
+                    $aTouchedIds[] = $iId;
                 }
             }
-        }
 
-        $this->oDb->trans_commit();
-        $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
-        return true;
+            if ($bDeleteUntouched && !empty($aTouchedIds)) {
+                $this->oDb->where('user_id', $iUserId);
+                $this->oDb->where_not_in('id', $aTouchedIds);
+
+                if (!$this->oDb->delete($sTable)) {
+                    throw new \Exception('Failed to delete old items.', 1);
+                }
+            }
+
+
+            $this->oDb->trans_commit();
+            $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
+            return true;
+
+        } catch (\Exception $e) {
+
+            $this->setError($e->getMessage());
+            $this->oDb->trans_rollback();
+            return false;
+        }
     }
 
     // --------------------------------------------------------------------------
