@@ -19,8 +19,10 @@
             $field             = array();
             $field['key']      = $metaField;
             $field['type']     = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'text';
+            $field['class']    = isset($user_meta_cols[$metaField]['class']) ? $user_meta_cols[$metaField]['class'] : '';
             $field['label']    = isset($user_meta_cols[$metaField]['label']) ? $user_meta_cols[$metaField]['label'] : ucwords(str_replace('_', ' ', $metaField));
             $field['required'] = isset($user_meta_cols[$metaField]['required']) ? $user_meta_cols[$metaField]['required'] : false;
+            $field['options']  = isset($user_meta_cols[$metaField]['options']) ? $user_meta_cols[$metaField]['options'] : array();
             $field['default']  = $value;
 
             switch ($dataType) {
@@ -28,11 +30,17 @@
                 case 'bool':
                 case 'boolean':
 
-                    $field['class']    = 'select2';
                     $field['text_on']  = strtoupper(lang('yes'));
                     $field['text_off'] = strtoupper(lang('no'));
 
                     echo form_field_boolean($field);
+                    break;
+
+                case 'dropdown':
+                case 'select':
+
+                    $field['class'] .= ' select2';
+                    echo form_field_dropdown($field, $field['options']);
                     break;
 
                 case 'date':
@@ -68,7 +76,7 @@
                                 $options[$row->{$selectId}] = $row->{$selectName};
                             }
 
-                            $field['class'] = 'select2';
+                            $field['class'] .= ' select2';
 
                             echo form_field_dropdown($field, $options);
 
