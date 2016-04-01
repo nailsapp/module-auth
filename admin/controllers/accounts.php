@@ -536,6 +536,7 @@ class Accounts extends BaseAdmin
                     case 'upload':
                     case 'string':
                     default:
+
                         if (isset($value['validation'])) {
 
                             $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
@@ -609,22 +610,29 @@ class Accounts extends BaseAdmin
                     //  Set meta data
                     foreach ($this->data['user_meta_cols'] as $col => $value) {
 
+                        $mValue = $this->input->post($col);
+
+                        //  Should the field be made null on empty?
+                        if (!empty($value['nullOnEmpty']) && empty($mValue)) {
+                            $mValue = null;
+                        }
+
                         switch ($value['datatype']) {
 
                             case 'bool':
                             case 'boolean':
                                 //  Convert all to boolean from string
-                                $data[$col] = stringToBoolean($this->input->post($col));
+                                $data[$col] = stringToBoolean($mValue);
                                 break;
 
                             case 'file':
                             case 'upload':
                                 //  File uploads should be an integer, or if empty, null
-                                $data[$col] = (int) $this->input->post($col) ? (int) $this->input->post($col) : null;
+                                $data[$col] = (int) $mValue ?: null;
                                 break;
 
                             default:
-                                $data[$col] = $this->input->post($col);
+                                $data[$col] = $mValue;
                                 break;
                         }
                     }
