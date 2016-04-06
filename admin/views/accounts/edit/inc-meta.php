@@ -64,21 +64,18 @@
                             $this->db->select($selectId . ',' . $selectName);
 
                             if ($orderCol) {
-
                                 $this->db->order_by($orderCol, $orderDir);
                             }
 
                             $results = $this->db->get($table)->result();
-                            $options = array();
 
                             foreach ($results as $row) {
-
-                                $options[$row->{$selectId}] = $row->{$selectName};
+                                $field['options'][$row->{$selectId}] = $row->{$selectName};
                             }
 
                             $field['class'] .= ' select2';
 
-                            echo form_field_dropdown($field, $options);
+                            echo form_field_dropdown($field);
 
                         } else {
 
