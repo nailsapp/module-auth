@@ -52,8 +52,8 @@ _AUTH_USERSEARCH = function()
                     }).done(function(data) {
 
                         var out = {
-                            'id': data.user.id,
-                            'text': data.user.first_name + ' ' + data.user.last_name + ' (' + data.user.email + ')'
+                            'id': data.data.id,
+                            'text': data.data.first_name + ' ' + data.data.last_name + ' (' + data.data.email + ')'
                         };
 
                         callback(out);
