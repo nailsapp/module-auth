@@ -44,7 +44,7 @@ _AUTH_USERSEARCH = function()
                 if (id !== '') {
 
                     $.ajax({
-                        url: window.SITE_URL + 'api/auth/user',
+                        url: window.SITE_URL + 'api/auth/user/id',
                         data: {
                             'id': id
                         },
