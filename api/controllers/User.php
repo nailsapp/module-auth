@@ -87,9 +87,9 @@ class User extends Base
      */
     public function getId($iId = null)
     {
-        $sId = $this->input->get('id');
+        $iId = (int) $iId ?: (int) $this->input->get('id');
 
-        if (empty($sId)) {
+        if (empty($iId)) {
             return array(
                 'status' => 404
             );
