@@ -156,9 +156,10 @@ class User extends Base
     public function formatUser($oUser)
     {
         return array(
-            'id'    => $oUser->id,
-            'name'  => $oUser->first_name . ' ' . $oUser->last_name,
-            'email' => $oUser->email
+            'id'         => $oUser->id,
+            'first_name' => $oUser->first_name,
+            'last_name'  => $oUser->last_name,
+            'email'      => $oUser->email
         );
     }
 }

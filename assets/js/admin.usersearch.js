@@ -28,7 +28,7 @@ _AUTH_USERSEARCH = function()
                         if (data.data.hasOwnProperty(key)) {
                             out.results.push({
                                 'id': data.data[key].id,
-                                'text': data.data[key].name + ' (' + data.data[key].email + ')'
+                                'text': data.data[key].first_name + ' ' + data.data[key].last_name + ' (' + data.data[key].email + ')'
                             });
                         }
                     }
