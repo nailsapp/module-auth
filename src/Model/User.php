@@ -1148,7 +1148,7 @@ class User extends Base
                 //  If the user's password was updated send them a notification
                 if ($bPasswordUpdated) {
 
-                    $oEmailer = Factory::service('Emailer');
+                    $oEmailer = Factory::service('Emailer', 'nailsapp/module-email');
 
                     $oEmail                  = new \stdClass();
                     $oEmail->type            = 'password_updated';
@@ -1511,7 +1511,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oEmailer                = Factory::service('Emailer');
+        $oEmailer                = Factory::service('Emailer', 'nailsapp/module-email');
         $oEmail                  = new \stdClass();
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
@@ -2172,7 +2172,7 @@ class User extends Base
             //  Send the user the welcome email
             if ($sendWelcome) {
 
-                $oEmailer      = Factory::service('Emailer');
+                $oEmailer      = Factory::service('Emailer', 'nailsapp/module-email');
                 $oEmail        = new \stdClass();
                 $oEmail->type  = 'new_user_' . $oGroup->id;
                 $oEmail->to_id = $iId;
