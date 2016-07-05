@@ -28,6 +28,20 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Event fired when a user is created.
+     */
+    const EVENT_USER_CREATED = 'USER.CREATED';
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Event fired when a user is modified
+     */
+    const EVENT_USER_MODIFIED = 'USER.MODIFIED';
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the user model
      */
     public function __construct()
@@ -894,7 +908,6 @@ class User extends Base
         $data  = (array) $data;
         $iUserId  = $this->getUserId($user_id);
         if (empty($iUserId)) {
-
             return false;
         }
 
@@ -902,7 +915,6 @@ class User extends Base
 
         $oUser = $this->getById($iUserId);
         if (empty($oUser)) {
-
             $this->setError('Invalid user ID');
             return false;
         }
@@ -928,7 +940,6 @@ class User extends Base
                 $oHash = $this->user_password_model->generateHash($oUser->group_id, $data['password']);
 
                 if (empty($oHash)) {
-
                     $this->setError($this->user_password_model->lastError());
                     return false;
                 }
@@ -1137,6 +1148,8 @@ class User extends Base
                 //  If the user's password was updated send them a notification
                 if ($bPasswordUpdated) {
 
+                    $oEmailer = Factory::service('Emailer');
+
                     $oEmail                  = new \stdClass();
                     $oEmail->type            = 'password_updated';
                     $oEmail->to_id           = $iUserId;
@@ -1148,7 +1161,7 @@ class User extends Base
                         $oEmail->data->updatedBy = $this->activeUser('first_name,last_name');
                     }
 
-                    $this->emailer->send($oEmail, true);
+                    $oEmailer->send($oEmail, true);
                 }
 
             } else {
@@ -1189,19 +1202,16 @@ class User extends Base
 
             //  Do we need to update any timezone/date/time preferences?
             if (isset($data['timezone'])) {
-
                 $oDateTimeModel = Factory::model('DateTime');
                 $oDateTimeModel->setUserTimezone($data['timezone']);
             }
 
             if (isset($data['datetime_format_date'])) {
-
                 $oDateTimeModel = Factory::model('DateTime');
                 $oDateTimeModel->setDateFormat($data['datetime_format_date']);
             }
 
             if (isset($data['datetime_format_time'])) {
-
                 $oDateTimeModel = Factory::model('DateTime');
                 $oDateTimeModel->setTimeFormat($data['datetime_format_time']);
             }
@@ -1212,14 +1222,20 @@ class User extends Base
             //  or email address has changed
 
             if ((isset($data['email']) || !empty($bPasswordUpdated)) && $this->isRemembered()) {
-
                 $this->setRememberCookie();
-
             }
-
         }
 
         $this->setCacheUser($iUserId);
+
+        $oEventService = Factory::service('Event');
+        $oEventService->trigger(
+            static::EVENT_USER_MODIFIED,
+            'nailsapp/module-auth',
+            array(
+                'user' => $this->getById($iUserId)
+            )
+        );
 
         return true;
     }
@@ -1473,13 +1489,10 @@ class User extends Base
         } else {
 
             $this->db->where('ue.email', $email_id);
-
         }
 
         if (!empty($user_id)) {
-
             $this->db->where('ue.user_id', $user_id);
-
         }
 
         $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tablePrefix . '.id = ue.user_id');
@@ -1487,33 +1500,30 @@ class User extends Base
         $oEmailRow = $this->db->get(NAILS_DB_PREFIX . 'user_email ue')->row();
 
         if (!$oEmailRow) {
-
             $this->setError('Invalid Email.');
             return false;
-
         }
 
         if ($oEmailRow->is_verified) {
-
             $this->setError('Email is already verified.');
             return false;
-
         }
 
         // --------------------------------------------------------------------------
 
+        $oEmailer                = Factory::service('Emailer');
         $oEmail                  = new \stdClass();
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
         $oEmail->data            = new \stdClass();
         $oEmail->data->verifyUrl = site_url('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
 
-        if (!$this->emailer->send($oEmail, true)) {
+        if (!$oEmailer->send($oEmail, true)) {
 
             //  Failed to send using the group email, try using the generic email template
             $oEmail->type = 'verify_email';
 
-            if (!$this->emailer->send($oEmail, true)) {
+            if (!$oEmailer->send($oEmail, true)) {
 
                 //  Email failed to send, for now, do nothing.
                 $this->setError('The verification email failed to send.');
@@ -2107,7 +2117,6 @@ class User extends Base
         $this->db->set($aUserData);
 
         if (!$this->db->insert(NAILS_DB_PREFIX . 'user')) {
-
             $this->setError('Failed to create base user object.');
             $this->db->trans_rollback();
             return false;
@@ -2126,7 +2135,6 @@ class User extends Base
         $this->db->where('id', $iId);
 
         if (!$this->db->update(NAILS_DB_PREFIX . 'user')) {
-
             $this->setError('Failed to update base user object.');
             $this->db->trans_rollback();
             return false;
@@ -2156,7 +2164,6 @@ class User extends Base
             $sCode = $this->emailAdd($sEmail, $iId, true, $bEmailIsVerified, false);
 
             if (!$sCode) {
-
                 //  Error will be set by emailAdd();
                 $this->db->trans_rollback();
                 return false;
@@ -2165,6 +2172,7 @@ class User extends Base
             //  Send the user the welcome email
             if ($sendWelcome) {
 
+                $oEmailer      = Factory::service('Emailer');
                 $oEmail        = new \stdClass();
                 $oEmail->type  = 'new_user_' . $oGroup->id;
                 $oEmail->to_id = $iId;
@@ -2197,17 +2205,16 @@ class User extends Base
                     $oEmail->data->verifyUrl  = site_url('email/verify/' . $iId . '/' . $sCode);
                 }
 
-                if (!$this->emailer->send($oEmail, true)) {
+                if (!$oEmailer->send($oEmail, true)) {
 
                     //  Failed to send using the group email, try using the generic email template
                     $oEmail->type = 'new_user';
 
-                    if (!$this->emailer->send($oEmail, true)) {
+                    if (!$oEmailer->send($oEmail, true)) {
 
                         //  Email failed to send, musn't exist, oh well.
                         $sError  = 'Failed to send welcome email.';
                         $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
-
                         $this->setError($sError);
                     }
                 }
@@ -2220,7 +2227,19 @@ class User extends Base
         if ($this->db->trans_status() !== false) {
 
             $this->db->trans_commit();
-            return $this->getById($iId);
+
+            $oUser = $this->getById($iId);
+
+            $oEventService = Factory::service('Event');
+            $oEventService->trigger(
+                static::EVENT_USER_CREATED,
+                'nailsapp/module-auth',
+                array(
+                    'user' => $oUser
+                )
+            );
+
+            return $oUser;
 
         } else {
 
@@ -2237,10 +2256,11 @@ class User extends Base
      */
     public function destroy($userId)
     {
-        $this->db->where('id', $userId);
-        $this->db->delete(NAILS_DB_PREFIX . 'user');
+        $oDb = Factory::service('Database');
+        $oDb->where('id', $userId);
+        $oDb->delete(NAILS_DB_PREFIX . 'user');
 
-        if ((bool) $this->db->affected_rows()) {
+        if ((bool) $oDb->affected_rows()) {
 
             $this->unsetCacheUser($userId);
             return true;
@@ -2364,7 +2384,6 @@ class User extends Base
 
         //  Check length
         if (strlen($username) < $minLength) {
-
             $this->setError('Usernames msut be at least ' . $minLength . ' characters long.');
             return false;
         }
@@ -2376,12 +2395,10 @@ class User extends Base
             $this->db->where('username', $username);
 
             if (!empty($ignoreUserId)) {
-
                 $this->db->where('id !=', $ignoreUserId);
             }
 
             if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user')) {
-
                 $this->setError('Username is already in use.');
                 return false;
             }
@@ -2401,13 +2418,11 @@ class User extends Base
     public function merge($userId, $mergeIds, $preview = false)
     {
         if (!is_numeric($userId)) {
-
             $this->setError('"userId" must be numeric.');
             return false;
         }
 
         if (!is_array($mergeIds)) {
-
             $this->setError('"mergeIDs" must be an array.');
             return false;
         }
@@ -2507,7 +2522,6 @@ class User extends Base
             $out->merge = array();
 
             foreach ($mergeIds as $mergeUserId) {
-
                 $out->merge[] = $this->getById($mergeUserId);
             }
 
@@ -2525,7 +2539,6 @@ class User extends Base
 
                     //  Additional updates for certain tables
                     switch ($tables[$i]->name) {
-
                         case NAILS_DB_PREFIX . 'user_email':
                             $this->db->set('is_primary', false);
                             break;
@@ -2579,7 +2592,7 @@ class User extends Base
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
      * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aData     The same data array which is passed to getCountCommon(), for reference if needed
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
