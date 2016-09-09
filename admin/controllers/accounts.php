@@ -109,7 +109,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tablePrefix = $this->user_model->getTablePrefix();
+        $tablePrefix = $this->user_model->getTableAlias();
 
         // --------------------------------------------------------------------------
 
