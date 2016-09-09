@@ -52,7 +52,7 @@ class User extends Base
 
         //  Set defaults
         $this->table              = NAILS_DB_PREFIX . 'user';
-        $this->tablePrefix        = 'u';
+        $this->tableAlias        = 'u';
         $this->tableSlugColumn    = 'username';
         $this->rememberCookie     = 'nailsrememberme';
         $this->adminRecoveryField = 'nailsAdminRecoveryData';
@@ -64,12 +64,12 @@ class User extends Base
 
         //  Define searchable fields, resetting it
         $this->searchableFields = array(
-            $this->tablePrefix . '.id',
-            $this->tablePrefix . '.username',
+            $this->tableAlias . '.id',
+            $this->tableAlias . '.username',
             'ue.email',
             array(
-                $this->tablePrefix . '.first_name',
-                $this->tablePrefix . '.last_name'
+                $this->tableAlias . '.first_name',
+                $this->tableAlias . '.last_name'
             )
         );
 
@@ -579,7 +579,7 @@ class User extends Base
     protected function getCountCommon($aData = array())
     {
         //  Define the selects
-        $this->db->select($this->tablePrefix . '.*');
+        $this->db->select($this->tableAlias . '.*');
         $this->db->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
         $this->db->select('ue.date_verified email_is_verified_on');
         $this->db->select($this->getMetaColumns('um'));
@@ -590,19 +590,19 @@ class User extends Base
         //  Define the joins
         $this->db->join(
             NAILS_DB_PREFIX . 'user_email ue',
-            $this->tablePrefix . '.id = ue.user_id AND ue.is_primary = 1',
+            $this->tableAlias . '.id = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );
 
         $this->db->join(
             NAILS_DB_PREFIX . 'user_meta_app um',
-            $this->tablePrefix . '.id = um.user_id',
+            $this->tableAlias . '.id = um.user_id',
             'LEFT'
         );
 
         $this->db->join(
             NAILS_DB_PREFIX . 'user_group ug',
-            $this->tablePrefix . '.group_id = ug.id',
+            $this->tableAlias . '.group_id = ug.id',
             'LEFT'
         );
 
@@ -615,12 +615,12 @@ class User extends Base
             }
 
             $aData['or_like'][] = array(
-                'column' => $this->tablePrefix . '.id',
+                'column' => $this->tableAlias . '.id',
                 'value'  => $aData['keywords']
             );
 
             $aData['or_like'][] = array(
-                'column' => array($this->tablePrefix . '.first_name', $this->tablePrefix . '.last_name'),
+                'column' => array($this->tableAlias . '.first_name', $this->tableAlias . '.last_name'),
                 'value'  => $aData['keywords']
             );
 
@@ -804,7 +804,7 @@ class User extends Base
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->tablePrefix . '.username',
+                    'column' => $this->tableAlias . '.username',
                     'value'  => $username
                 )
             )
@@ -833,11 +833,11 @@ class User extends Base
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->tablePrefix . '.id_md5',
+                    'column' => $this->tableAlias . '.id_md5',
                     'value'  => $md5Id
                 ),
                 array(
-                    'column' => $this->tablePrefix . '.password_md5',
+                    'column' => $this->tableAlias . '.password_md5',
                     'value'  => $md5Pw
                 )
             )
@@ -867,7 +867,7 @@ class User extends Base
         $data = array(
             'where' => array(
                 array(
-                    'column' => $this->tablePrefix . '.referral',
+                    'column' => $this->tableAlias . '.referral',
                     'value'  => $referralCode
                 )
             )
@@ -1478,7 +1478,7 @@ class User extends Base
                 'ue.code',
                 'ue.is_verified',
                 'ue.user_id',
-                $this->tablePrefix . '.group_id'
+                $this->tableAlias . '.group_id'
             )
         );
 
@@ -1495,7 +1495,7 @@ class User extends Base
             $this->db->where('ue.user_id', $user_id);
         }
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tablePrefix . '.id = ue.user_id');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tableAlias . '.id = ue.user_id');
 
         $oEmailRow = $this->db->get(NAILS_DB_PREFIX . 'user_email ue')->row();
 

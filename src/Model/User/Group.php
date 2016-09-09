@@ -28,7 +28,7 @@ class Group extends \Nails\Common\Model\Base
         // --------------------------------------------------------------------------
 
         $this->table       = NAILS_DB_PREFIX . 'user_group';
-        $this->tablePrefix = 'ug';
+        $this->tableAlias = 'ug';
 
         // --------------------------------------------------------------------------
 

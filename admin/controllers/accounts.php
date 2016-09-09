@@ -109,14 +109,14 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tablePrefix = $this->user_model->getTableAlias();
+        $tableAlias = $this->user_model->getTableAlias();
 
         // --------------------------------------------------------------------------
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tablePrefix . '.id';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tableAlias . '.id';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -124,10 +124,10 @@ class Accounts extends BaseAdmin
 
         //  Define the sortable columns
         $sortColumns = array(
-            $tablePrefix . '.id'         => 'User ID',
-            $tablePrefix . '.group_id'   => 'Group ID',
-            $tablePrefix . '.first_name' => 'First Name, Surname',
-            $tablePrefix . '.last_name'  => 'Surname, First Name',
+            $tableAlias . '.id'         => 'User ID',
+            $tableAlias . '.group_id'   => 'Group ID',
+            $tableAlias . '.first_name' => 'First Name, Surname',
+            $tableAlias . '.last_name'  => 'Surname, First Name',
             'ue.email'                   => 'Email'
         );
 
@@ -147,7 +147,7 @@ class Accounts extends BaseAdmin
         if (count($groupsFilter) > 1) {
 
             $cbFilters[] = Helper::searchFilterObject(
-                $tablePrefix . '.group_id',
+                $tableAlias . '.group_id',
                 'User Group',
                 $groupsFilter
             );

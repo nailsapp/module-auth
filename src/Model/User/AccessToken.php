@@ -31,7 +31,7 @@ class AccessToken extends \Nails\Common\Model\Base
         parent::__construct();
 
         $this->table       = NAILS_DB_PREFIX . 'user_auth_access_token';
-        $this->tablePrefix = 'uaat';
+        $this->tableAlias = 'uaat';
 
         //  Load the config file and specify values
         $oConfig = Factory::service('Config');
@@ -227,7 +227,7 @@ class AccessToken extends \Nails\Common\Model\Base
             $data['where'] = array();
         }
 
-        $data['where'][] = array($this->tablePrefix . '.token', hash('sha256', $token . APP_PRIVATE_KEY));
+        $data['where'][] = array($this->tableAlias . '.token', hash('sha256', $token . APP_PRIVATE_KEY));
 
         $token = $this->getAll(null, null, $data);
 
@@ -252,7 +252,7 @@ class AccessToken extends \Nails\Common\Model\Base
     {
         $data = array(
             'where' => array(
-                '(' . $this->tablePrefix . '.expires IS NULL OR ' . $this->tablePrefix . '.expires > NOW())'
+                '(' . $this->tableAlias . '.expires IS NULL OR ' . $this->tableAlias . '.expires > NOW())'
             )
         );
 
