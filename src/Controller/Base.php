@@ -14,7 +14,7 @@ namespace Nails\Auth\Controller;
 
 use Nails\Factory;
 
-class Base extends \NAILS_Controller
+class Base extends \App\Controller\Base
 {
     protected $auth_model;
 
