@@ -11,16 +11,15 @@ _AUTH_USERSEARCH = function()
      */
     base.__construct = function() {
 
-
         //  Set up the searchers
         var searchers = [
             {
                 'class': 'user-search',
                 'placeholder': 'Search for a user',
                 'minimumInputLength': 3,
-                'apiUrl': window.SITE_URL + 'api/auth/user/search',
+                'apiUrl': window.SITE_URL + 'api/auth/user',
                 'format': function(data) {
-                    return data.first_name + ' ' + data.last_name + ' (' + data.email + ')';
+                    return '#' + data.id + ' - ' + data.first_name + ' ' + data.last_name + ' (' + data.email + ')';
                 }
             }
         ];
@@ -61,15 +60,21 @@ _AUTH_USERSEARCH = function()
                                 };
                             },
                             results: function (data) {
-
+                                var text;
                                 var out = {
                                     'results': []
                                 };
                                 for (var key in data.data) {
                                     if (data.data.hasOwnProperty(key)) {
+                                        if (typeof config.format === 'function') {
+                                            text = config.format(data.data[key]);
+                                        } else {
+                                            text = data.data[key].label;
+                                        }
+
                                         out.results.push({
                                             'id': data.data[key].id,
-                                            'text': data.data[key].label
+                                            'text': text
                                         });
                                     }
                                 }
@@ -99,7 +104,7 @@ _AUTH_USERSEARCH = function()
 
                                             out.push({
                                                 'id': data.data[i].id,
-                                                'text': data.data[i].label
+                                                'text': text
                                             });
                                         }
                                         callback(out);
