@@ -2071,7 +2071,8 @@ class User extends Base
         $aUserData['temp_pw']         = !empty($data['temp_pw']);
 
         //  Referral code
-        $aUserData['referral'] = $this->generateReferral();
+        $aUserData['referral']        = $this->generateReferral();
+        $aUserData['referred_by']     = !empty($data['referred_by']) ? $data['referred_by'] : null;
 
         //  Other data
         $aUserData['salutation'] = !empty($data['salutation']) ? $data['salutation'] : null ;
