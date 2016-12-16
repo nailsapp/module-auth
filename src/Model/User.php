@@ -2179,6 +2179,9 @@ class User extends Base
                 $oEmail->to_id = $iId;
                 $oEmail->data  = new \stdClass();
 
+                //  Add required user data to the email
+                $oEmail->data->user->username = $aUserData['username'];
+
                 //  If this user is created by an admin then take note of that.
                 if ($this->isAdmin() && $this->activeUser('id') != $iId) {
 
