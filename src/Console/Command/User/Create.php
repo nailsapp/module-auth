@@ -11,14 +11,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class Create extends Base
 {
-    const EXIT_CODE_SUCCESS = 0;
-    const EXIT_CODE_FAILURE = 1;
-
-    // --------------------------------------------------------------------------
-
     protected function configure()
     {
-        $this->setName('user-create');
+        $this->setName('user:create');
         $this->setDescription('Creates a new super user');
 
         $this->addOption(
@@ -204,7 +199,7 @@ class Create extends Base
         //  Test username/email for duplicates
         $oStatement = $oDb->prepare('
                 SELECT COUNT(*) total FROM`' . NAILS_DB_PREFIX . 'user`
-                WHERE 
+                WHERE
                     `username` = :username
             ');
         $oStatement->execute(
@@ -220,7 +215,7 @@ class Create extends Base
 
         $oStatement = $oDb->prepare('
                 SELECT COUNT(*) total FROM`' . NAILS_DB_PREFIX . 'user_email`
-                WHERE 
+                WHERE
                     `email` = :email
             ');
         $oStatement->execute(
@@ -357,25 +352,18 @@ class Create extends Base
     /**
      * Performs the abort functionality and returns the exit code
      *
-     * @param  OutputInterface $oOutput  The Output Interface provided by Symfony
-     * @param  integer         $exitCode The exit code
+     * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     * @param  array $aMessages The error message
+     * @param  integer $iExitCode The exit code
      * @return int
      */
-    private function abort($oOutput, $exitCode = self::EXIT_CODE_FAILURE)
+    protected function abort($oOutput, $iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
     {
-        $oOutput->writeln('');
-
-        $colorOpen  = $exitCode === self::EXIT_CODE_FAILURE ? '' : '<error>';
-        $colorClose = $exitCode === self::EXIT_CODE_FAILURE ? '' : '</error>';
-
+        $aMessages[] = 'Aborting user creation';
         if (!empty($this->oDb) && $this->oDb->isTransactionRunning()) {
-            $oOutput->writeln($colorOpen . 'Rolling back Database' . $colorClose);
+            $aMessages[] = 'Rolling back database';
             $this->oDb->transactionRollback();
         }
-
-        $oOutput->writeln($colorOpen . 'Aborting migration' . $colorClose);
-        $oOutput->writeln('');
-
-        return $exitCode;
+        return parent::abort($oOutput, $iExitCode, $aMessages);
     }
 }
