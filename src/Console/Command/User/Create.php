@@ -13,7 +13,7 @@ class Create extends Base
 {
     protected function configure()
     {
-        $this->setName('user:create');
+        $this->setName('make:user');
         $this->setDescription('Creates a new super user');
 
         $this->addOption(
@@ -29,12 +29,15 @@ class Create extends Base
     /**
      * Executes the app
      *
-     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
+     * @param  InputInterface $oInput The Input Interface provided by Symfony
      * @param  OutputInterface $oOutput The Output Interface provided by Symfony
      * @return int
+     * @throws \Exception
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
     {
+        parent::execute($oInput, $oOutput);
+
         $oOutput->writeln('');
         $oOutput->writeln('<info>---------------</info>');
         $oOutput->writeln('<info>Nails User Tool</info>');
@@ -45,13 +48,13 @@ class Create extends Base
         if (!defined('APP_PRIVATE_KEY')) {
             $oOutput->writeln('<error>APP_PRIVATE_KEY is not defined; does Nails need installed?</error>');
 
-            return $this->abort($oOutput);
+            return $this->abort();
         }
 
         if (!defined('DEPLOY_PRIVATE_KEY')) {
             $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined; does Nails need installed?</error>');
 
-            return $this->abort($oOutput);
+            return $this->abort();
         }
 
         // --------------------------------------------------------------------------
@@ -70,15 +73,15 @@ class Create extends Base
             $oOutput->writeln('--------------------------------------');
             $oOutput->writeln('');
 
-            if (!$this->confirm('Continue with user generation?', true, $input, $oOutput)) {
-                return $this->abort($oOutput, 1);
+            if (!$this->confirm('Continue with user generation?', true)) {
+                return $this->abort(static::EXIT_CODE_SUCCESS);
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Detect super group ID
-        $oDb = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+        $oDb     = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
         $oResult = $oDb->query(
             'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
@@ -110,7 +113,7 @@ class Create extends Base
                 $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
                 $sError = '';
                 do {
-                    $sValue = $this->ask($sError . $sField . ':', '', $oInput, $oOutput);
+                    $sValue = $this->ask($sError . $sField . ':', '');
                     $sError = '<error>Please specify</error> ';
                 } while (empty($sValue));
             }
@@ -132,7 +135,7 @@ class Create extends Base
 
         //  Execute
         if (!$this->confirm('Continue?', true, $oInput, $oOutput)) {
-            return $this->abort($oOutput);
+            return $this->abort();
         }
 
         // --------------------------------------------------------------------------
@@ -352,18 +355,18 @@ class Create extends Base
     /**
      * Performs the abort functionality and returns the exit code
      *
-     * @param  OutputInterface $oOutput The Output Interface provided by Symfony
      * @param  array $aMessages The error message
      * @param  integer $iExitCode The exit code
      * @return int
      */
-    protected function abort($oOutput, $iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
+    protected function abort($iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
     {
         $aMessages[] = 'Aborting user creation';
         if (!empty($this->oDb) && $this->oDb->isTransactionRunning()) {
             $aMessages[] = 'Rolling back database';
             $this->oDb->transactionRollback();
         }
-        return parent::abort($oOutput, $iExitCode, $aMessages);
+
+        return parent::abort($iExitCode, $aMessages);
     }
 }
