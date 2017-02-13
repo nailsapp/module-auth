@@ -855,13 +855,12 @@ class Login extends Base
                     //  Redirect
                     $this->session->set_flashdata('success', lang('auth_social_register_ok', $newUser->first_name));
 
-                    /**
-                     * Registrations will be forced to the registration redirect, regardless
-                     * of what else has been set
-                     */
-
-                    $group     = $this->user_group_model->getById($newUser->group_id);
-                    $redirectUrl  = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
+                    if (empty($this->data['return_to'])) {
+                        $group       = $this->user_group_model->getById($newUser->group_id);
+                        $redirectUrl = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
+                    } else {
+                        $redirectUrl = $this->data['return_to'];
+                    }
 
                     redirect($redirectUrl);
 
