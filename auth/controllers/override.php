@@ -24,8 +24,7 @@ class Override extends Base
         // --------------------------------------------------------------------------
 
         //  If you're not a admin then you shouldn't be accessing this class
-        if (!$this->user_model->wasAdmin() && !$this->user_model->isAdmin()) {
-
+        if (!wasAdmin() && !isAdmin()) {
             $this->session->set_flashdata('error', lang('auth_no_access'));
             redirect('/');
         }
@@ -59,7 +58,7 @@ class Override extends Base
          * - Sign in as superusers (unless they are a superuser)
          */
 
-        if (!$this->user_model->wasAdmin()) {
+        if (!wasAdmin()) {
 
             $hasPermission = userHasPermission('admin:auth:accounts:loginAs');
             $isCloning     = activeUser('id') == $user->id ? true : false;
@@ -85,7 +84,7 @@ class Override extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!$this->input->get('returningAdmin') && $this->user_model->isAdmin()) {
+        if (!$this->input->get('returningAdmin') && isAdmin()) {
 
             /**
              * The current user is an admin, we should set our Admin Recovery Data so
@@ -99,17 +98,17 @@ class Override extends Base
             $status  = 'success';
             $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
 
-        } elseif ($this->user_model->wasAdmin()) {
+        } elseif (wasAdmin()) {
 
             /**
              * This user is a recovering adminaholic. Work out where we're sending
              * them back to then remove the adminRecovery data.
              */
 
-            $recoveryData = $this->user_model->getAdminRecoveryData();
+            $recoveryData = getAdminRecoveryData();
             $redirect     = !empty($recoveryData->returnTo) ? $recoveryData->returnTo : $user->group_homepage;
 
-            $this->user_model->unsetAdminRecoveryData();
+            unsetAdminRecoveryData();
 
             //  Some feedback
             $status  = 'success';

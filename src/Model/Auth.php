@@ -12,10 +12,12 @@
 
 namespace Nails\Auth\Model;
 
-use Nails\Factory;
+use Google\Authenticator\GoogleAuthenticator;
+use Nails\Common\Model\Base;
 use Nails\Environment;
+use Nails\Factory;
 
-class Auth extends \Nails\Common\Model\Base
+class Auth extends Base
 {
     protected $aBruteProtection;
 
@@ -28,21 +30,23 @@ class Auth extends \Nails\Common\Model\Base
     {
         parent::__construct();
 
-        $this->aBruteProtection = array(
+        $this->aBruteProtection = [
             'delay'  => 1500000,
             'limit'  => 10,
-            'expire' => 900
-        );
+            'expire' => 900,
+        ];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Log a user in
+     *
      * @param  string  $identifier The identifier to use for the user lookup
      * @param  string  $password   The user's password
      * @param  boolean $remember   Whether to 'remember' the user or not
-     * @return object
+     *
+     * @return boolean|object
      */
     public function login($identifier, $password, $remember = false)
     {
@@ -63,24 +67,22 @@ class Auth extends \Nails\Common\Model\Base
         // --------------------------------------------------------------------------
 
         //  Look up the user, how we do so depends on the login mode that the app is using
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-                $user = $this->user_model->getByEmail($identifier);
+                $user = $oUserModel->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
-                $user = $this->user_model->getByUsername($identifier);
+                $user = $oUserModel->getByUsername($identifier);
                 break;
 
             default:
                 if (valid_email($identifier)) {
-
-                    $user = $this->user_model->getByEmail($identifier);
-
+                    $user = $oUserModel->getByEmail($identifier);
                 } else {
-
-                    $user = $this->user_model->getByUsername($identifier);
+                    $user = $oUserModel->getByUsername($identifier);
                 }
                 break;
         }
@@ -90,7 +92,8 @@ class Auth extends \Nails\Common\Model\Base
         if ($user) {
 
             //  User was recognised; validate credentials
-            if ($this->user_password_model->isCorrect($user->id, $password)) {
+            $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+            if ($oPasswordModel->isCorrect($user->id, $password)) {
 
                 //  Password accepted! Final checks...
 
@@ -100,7 +103,7 @@ class Auth extends \Nails\Common\Model\Base
                     //  Check if the block has expired
                     if (time() < strtotime($user->failed_login_expires)) {
 
-                        $blockTime = ceil($this->aBruteProtection['expire']/60);
+                        $blockTime = ceil($this->aBruteProtection['expire'] / 60);
 
                         $error = lang('auth_login_fail_blocked', $blockTime);
                         $this->setError($error);
@@ -109,7 +112,7 @@ class Auth extends \Nails\Common\Model\Base
                 }
 
                 //  Reset user's failed login counter and allow login
-                $this->user_model->resetFailedLogin($user->id);
+                $oUserModel->resetFailedLogin($user->id);
 
                 /**
                  * If two factor auth is enabled then don't _actually_ set login data the
@@ -121,20 +124,20 @@ class Auth extends \Nails\Common\Model\Base
                 if (!$oConfig->item('authTwoFactorMode')) {
 
                     //  Set login data for this user
-                    $this->user_model->setLoginData($user->id);
+                    $oUserModel->setLoginData($user->id);
 
                     //  If we're remembering this user set a cookie
                     if ($remember) {
-                        $this->user_model->setRememberCookie($user->id, $user->password, $user->email);
+                        $oUserModel->setRememberCookie($user->id, $user->password, $user->email);
                     }
 
                     //  Update their last login and increment their login count
-                    $this->user_model->updateLastLogin($user->id);
+                    $oUserModel->updateLastLogin($user->id);
                 }
 
                 return $user;
 
-            //  Is the password null? If so it means the account was created using an API of sorts
+                //  Is the password null? If so it means the account was created using an API of sorts
             } elseif (is_null($user->password)) {
 
                 switch (APP_NATIVE_LOGIN_USING) {
@@ -162,7 +165,7 @@ class Auth extends \Nails\Common\Model\Base
                 //  User was recognised but the password was wrong
 
                 //  Increment the user's failed login count
-                $this->user_model->incrementFailedLogin($user->id, $this->aBruteProtection['expire']);
+                $oUserModel->incrementFailedLogin($user->id, $this->aBruteProtection['expire']);
 
                 //  Are we already blocked? Let them know...
                 if ($user->failed_login_count >= $this->aBruteProtection['limit']) {
@@ -170,14 +173,14 @@ class Auth extends \Nails\Common\Model\Base
                     //  Check if the block has expired
                     if (time() < strtotime($user->failed_login_expires)) {
 
-                        $blockTime = ceil($this->aBruteProtection['expire']/60);
+                        $blockTime = ceil($this->aBruteProtection['expire'] / 60);
                         $error     = lang('auth_login_fail_blocked', $blockTime);
                         $this->setError($error);
                         return false;
                     }
 
                     //  Block has expired, reset the counter
-                    $this->user_model->resetFailedLogin($user->id);
+                    $oUserModel->resetFailedLogin($user->id);
                 }
 
                 //  Check if the password was changed recently
@@ -213,23 +216,20 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Verifies a user's login credentials
+     *
      * @param  string $identifier The identifier to use for the lookup
      * @param  string $password   The user's password
+     *
      * @return boolean
      */
     public function verifyCredentials($identifier, $password)
     {
         //  Look up the user, how we do so depends on the login mode that the app is using
-        $user = $this->user_model->getByIdentifier($identifier);
+        $oUserModel     = Factory::model('User', 'nailsapp/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $user           = $oUserModel->getByIdentifier($identifier);
 
-        if (!empty($user)) {
-
-            return $this->user_password_model->isCorrect($user->id, $password);
-
-        } else {
-
-            return false;
-        }
+        return !empty($user) ? $oPasswordModel->isCorrect($user->id, $password) : false;
     }
 
     // --------------------------------------------------------------------------
@@ -240,25 +240,27 @@ class Auth extends \Nails\Common\Model\Base
      */
     public function logout()
     {
-        // Delete the remember me cookies if they exist
-        $this->user_model->clearRememberCookie();
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel->clearRememberCookie();
 
         // --------------------------------------------------------------------------
 
         //  null the remember_code so that auto-logins stop
-        $this->db->set('remember_code', null);
-        $this->db->where('id', activeUser('id'));
-        $this->db->update(NAILS_DB_PREFIX . 'user');
+        $oDb = Factory::service('Database');
+        $oDb->set('remember_code', null);
+        $oDb->where('id', activeUser('id'));
+        $oDb->update(NAILS_DB_PREFIX . 'user');
 
         // --------------------------------------------------------------------------
 
         //  Destroy key parts of the session (enough for user_model to report user as logged out)
-        $this->user_model->clearLoginData();
+        $oUserModel->clearLoginData();
 
         // --------------------------------------------------------------------------
 
         //  Destory CI session
-        $this->session->sess_destroy();
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->sess_destroy();
 
         // --------------------------------------------------------------------------
 
@@ -276,33 +278,37 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Generate an MFA token
-     * @param  int    $userId The user ID to generate the token for
+     *
+     * @param  int $userId The user ID to generate the token for
+     *
      * @return string
      */
     public function mfaTokenGenerate($userId)
     {
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
         $oDate          = Factory::factory('DateTime');
+        $oInput         = Factory::service('Input');
         $salt           = $oPasswordModel->salt();
-        $ip             = $this->input->ipAddress();
+        $ip             = $oInput->ipAddress();
         $created        = $oDate->format('Y-m-d H:i:s');
         $expires        = $oDate->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
 
-        $token          = array();
+        $token          = [];
         $token['token'] = sha1(sha1(APP_PRIVATE_KEY . $userId . $created . $expires . $ip) . $salt);
         $token['salt']  = md5($salt);
 
         //  Add this to the DB
-        $this->db->set('user_id', $userId);
-        $this->db->set('token', $token['token']);
-        $this->db->set('salt', $token['salt']);
-        $this->db->set('created', $created);
-        $this->db->set('expires', $expires);
-        $this->db->set('ip', $ip);
+        $oDb = Factory::service('Database');
+        $oDb->set('user_id', $userId);
+        $oDb->set('token', $token['token']);
+        $oDb->set('salt', $token['salt']);
+        $oDb->set('created', $created);
+        $oDb->set('expires', $expires);
+        $oDb->set('ip', $ip);
 
-        if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) {
+        if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) {
 
-            $token['id'] = $this->db->insert_id();
+            $token['id'] = $oDb->insert_id();
             return $token;
 
         } else {
@@ -317,19 +323,22 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Validate a MFA token
+     *
      * @param  int    $userId The ID of the user the token belongs to
      * @param  string $salt   The token's salt
      * @param  string $token  The token's hash
      * @param  string $ip     The user's IP address
+     *
      * @return boolean
      */
     public function mfaTokenValidate($userId, $salt, $token, $ip)
     {
-        $this->db->where('user_id', $userId);
-        $this->db->where('salt', $salt);
-        $this->db->where('token', $token);
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $userId);
+        $oDb->where('salt', $salt);
+        $oDb->where('token', $token);
 
-        $token  = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
+        $token  = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
         $return = true;
 
         if (!$token) {
@@ -361,31 +370,38 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Delete an MFA token
-     * @param  int     $tokenId The token's ID
+     *
+     * @param  int $tokenId The token's ID
+     *
      * @return boolean
      */
     public function mfaTokenDelete($tokenId)
     {
-        $this->db->where('id', $tokenId);
-        $this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
-        return (bool) $this->db->affected_rows();
+        $oDb = Factory::service('Database');
+        $oDb->where('id', $tokenId);
+        $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
+        return (bool) $oDb->affected_rows();
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Fetches a random MFA question for a user
-     * @param  int      $userId The user's ID
-     * @return stdClass
+     *
+     * @param  int $userId The user's ID
+     *
+     * @return boolean|\stdClass
      */
     public function mfaQuestionGet($userId)
     {
-        $this->db->where('user_id', $userId);
-        $this->db->order_by('last_requested', 'DESC');
-        $questions = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
+        $oDb    = Factory::service('Database');
+        $oInput = Factory::service('Input');
+
+        $oDb->where('user_id', $userId);
+        $oDb->order_by('last_requested', 'DESC');
+        $questions = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
 
         if (!$questions) {
-
             $this->setError('No security questions available for this user.');
             return false;
         }
@@ -423,13 +439,14 @@ class Auth extends \Nails\Common\Model\Base
         }
 
         //  Decode the question
-        $out->question = $this->encrypt->decode($out->question, APP_PRIVATE_KEY . $out->salt);
+        $oEncrypt      = Factory::service('Encrypt');
+        $out->question = $oEncrypt->decode($out->question, APP_PRIVATE_KEY . $out->salt);
 
         //  Update the last requested details
-        $this->db->set('last_requested', 'NOW()', false);
-        $this->db->set('last_requested_ip', $this->input->ipAddress());
-        $this->db->where('id', $out->id);
-        $this->db->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
+        $oDb->set('last_requested', 'NOW()', false);
+        $oDb->set('last_requested_ip', $oInput->ipAddress());
+        $oDb->where('id', $out->id);
+        $oDb->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
 
         return $out;
     }
@@ -438,17 +455,20 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Validates the answer to an MFA Question
+     *
      * @param  int    $questionId The question's ID
      * @param  int    $userId     The user's ID
      * @param  string $answer     The user's answer
+     *
      * @return boolean
      */
     public function mfaQuestionValidate($questionId, $userId, $answer)
     {
-        $this->db->select('answer, salt');
-        $this->db->where('id', $questionId);
-        $this->db->where('user_id', $userId);
-        $question = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
+        $oDb = Factory::service('Database');
+        $oDb->select('answer, salt');
+        $oDb->where('id', $questionId);
+        $oDb->where('user_id', $userId);
+        $question = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
 
         if (!$question) {
             return false;
@@ -463,9 +483,11 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Sets MFA questions for a user
+     *
      * @param  int     $userId   The user's ID
      * @param  array   $data     An array of question and answers
      * @param  boolean $clearOld Whether or not to clear old questions
+     *
      * @return boolean
      */
     public function mfaQuestionSet($userId, $data, $clearOld = true)
@@ -481,27 +503,29 @@ class Auth extends \Nails\Common\Model\Base
         }
 
         //  Begin transaction
-        $this->db->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
         //  Delete old questions?
         if ($clearOld) {
-
-            $this->db->where('user_id', $userId);
-            $this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
+            $oDb->where('user_id', $userId);
+            $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
 
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-        $questionData   = array();
-        $counter        = 0;
-        $oDate          = Factory::factory('DateTime');
-        $sDateTime      = $oDate->format('Y-m-d H:i:s');
+        $oEncrypt       = Factory::service('Encrypt');
+
+        $questionData = [];
+        $counter      = 0;
+        $oDate        = Factory::factory('DateTime');
+        $sDateTime    = $oDate->format('Y-m-d H:i:s');
 
         foreach ($data as $d) {
 
-            $questionData[$counter]             = array();
+            $questionData[$counter]             = [];
             $questionData[$counter]['user_id']  = $userId;
             $questionData[$counter]['salt']     = $oPasswordModel->salt();
-            $questionData[$counter]['question'] = $this->encrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
+            $questionData[$counter]['question'] = $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
             $questionData[$counter]['answer']   = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
             $questionData[$counter]['created']  = $sDateTime;
 
@@ -510,22 +534,22 @@ class Auth extends \Nails\Common\Model\Base
 
         if ($questionData) {
 
-            $this->db->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $questionData);
+            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $questionData);
 
-            if ($this->db->trans_status() !== false) {
+            if ($oDb->trans_status() !== false) {
 
-                $this->db->trans_commit();
+                $oDb->trans_commit();
                 return true;
 
             } else {
 
-                $this->db->trans_rollback();
+                $oDb->trans_rollback();
                 return false;
             }
 
         } else {
 
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             $this->setError('No data to save.');
             return false;
         }
@@ -535,21 +559,26 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Gets the user's MFA device if there is one
-     * @param  int   $userId The user's ID
-     * @return mixed         stdClass on success, false on failure
+     *
+     * @param  int $userId The user's ID
+     *
+     * @return mixed         \stdClass on success, false on failure
      */
     public function mfaDeviceSecretGet($userId)
     {
-        $this->db->where('user_id', $userId);
-        $this->db->limit(1);
-        $result = $this->db->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
+        $oDb      = Factory::service('Database');
+        $oEncrypt = Factory::service('Encrypt');
+
+        $oDb->where('user_id', $userId);
+        $oDb->limit(1);
+        $result = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
 
         if (empty($result)) {
             return false;
         }
 
-        $return = $result[0];
-        $return->secret = $this->encrypt->decode($return->secret, APP_PRIVATE_KEY);
+        $return         = $result[0];
+        $return->secret = $oEncrypt->decode($return->secret, APP_PRIVATE_KEY);
 
         return $result[0];
     }
@@ -558,14 +587,17 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Generates a MFA Device Secret
-     * @param  int    $userId         The user ID tog enerate for
+     *
+     * @param  int    $userId         The user ID to generate for
      * @param  string $existingSecret The existing secret to use instead of generating a new one
-     * @return array
+     *
+     * @return boolean|array
      */
     public function mfaDeviceSecretGenerate($userId, $existingSecret = null)
     {
         //  Get an identifier for the user
-        $user = $this->user_model->getById($userId);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $user       = $oUserModel->getById($userId);
 
         if (!$user) {
 
@@ -573,15 +605,12 @@ class Auth extends \Nails\Common\Model\Base
             return false;
         }
 
-        $g = new \Google\Authenticator\GoogleAuthenticator();
+        $g = new GoogleAuthenticator();
 
         //  Generate the secret
         if (empty($existingSecret)) {
-
             $secret = $g->generateSecret();
-
         } else {
-
             $secret = $existingSecret;
         }
 
@@ -590,13 +619,13 @@ class Auth extends \Nails\Common\Model\Base
 
         //  User identifier
         $username = $user->username;
-        $username = empty($username) ? preg_replace('/[^a-z]/', strtolower($user->first_name . $user->last_name)) : $username;
-        $username = empty($username) ? preg_replace('/[^a-z]/', strtolower($user->email)) : $username;
+        $username = empty($username) ? preg_replace('/[^a-z]/', '', strtolower($user->first_name . $user->last_name)) : $username;
+        $username = empty($username) ? preg_replace('/[^a-z]/', '', strtolower($user->email)) : $username;
 
-        return array(
+        return [
             'secret' => $secret,
-            'url'    => $g->getURL($username, $hostname, $secret)
-        );
+            'url'    => $g->getUrl($username, $hostname, $secret),
+        ];
     }
 
     // --------------------------------------------------------------------------
@@ -604,10 +633,12 @@ class Auth extends \Nails\Common\Model\Base
     /**
      * Validates a secret against two given codes, if valid adds as a device for
      * the user
-     * @param  int     $userId The user's ID
-     * @param  string  $secret The secret being used
-     * @param  int     $code1  The first code to be generate
-     * @param  int     $code2  The second code to be generated
+     *
+     * @param  int    $userId The user's ID
+     * @param  string $secret The secret being used
+     * @param  int    $code1  The first code to be generate
+     * @param  int    $code2  The second code to be generated
+     *
      * @return boolean
      */
     public function mfaDeviceSecretValidate($userId, $secret, $code1, $code2)
@@ -617,7 +648,7 @@ class Auth extends \Nails\Common\Model\Base
         $code2 = preg_replace('/[^\d]/', '', $code2);
 
         //  New instance of the authenticator
-        $g = new \Google\Authenticator\GoogleAuthenticator();
+        $g = new GoogleAuthenticator();
 
         //  Check the codes
         $checkCode1 = $g->checkCode($secret, $code1);
@@ -631,28 +662,31 @@ class Auth extends \Nails\Common\Model\Base
              * so they can't be used again.
              */
 
-            $this->db->set('user_id', $userId);
-            $this->db->set('secret', $this->encrypt->encode($secret, APP_PRIVATE_KEY));
-            $this->db->set('created', 'NOW()', false);
+            $oDb      = Factory::service('Database');
+            $oEncrypt = Factory::service('Encrypt');
 
-            if ($this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+            $oDb->set('user_id', $userId);
+            $oDb->set('secret', $oEncrypt->encode($secret, APP_PRIVATE_KEY));
+            $oDb->set('created', 'NOW()', false);
 
-                $secret_id = $this->db->insert_id();
+            if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+
+                $secret_id = $oDb->insert_id();
                 $oDate     = Factory::factory('DateTime');
 
-                $data   = array();
-                $data[] = array(
+                $data   = [];
+                $data[] = [
                     'secret_id' => $secret_id,
                     'code'      => $code1,
-                    'used'      => $oDate->format('Y-m-d H:i:s')
-                );
-                $data[] = array(
+                    'used'      => $oDate->format('Y-m-d H:i:s'),
+                ];
+                $data[] = [
                     'secret_id' => $secret_id,
                     'code'      => $code2,
-                    'used'      => $oDate->format('Y-m-d H:i:s')
-                );
+                    'used'      => $oDate->format('Y-m-d H:i:s'),
+                ];
 
-                $this->db->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $data);
+                $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $data);
 
                 return true;
 
@@ -673,8 +707,10 @@ class Auth extends \Nails\Common\Model\Base
 
     /**
      * Validates an MFA Device code
-     * @param  int     $userId The user's ID
-     * @param  string  $code   The code to validate
+     *
+     * @param  int    $userId The user's ID
+     * @param  string $code   The code to validate
+     *
      * @return boolean
      */
     public function mfaDeviceCodeValidate($userId, $code)
@@ -683,17 +719,16 @@ class Auth extends \Nails\Common\Model\Base
         $secret = $this->mfaDeviceSecretGet($userId);
 
         if (!$secret) {
-
             $this->setError('Invalid User');
             return false;
         }
 
         //  Has the code been used before?
-        $this->db->where('secret_id', $secret->id);
-        $this->db->where('code', $code);
+        $oDb = Factory::service('Database');
+        $oDb->where('secret_id', $secret->id);
+        $oDb->where('code', $code);
 
-        if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
-
+        if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
             $this->setError('Code has already been used.');
             return false;
         }
@@ -702,18 +737,18 @@ class Auth extends \Nails\Common\Model\Base
         $code = preg_replace('/[^\d]/', '', $code);
 
         //  New instance of the authenticator
-        $g = new \Google\Authenticator\GoogleAuthenticator();
+        $g = new GoogleAuthenticator();
 
         $checkCode = $g->checkCode($secret->secret, $code);
 
         if ($checkCode) {
 
             //  Log the code so it can't be used again
-            $this->db->set('secret_id', $secret->id);
-            $this->db->set('code', $code);
-            $this->db->set('used', 'NOW()', false);
+            $oDb->set('secret_id', $secret->id);
+            $oDb->set('code', $code);
+            $oDb->set('used', 'NOW()', false);
 
-            $this->db->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
+            $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
 
             return true;
 
