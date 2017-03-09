@@ -603,30 +603,6 @@ class User extends Base
             'LEFT'
         );
 
-        // --------------------------------------------------------------------------
-
-        if (!empty($aData['keywords'])) {
-
-            if (empty($aData['or_like'])) {
-                $aData['or_like'] = [];
-            }
-
-            $aData['or_like'][] = [
-                'column' => $this->tableAlias . '.id',
-                'value'  => $aData['keywords'],
-            ];
-
-            $aData['or_like'][] = [
-                'column' => [$this->tableAlias . '.first_name', $this->tableAlias . '.last_name'],
-                'value'  => $aData['keywords'],
-            ];
-
-            $aData['or_like'][] = [
-                'column' => 'ue.email',
-                'value'  => $aData['keywords'],
-            ];
-        }
-
         //  Let the parent method handle sorting, etc
         parent::getCountCommon($aData);
     }
