@@ -39,7 +39,7 @@ class Forgotten_Password extends Base
     public function index()
     {
         //  If user is logged in they shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
@@ -466,7 +466,7 @@ class Forgotten_Password extends Base
     public function _remap($method)
     {
         //  If you're logged in you shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');

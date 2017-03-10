@@ -25,7 +25,7 @@ class Logout extends Base
     public function index()
     {
         //  If already logged out just send them silently on their way
-        if (!$this->user_model->isLoggedIn()) {
+        if (!isLoggedIn()) {
             redirect('/');
         }
 

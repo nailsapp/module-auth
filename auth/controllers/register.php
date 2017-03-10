@@ -45,7 +45,7 @@ class Register extends Base
     public function index()
     {
         //  If you're logged in you shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             $this->session->set_flashdata(
                 'error',

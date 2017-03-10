@@ -81,7 +81,7 @@ class Login extends Base
     public function index()
     {
         //  If you're logged in you shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             redirect($this->data['return_to']);
         }
@@ -358,7 +358,7 @@ class Login extends Base
          * again using the hashes.
          */
 
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             if (md5(activeUser('id')) == $hash['id']) {
 
@@ -532,7 +532,7 @@ class Login extends Base
 
         if ($user) {
 
-            if ($this->user_model->isLoggedIn() && activeUser('id') == $user->id) {
+            if (isLoggedIn() && activeUser('id') == $user->id) {
 
                 /**
                  * Logged in user is already logged in and is the social user.
@@ -550,7 +550,7 @@ class Login extends Base
                     redirect($user->group_homepage);
                 }
 
-            } elseif ($this->user_model->isLoggedIn() && activeUser('id') != $user->id) {
+            } elseif (isLoggedIn() && activeUser('id') != $user->id) {
 
                 /**
                  * Hmm, a user was found for this Provider ID, but it's not the actively logged
@@ -589,7 +589,7 @@ class Login extends Base
                 }
             }
 
-        } elseif ($this->user_model->isLoggedIn()) {
+        } elseif (isLoggedIn()) {
 
             /**
              * User is logged in and it look's like the provider isn't being used by

@@ -114,7 +114,7 @@ class AccessToken extends \Nails\Api\Controller\Base
         $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
         $aOut              = array();
 
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             $sAccessToken = $this->input->post('access_token');
 
