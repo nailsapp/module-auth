@@ -110,17 +110,18 @@ class Forgotten_Password extends Base
                 if ($this->user_password_model->setToken($_identifier)) {
 
                     //  Send email to user
+                    $oUserModel = Factory::model('User', 'nailsapp/module-auth');
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL' :
-                            $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
+                            $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
 
                             //  User provided an email, send to that email
                             $sendToEmail = $_identifier;
                             break;
 
                         case 'USERNAME' :
-                            $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
+                            $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
 
                             /**
                              * Can't email a username, send to their ID and let the email library
@@ -133,14 +134,14 @@ class Forgotten_Password extends Base
                         default:
                             if (valid_email($_identifier)) {
 
-                                $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
+                                $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
 
                                 //  User provided an email, send to that email
                                 $sendToEmail = $_identifier;
 
                             } else {
 
-                                $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
+                                $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
 
                                 /**
                                  * Can't email a username, send to their ID and let the email library handle

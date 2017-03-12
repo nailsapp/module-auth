@@ -162,7 +162,8 @@ class Register extends Base
                 // --------------------------------------------------------------------------
 
                 //  Create new user
-                $oNewUser = $this->user_model->create($aInsertData);
+                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+                $oNewUser   = $oUserModel->create($aInsertData);
 
                 if ($oNewUser) {
 
@@ -172,7 +173,7 @@ class Register extends Base
                     // --------------------------------------------------------------------------
 
                     //  Log the user in
-                    $this->user_model->setLoginData($oNewUser->id);
+                    $oUserModel->setLoginData($oNewUser->id);
 
                     // --------------------------------------------------------------------------
 
@@ -192,7 +193,7 @@ class Register extends Base
 
                 } else {
 
-                    $this->data['error'] = 'Could not create new user account. ' . $this->user_model->lastError();
+                    $this->data['error'] = 'Could not create new user account. ' . $oUserModel->lastError();
                 }
 
             } else {
@@ -240,7 +241,8 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Valid user?
-        $oUser = $this->user_model->getById($iId);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUser      = $oUserModel->getById($iId);
 
         if (!$oUser) {
 

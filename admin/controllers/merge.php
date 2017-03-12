@@ -81,7 +81,8 @@ class Merge extends BaseAdmin
 
             if (!in_array(activeUser('id'), $mergeIds)) {
 
-                $mergeResult = $this->user_model->merge($userId, $mergeIds, $preview);
+                $oUserModel  = Factory::model('User', 'nailsapp/module-auth');
+                $mergeResult = $oUserModel->merge($userId, $mergeIds, $preview);
 
                 if ($mergeResult) {
 
@@ -102,7 +103,7 @@ class Merge extends BaseAdmin
 
                 } else {
 
-                    $this->data['error'] = 'Failed to merge users. ' . $this->user_model->lastError();
+                    $this->data['error'] = 'Failed to merge users. ' . $oUserModel->lastError();
                 }
 
             } else {

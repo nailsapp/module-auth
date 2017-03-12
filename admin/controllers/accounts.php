@@ -98,7 +98,6 @@ class Accounts extends BaseAdmin
     public function index()
     {
         if (!userHasPermission('admin:auth:accounts:browse')) {
-
             unauthorised();
         }
 
@@ -109,7 +108,8 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tableAlias = $this->user_model->getTableAlias();
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $tableAlias = $oUserModel->getTableAlias();
 
         // --------------------------------------------------------------------------
 
@@ -165,8 +165,9 @@ class Accounts extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->user_model->countAll($data);
-        $this->data['users'] = $this->user_model->getAll($page, $perPage, $data);
+        $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
+        $totalRows           = $oUserModel->countAll($data);
+        $this->data['users'] = $oUserModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
@@ -174,7 +175,6 @@ class Accounts extends BaseAdmin
 
         //  Add a header button
         if (userHasPermission('admin:auth:accounts:create')) {
-
              Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
         }
 
@@ -284,7 +284,8 @@ class Accounts extends BaseAdmin
                 $data['temp_pw']        = stringToBoolean($this->input->post('temp_pw'));
                 $data['inform_user_pw'] = true;
 
-                $new_user = $this->user_model->create($data, stringToBoolean($this->input->post('send_activation')));
+                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+                $new_user   = $oUserModel->create($data, stringToBoolean($this->input->post('send_activation')));
 
                 if ($new_user) {
 
@@ -293,11 +294,11 @@ class Accounts extends BaseAdmin
                      * might happen along the way
                      */
 
-                    if ($this->user_model->getErrors()) {
+                    if ($oUserModel->getErrors()) {
 
                         $message  = '<strong>Please Note,</strong> while the user was created successfully, the ';
                         $message .= 'following issues were encountered:';
-                        $message .= '<ul><li>' . implode('</li><li>', $this->user_model->getErrors()) . '</li></ul>';
+                        $message .= '<ul><li>' . implode('</li><li>', $oUserModel->getErrors()) . '</li></ul>';
 
                         $this->session->set_flashdata('message', $message);
                     }
@@ -332,13 +333,13 @@ class Accounts extends BaseAdmin
 
                     $this->data['error']  = 'There was an error when creating the user ';
                     $this->data['error'] .= 'account:<br />&rsaquo; ';
-                    $this->data['error'] .= implode('<br />&rsaquo; ', $this->user_model->getErrors());
+                    $this->data['error'] .= implode('<br />&rsaquo; ', $oUserModel->getErrors());
                 }
 
             } else {
 
                 $this->data['error']  = 'There was an error when creating the user account. ';
-                $this->data['error'] .= $this->user_model->lastError();
+                $this->data['error'] .= $oUserModel->lastError();
             }
         }
 
@@ -385,7 +386,8 @@ class Accounts extends BaseAdmin
          * (we need to know the group of the user so we can pull up the correct cols/rules)
          */
 
-        $user = $this->user_model->getById($this->uri->segment(5));
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $user       = $oUserModel->getById($this->uri->segment(5));
 
         if (!$user) {
 
@@ -394,7 +396,7 @@ class Accounts extends BaseAdmin
         }
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
+        if (!$oUserModel->isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
@@ -640,7 +642,7 @@ class Accounts extends BaseAdmin
                     // --------------------------------------------------------------------------
 
                     //  Update account
-                    if ($this->user_model->update($this->input->post('id'), $data)) {
+                    if ($oUserModel->update($this->input->post('id'), $data)) {
 
                         $name = $this->input->post('first_name') . ' ' . $this->input->post('last_name');
                         $this->data['success'] = lang('accounts_edit_ok', array(title_case($name)));
@@ -682,14 +684,14 @@ class Accounts extends BaseAdmin
                         // --------------------------------------------------------------------------
 
                         //  refresh the user object
-                        $user = $this->user_model->getById($this->input->post('id'));
+                        $user = $oUserModel->getById($this->input->post('id'));
 
                     //  The account failed to update, feedback to user
                     } else {
 
                         $this->data['error'] = lang(
                             'accounts_edit_fail',
-                            implode(', ', $this->user_model->getErrors())
+                            implode(', ', $oUserModel->getErrors())
                         );
                     }
                 }
@@ -719,7 +721,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's email addresses
-        $this->data['user_emails'] = $this->user_model->getEmailsForUser($user->id);
+        $this->data['user_emails'] = $oUserModel->getEmailsForUser($user->id);
 
         // --------------------------------------------------------------------------
 
@@ -793,24 +795,21 @@ class Accounts extends BaseAdmin
     public function change_group()
     {
         if (!userHasPermission('admin:auth:accounts:changeUserGroup')) {
-
             show_404();
         }
 
         // --------------------------------------------------------------------------
 
+        $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
         $userIds             = explode(',', $this->input->get('users'));
-        $this->data['users'] = $this->user_model->getByIds($userIds);
+        $this->data['users'] = $oUserModel->getByIds($userIds);
 
         if (!$this->data['users']) {
-
             show_404();
         }
 
         foreach ($this->data['users'] as $user) {
-
-            if ($this->user_model->isSuperuser($user->id) && !$this->user_model->isSuperuser()) {
-
+            if ($oUserModel->isSuperuser($user->id) && !$oUserModel->isSuperuser()) {
                 show_404();
             }
         }
@@ -856,15 +855,15 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $uid       = $this->uri->segment(5);
-        $user      = $this->user_model->getById($uid);
-        $oldValue = $user->is_suspended;
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $uid        = $this->uri->segment(5);
+        $user       = $oUserModel->getById($uid);
+        $oldValue   = $user->is_suspended;
 
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
-
+        if (!isSuperuser() && userHasPermission('superuser', $user)) {
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
         }
@@ -872,12 +871,12 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Suspend user
-        $this->user_model->suspend($uid);
+        $oUserModel->suspend($uid);
 
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user      = $this->user_model->getById($uid);
+        $user      = $oUserModel->getById($uid);
         $newValue = $user->is_suspended;
 
 
@@ -936,14 +935,15 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $uid       = $this->uri->segment(5);
-        $user      = $this->user_model->getById($uid);
-        $oldValue = $user->is_suspended;
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $uid        = $this->uri->segment(5);
+        $user       = $oUserModel->getById($uid);
+        $oldValue   = $user->is_suspended;
 
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
+        if (!isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -952,12 +952,12 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Unsuspend user
-        $this->user_model->unsuspend($uid);
+        $oUserModel->unsuspend($uid);
 
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user     = $this->user_model->getById($uid);
+        $user     = $oUserModel->getById($uid);
         $newValue = $user->is_suspended;
 
         // --------------------------------------------------------------------------
@@ -1021,13 +1021,14 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $uid  = $this->uri->segment(5);
-        $user = $this->user_model->getById($uid);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $uid        = $this->uri->segment(5);
+        $user       = $oUserModel->getById($uid);
 
         // --------------------------------------------------------------------------
 
         //  Non-superusers editing superusers is not cool
-        if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
+        if (!isSuperuser() && userHasPermission('superuser', $user)) {
 
             $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
             redirect($this->input->get('return_to'));
@@ -1036,7 +1037,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Delete user
-        $user = $this->user_model->getById($uid);
+        $user = $oUserModel->getById($uid);
 
         if (!$user) {
 
@@ -1053,7 +1054,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Define messages
-        if ($this->user_model->destroy($uid)) {
+        if ($oUserModel->destroy($uid)) {
 
             $this->session->set_flashdata(
                 'success',
@@ -1097,9 +1098,10 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $uid      = $this->uri->segment(5);
-        $user     = $this->user_model->getById($uid);
-        $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $uid        = $this->uri->segment(5);
+        $user       = $oUserModel->getById($uid);
+        $returnTo   = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
 
         // --------------------------------------------------------------------------
 
@@ -1111,7 +1113,7 @@ class Accounts extends BaseAdmin
         } else {
 
             //  Non-superusers editing superusers is not cool
-            if (!$this->user_model->isSuperuser() && userHasPermission('superuser', $user)) {
+            if (!$isSuperuser() && userHasPermission('superuser', $user)) {
 
                 $this->session->set_flashdata('error', lang('accounts_edit_error_noteditable'));
                 redirect($returnTo);
@@ -1127,7 +1129,7 @@ class Accounts extends BaseAdmin
                     $data = array();
                     $data['profile_img'] = null;
 
-                    $this->user_model->update($uid, $data);
+                    $oUserModel->update($uid, $data);
 
                     // --------------------------------------------------------------------------
 
@@ -1157,9 +1159,10 @@ class Accounts extends BaseAdmin
      */
     public function email()
     {
-        $action = $this->input->post('action');
-        $email  = $this->input->post('email');
-        $id     = $this->input->post('id');
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $action     = $this->input->post('action');
+        $email      = $this->input->post('email');
+        $id         = $this->input->post('id');
 
         switch ($action) {
 
@@ -1167,7 +1170,7 @@ class Accounts extends BaseAdmin
                 $isPrimary  = (bool) $this->input->post('isPrimary');
                 $isVerified = (bool) $this->input->post('isVerified');
 
-                if ($this->user_model->emailAdd($email, $id, $isPrimary, $isVerified)) {
+                if ($oUserModel->emailAdd($email, $id, $isPrimary, $isVerified)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was added successfully. ';
@@ -1176,12 +1179,12 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to add email. ';
-                    $message .= $this->user_model->lastError();
+                    $message .= $oUserModel->lastError();
                 }
                 break;
 
             case 'delete':
-                if ($this->user_model->emailDelete($email, $id)) {
+                if ($oUserModel->emailDelete($email, $id)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was deleted successfully. ';
@@ -1190,12 +1193,12 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to delete email "' . $email . '". ';
-                    $message .= $this->user_model->lastError();
+                    $message .= $oUserModel->lastError();
                 }
                 break;
 
             case 'makePrimary':
-                if ($this->user_model->emailMakePrimary($email, $id)) {
+                if ($oUserModel->emailMakePrimary($email, $id)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was set as the primary email.';
@@ -1204,13 +1207,13 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to mark "' . $email . '" as the primary address. ';
-                    $message .= $this->user_model->lastError();
+                    $message .= $oUserModel->lastError();
                 }
                 break;
 
             case 'verify':
                 //  Get the code for this email
-                $userEmails = $this->user_model->getEmailsForUser($id);
+                $userEmails = $oUserModel->getEmailsForUser($id);
                 $code       = '';
 
                 foreach ($userEmails as $userEmail) {
@@ -1221,7 +1224,7 @@ class Accounts extends BaseAdmin
                     }
                 }
 
-                if (!empty($code) && $this->user_model->emailVerify($id, $code)) {
+                if (!empty($code) && $oUserModel->emailVerify($id, $code)) {
 
                     $status  = 'success';
                     $message = '"' . $email . '" was verified successfully.';
@@ -1236,7 +1239,7 @@ class Accounts extends BaseAdmin
 
                     $status   = 'error';
                     $message  = 'Failed to mark "' . $email . '" as verified. ';
-                    $message .= $this->user_model->lastError();
+                    $message .= $oUserModel->lastError();
                 }
                 break;
 

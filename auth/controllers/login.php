@@ -389,14 +389,15 @@ class Login extends Base
          * if all is ok otherwise we report an error.
          */
 
-        $user = $this->user_model->getByHashes($hash['id'], $hash['pw']);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $user       = $oUserModel->getByHashes($hash['id'], $hash['pw']);
 
         // --------------------------------------------------------------------------
 
         if ($user) {
 
             //  User was verified, log the user in
-            $this->user_model->setLoginData($user->id);
+            $oUserModel->setLoginData($user->id);
 
             // --------------------------------------------------------------------------
 
@@ -437,7 +438,7 @@ class Login extends Base
             // --------------------------------------------------------------------------
 
             //  Update their last login
-            $this->user_model->updateLastLogin($user->id);
+            $oUserModel->updateLastLogin($user->id);
 
             // --------------------------------------------------------------------------
 
@@ -470,6 +471,8 @@ class Login extends Base
      */
     protected function socialSignon($provider)
     {
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
         //  Get the adapter, HybridAuth will handle the redirect
         $adapter  = $this->oSocial->authenticate($provider);
         $provider = $this->oSocial->getProvider($provider);
@@ -571,7 +574,7 @@ class Login extends Base
             } else {
 
                 //  Fab, user exists, try to log them in
-                $this->user_model->setLoginData($user->id);
+                $oUserModel->setLoginData($user->id);
                 $this->oSocial->saveSession($user->id);
 
                 if (!$this->_login($user)) {
@@ -688,7 +691,7 @@ class Login extends Base
                 //  Check email
                 if (isset($requiredData['email'])) {
 
-                    $check = $this->user_model->getByEmail($requiredData['email']);
+                    $check = $oUserModel->getByEmail($requiredData['email']);
 
                     if ($check) {
 
@@ -707,7 +710,7 @@ class Login extends Base
                      * throw an error.
                      */
 
-                    $check = $this->user_model->getByUsername($requiredData['username']);
+                    $check = $oUserModel->getByUsername($requiredData['username']);
 
                     if ($check) {
 
@@ -740,12 +743,12 @@ class Login extends Base
                     $basename = url_title($username, '-', true);
                     $requiredData['username'] = $basename;
 
-                    $user = $this->user_model->getByUsername($requiredData['username']);
+                    $user = $oUserModel->getByUsername($requiredData['username']);
 
                     while ($user) {
 
                         $requiredData['username'] = increment_string($basename, '');
-                        $user = $this->user_model->getByUsername($requiredData['username']);
+                        $user = $oUserModel->getByUsername($requiredData['username']);
                     }
                 }
 
@@ -773,7 +776,7 @@ class Login extends Base
                 // --------------------------------------------------------------------------
 
                 //  Create user
-                $newUser = $this->user_model->create($data);
+                $newUser = $oUserModel->create($data);
 
                 if ($newUser) {
 
@@ -823,7 +826,7 @@ class Login extends Base
                                         $data                = array();
                                         $data['profile_img'] = $_upload->id;
 
-                                        $this->user_model->update($newUser->id, $data);
+                                        $oUserModel->update($newUser->id, $data);
 
                                     } else {
 
@@ -843,7 +846,7 @@ class Login extends Base
                     // --------------------------------------------------------------------------
 
                     //  Aint that swell, all registered!Redirect!
-                    $this->user_model->setLoginData($newUser->id);
+                    $oUserModel->setLoginData($newUser->id);
 
                     // --------------------------------------------------------------------------
 

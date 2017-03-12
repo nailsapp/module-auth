@@ -224,8 +224,10 @@ class Mfa_question extends BaseMfa
 
                             } else {
 
+                                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
                                 $this->data['error']  = lang('auth_twofactor_question_set_fail');
-                                $this->data['error'] .= ' ' . $this->user_model->lastError();
+                                $this->data['error'] .= ' ' . $oUserModel->lastError();
                             }
 
                         } else {

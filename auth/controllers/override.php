@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Override extends Base
@@ -41,9 +42,11 @@ class Override extends Base
     public function login_as()
     {
         //  Perform lookup of user
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
         $hashId = $this->uri->segment(4);
         $hashPw = $this->uri->segment(5);
-        $user   = $this->user_model->getByHashes($hashId, $hashPw);
+        $user   = $oUserModel->getByHashes($hashId, $hashPw);
 
         if (!$user) {
             show_404();
@@ -91,7 +94,7 @@ class Override extends Base
              * that they can come back.
              */
 
-            $this->user_model->setAdminRecoveryData($user->id, $this->input->get('return_to'));
+            $oUserModel->setAdminRecoveryData($user->id, $this->input->get('return_to'));
             $redirect = $user->group_homepage;
 
             //  A bit of feedback
@@ -131,7 +134,7 @@ class Override extends Base
         // --------------------------------------------------------------------------
 
         //  Replace current user's session data
-        $this->user_model->setLoginData($user->id);
+        $oUserModel->setLoginData($user->id);
 
         // --------------------------------------------------------------------------
 

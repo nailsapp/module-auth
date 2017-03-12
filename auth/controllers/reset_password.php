@@ -26,11 +26,8 @@ class Reset_Password extends Base
     {
         parent::__construct();
 
-        // --------------------------------------------------------------------------
-
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
-
             $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
@@ -48,10 +45,11 @@ class Reset_Password extends Base
      **/
     protected function validate($id, $hash)
     {
-        $oConfig = Factory::service('Config');
+        $oConfig    = Factory::service('Config');
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
 
         //  Check auth credentials
-        $user = $this->user_model->getById($id);
+        $user = $oUserModel->getById($id);
 
         // --------------------------------------------------------------------------
 
@@ -180,7 +178,7 @@ class Reset_Password extends Base
                     $remember                        = (bool) $this->input->get('remember');
 
                     //  Reset the password
-                    if ($this->user_model->update($user->id, $data)) {
+                    if ($oUserModel->update($user->id, $data)) {
 
                         //  Log the user in
                         switch (APP_NATIVE_LOGIN_USING) {
@@ -274,7 +272,7 @@ class Reset_Password extends Base
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($oConfig->item('authTwoFactorMode')) {
 
-                                $this->user_model->setLoginData($user->id);
+                                $oUserModel->setLoginData($user->id);
                             }
 
                             //  Log user in and forward to wherever they need to go
@@ -298,7 +296,7 @@ class Reset_Password extends Base
 
                     } else {
 
-                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $this->user_model->lastError());
+                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $oUserModel->lastError());
                     }
 
                 } else {

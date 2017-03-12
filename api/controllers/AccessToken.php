@@ -40,7 +40,8 @@ class AccessToken extends \Nails\Api\Controller\Base
              * - @todo: handle 2FA, perhaps?
              */
 
-            $oUser        = $this->user_model->getByIdentifier($sIdentifier);
+            $oUserModel   = Factory::model('User', 'nailsapp/module-auth');
+            $oUser        = $oUserModel->getByIdentifier($sIdentifier);
             $bIsSuspended = $oUser->is_suspended;
             $bPwIsTemp    = $oUser->temp_pw;
             $bPwIsExpired = $this->user_password_model->isExpired($oUser->id);

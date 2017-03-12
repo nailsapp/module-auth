@@ -44,10 +44,12 @@ class BaseMfa extends Base
 
     protected function validateToken()
     {
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
         $this->returnTo = $this->input->get('return_to', true);
         $this->remember = $this->input->get('remember', true);
         $userId         = $this->uri->segment(3);
-        $this->mfaUser  = $this->user_model->getById($userId);
+        $this->mfaUser  = $oUserModel->getById($userId);
 
         if (!$this->mfaUser) {
 
@@ -122,12 +124,13 @@ class BaseMfa extends Base
     protected function loginUser()
     {
         //  Set login data for this user
-        $this->user_model->setLoginData($this->mfaUser->id);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel->setLoginData($this->mfaUser->id);
 
         //  If we're remembering this user set a cookie
         if ($this->remember) {
 
-            $this->user_model->setRememberCookie(
+            $oUserModel->setRememberCookie(
                 $this->mfaUser->id,
                 $this->mfaUser->password,
                 $this->mfaUser->email
@@ -135,7 +138,7 @@ class BaseMfa extends Base
         }
 
         //  Update their last login and increment their login count
-        $this->user_model->updateLastLogin($this->mfaUser->id);
+        $oUserModel->updateLastLogin($this->mfaUser->id);
 
         // --------------------------------------------------------------------------
 
