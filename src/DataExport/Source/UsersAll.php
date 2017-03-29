@@ -57,9 +57,12 @@ class UsersAll implements Source
 
     /**
      * Execute the data export
+     *
+     * @param array $aData Any data to pass to the source
+     *
      * @return bool|array
      */
-    public function execute()
+    public function execute($aData = [])
     {
         $oDb             = Factory::service('Database');
         $oUserModel      = Factory::model('User', 'nailsapp/module-auth');

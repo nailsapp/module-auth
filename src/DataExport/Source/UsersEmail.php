@@ -57,9 +57,12 @@ class UsersEmail implements Source
 
     /**
      * Execute the data export
-     * @return bool|\stdClass
+     *
+     * @param array $aData Any data to pass to the source
+     *
+     * @return bool|array
      */
-    public function execute()
+    public function execute($aData = [])
     {
         //  Fetch all users via the User model
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
