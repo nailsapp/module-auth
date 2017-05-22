@@ -89,33 +89,32 @@ class Merge extends BaseAdmin
                     if ($preview) {
 
                         $this->data['mergeResult'] = $mergeResult;
-
                         Helper::loadView('preview');
                         return;
 
                     } else {
 
-                        $status  = 'success';
-                        $message = 'Users were merged successfully.';
-                        $this->session->set_flashdata($status, $message);
+                        $status   = 'success';
+                        $message  = 'Users were merged successfully.';
+                        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                        $oSession->set_flashdata($status, $message);
                         redirect('admin/auth/merge');
                     }
 
                 } else {
-
                     $this->data['error'] = 'Failed to merge users. ' . $oUserModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = 'You cannot list yourself as a user to merge.';
             }
         }
 
         // --------------------------------------------------------------------------
 
-        $this->asset->load('admin.accounts.merge.min.js', 'nailsapp/module-auth');
-        $this->asset->inline('var _accountsMerge = new NAILS_Admin_Accounts_Merge()', 'JS');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('admin.accounts.merge.min.js', 'nailsapp/module-auth');
+        $oAsset->inline('var _accountsMerge = new NAILS_Admin_Accounts_Merge()', 'JS');
 
         // --------------------------------------------------------------------------
 

@@ -44,6 +44,7 @@ class BaseMfa extends Base
 
     protected function validateToken()
     {
+        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
 
         $this->returnTo = $this->input->get('return_to', true);
@@ -53,14 +54,11 @@ class BaseMfa extends Base
 
         if (!$this->mfaUser) {
 
-            $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
             if ($this->returnTo) {
-
                 redirect('auth/login?return_to=' . $this->returnTo);
-
             } else {
-
                 redirect('auth/login');
             }
         }
@@ -87,7 +85,7 @@ class BaseMfa extends Base
 
         if (!$this->auth_model->mfaTokenValidate($this->mfaUser->id, $salt, $token, $ipAddress)) {
 
-            $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
             $query              = array();
             $query['return_to'] = $this->returnTo;
@@ -96,11 +94,8 @@ class BaseMfa extends Base
             $query = array_filter($query);
 
             if ($query) {
-
                 $query = '?' . http_build_query($query);
-
             } else {
-
                 $query = '';
             }
 
@@ -129,7 +124,6 @@ class BaseMfa extends Base
 
         //  If we're remembering this user set a cookie
         if ($this->remember) {
-
             $oUserModel->setRememberCookie(
                 $this->mfaUser->id,
                 $this->mfaUser->password,
@@ -153,11 +147,8 @@ class BaseMfa extends Base
             $oConfig = Factory::service('Config');
 
             if ($oConfig->item('authShowNicetimeOnLogin')) {
-
                 $lastLogin = niceTime(strtotime($this->mfaUser->last_login));
-
             } else {
-
                 $lastLogin = toUserDatetime($this->mfaUser->last_login);
             }
 
@@ -206,7 +197,8 @@ class BaseMfa extends Base
             $sloginAvatar = '';
         }
 
-        $this->session->set_flashdata($status, $sloginAvatar . $message);
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->set_flashdata($status, $sloginAvatar . $message);
 
         // --------------------------------------------------------------------------
 

@@ -44,10 +44,11 @@ class Register extends Base
      */
     public function index()
     {
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-
-            $this->session->set_flashdata(
+            $oSession->set_flashdata(
                 'error',
                 lang('auth_no_access_already_logged_in', activeUser('email'))
             );
@@ -154,9 +155,8 @@ class Register extends Base
                 // --------------------------------------------------------------------------
 
                 //  Handle referrals
-                if ($this->session->userdata('referred_by')) {
-
-                    $aInsertData['referred_by'] = $this->session->userdata('referred_by');
+                if ($oSession->userdata('referred_by')) {
+                    $aInsertData['referred_by'] = $oSession->userdata('referred_by');
                 }
 
                 // --------------------------------------------------------------------------
@@ -185,7 +185,7 @@ class Register extends Base
                     //  Redirect to the group homepage
                     //  @todo: There should be the option to enable/disable forced activation
 
-                    $this->session->set_flashdata('success', lang('auth_register_flashdata_welcome', $oNewUser->first_name));
+                    $oSession->set_flashdata('success', lang('auth_register_flashdata_welcome', $oNewUser->first_name));
 
                     $sRedirect = $oGroup->registration_redirect ? $oGroup->registration_redirect : $oGroup->default_homepage;
 
@@ -213,9 +213,10 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/register/form', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/register/form', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -226,15 +227,17 @@ class Register extends Base
      */
     public function resend()
     {
-        $iId    = (int) $this->uri->segment(4);
-        $sHash  = $this->uri->segment(5);
+        $oUri     = Factory::service('Uri');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+
+        $iId    = (int) $oUri->segment(4);
+        $sHash  = $oUri->segment(5);
 
         // --------------------------------------------------------------------------
 
         //  We got details?
         if (empty($iId) || empty($sHash)) {
-
-            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
@@ -245,8 +248,7 @@ class Register extends Base
         $oUser      = $oUserModel->getById($iId);
 
         if (!$oUser) {
-
-            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
@@ -254,8 +256,7 @@ class Register extends Base
 
         //  Account active?
         if ($oUser->email_is_verified) {
-
-            $this->session->set_flashdata(
+            $oSession->set_flashdata(
                 'message',
                 lang('auth_register_resend_already_active', site_url('auth/login'))
             );
@@ -266,8 +267,7 @@ class Register extends Base
 
         //  Hash match?
         if (md5($oUser->activation_code) != $sHash) {
-
-            $this->session->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
@@ -295,8 +295,9 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/register/resend', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/register/resend', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 }

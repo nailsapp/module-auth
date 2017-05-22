@@ -111,13 +111,11 @@ class Groups extends BaseAdmin
     public function create()
     {
         if (!userHasPermission('admin:auth:groups:create')) {
-
             show_404();
         }
 
-        // --------------------------------------------------------------------------
-
-        $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to dynamically create groups is on the roadmap.');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->set_flashdata('message', '<strong>Coming soon!</strong> The ability to dynamically create groups is on the roadmap.');
         redirect('admin/auth/groups');
     }
 
@@ -130,7 +128,6 @@ class Groups extends BaseAdmin
     public function edit()
     {
         if (!userHasPermission('admin:auth:groups:edit')) {
-
             show_404();
         }
 
@@ -141,7 +138,6 @@ class Groups extends BaseAdmin
         $this->data['group'] = $this->user_group_model->getById($gid);
 
         if (!$this->data['group']) {
-
             show_404();
         }
 
@@ -178,16 +174,15 @@ class Groups extends BaseAdmin
 
                 if ($this->user_group_model->update($gid, $data)) {
 
-                    $this->session->set_flashdata('success', 'Group updated successfully!');
+                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession->set_flashdata('success', 'Group updated successfully!');
                     redirect('admin/auth/groups');
 
                 } else {
-
                     $this->data['error'] = 'I was unable to update the group. ' . $this->user_group_model->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -205,7 +200,6 @@ class Groups extends BaseAdmin
                 $temp->permissions = $controllerDetails['className']::permissions();
 
                 if (!empty($temp->permissions)) {
-
                     $this->data['permissions'][] = $temp;
                 }
             }
@@ -222,8 +216,9 @@ class Groups extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('admin.groups.min.js', 'nailsapp/module-auth');
-        $this->asset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('admin.groups.min.js', 'nailsapp/module-auth');
+        $oAsset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -240,13 +235,11 @@ class Groups extends BaseAdmin
     public function delete()
     {
         if (!userHasPermission('admin:auth:groups:delete')) {
-
             show_404();
         }
 
-        // --------------------------------------------------------------------------
-
-        $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete groups is on the roadmap.');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete groups is on the roadmap.');
         redirect('admin/auth/groups');
     }
 
@@ -259,19 +252,15 @@ class Groups extends BaseAdmin
     public function set_default()
     {
         if (!userHasPermission('admin:auth:groups:setDefault')) {
-
             show_404();
         }
 
-        // --------------------------------------------------------------------------
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
 
         if ($this->user_group_model->setAsDefault($this->uri->segment(5))) {
-
-            $this->session->set_flashdata('success', 'Group set as default successfully.');
-
+            $oSession->set_flashdata('success', 'Group set as default successfully.');
         } else {
-
-            $this->session->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->lastError());
+            $oSession->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->lastError());
         }
 
         redirect('admin/auth/groups');

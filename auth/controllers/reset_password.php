@@ -28,7 +28,8 @@ class Reset_Password extends Base
 
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
-            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
     }
@@ -267,40 +268,32 @@ class Reset_Password extends Base
                                 $sloginAvatar = '';
                             }
 
-                            $this->session->set_flashdata($status, $sloginAvatar . $message);
+                            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                            $oSession->set_flashdata($status, $sloginAvatar . $message);
 
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($oConfig->item('authTwoFactorMode')) {
-
                                 $oUserModel->setLoginData($user->id);
                             }
 
                             //  Log user in and forward to wherever they need to go
                             if ($this->input->get('return_to')) {
-
                                 redirect($this->input->get('return_to'));
-
                             } elseif ($user->group_homepage) {
-
                                 redirect($user->group_homepage);
-
                             } else {
-
                                 redirect('/');
                             }
 
                         } else {
-
                             $this->data['error'] = lang('auth_forgot_reset_badlogin', site_url('auth/login'));
                         }
 
                     } else {
-
                         $this->data['error'] = lang('auth_forgot_reset_badupdate', $oUserModel->lastError());
                     }
 
                 } else {
-
                     $this->data['error'] = lang('fv_there_were_errors');
                 }
             }
@@ -340,9 +333,10 @@ class Reset_Password extends Base
             // --------------------------------------------------------------------------
 
             //  Load the views
-            $this->load->view('structure/header/blank', $this->data);
-            $this->load->view('auth/password/change_temp', $this->data);
-            $this->load->view('structure/footer/blank', $this->data);
+            $oView = Factory::service('View');
+            $oView->load('structure/header/blank', $this->data);
+            $oView->load('auth/password/change_temp', $this->data);
+            $oView->load('structure/footer/blank', $this->data);
 
             return;
         }

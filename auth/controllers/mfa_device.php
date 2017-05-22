@@ -55,6 +55,7 @@ class Mfa_device extends BaseMfa
     {
         if ($this->input->post()) {
 
+            $oSession        = Factory::service('Session', 'nailsapp/module-auth');
             $oFormValidation = Factory::service('FormValidation');
 
             $oFormValidation->set_rules('mfaSecret', '', 'xss_clean|required');
@@ -78,17 +79,15 @@ class Mfa_device extends BaseMfa
                     $message .= 'associated an MFA device with your account. You will be required ot use it ';
                     $message .= 'the next time you log in.';
 
-                    $this->session->set_flashdata($status, $message);
+                    $oSession->set_flashdata($status, $message);
 
                     $this->loginUser();
 
                 } else {
-
                     $this->data['error'] = '<strong>Sorry,</strong> those codes failed to validate. Please try again.';
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -105,14 +104,11 @@ class Mfa_device extends BaseMfa
             $message  = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
             $message .= $this->auth_model->lastError();
 
-            $this->session->set_flashdata($status, $message);
+            $oSession->set_flashdata($status, $message);
 
             if ($this->returnTo) {
-
                 redirect('auth/login?return_to=' . $this->returnTo);
-
             } else {
-
                 redirect('auth/login');
             }
         }
@@ -120,9 +116,10 @@ class Mfa_device extends BaseMfa
         //  Render the page
         $this->data['page']->title = 'Set up a new MFA device';
 
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/mfa/device/setup', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/mfa/device/setup', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -161,8 +158,9 @@ class Mfa_device extends BaseMfa
         //  Render the page
         $this->data['page']->title = 'Enter your Code';
 
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/mfa/device/ask', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/mfa/device/ask', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 }
