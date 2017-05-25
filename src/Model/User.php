@@ -1926,7 +1926,7 @@ class User extends Base
      * @param  boolean $sendWelcome Whether to send the welcome email
      * @return mixed                StdClass on success, false on failure
      */
-    public function create($data, $sendWelcome = true)
+    public function create($data = [], $sendWelcome = true)
     {
         $oDate = Factory::factory('DateTime');
 
