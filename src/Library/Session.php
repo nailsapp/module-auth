@@ -54,7 +54,7 @@ class Session
                 $oCi->config->set_item('sess_table_name', $sSessionTable);
             }
 
-            $oCi->load->library('session/session');
+            $oCi->load->library('session');
             $this->oSession = $oCi->session;
             $this->bIsCli   = false;
 
