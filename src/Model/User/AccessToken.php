@@ -57,7 +57,7 @@ class AccessToken extends \Nails\Common\Model\Base
      * @param  array $data The data to create the access token with
      * @return mixed false on failure, stdClass on success
      */
-    public function create($data = array())
+    public function create($data = array(), $bReturnObject = false)
     {
         //  User ID is a required field
         if (empty($data['user_id'])) {
@@ -206,7 +206,7 @@ class AccessToken extends \Nails\Common\Model\Base
      * @param  array $data Data to update the access token with
      * @return boolean
      */
-    public function update($id, $data)
+    public function update($id, $data = [])
     {
         $this->setError('Access tokens cannot be amended once created.');
         return false;
