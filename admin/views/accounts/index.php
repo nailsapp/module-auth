@@ -28,8 +28,8 @@
 
                     $sPermPrefix    = 'admin:auth:accounts:';
                     $bIsActiveUser  = $member->id == activeUser('id');
-                    $bActiveIsSuper = $this->user_model->isSuperuser();
-                    $bMemberIsSuper = $this->user_model->isSuperuser($member);
+                    $bActiveIsSuper = isSuperuser();
+                    $bMemberIsSuper = isSuperuser($member);
                     $sMemberNameFL  = $member->first_name . ' ' . $member->last_name;
                     $sMemberNameLF  = $member->last_name . ', ' . $member->first_name;
 

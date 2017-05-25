@@ -218,14 +218,17 @@ class Mfa_question extends BaseMfa
                                 $message .= 'successfully set your security questions. You will be asked to answer ';
                                 $message .= 'one of them every time you log in.';
 
-                                $this->session->set_flashdata($status, $message);
+                                $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                                $oSession->set_flashdata($status, $message);
 
                                 $this->loginUser();
 
                             } else {
 
+                                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
                                 $this->data['error']  = lang('auth_twofactor_question_set_fail');
-                                $this->data['error'] .= ' ' . $this->user_model->lastError();
+                                $this->data['error'] .= ' ' . $oUserModel->lastError();
                             }
 
                         } else {
@@ -242,9 +245,10 @@ class Mfa_question extends BaseMfa
                 //  No questions, request they set them
                 $this->data['page']->title = lang('auth_twofactor_question_set_title');
 
-                $this->load->view('structure/header/blank', $this->data);
-                $this->load->view('auth/mfa/question/set', $this->data);
-                $this->load->view('structure/footer/blank', $this->data);
+                $oView = Factory::service('View');
+                $oView->load('structure/header/blank', $this->data);
+                $oView->load('auth/mfa/question/set', $this->data);
+                $oView->load('structure/footer/blank', $this->data);
             }
         }
     }
@@ -256,8 +260,9 @@ class Mfa_question extends BaseMfa
         //  Ask away cap'n!
         $this->data['page']->title = lang('auth_twofactor_answer_title');
 
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/mfa/question/ask', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/mfa/question/ask', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 }

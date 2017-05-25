@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
 class Override extends Base
@@ -24,9 +25,9 @@ class Override extends Base
         // --------------------------------------------------------------------------
 
         //  If you're not a admin then you shouldn't be accessing this class
-        if (!$this->user_model->wasAdmin() && !$this->user_model->isAdmin()) {
-
-            $this->session->set_flashdata('error', lang('auth_no_access'));
+        if (!wasAdmin() && !isAdmin()) {
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', lang('auth_no_access'));
             redirect('/');
         }
     }
@@ -42,9 +43,11 @@ class Override extends Base
     public function login_as()
     {
         //  Perform lookup of user
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
         $hashId = $this->uri->segment(4);
         $hashPw = $this->uri->segment(5);
-        $user   = $this->user_model->getByHashes($hashId, $hashPw);
+        $user   = $oUserModel->getByHashes($hashId, $hashPw);
 
         if (!$user) {
             show_404();
@@ -59,7 +62,9 @@ class Override extends Base
          * - Sign in as superusers (unless they are a superuser)
          */
 
-        if (!$this->user_model->wasAdmin()) {
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+
+        if (!wasAdmin()) {
 
             $hasPermission = userHasPermission('admin:auth:accounts:loginAs');
             $isCloning     = activeUser('id') == $user->id ? true : false;
@@ -69,7 +74,7 @@ class Override extends Base
 
                 if (!$hasPermission) {
 
-                    $this->session->set_flashdata('error', lang('auth_override_fail_nopermission'));
+                    $oSession->set_flashdata('error', lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
 
                 } elseif ($isCloning) {
@@ -85,31 +90,31 @@ class Override extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!$this->input->get('returningAdmin') && $this->user_model->isAdmin()) {
+        if (!$this->input->get('returningAdmin') && isAdmin()) {
 
             /**
              * The current user is an admin, we should set our Admin Recovery Data so
              * that they can come back.
              */
 
-            $this->user_model->setAdminRecoveryData($user->id, $this->input->get('return_to'));
+            $oUserModel->setAdminRecoveryData($user->id, $this->input->get('return_to'));
             $redirect = $user->group_homepage;
 
             //  A bit of feedback
             $status  = 'success';
             $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
 
-        } elseif ($this->user_model->wasAdmin()) {
+        } elseif (wasAdmin()) {
 
             /**
              * This user is a recovering adminaholic. Work out where we're sending
              * them back to then remove the adminRecovery data.
              */
 
-            $recoveryData = $this->user_model->getAdminRecoveryData();
+            $recoveryData = getAdminRecoveryData();
             $redirect     = !empty($recoveryData->returnTo) ? $recoveryData->returnTo : $user->group_homepage;
 
-            $this->user_model->unsetAdminRecoveryData();
+            unsetAdminRecoveryData();
 
             //  Some feedback
             $status  = 'success';
@@ -132,14 +137,13 @@ class Override extends Base
         // --------------------------------------------------------------------------
 
         //  Replace current user's session data
-        $this->user_model->setLoginData($user->id);
+        $oUserModel->setLoginData($user->id);
 
         // --------------------------------------------------------------------------
 
         //  Any feedback?
         if (!empty($message)) {
-
-            $this->session->set_flashdata($status, $message);
+            $oSession->set_flashdata($status, $message);
         }
 
         // --------------------------------------------------------------------------

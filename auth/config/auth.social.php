@@ -77,7 +77,8 @@ $config['auth_social_signon_providers'][] = array(
         'keys'  => array(
             'id'        => array('label' => 'App ID', 'required' => true),
             'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
+        ),
+        'scope' => array('label' => 'Scope', 'required' => false)
     )
 );
 $config['auth_social_signon_providers'][] = array(

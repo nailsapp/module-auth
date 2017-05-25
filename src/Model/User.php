@@ -12,8 +12,8 @@
 
 namespace Nails\Auth\Model;
 
-use Nails\Factory;
 use Nails\Common\Model\Base;
+use Nails\Factory;
 
 class User extends Base
 {
@@ -23,7 +23,6 @@ class User extends Base
     protected $isRemembered;
     protected $isLoggedIn;
     protected $adminRecoveryField;
-    protected $oConfig;
 
     // --------------------------------------------------------------------------
 
@@ -52,7 +51,7 @@ class User extends Base
 
         //  Set defaults
         $this->table              = NAILS_DB_PREFIX . 'user';
-        $this->tableAlias        = 'u';
+        $this->tableAlias         = 'u';
         $this->tableSlugColumn    = 'username';
         $this->rememberCookie     = 'nailsrememberme';
         $this->adminRecoveryField = 'nailsAdminRecoveryData';
@@ -63,24 +62,20 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Define searchable fields, resetting it
-        $this->searchableFields = array(
+        $this->searchableFields = [
             $this->tableAlias . '.id',
             $this->tableAlias . '.username',
             'ue.email',
-            array(
+            [
                 $this->tableAlias . '.first_name',
-                $this->tableAlias . '.last_name'
-            )
-        );
+                $this->tableAlias . '.last_name',
+            ],
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Clear the activeUser
         $this->clearActiveUser();
-
-        // --------------------------------------------------------------------------
-
-        $this->oConfig = Factory::service('Config');
     }
 
     // --------------------------------------------------------------------------
@@ -93,8 +88,6 @@ class User extends Base
     {
         //  Refresh user's session
         $this->refreshSession();
-
-        // --------------------------------------------------------------------------
 
         //  If no user is logged in, see if there's a remembered user to be logged in
         if (!$this->isLoggedIn()) {
@@ -111,9 +104,10 @@ class User extends Base
     protected function loginRememberedUser()
     {
         //  Is remember me functionality enabled?
-        $this->oConfig->load('auth/auth');
+        $oConfig = Factory::service('Config');
+        $oConfig->load('auth/auth');
 
-        if (!$this->oConfig->item('authEnableRememberMe')) {
+        if (!$oConfig->item('authEnableRememberMe')) {
             return false;
         }
 
@@ -131,10 +125,9 @@ class User extends Base
             if ($email && $code) {
 
                 //  Look up the user so we can cross-check the codes
-                $user = $this->getByEmail($email, true);
+                $user = $this->getByEmail($email);
 
                 if ($user && $code === $user->remember_code) {
-
                     //  User was validated, log them in!
                     $this->setLoginData($user->id);
                     $this->me = $user->id;
@@ -149,8 +142,10 @@ class User extends Base
 
     /**
      * Fetches a value from the active user's session data
-     * @param  string  $sKeys      The key to look up in activeUser
-     * @param  string  $sDelimiter If multiple fields are requested they'll be joined by this string
+     *
+     * @param  string $sKeys      The key to look up in activeUser
+     * @param  string $sDelimiter If multiple fields are requested they'll be joined by this string
+     *
      * @return mixed
      */
     public function activeUser($sKeys = '', $sDelimiter = ' ')
@@ -179,24 +174,20 @@ class User extends Base
             //  More than one key
             $aKeys = explode(',', $sKeys);
             $aKeys = array_filter($aKeys);
-            $aOut   = array();
+            $aOut  = [];
 
             foreach ($aKeys as $sKey) {
 
                 //  If something is found, use that.
                 if (isset($this->activeUser->{trim($sKey)})) {
-
                     $aOut[] = $this->activeUser->{trim($sKey)};
                 }
             }
 
             //  If nothing was found, just return null
             if (empty($aOut)) {
-
                 $val = null;
-
             } else {
-
                 $val = implode($sDelimiter, $aOut);
             }
         }
@@ -208,15 +199,13 @@ class User extends Base
 
     /**
      * Set the active user
-     * @param stdClass $oUser The user obect to set
+     *
+     * @param \stdClass $oUser The user object to set
      */
     public function setActiveUser($oUser)
     {
         $this->activeUser = $oUser;
-
-        // --------------------------------------------------------------------------
-
-        $oDateTimeModel = Factory::model('DateTime');
+        $oDateTimeModel   = Factory::model('DateTime');
 
         //  Set the user's date/time formats
         $sFormatDate = $this->activeUser('pref_date_format');
@@ -231,7 +220,7 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Clear the acive user
+     * Clear the active user
      * @return void
      */
     public function clearActiveUser()
@@ -243,8 +232,11 @@ class User extends Base
 
     /**
      * Set the user's login data
+     *
      * @param mixed   $mIdEmail        The user's ID or email address
      * @param boolean $bSetSessionData Whether to set the session data or not
+     *
+     * @return boolean
      */
     public function setLoginData($mIdEmail, $bSetSessionData = true)
     {
@@ -257,12 +249,9 @@ class User extends Base
         } elseif (is_string($mIdEmail)) {
 
             if (valid_email($mIdEmail)) {
-
                 $oUser  = $this->getByEmail($mIdEmail);
                 $sError = 'Invalid User email.';
-
             } else {
-
                 $this->setError('Invalid User email.');
                 return false;
             }
@@ -294,12 +283,13 @@ class User extends Base
             //  Set session variables
             if ($bSetSessionData) {
 
-                $sessionData = array(
+                $sessionData = [
                     'id'       => $oUser->id,
                     'email'    => $oUser->email,
                     'group_id' => $oUser->group_id,
-                );
-                $this->session->set_userdata($sessionData);
+                ];
+                $oSession    = Factory::service('Session', 'nailsapp/module-auth');
+                $oSession->set_userdata($sessionData);
             }
 
             //  Set the active user
@@ -318,9 +308,10 @@ class User extends Base
     public function clearLoginData()
     {
         //  Clear the session
-        $this->session->unset_userdata('id');
-        $this->session->unset_userdata('email');
-        $this->session->unset_userdata('group_id');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->unset_userdata('id');
+        $oSession->unset_userdata('email');
+        $oSession->unset_userdata('group_id');
 
         //  Set the flag
         $this->isLoggedIn = false;
@@ -328,7 +319,7 @@ class User extends Base
         //  Reset the activeUser
         $this->clearActiveUser();
 
-        //  Remove any rememebr me cookie
+        //  Remove any remember me cookie
         $this->clearRememberCookie();
     }
 
@@ -353,7 +344,6 @@ class User extends Base
     {
         //  Deja vu?
         if (!is_null($this->isRemembered)) {
-
             return $this->isRemembered;
         }
 
@@ -377,7 +367,9 @@ class User extends Base
 
     /**
      * Determines whether the active user group has admin permissions.
-     * @param  mixed   $user The user to check, uses activeUser if null
+     *
+     * @param  mixed $user The user to check, uses activeUser if null
+     *
      * @return boolean
      */
     public function isAdmin($user = null)
@@ -395,24 +387,28 @@ class User extends Base
      */
     public function wasAdmin()
     {
-        return (bool) $this->session->userdata($this->adminRecoveryField);
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        return (bool) $oSession->userdata($this->adminRecoveryField);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Adds to the admin recovery array, allowing suers to login as other users multiple times, and come back
-     * @param integer $loggingInAs The ID of the user who is being immitated
+     *
+     * @param integer $loggingInAs The ID of the user who is being imitated
      * @param string  $returnTo    Where to redirect the user when they log back in
      */
     public function setAdminRecoveryData($loggingInAs, $returnTo = '')
     {
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oInput   = Factory::service('Input');
         //  Look for existing Recovery Data
-        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
-            $existingRecoveryData = array();
+            $existingRecoveryData = [];
         }
 
         //  Prepare the new element
@@ -422,35 +418,33 @@ class User extends Base
         $adminRecoveryData->hash      = md5(activeUser('password'));
         $adminRecoveryData->name      = activeUser('first_name,last_name');
         $adminRecoveryData->email     = activeUser('email');
-        $adminRecoveryData->returnTo  = empty($returnTo) ? $this->input->server('REQUEST_URI') : $returnTo;
+        $adminRecoveryData->returnTo  = empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo;
 
-        $adminRecoveryData->loginUrl  = 'auth/override/login_as/';
+        $adminRecoveryData->loginUrl = 'auth/override/login_as/';
         $adminRecoveryData->loginUrl .= md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash;
         $adminRecoveryData->loginUrl .= '?returningAdmin=1';
-        $adminRecoveryData->loginUrl  = site_url($adminRecoveryData->loginUrl);
+        $adminRecoveryData->loginUrl = site_url($adminRecoveryData->loginUrl);
 
         //  Put the new session onto the stack and save to the session
         $existingRecoveryData[] = $adminRecoveryData;
 
-        $this->session->set_userdata($this->adminRecoveryField, $existingRecoveryData);
+        $oSession->set_userdata($this->adminRecoveryField, $existingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the recovery data at the bottom of the stack, i.e the most recently added
-     * @return stdClass
+     * @return array|\stdClass
      */
     public function getAdminRecoveryData()
     {
-        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
 
         if (empty($existingRecoveryData)) {
-
-            return array();
-
+            return [];
         } else {
-
             return end($existingRecoveryData);
         }
     }
@@ -463,18 +457,19 @@ class User extends Base
      */
     public function unsetAdminRecoveryData()
     {
-        $existingRecoveryData = $this->session->userdata($this->adminRecoveryField);
+        $oSession             = Factory::service('Session', 'nailsapp/module-auth');
+        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
-            $existingRecoveryData = array();
+            $existingRecoveryData = [];
 
         } else {
 
             array_pop($existingRecoveryData);
         }
 
-        $this->session->set_userdata($this->adminRecoveryField, $existingRecoveryData);
+        $oSession->set_userdata($this->adminRecoveryField, $existingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
@@ -482,7 +477,9 @@ class User extends Base
     /**
      * Determines whether the active user is a superuser. Extend this method to
      * alter it's response.
-     * @param  mixed   $user The user to check, uses activeUser if null
+     *
+     * @param  mixed $user The user to check, uses activeUser if null
+     *
      * @return boolean
      */
     public function isSuperuser($user = null)
@@ -494,8 +491,11 @@ class User extends Base
 
     /**
      * Determines whether the specified user has a certain ACL permission
-     * @param   string  $sSearch The permission to check for
-     * @param   mixed   $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
+     *
+     * @param   string $sSearch The permission to check for
+     * @param   mixed  $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object
+     *                          uses that object
+     *
      * @return  boolean
      */
     public function hasPermission($sSearch, $mUser = null)
@@ -506,33 +506,27 @@ class User extends Base
             $oUser = $this->getById($mUser);
 
             if (isset($oUser->acl)) {
-
                 $aAcl = $oUser->acl;
                 unset($oUser);
-
             } else {
-
                 return false;
             }
 
         } elseif (isset($mUser->acl)) {
-
             $aAcl = $mUser->acl;
-
         } else {
-
             $aAcl = $this->activeUser('acl');
         }
 
         if (!$aAcl) {
-
             return false;
         }
 
         // --------------------------------------------------------------------------
 
         // Super users or CLI users can do anything their heart's desire
-        if (in_array('admin:superuser', $aAcl) || $this->input->is_cli_request()) {
+        $oInput = Factory::service('Input');
+        if (in_array('admin:superuser', $aAcl) || $oInput->is_cli_request()) {
             return true;
         }
 
@@ -540,8 +534,8 @@ class User extends Base
 
         /**
          * Test the ACL
-         * We're going to use regular experessions here so we can allow for some
-         * flexability in the search, i.e admin:* would return true if the user has
+         * We're going to use regular expressions here so we can allow for some
+         * flexibility in the search, i.e admin:* would return true if the user has
          * access to any of admin.
          */
 
@@ -573,62 +567,41 @@ class User extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
+     *
      * @param array $aData Data passed from the calling method
+     *
      * @return void
      */
-    protected function getCountCommon($aData = array())
+    protected function getCountCommon($aData = [])
     {
         //  Define the selects
-        $this->db->select($this->tableAlias . '.*');
-        $this->db->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
-        $this->db->select('ue.date_verified email_is_verified_on');
-        $this->db->select($this->getMetaColumns('um'));
-        $this->db->select('ug.slug group_slug,ug.label group_name,ug.default_homepage group_homepage,ug.acl group_acl');
+        $oDb = Factory::service('Database');
+        $oDb->select($this->tableAlias . '.*');
+        $oDb->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
+        $oDb->select('ue.date_verified email_is_verified_on');
+        $oDb->select($this->getMetaColumns('um'));
+        $oDb->select('ug.slug group_slug,ug.label group_name,ug.default_homepage group_homepage,ug.acl group_acl');
 
         // --------------------------------------------------------------------------
 
         //  Define the joins
-        $this->db->join(
+        $oDb->join(
             NAILS_DB_PREFIX . 'user_email ue',
             $this->tableAlias . '.id = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );
 
-        $this->db->join(
+        $oDb->join(
             NAILS_DB_PREFIX . 'user_meta_app um',
             $this->tableAlias . '.id = um.user_id',
             'LEFT'
         );
 
-        $this->db->join(
+        $oDb->join(
             NAILS_DB_PREFIX . 'user_group ug',
             $this->tableAlias . '.group_id = ug.id',
             'LEFT'
         );
-
-        // --------------------------------------------------------------------------
-
-        if (!empty($aData['keywords'])) {
-
-            if (empty($aData['or_like'])) {
-                $aData['or_like'] = array();
-            }
-
-            $aData['or_like'][] = array(
-                'column' => $this->tableAlias . '.id',
-                'value'  => $aData['keywords']
-            );
-
-            $aData['or_like'][] = array(
-                'column' => array($this->tableAlias . '.first_name', $this->tableAlias . '.last_name'),
-                'value'  => $aData['keywords']
-            );
-
-            $aData['or_like'][] = array(
-                'column' => 'ue.email',
-                'value'  => $aData['keywords']
-            );
-        }
 
         //  Let the parent method handle sorting, etc
         parent::getCountCommon($aData);
@@ -638,13 +611,14 @@ class User extends Base
 
     /**
      * Defines the list of columns in the `user` table
+     *
      * @param  string $sPrefix The prefix to add to the columns
      * @param  array  $aCols   Any additional columns to add
+     *
      * @return array
      */
-    protected function getUserColumns($sPrefix = '', $aCols = array())
+    protected function getUserColumns($sPrefix = '', $aCols = [])
     {
-        $aCols   = array();
         $aCols[] = 'group_id';
         $aCols[] = 'ip_address';
         $aCols[] = 'last_ip';
@@ -685,11 +659,13 @@ class User extends Base
 
     /**
      * Defines the list of columns in the `user_meta_app` table
+     *
      * @param  string $sPrefix The prefix to add to the columns
      * @param  array  $aCols   Any additional columns to add
+     *
      * @return array
      */
-    protected function getMetaColumns($sPrefix = '', $aCols = array())
+    protected function getMetaColumns($sPrefix = '', $aCols = [])
     {
         return $this->prepareDbColumns($sPrefix, $aCols);
     }
@@ -697,10 +673,14 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Filter out duplicates and prefix column names if nessecary
-     * @var string
+     * Filter out duplicates and prefix column names if necessary
+     *
+     * @param string $sPrefix
+     * @param array  $aCols
+     *
+     * @return array
      */
-    protected function prepareDbColumns($sPrefix = '', $aCols = array())
+    protected function prepareDbColumns($sPrefix = '', $aCols = [])
     {
         //  Clean up
         $aCols = array_unique($aCols);
@@ -708,9 +688,7 @@ class User extends Base
 
         //  Prefix all the values, if needed
         if ($sPrefix) {
-
             foreach ($aCols as $key => &$value) {
-
                 $value = $sPrefix . '.' . $value;
             }
         }
@@ -722,7 +700,9 @@ class User extends Base
 
     /**
      * Look up a user by their identifier
+     *
      * @param  string $identifier The user's identifier, either an email address or a username
+     *
      * @return mixed              false on failure, stdClass on success
      */
     public function getByIdentifier($identifier)
@@ -741,11 +721,8 @@ class User extends Base
 
             default:
                 if (valid_email($identifier)) {
-
                     $user = $this->getByEmail($identifier);
-
                 } else {
-
                     $user = $this->getByUsername($identifier);
                 }
                 break;
@@ -758,57 +735,51 @@ class User extends Base
 
     /**
      * Get a user by their email address
+     *
      * @param  string $email The user's email address
+     *
      * @return mixed         stdClass on success, false on failure
      */
     public function getByEmail($email)
     {
         if (!is_string($email)) {
-
             return false;
         }
 
         // --------------------------------------------------------------------------
 
         //  Look up the email, and if we find an ID then fetch that user
-        $this->db->select('user_id');
-        $this->db->where('email', trim($email));
-        $user = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $oDb = Factory::service('Database');
+        $oDb->select('user_id');
+        $oDb->where('email', trim($email));
+        $user = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
 
-        if ($user) {
-
-            return $this->getById($user->user_id);
-
-        } else {
-
-            return false;
-        }
+        return $user ? $this->getById($user->user_id) : false;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Get a user by their username
+     *
      * @param  string $username The user's username
+     *
      * @return mixed            stdClass on success, false on failure
      */
     public function getByUsername($username)
     {
         if (!is_string($username)) {
-
             return false;
         }
 
-        // --------------------------------------------------------------------------
-
-        $data = array(
-            'where' => array(
-                array(
+        $data = [
+            'where' => [
+                [
                     'column' => $this->tableAlias . '.username',
-                    'value'  => $username
-                )
-            )
-        );
+                    'value'  => $username,
+                ],
+            ],
+        ];
 
         $user = $this->getAll(null, null, $data);
 
@@ -819,29 +790,30 @@ class User extends Base
 
     /**
      * Get a specific user by a MD5 hash of their ID and password
+     *
      * @param  string $md5Id The MD5 hash of their ID
      * @param  string $md5Pw The MD5 hash of their password
+     *
      * @return mixed         stdClass on success, false on failure
      */
     public function getByHashes($md5Id, $md5Pw)
     {
         if (empty($md5Id) || empty($md5Pw)) {
-
             return false;
         }
 
-        $data = array(
-            'where' => array(
-                array(
+        $data = [
+            'where' => [
+                [
                     'column' => $this->tableAlias . '.id_md5',
-                    'value'  => $md5Id
-                ),
-                array(
+                    'value'  => $md5Id,
+                ],
+                [
                     'column' => $this->tableAlias . '.password_md5',
-                    'value'  => $md5Pw
-                )
-            )
-        );
+                    'value'  => $md5Pw,
+                ],
+            ],
+        ];
 
         $user = $this->getAll(null, null, $data);
 
@@ -852,26 +824,25 @@ class User extends Base
 
     /**
      * Get a user by their referral code
+     *
      * @param  string $referralCode The user's referral code
+     *
      * @return mixed                stdClass on success, false on failure
      */
     public function getByReferral($referralCode)
     {
         if (!is_string($referralCode)) {
-
             return false;
         }
 
-        // --------------------------------------------------------------------------
-
-        $data = array(
-            'where' => array(
-                array(
+        $data = [
+            'where' => [
+                [
                     'column' => $this->tableAlias . '.referral',
-                    'value'  => $referralCode
-                )
-            )
-        );
+                    'value'  => $referralCode,
+                ],
+            ],
+        ];
 
         $user = $this->getAll(null, null, $data);
 
@@ -882,15 +853,18 @@ class User extends Base
 
     /**
      * Get all the email addresses which are registered to a particular user ID
+     *
      * @param  integer $id The user's ID
+     *
      * @return array
      */
     public function getEmailsForUser($id)
     {
-        $this->db->where('user_id', $id);
-        $this->db->order_by('date_added');
-        $this->db->order_by('email', 'ASC');
-        return $this->db->get(NAILS_DB_PREFIX . 'user_email')->result();
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $id);
+        $oDb->order_by('date_added');
+        $oDb->order_by('email', 'ASC');
+        return $oDb->get(NAILS_DB_PREFIX . 'user_email')->result();
     }
 
     // --------------------------------------------------------------------------
@@ -899,14 +873,17 @@ class User extends Base
      * Update a user, if $user_id is not set method will attempt to update the
      * active user. If $data is passed then the method will attempt to update
      * the user and/or user_meta_* tables
-     * @return  integer $id   The ID of the user to update
-     * @return  array   $data Any data to be updated
+     *
+     * @param  integer $user_id The ID of the user to update
+     * @param  array   $data    Any data to be updated
+     *
+     * @return boolean
      */
     public function update($user_id = null, $data = null)
     {
-        $oDate = Factory::factory('DateTime');
-        $data  = (array) $data;
-        $iUserId  = $this->getUserId($user_id);
+        $oDate   = Factory::factory('DateTime');
+        $data    = (array) $data;
+        $iUserId = $this->getUserId($user_id);
         if (empty($iUserId)) {
             return false;
         }
@@ -925,6 +902,10 @@ class User extends Base
         //  If there's some data we'll need to know the columns of `user`
         //  We also want to unset any 'dangerous' items then set it for the query
 
+        $oDb                = Factory::service('Database');
+        $oInput             = Factory::service('Input');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+
         if ($data) {
 
             //  Set the cols in `user` (rather than querying the DB)
@@ -937,10 +918,10 @@ class User extends Base
             //  If we're updating the user's password we should generate a new hash
             if (array_key_exists('password', $data)) {
 
-                $oHash = $this->user_password_model->generateHash($oUser->group_id, $data['password']);
+                $oHash = $oUserPasswordModel->generateHash($oUser->group_id, $data['password']);
 
                 if (empty($oHash)) {
-                    $this->setError($this->user_password_model->lastError());
+                    $this->setError($oUserPasswordModel->lastError());
                     return false;
                 }
 
@@ -958,8 +939,8 @@ class User extends Base
             }
 
             //  Set the data
-            $aDataUser            = array();
-            $aDataMeta            = array();
+            $aDataUser            = [];
+            $aDataMeta            = [];
             $sDataEmail           = '';
             $sDataUsername        = '';
             $dataResetMfaQuestion = false;
@@ -983,23 +964,14 @@ class User extends Base
                     }
 
                 } elseif ($key == 'email') {
-
                     $sDataEmail = strtolower(trim($val));
-
                 } elseif ($key == 'username') {
-
                     $sDataUsername = strtolower(trim($val));
-
                 } elseif ($key == 'reset_mfa_question') {
-
                     $dataResetMfaQuestion = $val;
-
                 } elseif ($key == 'reset_mfa_device') {
-
                     $dataResetMfaDevice = $val;
-
                 } else {
-
                     $aDataMeta[$key] = $val;
                 }
             }
@@ -1011,11 +983,8 @@ class User extends Base
 
                 //  Check username is valid
                 if (!$this->isValidUsername($sDataUsername, true, $iUserId)) {
-
                     return false;
-
                 } else {
-
                     $aDataUser['username'] = $sDataUsername;
                 }
             }
@@ -1024,41 +993,42 @@ class User extends Base
 
             //  Begin transaction
             $bRollback = false;
-            $this->db->trans_begin();
+            $oDb->trans_begin();
 
             // --------------------------------------------------------------------------
 
             //  Resetting security questions?
-            $this->oConfig->load('auth/auth');
+            $oConfig = Factory::service('Config');
+            $oConfig->load('auth/auth');
 
-            if ($this->oConfig->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
+            if ($oConfig->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
 
-                $this->db->where('user_id', $iUserId);
-                if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
+                $oDb->where('user_id', $iUserId);
+                if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
 
                     /**
                      * Rollback immediately in case there's email or password changes which
                      * might send an email.
                      */
 
-                    $this->db->trans_rollback();
+                    $oDb->trans_rollback();
 
                     $this->setError('could not reset user\'s Multi Factor Authentication questions.');
 
                     return false;
                 }
 
-            } elseif ($this->oConfig->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
+            } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
 
-                $this->db->where('user_id', $iUserId);
-                if (!$this->db->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+                $oDb->where('user_id', $iUserId);
+                if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
 
                     /**
                      * Rollback immediately in case there's email or password changes which
                      * might send an email.
                      */
 
-                    $this->db->trans_rollback();
+                    $oDb->trans_rollback();
 
                     $this->setError('could not reset user\'s Multi Factor Authentication device.');
 
@@ -1069,24 +1039,22 @@ class User extends Base
             // --------------------------------------------------------------------------
 
             //  Update the user table
-            $this->db->where('id', $iUserId);
-            $this->db->set('last_update', 'NOW()', false);
+            $oDb->where('id', $iUserId);
+            $oDb->set('last_update', 'NOW()', false);
 
             if ($aDataUser) {
-
-                $this->db->set($aDataUser);
+                $oDb->set($aDataUser);
             }
 
-            $this->db->update(NAILS_DB_PREFIX . 'user');
+            $oDb->update(NAILS_DB_PREFIX . 'user');
 
             // --------------------------------------------------------------------------
 
             //  Update the meta table
             if ($aDataMeta) {
-
-                $this->db->where('user_id', $iUserId);
-                $this->db->set($aDataMeta);
-                $this->db->update(NAILS_DB_PREFIX . 'user_meta_app');
+                $oDb->where('user_id', $iUserId);
+                $oDb->set($aDataMeta);
+                $oDb->update(NAILS_DB_PREFIX . 'user_meta_app');
             }
 
             // --------------------------------------------------------------------------
@@ -1097,8 +1065,8 @@ class User extends Base
                 if (valid_email($sDataEmail)) {
 
                     //  Check if the email is already being used
-                    $this->db->where('email', $sDataEmail);
-                    $oEmail = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
+                    $oDb->where('email', $sDataEmail);
+                    $oEmail = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
 
                     if ($oEmail) {
 
@@ -1109,11 +1077,8 @@ class User extends Base
                          */
 
                         if ($oEmail->user_id == $iUserId) {
-
                             $this->emailMakePrimary($oEmail->email);
-
                         } else {
-
                             $this->setError('Email is already in use.');
                             $bRollback = true;
                         }
@@ -1139,9 +1104,9 @@ class User extends Base
             // --------------------------------------------------------------------------
 
             //  How'd we get on?
-            if (!$bRollback && $this->db->trans_status() !== false) {
+            if (!$bRollback && $oDb->trans_status() !== false) {
 
-                $this->db->trans_commit();
+                $oDb->trans_commit();
 
                 // --------------------------------------------------------------------------
 
@@ -1154,7 +1119,7 @@ class User extends Base
                     $oEmail->type            = 'password_updated';
                     $oEmail->to_id           = $iUserId;
                     $oEmail->data            = new \stdClass();
-                    $oEmail->data->ipAddress = $this->input->ipAddress();
+                    $oEmail->data->ipAddress = $oInput->ipAddress();
                     $oEmail->data->updatedAt = $oDate->format('Y-m-d H:i:s');
 
                     if ($this->activeUser('id')) {
@@ -1166,7 +1131,7 @@ class User extends Base
 
             } else {
 
-                $this->db->trans_rollback();
+                $oDb->trans_rollback();
                 return false;
             }
 
@@ -1174,26 +1139,22 @@ class User extends Base
 
             /**
              * If there was no data then run an update anyway on just user table. We need to
-             * do this as some methods will use $this->db->set() before calling update(); not
+             * do this as some methods will use $oDb->set() before calling update(); not
              * sure if this is a bad design or not... sorry.
              */
 
-            $this->db->set('last_update', 'NOW()', false);
-            $this->db->where('id', $iUserId);
-            $this->db->update(NAILS_DB_PREFIX . 'user');
+            $oDb->set('last_update', 'NOW()', false);
+            $oDb->where('id', $iUserId);
+            $oDb->update(NAILS_DB_PREFIX . 'user');
         }
 
         // --------------------------------------------------------------------------
 
         //  If we just updated the active user we should probably update their session info
         if ($iUserId == $this->activeUser('id')) {
-
             $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
-
             if ($data) {
-
                 foreach ($data as $key => $val) {
-
                     $this->activeUser->{$key} = $val;
                 }
             }
@@ -1232,9 +1193,9 @@ class User extends Base
         $oEventService->trigger(
             static::EVENT_USER_MODIFIED,
             'nailsapp/module-auth',
-            array(
-                'user' => $this->getById($iUserId)
-            )
+            [
+                'user' => $this->getById($iUserId),
+            ]
         );
 
         return true;
@@ -1244,21 +1205,18 @@ class User extends Base
 
     /**
      * Works out the correct user ID, falls back to activeUser()
+     *
      * @param  integer $iUserId The user ID to use
+     *
      * @return integer
      */
     protected function getUserId($iUserId = null)
     {
         if (!empty($iUserId)) {
-
             $iUid = (int) $iUserId;
-
         } elseif ($this->activeUser('id')) {
-
             $iUid = $this->activeUser('id');
-
         } else {
-
             $this->setError('No user ID set');
             return false;
         }
@@ -1270,7 +1228,9 @@ class User extends Base
 
     /**
      * Returns a user from the cache
-     * @param  int   $userId The ID of the user to return
+     *
+     * @param  int $userId The ID of the user to return
+     *
      * @return mixed
      */
     public function getCacheUser($userId)
@@ -1282,15 +1242,16 @@ class User extends Base
 
     /**
      * Saves a user object to the persistent cache
+     *
      * @param int $userId The user ID to cache
+     *
      * @return boolean
      */
     public function setCacheUser($userId)
     {
-        $user = $this->getById($userId, false, true);
+        $user = $this->getById($userId);
 
         if (empty($user)) {
-
             return false;
         }
 
@@ -1303,7 +1264,9 @@ class User extends Base
 
     /**
      * Sets the user's object into the cache
-     * @param  stdClass $userObj The complete user Object to cache
+     *
+     * @param  \stdClass $userObj The complete user Object to cache
+     *
      * @return void
      */
     protected function setCacheUserObj($userObj)
@@ -1315,7 +1278,9 @@ class User extends Base
 
     /**
      * Removes a user object from the persistent cache
+     *
      * @param int $userId The user ID to remove from cache
+     *
      * @return void
      */
     public function unsetCacheUser($userId)
@@ -1327,11 +1292,13 @@ class User extends Base
 
     /**
      * Adds a new email to the user_email table. Will optionally send the verification email, too.
+     *
      * @param  string  $email       The email address to add
      * @param  int     $user_id     The ID of the user to add for, defaults to $this->activeUser('id')
      * @param  boolean $bIsPrimary  Whether or not the email address should be the primary email address for the user
      * @param  boolean $is_verified Whether ot not the email should be marked as verified
      * @param  boolean $send_email  If unverified, whether or not the verification email should be sent
+     *
      * @return mixed                String containing verification code on success, false on failure
      */
     public function emailAdd($email, $user_id = null, $bIsPrimary = false, $is_verified = false, $send_email = true)
@@ -1350,7 +1317,6 @@ class User extends Base
 
         //  Make sure the email is valid
         if (!valid_email($oEmail)) {
-
             $this->setError('"' . $oEmail . '" is not a valid email address');
             return false;
         }
@@ -1362,9 +1328,10 @@ class User extends Base
          * in use by a different user then return an error.
          */
 
-        $this->db->select('id, user_id, is_verified, code');
-        $this->db->where('email', $oEmail);
-        $oTest = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $oDb = Factory::service('Database');
+        $oDb->select('id, user_id, is_verified, code');
+        $oDb->where('email', $oEmail);
+        $oTest = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
 
         if ($oTest) {
 
@@ -1376,13 +1343,11 @@ class User extends Base
                  */
 
                 if ($bIsPrimary) {
-
                     $this->emailMakePrimary($oTest->id);
                 }
 
                 //  Resend verification email?
                 if ($send_email && !$oTest->is_verified) {
-
                     $this->emailAddSendVerify($oTest->id);
                 }
 
@@ -1404,33 +1369,30 @@ class User extends Base
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
         $sCode          = $oPasswordModel->salt();
 
-        $this->db->set('user_id', $oUser->id);
-        $this->db->set('email', $oEmail);
-        $this->db->set('code', $sCode);
-        $this->db->set('is_verified', (bool) $is_verified);
-        $this->db->set('date_added', 'NOW()', false);
+        $oDb->set('user_id', $oUser->id);
+        $oDb->set('email', $oEmail);
+        $oDb->set('code', $sCode);
+        $oDb->set('is_verified', (bool) $is_verified);
+        $oDb->set('date_added', 'NOW()', false);
 
         if ((bool) $is_verified) {
-
-            $this->db->set('date_verified', 'NOW()', false);
+            $oDb->set('date_verified', 'NOW()', false);
         }
 
-        $this->db->insert(NAILS_DB_PREFIX . 'user_email');
+        $oDb->insert(NAILS_DB_PREFIX . 'user_email');
 
-        if ($this->db->affected_rows()) {
+        if ($oDb->affected_rows()) {
 
             //  Email ID
-            $iEmailId = $this->db->insert_id();
+            $iEmailId = $oDb->insert_id();
 
             //  Make it the primary email address?
             if ($bIsPrimary) {
-
                 $this->emailMakePrimary($iEmailId);
             }
 
             //  Send off the verification email
             if ($send_email && !$is_verified) {
-
                 $this->emailAddSendVerify($iEmailId);
             }
 
@@ -1440,15 +1402,14 @@ class User extends Base
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
 
-                $oDate = Factory::factory('DateTime');
+                $oDate                         = Factory::factory('DateTime');
                 $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 if ($bIsPrimary) {
-
-                    $this->activeUser->email = $oEmail;
+                    $this->activeUser->email                   = $oEmail;
                     $this->activeUser->email_verification_code = $sCode;
-                    $this->activeUser->email_is_verified = (bool) $is_verified;
-                    $this->activeUser->email_is_verified_on = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
+                    $this->activeUser->email_is_verified       = (bool) $is_verified;
+                    $this->activeUser->email_is_verified_on    = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
                 }
             }
 
@@ -1456,7 +1417,6 @@ class User extends Base
             return $sCode;
 
         } else {
-
             return false;
         }
     }
@@ -1465,39 +1425,39 @@ class User extends Base
 
     /**
      * Send, or resend, the verify email for a particular email address
+     *
      * @param  integer $email_id The email's ID
      * @param  integer $user_id  The user's ID
+     *
      * @return boolean
      */
     public function emailAddSendVerify($email_id, $user_id = null)
     {
         //  Fetch the email and the user's group
-        $this->db->select(
-            array(
+        $oDb = Factory::service('Database');
+        $oDb->select(
+            [
                 'ue.id',
                 'ue.code',
                 'ue.is_verified',
                 'ue.user_id',
-                $this->tableAlias . '.group_id'
-            )
+                $this->tableAlias . '.group_id',
+            ]
         );
 
         if (is_numeric($email_id)) {
-
-            $this->db->where('ue.id', $email_id);
-
+            $oDb->where('ue.id', $email_id);
         } else {
-
-            $this->db->where('ue.email', $email_id);
+            $oDb->where('ue.email', $email_id);
         }
 
         if (!empty($user_id)) {
-            $this->db->where('ue.user_id', $user_id);
+            $oDb->where('ue.user_id', $user_id);
         }
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tableAlias . '.id = ue.user_id');
+        $oDb->join(NAILS_DB_PREFIX . 'user u', $this->tableAlias . '.id = ue.user_id');
 
-        $oEmailRow = $this->db->get(NAILS_DB_PREFIX . 'user_email ue')->row();
+        $oEmailRow = $oDb->get(NAILS_DB_PREFIX . 'user_email ue')->row();
 
         if (!$oEmailRow) {
             $this->setError('Invalid Email.');
@@ -1524,7 +1484,6 @@ class User extends Base
             $oEmail->type = 'verify_email';
 
             if (!$oEmailer->send($oEmail, true)) {
-
                 //  Email failed to send, for now, do nothing.
                 $this->setError('The verification email failed to send.');
                 return false;
@@ -1539,30 +1498,29 @@ class User extends Base
     /**
      * Deletes a non-primary email from the user_email table, optionally filtering
      * by $user_id
+     *
      * @param  mixed $email_id The email address, or the ID of the email address to remove
-     * @param  int $user_id    The ID of the user to restrict to
+     * @param  int   $user_id  The ID of the user to restrict to
+     *
      * @return boolean
      */
     public function emailDelete($email_id, $user_id = null)
     {
+        $oDb = Factory::service('Database');
         if (is_numeric($email_id)) {
-
-            $this->db->where('id', $email_id);
-
+            $oDb->where('id', $email_id);
         } else {
-
-            $this->db->where('email', $email_id);
+            $oDb->where('email', $email_id);
         }
 
         if (!empty($user_id)) {
-
-            $this->db->where('user_id', $user_id);
+            $oDb->where('user_id', $user_id);
         }
 
-        $this->db->where('is_primary', false);
-        $this->db->delete(NAILS_DB_PREFIX . 'user_email');
+        $oDb->where('is_primary', false);
+        $oDb->delete(NAILS_DB_PREFIX . 'user_email');
 
-        if ((bool) $this->db->affected_rows()) {
+        if ((bool) $oDb->affected_rows()) {
 
             //  @todo: update the activeUser if required
             $this->setCacheUser($user_id);
@@ -1580,19 +1538,18 @@ class User extends Base
     /**
      * Verifies whether the supplied $code is valid for the requested user ID or email
      * address. If it is then the email is marked as verified.
+     *
      * @param  mixed  $mIdEmail The numeric ID of the user, or the email address
      * @param  string $code     The verification code as generated by emailAdd()
+     *
      * @return boolean
      */
     public function emailVerify($mIdEmail, $code)
     {
         //  Check user exists
         if (is_numeric($mIdEmail)) {
-
             $user = $this->getById($mIdEmail);
-
         } else {
-
             $user = $this->getByEmail($mIdEmail);
         }
 
@@ -1605,12 +1562,12 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Check if email has already been verified
-        $this->db->where('user_id', $user->id);
-        $this->db->where('is_verified', true);
-        $this->db->where('code', $code);
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $user->id);
+        $oDb->where('is_verified', true);
+        $oDb->where('code', $code);
 
-        if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
-
+        if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
             $this->setError('Email has already been verified.');
             return false;
         }
@@ -1618,22 +1575,22 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Go ahead and set as verified
-        $this->db->set('is_verified', true);
-        $this->db->set('date_verified', 'NOW()', false);
-        $this->db->where('user_id', $user->id);
-        $this->db->where('is_verified', false);
-        $this->db->where('code', $code);
+        $oDb->set('is_verified', true);
+        $oDb->set('date_verified', 'NOW()', false);
+        $oDb->where('user_id', $user->id);
+        $oDb->where('is_verified', false);
+        $oDb->where('code', $code);
 
-        $this->db->update(NAILS_DB_PREFIX . 'user_email');
+        $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
-        if ((bool) $this->db->affected_rows()) {
+        if ((bool) $oDb->affected_rows()) {
 
             $this->setCacheUser($user->id);
 
             //  Update the activeUser
             if ($user->id == $this->activeUser('id')) {
 
-                $oDate = Factory::factory('DateTime');
+                $oDate                         = Factory::factory('DateTime');
                 $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
@@ -1642,7 +1599,6 @@ class User extends Base
             return true;
 
         } else {
-
             return false;
         }
     }
@@ -1651,62 +1607,61 @@ class User extends Base
 
     /**
      * Sets an email address as the primary email address for that user.
+     *
      * @param  mixed $id_email The numeric  ID of the email address, or the email address itself
      * @param  int   $user_id  Specify the user ID which this should apply to
+     *
      * @return boolean
      */
     public function emailMakePrimary($id_email, $user_id = null)
     {
         //  Fetch email
-        $this->db->select('id,user_id,email');
+        $oDb = Factory::service('Database');
+        $oDb->select('id,user_id,email');
 
         if (is_numeric($id_email)) {
-
-            $this->db->where('id', $id_email);
-
+            $oDb->where('id', $id_email);
         } else {
-
-            $this->db->where('email', $id_email);
+            $oDb->where('email', $id_email);
         }
 
         if (!is_null($user_id)) {
-
-            $this->db->where('user_id', $user_id);
+            $oDb->where('user_id', $user_id);
         }
 
-        $oEmail = $this->db->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $oEmail = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
 
         if (empty($oEmail)) {
             return false;
         }
 
         //  Update
-        $this->db->trans_begin();
+        $oDb->trans_begin();
 
-        $this->db->set('is_primary', false);
-        $this->db->where('user_id', $oEmail->user_id);
-        $this->db->update(NAILS_DB_PREFIX . 'user_email');
+        $oDb->set('is_primary', false);
+        $oDb->where('user_id', $oEmail->user_id);
+        $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
-        $this->db->set('is_primary', true);
-        $this->db->where('id', $oEmail->id);
-        $this->db->update(NAILS_DB_PREFIX . 'user_email');
+        $oDb->set('is_primary', true);
+        $oDb->where('id', $oEmail->id);
+        $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
-        $this->db->trans_complete();
+        $oDb->trans_complete();
 
-        if ($this->db->trans_status() === false) {
+        if ($oDb->trans_status() === false) {
 
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             return false;
 
         } else {
 
-            $this->db->trans_commit();
+            $oDb->trans_commit();
             $this->setCacheUser($oEmail->user_id);
 
             //  Update the activeUser
             if ($oEmail->user_id == $this->activeUser('id')) {
 
-                $oDate = Factory::factory('DateTime');
+                $oDate                         = Factory::factory('DateTime');
                 $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
@@ -1721,8 +1676,10 @@ class User extends Base
 
     /**
      * Increment the user's failed logins
+     *
      * @param  integer $user_id The user ID to increment
      * @param  integer $expires How long till the block, if the threshold is reached, expires.
+     *
      * @return boolean
      */
     public function incrementFailedLogin($user_id, $expires = 300)
@@ -1730,8 +1687,9 @@ class User extends Base
         $oDate = Factory::factory('DateTime');
         $oDate->add(new \DateInterval('PT' . $expires . 'S'));
 
-        $this->db->set('failed_login_count', '`failed_login_count`+1', false);
-        $this->db->set('failed_login_expires', $oDate->format('Y-m-d H:i:s'));
+        $oDb = Factory::service('Database');
+        $oDb->set('failed_login_count', '`failed_login_count`+1', false);
+        $oDb->set('failed_login_expires', $oDate->format('Y-m-d H:i:s'));
         return $this->update($user_id);
     }
 
@@ -1739,13 +1697,16 @@ class User extends Base
 
     /**
      * Reset a user's failed login
+     *
      * @param  integer $user_id The user ID to reset
+     *
      * @return boolean
      */
     public function resetFailedLogin($user_id)
     {
-        $this->db->set('failed_login_count', 0);
-        $this->db->set('failed_login_expires', 'null', false);
+        $oDb = Factory::service('Database');
+        $oDb->set('failed_login_count', 0);
+        $oDb->set('failed_login_expires', 'null', false);
         return $this->update($user_id);
     }
 
@@ -1753,13 +1714,16 @@ class User extends Base
 
     /**
      * Update a user's `last_login` field
+     *
      * @param  integer $user_id The user ID to update
+     *
      * @return boolean
      */
     public function updateLastLogin($user_id)
     {
-        $this->db->set('last_login', 'NOW()', false);
-        $this->db->set('login_count', 'login_count+1', false);
+        $oDb = Factory::service('Database');
+        $oDb->set('last_login', 'NOW()', false);
+        $oDb->set('login_count', 'login_count+1', false);
         return $this->update($user_id);
     }
 
@@ -1767,18 +1731,20 @@ class User extends Base
 
     /**
      * Set the user's 'rememberMe' cookie, nom nom nom
-     * @param  integer $id      The User's ID
-     * @param  string $password The user's password, hashed
-     * @param  string $email    The user's email\
+     *
+     * @param  integer $id       The User's ID
+     * @param  string  $password The user's password, hashed
+     * @param  string  $email    The user's email\
+     *
      * @return boolean
      */
     public function setRememberCookie($id = null, $password = null, $email = null)
     {
         //  Is remember me functionality enabled?
-        $this->oConfig->load('auth/auth');
+        $oConfig = Factory::service('Config');
+        $oConfig->load('auth/auth');
 
-        if (!$this->oConfig->item('authEnableRememberMe')) {
-
+        if (!$oConfig->item('authEnableRememberMe')) {
             return false;
         }
 
@@ -1801,16 +1767,18 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Generate a code to remember the user by and save it to the DB
-        $sSalt = $this->encrypt->encode(sha1($id . $password . $email . APP_PRIVATE_KEY. time()), APP_PRIVATE_KEY);
+        $oEncrypt = Factory::service('Encrypt');
+        $sSalt    = $oEncrypt->encode(sha1($id . $password . $email . APP_PRIVATE_KEY . time()), APP_PRIVATE_KEY);
 
-        $this->db->set('remember_code', $sSalt);
-        $this->db->where('id', $id);
-        $this->db->update(NAILS_DB_PREFIX . 'user');
+        $oDb = Factory::service('Database');
+        $oDb->set('remember_code', $sSalt);
+        $oDb->where('id', $id);
+        $oDb->update(NAILS_DB_PREFIX . 'user');
 
         // --------------------------------------------------------------------------
 
         //  Set the cookie
-        $aData           = array();
+        $aData           = [];
         $aData['name']   = $this->rememberCookie;
         $aData['value']  = $email . '|' . $sSalt;
         $aData['expire'] = 1209600; //   2 weeks
@@ -1835,8 +1803,6 @@ class User extends Base
     {
         delete_cookie($this->rememberCookie);
 
-        // --------------------------------------------------------------------------
-
         //  Update the flag
         $this->isRemembered = false;
     }
@@ -1845,36 +1811,30 @@ class User extends Base
 
     /**
      * Refresh the user's session from the database
-     * @return void
+     * @return boolean
      */
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
         if ($this->wasAdmin()) {
 
             $recoveryData = $this->getAdminRecoveryData();
 
             if (!empty($recoveryData->newUserId)) {
-
                 $me = $recoveryData->newUserId;
-
             } else {
-
-                $me = $this->session->userdata('id');
+                $me = $oSession->userdata('id');
             }
 
         } else {
-
-            $me = $this->session->userdata('id');
+            $me = $oSession->userdata('id');
         }
 
         //  Is anybody home? Hello...?
         if (!$me) {
-
             $me = $this->me;
-
             if (!$me) {
-
                 return false;
             }
         }
@@ -1889,13 +1849,10 @@ class User extends Base
          */
 
         if (!$me || !empty($me->is_suspended)) {
-
             $this->clearRememberCookie();
             $this->clearActiveUser();
             $this->clearLoginData();
-
             $this->isLoggedIn = false;
-
             return false;
         }
 
@@ -1912,38 +1869,47 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Update user's `last_seen` and `last_ip` properties
-        $this->db->set('last_seen', 'NOW()', false);
-        $this->db->set('last_ip', $this->input->ipAddress());
-        $this->db->where('id', $me->id);
-        $this->db->update(NAILS_DB_PREFIX . 'user');
+        $oDb    = Factory::service('Database');
+        $oInput = Factory::service('Input');
+
+        $oDb->set('last_seen', 'NOW()', false);
+        $oDb->set('last_ip', $oInput->ipAddress());
+        $oDb->where('id', $me->id);
+        $oDb->update(NAILS_DB_PREFIX . 'user');
+
+        return true;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Create a new user
-     * @param  array $data          An array of data to create the user with
+     *
+     * @param  array   $data        An array of data to create the user with
      * @param  boolean $sendWelcome Whether to send the welcome email
+     *
      * @return mixed                StdClass on success, false on failure
      */
     public function create($data = [], $sendWelcome = true)
     {
-        $oDate = Factory::factory('DateTime');
+        $oDate              = Factory::factory('DateTime');
+        $oDb                = Factory::service('Database');
+        $oInput             = Factory::service('Input');
+        $oUserGroupModel    = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
 
         //  Has an email or a username been submitted?
         if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
             //  Email defined?
             if (empty($data['email'])) {
-
                 $this->setError('An email address must be supplied.');
                 return false;
             }
 
             //  Check email against DB
-            $this->db->where('email', $data['email']);
-            if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
-
+            $oDb->where('email', $data['email']);
+            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -1952,7 +1918,6 @@ class User extends Base
 
             //  Username defined?
             if (empty($data['username'])) {
-
                 $this->setError('A username must be supplied.');
                 return false;
             }
@@ -1965,15 +1930,13 @@ class User extends Base
 
             //  Both a username and an email must be supplied
             if (empty($data['email']) || empty($data['username'])) {
-
                 $this->setError('An email address and a username must be supplied.');
                 return false;
             }
 
             //  Check email against DB
-            $this->db->where('email', $data['email']);
-            if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
-
+            $oDb->where('email', $data['email']);
+            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -1987,29 +1950,23 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  All should be ok, go ahead and create the account
-        $aUserData = array();
+        $aUserData = [];
 
         // --------------------------------------------------------------------------
 
         //  Check that we're dealing with a valid group
         if (empty($data['group_id'])) {
-
-            $aUserData['group_id'] = $this->user_group_model->getDefaultGroupId();
-
+            $aUserData['group_id'] = $oUserGroupModel->getDefaultGroupId();
         } else {
-
             $aUserData['group_id'] = $data['group_id'];
         }
 
-        $oGroup = $this->user_group_model->getById($aUserData['group_id']);
+        $oGroup = $oUserGroupModel->getById($aUserData['group_id']);
 
         if (empty($oGroup)) {
-
             $this->setError('Invalid Group ID specified.');
             return false;
-
         } else {
-
             $aUserData['group_id'] = $oGroup->id;
         }
 
@@ -2022,20 +1979,16 @@ class User extends Base
          */
 
         if (empty($data['password'])) {
-
-            $oPassword = $this->user_password_model->generateNullHash();
-
+            $oPassword = $oUserPasswordModel->generateNullHash();
             if (!$oPassword) {
-                $this->setError($this->user_password_model->lastError());
+                $this->setError($oUserPasswordModel->lastError());
                 return false;
             }
 
         } else {
-
-            $oPassword = $this->user_password_model->generateHash($aUserData['group_id'], $data['password']);
-
+            $oPassword = $oUserPasswordModel->generateHash($aUserData['group_id'], $data['password']);
             if (!$oPassword) {
-                $this->setError($this->user_password_model->lastError());
+                $this->setError($oUserPasswordModel->lastError());
                 return false;
             }
         }
@@ -2054,7 +2007,6 @@ class User extends Base
         }
 
         if (!empty($data['email'])) {
-
             $sEmail           = $data['email'];
             $bEmailIsVerified = !empty($data['email_is_verified']);
         }
@@ -2063,7 +2015,7 @@ class User extends Base
         $aUserData['password_md5']    = $oPassword->password_md5;
         $aUserData['password_engine'] = $oPassword->engine;
         $aUserData['salt']            = $oPassword->salt;
-        $aUserData['ip_address']      = $this->input->ipAddress();
+        $aUserData['ip_address']      = $oInput->ipAddress();
         $aUserData['last_ip']         = $aUserData['ip_address'];
         $aUserData['created']         = $oDate->format('Y-m-d H:i:s');
         $aUserData['last_update']     = $oDate->format('Y-m-d H:i:s');
@@ -2071,13 +2023,13 @@ class User extends Base
         $aUserData['temp_pw']         = !empty($data['temp_pw']);
 
         //  Referral code
-        $aUserData['referral']        = $this->generateReferral();
-        $aUserData['referred_by']     = !empty($data['referred_by']) ? $data['referred_by'] : null;
+        $aUserData['referral']    = $this->generateReferral();
+        $aUserData['referred_by'] = !empty($data['referred_by']) ? $data['referred_by'] : null;
 
         //  Other data
-        $aUserData['salutation'] = !empty($data['salutation']) ? $data['salutation'] : null ;
-        $aUserData['first_name'] = !empty($data['first_name']) ? $data['first_name'] : null ;
-        $aUserData['last_name']  = !empty($data['last_name'])  ? $data['last_name']  : null ;
+        $aUserData['salutation'] = !empty($data['salutation']) ? $data['salutation'] : null;
+        $aUserData['first_name'] = !empty($data['first_name']) ? $data['first_name'] : null;
+        $aUserData['last_name']  = !empty($data['last_name']) ? $data['last_name'] : null;
 
         if (isset($data['gender'])) {
             $aUserData['gender'] = $data['gender'];
@@ -2103,7 +2055,7 @@ class User extends Base
 
         //  Set Meta data
         $aMetaCols = $this->getMetaColumns();
-        $aMetaData = array();
+        $aMetaData = [];
 
         foreach ($data as $key => $val) {
             if (array_search($key, $aMetaCols) !== false) {
@@ -2113,17 +2065,17 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $oDb->trans_begin();
 
-        $this->db->set($aUserData);
+        $oDb->set($aUserData);
 
-        if (!$this->db->insert(NAILS_DB_PREFIX . 'user')) {
+        if (!$oDb->insert(NAILS_DB_PREFIX . 'user')) {
             $this->setError('Failed to create base user object.');
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             return false;
         }
 
-        $iId = $this->db->insert_id();
+        $iId = $oDb->insert_id();
 
         // --------------------------------------------------------------------------
 
@@ -2132,28 +2084,27 @@ class User extends Base
          * make use of looking up this hashed information; this should be quicker.
          */
 
-        $this->db->set('id_md5', md5($iId));
-        $this->db->where('id', $iId);
+        $oDb->set('id_md5', md5($iId));
+        $oDb->where('id', $iId);
 
-        if (!$this->db->update(NAILS_DB_PREFIX . 'user')) {
+        if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
             $this->setError('Failed to update base user object.');
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             return false;
         }
 
         // --------------------------------------------------------------------------
 
         //  Create the user_meta_app record, add any extra data if needed
-        $this->db->set('user_id', $iId);
+        $oDb->set('user_id', $iId);
 
         if ($aMetaData) {
-            $this->db->set($aMetaData);
+            $oDb->set($aMetaData);
         }
 
-        if (!$this->db->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
-
+        if (!$oDb->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
             $this->setError('Failed to create user meta data object.');
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             return false;
         }
 
@@ -2166,7 +2117,7 @@ class User extends Base
 
             if (!$sCode) {
                 //  Error will be set by emailAdd();
-                $this->db->trans_rollback();
+                $oDb->trans_rollback();
                 return false;
             }
 
@@ -2181,9 +2132,9 @@ class User extends Base
 
                 //  Add required user data to the email
                 $oEmail->data = (object) [
-                   'user' => (object) [
-                       'username' => $aUserData['username']
-                   ]
+                    'user' => (object) [
+                        'username' => $aUserData['username'],
+                    ],
                 ];
 
                 //  If this user is created by an admin then take note of that.
@@ -2210,7 +2161,7 @@ class User extends Base
 
                 //  If the email isn't verified we'll want to include a note asking them to do so
                 if (!$bEmailIsVerified) {
-                    $oEmail->data->verifyUrl  = site_url('email/verify/' . $iId . '/' . $sCode);
+                    $oEmail->data->verifyUrl = site_url('email/verify/' . $iId . '/' . $sCode);
                 }
 
                 if (!$oEmailer->send($oEmail, true)) {
@@ -2221,7 +2172,7 @@ class User extends Base
                     if (!$oEmailer->send($oEmail, true)) {
 
                         //  Email failed to send, musn't exist, oh well.
-                        $sError  = 'Failed to send welcome email.';
+                        $sError = 'Failed to send welcome email.';
                         $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
                         $this->setError($sError);
                     }
@@ -2232,9 +2183,9 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  commit the transaction and return new user object
-        if ($this->db->trans_status() !== false) {
+        if ($oDb->trans_status() !== false) {
 
-            $this->db->trans_commit();
+            $oDb->trans_commit();
 
             $oUser = $this->getById($iId);
 
@@ -2242,9 +2193,9 @@ class User extends Base
             $oEventService->trigger(
                 static::EVENT_USER_CREATED,
                 'nailsapp/module-auth',
-                array(
-                    'user' => $oUser
-                )
+                [
+                    'user' => $oUser,
+                ]
             );
 
             return $oUser;
@@ -2259,7 +2210,9 @@ class User extends Base
 
     /**
      * Delete a user
+     *
      * @param  integer $userId The ID of the user to delete
+     *
      * @return boolean
      */
     public function destroy($userId)
@@ -2283,7 +2236,9 @@ class User extends Base
 
     /**
      * Alias to destroy()
+     *
      * @param  integer $userId The ID of the user to delete
+     *
      * @return boolean
      */
     public function delete($userId)
@@ -2300,11 +2255,12 @@ class User extends Base
     protected function generateReferral()
     {
         Factory::helper('string');
+        $oDb = Factory::service('Database');
 
         while (1 > 0) {
 
             $referral = random_string('alnum', 8);
-            $q = $this->db->get_where(NAILS_DB_PREFIX . 'user', array('referral' => $referral));
+            $q        = $oDb->get_where(NAILS_DB_PREFIX . 'user', ['referral' => $referral]);
 
             if ($q->num_rows() == 0) {
 
@@ -2318,9 +2274,11 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Reqards a user for their referral
+     * Rewards a user for their referral
+     *
      * @param  integer $userId     The ID of the user who signed up
      * @param  integer $referrerId The ID of the user who made the referral
+     *
      * @return void
      */
     public function rewardReferral($userId, $referrerId)
@@ -2332,33 +2290,39 @@ class User extends Base
 
     /**
      * Suspend a user
+     *
      * @param  integer $userId The ID of the user to suspend
+     *
      * @return boolean
      */
     public function suspend($userId)
     {
-        return $this->update($userId, array('is_suspended' => true));
+        return $this->update($userId, ['is_suspended' => true]);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Unsuspend a user
+     *
      * @param  integer $userId The ID of the user to unsuspend
+     *
      * @return boolean
      */
     public function unsuspend($userId)
     {
-        return $this->update($userId, array('is_suspended' => false));
+        return $this->update($userId, ['is_suspended' => false]);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Checks whether a username is valid
+     *
      * @param  string  $username     The username to check
      * @param  boolean $checkDb      Whether to test against the database
      * @param  mixed   $ignoreUserId The ID of a user to ignore when checking the database
+     *
      * @return boolean
      */
     public function isValidUsername($username, $checkDb = false, $ignoreUserId = null)
@@ -2392,7 +2356,7 @@ class User extends Base
 
         //  Check length
         if (strlen($username) < $minLength) {
-            $this->setError('Usernames msut be at least ' . $minLength . ' characters long.');
+            $this->setError('Usernames must be at least ' . $minLength . ' characters long.');
             return false;
         }
 
@@ -2400,13 +2364,14 @@ class User extends Base
 
         if ($checkDb) {
 
-            $this->db->where('username', $username);
+            $oDb = Factory::service('Database');
+            $oDb->where('username', $username);
 
             if (!empty($ignoreUserId)) {
-                $this->db->where('id !=', $ignoreUserId);
+                $oDb->where('id !=', $ignoreUserId);
             }
 
-            if ($this->db->count_all_results(NAILS_DB_PREFIX . 'user')) {
+            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user')) {
                 $this->setError('Username is already in use.');
                 return false;
             }
@@ -2419,12 +2384,16 @@ class User extends Base
 
     /**
      * Merges users with ID in $mergeIds into $userId
+     *
      * @param  int   $userId   The user ID to keep
      * @param  array $mergeIds An array of user ID's to merge into $userId
+     *
      * @return boolean
      */
     public function merge($userId, $mergeIds, $preview = false)
     {
+        $oDb = Factory::service('Database');
+
         if (!is_numeric($userId)) {
             $this->setError('"userId" must be numeric.');
             return false;
@@ -2435,18 +2404,15 @@ class User extends Base
             return false;
         }
 
-        for ($i=0; $i<count($mergeIds); $i++) {
-
+        for ($i = 0; $i < count($mergeIds); $i++) {
             if (!is_numeric($mergeIds[$i])) {
                 $this->setError('"mergeIDs" must contain only numerical values.');
                 return false;
             }
-
-            $mergeIds[$i] = $this->db->escape((int) $mergeIds[$i]);
+            $mergeIds[$i] = $oDb->escape((int) $mergeIds[$i]);
         }
 
         if (in_array($userId, $mergeIds)) {
-
             $this->setError('"userId" cannot be listed as a merge user.');
             return false;
         }
@@ -2454,16 +2420,16 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Look for tables which contain a user ID column in them.
-        $userCols   = array();
+        $userCols   = [];
         $userCols[] = 'user_id';
         $userCols[] = 'created_by';
         $userCols[] = 'modified_by';
         $userCols[] = 'author_id';
         $userCols[] = 'authorId';
 
-        $userColsStr   = "'" . implode("','", $userCols) . "'";
+        $userColsStr = "'" . implode("','", $userCols) . "'";
 
-        $ignoreTables   = array();
+        $ignoreTables   = [];
         $ignoreTables[] = NAILS_DB_PREFIX . 'user';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_meta_app';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_code';
@@ -2472,24 +2438,24 @@ class User extends Base
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_token';
         $ignoreTables[] = NAILS_DB_PREFIX . 'user_social';
 
-        $ignoreTablesStr   = "'" . implode("','", $ignoreTables) . "'";
+        $ignoreTablesStr = "'" . implode("','", $ignoreTables) . "'";
 
-        $tables = array();
+        $tables = [];
         $query  = " SELECT COLUMN_NAME,TABLE_NAME
                     FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE COLUMN_NAME IN (" . $userColsStr . ")
                     AND TABLE_NAME NOT IN (" . $ignoreTablesStr . ")
                     AND TABLE_SCHEMA='" . DEPLOY_DB_DATABASE . "';";
 
-        $result = $this->db->query($query);
+        $result = $oDb->query($query);
 
         while ($table = $result->_fetch_object()) {
 
             if (!isset($tables[$table->TABLE_NAME])) {
 
-                $tables[$table->TABLE_NAME] = new \stdClass();
-                $tables[$table->TABLE_NAME]->name = $table->TABLE_NAME;
-                $tables[$table->TABLE_NAME]->columns = array();
+                $tables[$table->TABLE_NAME]          = new \stdClass();
+                $tables[$table->TABLE_NAME]->name    = $table->TABLE_NAME;
+                $tables[$table->TABLE_NAME]->columns = [];
             }
 
             $tables[$table->TABLE_NAME]->columns[] = $table->COLUMN_NAME;
@@ -2500,14 +2466,14 @@ class User extends Base
         //  Grab a count of the number of rows which will be affected
         for ($i = 0; $i < count($tables); $i++) {
 
-            $columnConditional = array();
+            $columnConditional = [];
             foreach ($tables[$i]->columns as $column) {
 
                 $columnConditional[] = $column . ' IN (' . implode(',', $mergeIds) . ')';
             }
 
-            $query  = 'SELECT COUNT(*) as numrows FROM  ' . $tables[$i]->name . ' WHERE ' . implode(' OR ', $columnConditional);
-            $result = $this->db->query($query)->row();
+            $query  = 'SELECT COUNT(*) AS numrows FROM  ' . $tables[$i]->name . ' WHERE ' . implode(' OR ', $columnConditional);
+            $result = $oDb->query($query)->row();
 
             if (empty($result->numrows)) {
 
@@ -2525,65 +2491,63 @@ class User extends Base
 
         if ($preview) {
 
-            $out = new \stdClass;
-            $out->user = $this->getById($userId);
-            $out->merge = array();
+            $out        = new \stdClass;
+            $out->user  = $this->getById($userId);
+            $out->merge = [];
 
             foreach ($mergeIds as $mergeUserId) {
                 $out->merge[] = $this->getById($mergeUserId);
             }
 
-            $out->tables = $tables;
+            $out->tables       = $tables;
             $out->ignoreTables = $ignoreTables;
 
         } else {
 
-            $this->db->trans_begin();
+            $oDb->trans_begin();
 
             //  For each table update the user columns
-            for ($i=0; $i<count($tables); $i++) {
+            for ($i = 0; $i < count($tables); $i++) {
 
                 foreach ($tables[$i]->columns as $column) {
 
                     //  Additional updates for certain tables
                     switch ($tables[$i]->name) {
                         case NAILS_DB_PREFIX . 'user_email':
-                            $this->db->set('is_primary', false);
+                            $oDb->set('is_primary', false);
                             break;
                     }
 
-                    $this->db->set($column, $userId);
-                    $this->db->where_in($column, $mergeIds);
-                    if (!$this->db->update($tables[$i]->name)) {
+                    $oDb->set($column, $userId);
+                    $oDb->where_in($column, $mergeIds);
+                    if (!$oDb->update($tables[$i]->name)) {
 
                         $errMsg = 'Failed to migrate column "' . $column . '" in table "' . $tables[$i]->name . '"';
                         $this->setError($errMsg);
-                        $this->db->trans_rollback();
+                        $oDb->trans_rollback();
                         return false;
                     }
                 }
             }
 
             //  Now delete each user
-            for ($i=0; $i<count($mergeIds); $i++) {
-
+            for ($i = 0; $i < count($mergeIds); $i++) {
                 if (!$this->destroy($mergeIds[$i])) {
-
                     $errMsg = 'Failed to delete user "' . $mergeIds[$i] . '" ';
                     $this->setError($errMsg);
-                    $this->db->trans_rollback();
+                    $oDb->trans_rollback();
                     return false;
                 }
             }
 
-            if ($this->db->trans_status() === false) {
+            if ($oDb->trans_status() === false) {
 
-                $this->db->trans_rollback();
+                $oDb->trans_rollback();
                 $out = false;
 
             } else {
 
-                $this->db->trans_commit();
+                $oDb->trans_commit();
                 $out = true;
             }
         }
@@ -2604,15 +2568,17 @@ class User extends Base
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
-    ) {
+        $aData = [],
+        $aIntegers = [],
+        $aBools = [],
+        $aFloats = []
+    )
+    {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 

@@ -25,7 +25,7 @@ class Logout extends Base
     public function index()
     {
         //  If already logged out just send them silently on their way
-        if (!$this->user_model->isLoggedIn()) {
+        if (!isLoggedIn()) {
             redirect('/');
         }
 
@@ -35,12 +35,14 @@ class Logout extends Base
         //  We're about to destroy the session so they'll go bye-bye unless we do
         //  something with 'em.
 
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+
         $aFlash             = array();
         $aFlash['name']     = activeUser('first_name');
-        $aFlash['success']  = $this->session->flashdata('success');
-        $aFlash['error']    = $this->session->flashdata('error');
-        $aFlash['notice']   = $this->session->flashdata('notice');
-        $aFlash['message']  = $this->session->flashdata('message');
+        $aFlash['success']  = $oSession->flashdata('success');
+        $aFlash['error']    = $oSession->flashdata('error');
+        $aFlash['notice']   = $oSession->flashdata('notice');
+        $aFlash['message']  = $oSession->flashdata('message');
 
         // --------------------------------------------------------------------------
 
@@ -76,30 +78,28 @@ class Logout extends Base
      **/
     public function bye()
     {
+        $oInput   = Factory::service('Input');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+
         //  If there's no 'success' GET set our default log out message
         //  otherwise keep any which might be coming our way.
-
-        $aGet = $this->input->get();
+        $aGet = $oInput->get();
 
         // --------------------------------------------------------------------------
 
         if (!empty($aGet['success'])) {
-
-            $this->session->set_flashdata('success', $aGet['success']);
-
+            $oSession->set_flashdata('success', $aGet['success']);
         } else {
-
-            $this->session->set_flashdata('success', lang('auth_logout_successful', $aGet['name']));
+            $oSession->set_flashdata('success', lang('auth_logout_successful', $aGet['name']));
         }
 
         // --------------------------------------------------------------------------
 
         //  Set any other flashdata which might be needed
         if (is_array($aGet)) {
-
             foreach ($aGet as $key => $value) {
                 if ($value) {
-                    $this->session->set_flashdata($key, $value);
+                    $oSession->set_flashdata($key, $value);
                 }
             }
         }

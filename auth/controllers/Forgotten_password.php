@@ -39,9 +39,9 @@ class Forgotten_Password extends Base
     public function index()
     {
         //  If user is logged in they shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
-
-            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+        if (isLoggedIn()) {
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 
@@ -110,17 +110,18 @@ class Forgotten_Password extends Base
                 if ($this->user_password_model->setToken($_identifier)) {
 
                     //  Send email to user
+                    $oUserModel = Factory::model('User', 'nailsapp/module-auth');
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL' :
-                            $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
+                            $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
 
                             //  User provided an email, send to that email
                             $sendToEmail = $_identifier;
                             break;
 
                         case 'USERNAME' :
-                            $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
+                            $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
 
                             /**
                              * Can't email a username, send to their ID and let the email library
@@ -133,14 +134,14 @@ class Forgotten_Password extends Base
                         default:
                             if (valid_email($_identifier)) {
 
-                                $this->data['reset_user'] = $this->user_model->getByEmail($_identifier);
+                                $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
 
                                 //  User provided an email, send to that email
                                 $sendToEmail = $_identifier;
 
                             } else {
 
-                                $this->data['reset_user'] = $this->user_model->getByUsername($_identifier);
+                                $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
 
                                 /**
                                  * Can't email a username, send to their ID and let the email library handle
@@ -243,9 +244,10 @@ class Forgotten_Password extends Base
         }
 
         //  Load the views
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/password/forgotten', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView = Factory::service('View');
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/password/forgotten', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -257,7 +259,9 @@ class Forgotten_Password extends Base
      */
     public function _validate($code)
     {
-        $oConfig = Factory::service('Config');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oConfig  = Factory::service('Config');
+        $oView    = Factory::service('View');
 
         /**
          * Attempt to verify code, if two factor auth is enabled then don't generate a
@@ -310,27 +314,26 @@ class Forgotten_Password extends Base
                             $status  = 'notice';
                             $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $this->session->set_flashdata($status, $message);
+                            $oSession->set_flashdata($status, $message);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->load->view('structure/header/blank', $this->data);
-                            $this->load->view('auth/password/forgotten_reset', $this->data);
-                            $this->load->view('structure/footer/blank', $this->data);
+                            $oView->load('structure/header/blank', $this->data);
+                            $oView->load('auth/password/forgotten_reset', $this->data);
+                            $oView->load('structure/footer/blank', $this->data);
                             return;
 
                         } else {
-
                             $this->data['error'] = lang('auth_twofactor_answer_incorrect');
                         }
                     }
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-                    $this->load->view('structure/header/blank', $this->data);
-                    $this->load->view('auth/mfa/question/ask', $this->data);
-                    $this->load->view('structure/footer/blank', $this->data);
+                    $oView->load('structure/header/blank', $this->data);
+                    $oView->load('auth/mfa/question/ask', $this->data);
+                    $oView->load('structure/footer/blank', $this->data);
 
                 } else {
 
@@ -345,14 +348,14 @@ class Forgotten_Password extends Base
                     $status  = 'notice';
                     $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $this->session->set_flashdata($status, $message);
+                    $oSession->set_flashdata($status, $message);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->load->view('structure/header/blank', $this->data);
-                    $this->load->view('auth/password/forgotten_reset', $this->data);
-                    $this->load->view('structure/footer/blank', $this->data);
+                    $oView->load('structure/header/blank', $this->data);
+                    $oView->load('auth/password/forgotten_reset', $this->data);
+                    $oView->load('structure/footer/blank', $this->data);
                 }
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
@@ -379,14 +382,14 @@ class Forgotten_Password extends Base
                             $status  = 'notice';
                             $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $this->session->set_flashdata($status, $message);
+                            $oSession->set_flashdata($status, $message);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->load->view('structure/header/blank', $this->data);
-                            $this->load->view('auth/password/forgotten_reset', $this->data);
-                            $this->load->view('structure/footer', $this->data);
+                            $oView->load('structure/header/blank', $this->data);
+                            $oView->load('auth/password/forgotten_reset', $this->data);
+                            $oView->load('structure/footer', $this->data);
                             return;
 
                         } else {
@@ -398,9 +401,9 @@ class Forgotten_Password extends Base
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
-                    $this->load->view('structure/header/blank', $this->data);
-                    $this->load->view('auth/mfa/device/ask', $this->data);
-                    $this->load->view('structure/footer', $this->data);
+                    $oView->load('structure/header/blank', $this->data);
+                    $oView->load('auth/mfa/device/ask', $this->data);
+                    $oView->load('structure/footer', $this->data);
 
                 } else {
 
@@ -415,14 +418,14 @@ class Forgotten_Password extends Base
                     $status  = 'notice';
                     $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $this->session->set_flashdata($status, $message);
+                    $oSession->set_flashdata($status, $message);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->load->view('structure/header/blank', $this->data);
-                    $this->load->view('auth/password/forgotten_reset', $this->data);
-                    $this->load->view('structure/footer/blank', $this->data);
+                    $oView->load('structure/header/blank', $this->data);
+                    $oView->load('auth/password/forgotten_reset', $this->data);
+                    $oView->load('structure/footer/blank', $this->data);
                 }
 
             } else {
@@ -436,14 +439,14 @@ class Forgotten_Password extends Base
                 $status  = 'notice';
                 $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                $this->session->set_flashdata($status, $message);
+                $oSession->set_flashdata($status, $message);
 
                 // --------------------------------------------------------------------------
 
                 //  Load the views
-                $this->load->view('structure/header/blank', $this->data);
-                $this->load->view('auth/password/forgotten_reset', $this->data);
-                $this->load->view('structure/footer/blank', $this->data);
+                $oView->load('structure/header/blank', $this->data);
+                $oView->load('auth/password/forgotten_reset', $this->data);
+                $oView->load('structure/footer/blank', $this->data);
             }
 
             return;
@@ -452,9 +455,9 @@ class Forgotten_Password extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->load->view('structure/header/blank', $this->data);
-        $this->load->view('auth/password/forgotten', $this->data);
-        $this->load->view('structure/footer/blank', $this->data);
+        $oView->load('structure/header/blank', $this->data);
+        $oView->load('auth/password/forgotten', $this->data);
+        $oView->load('structure/footer/blank', $this->data);
     }
 
     // --------------------------------------------------------------------------
@@ -466,20 +469,17 @@ class Forgotten_Password extends Base
     public function _remap($method)
     {
         //  If you're logged in you shouldn't be accessing this method
-        if ($this->user_model->isLoggedIn()) {
-
-            $this->session->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+        if (isLoggedIn()) {
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 
         // --------------------------------------------------------------------------
 
         if ($method == 'index') {
-
             $this->index();
-
         } else {
-
             $this->_validate($method);
         }
     }

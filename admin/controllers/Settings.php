@@ -192,7 +192,8 @@ class Settings extends BaseAdmin
 
                 if (empty($error)) {
 
-                    $this->db->trans_begin();
+                    $oDb = Factory::service('Database');
+                    $oDb->trans_begin();
 
                     $bRollback        = false;
                     $oAppSettingModel = Factory::model('AppSetting');
@@ -217,12 +218,12 @@ class Settings extends BaseAdmin
 
                     if ($bRollback) {
 
-                        $this->db->trans_rollback();
+                        $oDb->trans_rollback();
                         $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
 
                     } else {
 
-                        $this->db->trans_commit();
+                        $oDb->trans_commit();
                         $this->data['success'] = 'Authentication settings were saved.';
 
                     }
@@ -246,7 +247,8 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load assets
-        $this->asset->load('nails.admin.settings.min.js', 'NAILS');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('nails.admin.settings.min.js', 'NAILS');
 
         // --------------------------------------------------------------------------
 

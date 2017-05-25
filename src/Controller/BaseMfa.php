@@ -44,21 +44,21 @@ class BaseMfa extends Base
 
     protected function validateToken()
     {
+        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+
         $this->returnTo = $this->input->get('return_to', true);
         $this->remember = $this->input->get('remember', true);
         $userId         = $this->uri->segment(3);
-        $this->mfaUser  = $this->user_model->getById($userId);
+        $this->mfaUser  = $oUserModel->getById($userId);
 
         if (!$this->mfaUser) {
 
-            $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
             if ($this->returnTo) {
-
                 redirect('auth/login?return_to=' . $this->returnTo);
-
             } else {
-
                 redirect('auth/login');
             }
         }
@@ -85,7 +85,7 @@ class BaseMfa extends Base
 
         if (!$this->auth_model->mfaTokenValidate($this->mfaUser->id, $salt, $token, $ipAddress)) {
 
-            $this->session->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
             $query              = array();
             $query['return_to'] = $this->returnTo;
@@ -94,11 +94,8 @@ class BaseMfa extends Base
             $query = array_filter($query);
 
             if ($query) {
-
                 $query = '?' . http_build_query($query);
-
             } else {
-
                 $query = '';
             }
 
@@ -122,12 +119,12 @@ class BaseMfa extends Base
     protected function loginUser()
     {
         //  Set login data for this user
-        $this->user_model->setLoginData($this->mfaUser->id);
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel->setLoginData($this->mfaUser->id);
 
         //  If we're remembering this user set a cookie
         if ($this->remember) {
-
-            $this->user_model->setRememberCookie(
+            $oUserModel->setRememberCookie(
                 $this->mfaUser->id,
                 $this->mfaUser->password,
                 $this->mfaUser->email
@@ -135,7 +132,7 @@ class BaseMfa extends Base
         }
 
         //  Update their last login and increment their login count
-        $this->user_model->updateLastLogin($this->mfaUser->id);
+        $oUserModel->updateLastLogin($this->mfaUser->id);
 
         // --------------------------------------------------------------------------
 
@@ -150,11 +147,8 @@ class BaseMfa extends Base
             $oConfig = Factory::service('Config');
 
             if ($oConfig->item('authShowNicetimeOnLogin')) {
-
                 $lastLogin = niceTime(strtotime($this->mfaUser->last_login));
-
             } else {
-
                 $lastLogin = toUserDatetime($this->mfaUser->last_login);
             }
 
@@ -203,7 +197,8 @@ class BaseMfa extends Base
             $sloginAvatar = '';
         }
 
-        $this->session->set_flashdata($status, $sloginAvatar . $message);
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->set_flashdata($status, $sloginAvatar . $message);
 
         // --------------------------------------------------------------------------
 

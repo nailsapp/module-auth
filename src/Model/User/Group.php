@@ -12,26 +12,24 @@
 
 namespace Nails\Auth\Model\User;
 
-class Group extends \Nails\Common\Model\Base
+use Nails\Common\Model\Base;
+use Nails\Factory;
+
+class Group extends Base
 {
     protected $defaultGroup;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Cosntruct the model
+     * Group constructor.
      */
     public function __construct()
     {
         parent::__construct();
 
-        // --------------------------------------------------------------------------
-
-        $this->table       = NAILS_DB_PREFIX . 'user_group';
-        $this->tableAlias = 'ug';
-
-        // --------------------------------------------------------------------------
-
+        $this->table        = NAILS_DB_PREFIX . 'user_group';
+        $this->tableAlias   = 'ug';
         $this->defaultGroup = $this->getDefaultGroup();
     }
 
@@ -39,51 +37,50 @@ class Group extends \Nails\Common\Model\Base
 
     /**
      * Set's a group as the default group
+     *
      * @param mixed $group_id_slug The group's ID or slug
+     *
+     * @return boolean
      */
     public function setAsDefault($group_id_slug)
     {
         $group = $this->getByIdOrSlug($group_id_slug);
 
         if (!$group) {
-
             $this->setError('Invalid Group');
         }
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
         //  Unset old default
-        $this->db->set('is_default', false);
-        $this->db->set('modified', 'NOW()', false);
-        if ($this->user_model->isLoggedIn()) {
-
-            $this->db->set('modified_by', activeUser('id'));
-
+        $oDb->set('is_default', false);
+        $oDb->set('modified', 'NOW()', false);
+        if (isLoggedIn()) {
+            $oDb->set('modified_by', activeUser('id'));
         }
-        $this->db->where('is_default', true);
-        $this->db->update($this->table);
+        $oDb->where('is_default', true);
+        $oDb->update($this->table);
 
         //  Set new default
-        $this->db->set('is_default', true);
-        $this->db->set('modified', 'NOW()', false);
-        if ($this->user_model->isLoggedIn()) {
-
-            $this->db->set('modified_by', activeUser('id'));
-
+        $oDb->set('is_default', true);
+        $oDb->set('modified', 'NOW()', false);
+        if (isLoggedIn()) {
+            $oDb->set('modified_by', activeUser('id'));
         }
-        $this->db->where('id', $group->id);
-        $this->db->update($this->table);
+        $oDb->where('id', $group->id);
+        $oDb->update($this->table);
 
-        if ($this->db->trans_status() === false) {
+        if ($oDb->trans_status() === false) {
 
-            $this->db->trans_rollback();
+            $oDb->trans_rollback();
             return false;
 
         } else {
 
-            $this->db->trans_commit();
+            $oDb->trans_commit();
 
             //  Refresh the default group variable
             $this->getDefaultGroup();
@@ -96,17 +93,16 @@ class Group extends \Nails\Common\Model\Base
 
     /**
      * Returns the default user group
-     * @return stdClass
+     * @return \stdClass
      */
     public function getDefaultGroup()
     {
-        $data['where']   = array();
-        $data['where'][] = array('column' => 'is_default', 'value' => true);
+        $data['where']   = [];
+        $data['where'][] = ['column' => 'is_default', 'value' => true];
 
         $group = $this->getAll(null, null, $data);
 
         if (!$group) {
-
             showFatalError('No Default Group Set', 'A default user group must be set.');
         }
 
@@ -130,8 +126,10 @@ class Group extends \Nails\Common\Model\Base
 
     /**
      * Change the user group of multiple users, executing any pre/post upgrade functionality as required
+     *
      * @param  array   $userIds    An array of User ID's to update
      * @param  integer $newGroupId The ID of the new user group
+     *
      * @return boolean
      */
     public function changeUserGroup($userIds, $newGroupId)
@@ -144,9 +142,11 @@ class Group extends \Nails\Common\Model\Base
             return false;
         }
 
-        $users = $this->user_model->getByIds((array) $userIds);
+        $oDb        = Factory::service('Database');
+        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $users      = $oUserModel->getByIds((array) $userIds);
 
-        $this->db->trans_begin();
+        $oDb->trans_begin();
 
         foreach ($users as $user) {
 
@@ -154,39 +154,33 @@ class Group extends \Nails\Common\Model\Base
             $postMethod = 'changeUserGroup_post_' . $user->group_slug . '_' . $group->slug;
 
             if (method_exists($this, $preMethod)) {
-
                 if (!$this->$preMethod($user)) {
-
-                    $this->db->trans_rollback();
-                    $msg = '"' . $preMethod. '()" returned false for user ' . $user->id . ', rolling back changes';
+                    $oDb->trans_rollback();
+                    $msg = '"' . $preMethod . '()" returned false for user ' . $user->id . ', rolling back changes';
                     $this->setError($msg);
                     return false;
                 }
             }
 
-            $data = array('group_id' => $group->id);
-            if (!$this->user_model->update($user->id, $data)) {
-
-                $this->db->trans_rollback();
+            $data = ['group_id' => $group->id];
+            if (!$oUserModel->update($user->id, $data)) {
+                $oDb->trans_rollback();
                 $msg = 'Failed to update group ID for user ' . $user->id;
                 $this->setError($msg);
                 return false;
             }
 
             if (method_exists($this, $postMethod)) {
-
                 if (!$this->$postMethod($user)) {
-
-                    $this->db->trans_rollback();
-                    $msg = '"' . $postMethod. '()" returned false for user ' . $user->id . ', rolling back changes';
+                    $oDb->trans_rollback();
+                    $msg = '"' . $postMethod . '()" returned false for user ' . $user->id . ', rolling back changes';
                     $this->setError($msg);
                     return false;
                 }
             }
-
         }
 
-        $this->db->trans_commit();
+        $oDb->trans_commit();
         return true;
     }
 
@@ -194,7 +188,9 @@ class Group extends \Nails\Common\Model\Base
 
     /**
      * Formats an array of permissions into a JSON encoded string suitable for the database
-     * @param  array  $permissions An array of permissions to set
+     *
+     * @param  array $permissions An array of permissions to set
+     *
      * @return string
      */
     public function processPermissions($permissions)
@@ -203,13 +199,12 @@ class Group extends \Nails\Common\Model\Base
             return null;
         }
 
-        $out = array();
+        $out = [];
 
         //  Level 1
         foreach ($permissions as $levelOneSlug => $levelOnePermissions) {
 
             if (is_string($levelOnePermissions)) {
-
                 $out[] = $levelOneSlug;
                 continue;
             }
@@ -217,13 +212,11 @@ class Group extends \Nails\Common\Model\Base
             foreach ($levelOnePermissions as $levelTwoSlug => $levelTwoPermissions) {
 
                 if (is_string($levelTwoPermissions)) {
-
                     $out[] = $levelOneSlug . ':' . $levelTwoSlug;
                     continue;
                 }
 
                 foreach ($levelTwoPermissions as $levelThreeSlug => $levelThreePermissions) {
-
                     $out[] = $levelOneSlug . ':' . $levelTwoSlug . ':' . $levelThreeSlug;
                 }
             }
@@ -244,20 +237,21 @@ class Group extends \Nails\Common\Model\Base
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
      * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aData     The same data array which is passed to getCountCommon, for reference if needed
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
-    ) {
-
+        $aData = [],
+        $aIntegers = [],
+        $aBools = [],
+        $aFloats = []
+    )
+    {
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
         $oObj->acl            = json_decode($oObj->acl);
