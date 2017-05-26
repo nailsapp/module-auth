@@ -58,17 +58,17 @@ class Mfa_device extends BaseMfa
             $oSession        = Factory::service('Session', 'nailsapp/module-auth');
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('mfaSecret', '', 'xss_clean|required');
-            $oFormValidation->set_rules('mfaCode1', '', 'xss_clean|required');
-            $oFormValidation->set_rules('mfaCode2', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaSecret', '', 'required');
+            $oFormValidation->set_rules('mfaCode1', '', 'required');
+            $oFormValidation->set_rules('mfaCode2', '', 'required');
 
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
-                $secret = $this->input->post('mfaSecret');
-                $code1  = $this->input->post('mfaCode1');
-                $code2  = $this->input->post('mfaCode2');
+                $secret = $this->input->post('mfaSecret', true);
+                $code1  = $this->input->post('mfaCode1', true);
+                $code2  = $this->input->post('mfaCode2', true);
 
                 //  Verify the inout
                 if ($this->auth_model->mfaDeviceSecretValidate($this->mfaUser->id, $secret, $code1, $code2)) {
@@ -95,7 +95,7 @@ class Mfa_device extends BaseMfa
         //  Generate the secret
         $this->data['secret'] = $this->auth_model->mfaDeviceSecretGenerate(
             $this->mfaUser->id,
-            $this->input->post('mfaSecret')
+            $this->input->post('mfaSecret', true)
         );
 
         if (!$this->data['secret']) {
