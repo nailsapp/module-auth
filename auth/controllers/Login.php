@@ -891,19 +891,19 @@ class Login extends Base
             $oFormValidation = Factory::service('FormValidation');
 
             if (isset($requiredData['email'])) {
-                $oFormValidation->set_rules('email', 'email', 'xss_clean|trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
+                $oFormValidation->set_rules('email', 'email', 'trim|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]');
             }
 
             if (isset($requiredData['username'])) {
-                $oFormValidation->set_rules('username', 'username', 'xss_clean|trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
+                $oFormValidation->set_rules('username', 'username', 'trim|required|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
             }
 
             if (empty($requiredData['first_name'])) {
-                $oFormValidation->set_rules('first_name', '', 'xss_clean|trim|required');
+                $oFormValidation->set_rules('first_name', '', 'trim|required');
             }
 
             if (empty($requiredData['last_name'])) {
-                $oFormValidation->set_rules('last_name', '', 'xss_clean|trim|required');
+                $oFormValidation->set_rules('last_name', '', 'trim|required');
             }
 
             $oFormValidation->set_message('required', lang('fv_required'));
@@ -930,19 +930,19 @@ class Login extends Base
 
                 //  Valid!Ensure required data is set correctly then allow system to move on.
                 if (isset($requiredData['email'])) {
-                    $requiredData['email'] = $this->input->post('email');
+                    $requiredData['email'] = $this->input->post('email', true);
                 }
 
                 if (isset($requiredData['username'])) {
-                    $requiredData['username'] = $this->input->post('username');
+                    $requiredData['username'] = $this->input->post('username', true);
                 }
 
                 if (empty($requiredData['first_name'])) {
-                    $requiredData['first_name'] = $this->input->post('first_name');
+                    $requiredData['first_name'] = $this->input->post('first_name', true);
                 }
 
                 if (empty($requiredData['last_name'])) {
-                    $requiredData['last_name'] = $this->input->post('last_name');
+                    $requiredData['last_name'] = $this->input->post('last_name', true);
                 }
 
             } else {
