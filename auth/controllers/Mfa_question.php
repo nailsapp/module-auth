@@ -110,13 +110,13 @@ class Mfa_question extends BaseMfa
                         $oFormValidation->set_rules(
                             'question[' . $i . '][question]',
                             '',
-                            'xss_clean|required|is_natural_no_zero'
+                            'required|is_natural_no_zero'
                         );
 
                         $oFormValidation->set_rules(
                             'question[' . $i . '][answer]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
                     }
 
@@ -125,13 +125,13 @@ class Mfa_question extends BaseMfa
                         $oFormValidation->set_rules(
                             'custom_question[' . $i . '][question]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
 
                         $oFormValidation->set_rules(
                             'custom_question[' . $i . '][answer]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
                     }
 
@@ -142,7 +142,7 @@ class Mfa_question extends BaseMfa
 
                         //  Make sure that we have different questions
                         $questionIndex = array();
-                        $question      = (array) $this->input->post('question');
+                        $question      = (array) $this->input->post('question', true);
                         $error         = false;
 
                         foreach ($question as $q) {
@@ -159,7 +159,7 @@ class Mfa_question extends BaseMfa
                         }
 
                         $questionIndex = array();
-                        $question      = (array) $this->input->post('custom_question');
+                        $question      = (array) $this->input->post('custom_question', true);
 
                         foreach ($question as $q) {
 
@@ -179,9 +179,9 @@ class Mfa_question extends BaseMfa
                             //  Good arrows. Save questions
                             $data = array();
 
-                            if ($this->input->post('question')) {
+                            if ($this->input->post('question', true)) {
 
-                                foreach ($this->input->post('question') as $q) {
+                                foreach ($this->input->post('question', true) as $q) {
 
                                     $temp = new stdClass();
 
@@ -199,9 +199,9 @@ class Mfa_question extends BaseMfa
                                 }
                             }
 
-                            if ($this->input->post('custom_question')) {
+                            if ($this->input->post('custom_question', true)) {
 
-                                foreach ((array) $this->input->post('custom_question') as $q) {
+                                foreach ((array) $this->input->post('custom_question', true) as $q) {
 
                                     $temp           = new stdClass();
                                     $temp->question = trim($q['question']);
