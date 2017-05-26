@@ -65,33 +65,29 @@ class Register extends Base
 
             //  Validate input
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('first_name', '', 'required|xss_clean');
-            $oFormValidation->set_rules('last_name', '', 'required|xss_clean');
-            $oFormValidation->set_rules('password', '', 'required|xss_clean');
+            $oFormValidation->set_rules('first_name', '', 'required');
+            $oFormValidation->set_rules('last_name', '', 'required');
+            $oFormValidation->set_rules('password', '', 'required');
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                 );
 
-                if ($this->input->post('username')) {
-
-                    $oFormValidation->set_rules('email', '', 'xss_clean');
-                }
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
 
                 if ($this->input->post('email')) {
 
                     $oFormValidation->set_rules(
                         'email',
                         '',
-                        'xss_clean|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                        'valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                     );
                 }
 
@@ -100,12 +96,12 @@ class Register extends Base
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                 );
                 $oFormValidation->set_rules(
                     'username',
                     '',
-                    'xss_clean|required'
+                    'required'
                 );
             }
 
@@ -144,12 +140,12 @@ class Register extends Base
 
                 //  Attempt the registration
                 $aInsertData               = array();
-                $aInsertData['email']      = $this->input->post('email');
-                $aInsertData['username']   = $this->input->post('username');
+                $aInsertData['email']      = $this->input->post('email', true);
+                $aInsertData['username']   = $this->input->post('username', true);
                 $aInsertData['group_id']   = $iDefaultGroupId;
-                $aInsertData['password']   = $this->input->post('password');
-                $aInsertData['first_name'] = $this->input->post('first_name');
-                $aInsertData['last_name']  = $this->input->post('last_name');
+                $aInsertData['password']   = $this->input->post('password', true);
+                $aInsertData['first_name'] = $this->input->post('first_name', true);
+                $aInsertData['last_name']  = $this->input->post('last_name', true);
 
                 // --------------------------------------------------------------------------
 
