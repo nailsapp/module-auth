@@ -490,18 +490,13 @@ class Accounts extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Define user table rules
-            $oFormValidation->set_rules('username', '', 'xss-clean');
-            $oFormValidation->set_rules('first_name', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('last_name', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('gender', '', 'xss_clean|required');
-            $oFormValidation->set_rules('dob', '', 'xss_clean|valid_date');
-            $oFormValidation->set_rules('timezone', '', 'xss_clean|required');
-            $oFormValidation->set_rules('datetime_format_date', '', 'xss_clean|required');
-            $oFormValidation->set_rules('datetime_format_time', '', 'xss_clean|required');
-            $oFormValidation->set_rules('password', '', 'xss_clean');
-            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
-            $oFormValidation->set_rules('reset_mfa_question', '', 'xss_clean');
-            $oFormValidation->set_rules('reset_mfa_device', '', 'xss_clean');
+            $oFormValidation->set_rules('first_name', '', 'trim|required');
+            $oFormValidation->set_rules('last_name', '', 'trim|required');
+            $oFormValidation->set_rules('gender', '', 'required');
+            $oFormValidation->set_rules('dob', '', 'valid_date');
+            $oFormValidation->set_rules('timezone', '', 'required');
+            $oFormValidation->set_rules('datetime_format_date', '', 'required');
+            $oFormValidation->set_rules('datetime_format_time', '', 'required');
 
             // --------------------------------------------------------------------------
 
@@ -518,11 +513,11 @@ class Accounts extends BaseAdmin
                         //  Dates must validate
                         if (isset($value['validation'])) {
 
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']');
+                            $oFormValidation->set_rules($col, $label, $value['validation'] . '|valid_date[' . $col . ']');
 
                         } else {
 
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|valid_date[' . $col . ']');
+                            $oFormValidation->set_rules($col, $label, 'valid_date[' . $col . ']');
                         }
                         break;
 
@@ -535,11 +530,8 @@ class Accounts extends BaseAdmin
 
                         if (isset($value['validation'])) {
 
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
+                            $oFormValidation->set_rules($col, $label, $value['validation']);
 
-                        } else {
-
-                            $oFormValidation->set_rules($col, $label, 'xss_clean');
                         }
                         break;
                 }
@@ -586,27 +578,27 @@ class Accounts extends BaseAdmin
                 if (!isset($this->data['upload_error'])) {
 
                     //  Set basic data
-                    $data['temp_pw']              = stringToBoolean($this->input->post('temp_pw'));
-                    $data['reset_mfa_question']   = stringToBoolean($this->input->post('reset_mfa_question'));
-                    $data['reset_mfa_device']     = stringToBoolean($this->input->post('reset_mfa_device'));
-                    $data['first_name']           = $this->input->post('first_name');
-                    $data['last_name']            = $this->input->post('last_name');
-                    $data['username']             = $this->input->post('username');
-                    $data['gender']               = $this->input->post('gender');
-                    $data['dob']                  = $this->input->post('dob');
+                    $data['temp_pw']              = stringToBoolean($this->input->post('temp_pw', true));
+                    $data['reset_mfa_question']   = stringToBoolean($this->input->post('reset_mfa_question', true));
+                    $data['reset_mfa_device']     = stringToBoolean($this->input->post('reset_mfa_device', true));
+                    $data['first_name']           = $this->input->post('first_name', true);
+                    $data['last_name']            = $this->input->post('last_name', true);
+                    $data['username']             = $this->input->post('username', true);
+                    $data['gender']               = $this->input->post('gender', true);
+                    $data['dob']                  = $this->input->post('dob', true);
                     $data['dob']                  = !empty($data['dob']) ? $data['dob'] : null;
-                    $data['timezone']             = $this->input->post('timezone');
-                    $data['datetime_format_date'] = $this->input->post('datetime_format_date');
-                    $data['datetime_format_time'] = $this->input->post('datetime_format_time');
+                    $data['timezone']             = $this->input->post('timezone', true);
+                    $data['datetime_format_date'] = $this->input->post('datetime_format_date', true);
+                    $data['datetime_format_time'] = $this->input->post('datetime_format_time', true);
 
-                    if ($this->input->post('password')) {
-                        $data['password']  = $this->input->post('password');
+                    if ($this->input->post('password', true)) {
+                        $data['password']  = $this->input->post('password', true);
                     }
 
                     //  Set meta data
                     foreach ($this->data['user_meta_cols'] as $col => $value) {
 
-                        $mValue = $this->input->post($col);
+                        $mValue = $this->input->post($col, true);
 
                         //  Should the field be made null on empty?
                         if (!empty($value['nullOnEmpty']) && empty($mValue)) {
@@ -638,7 +630,7 @@ class Accounts extends BaseAdmin
                     //  Update account
                     if ($oUserModel->update($this->input->post('id'), $data)) {
 
-                        $name = $this->input->post('first_name') . ' ' . $this->input->post('last_name');
+                        $name = $this->input->post('first_name', true) . ' ' . $this->input->post('last_name', true);
                         $this->data['success'] = lang('accounts_edit_ok', array(title_case($name)));
 
                         // --------------------------------------------------------------------------
