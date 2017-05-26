@@ -130,12 +130,12 @@ class Mfa_device extends BaseMfa
 
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('mfaCode', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaCode', '', 'required');
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
-                $code = $this->input->post('mfaCode');
+                $code = $this->input->post('mfaCode', true);
 
                 //  Verify the inout
                 if ($this->auth_model->mfaDeviceCodeValidate($this->mfaUser->id, $code)) {
