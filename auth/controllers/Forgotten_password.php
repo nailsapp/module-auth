@@ -46,10 +46,10 @@ class Forgotten_Password extends Base
         }
 
         //  If there's POST data attempt to validate the user
-        if ($this->input->post() || $this->input->get('identifier')) {
+        if ($this->input->post() || $this->input->get('identifier', true)) {
 
             //  Define vars
-            $_identifier = $this->input->post('identifier');
+            $_identifier = $this->input->post('identifier', true);
 
             /**
              * Override with the $_GET variable if POST failed to return anything. Populate
@@ -57,10 +57,10 @@ class Forgotten_Password extends Base
              * hacky but works.
              */
 
-            if (!$_identifier && $this->input->get('identifier')) {
+            if (!$_identifier && $this->input->get('identifier', true)) {
 
-                $_POST['identifier'] = $this->input->get('identifier');
-                $_identifier         = $this->input->get('identifier');
+                $_POST['identifier'] = $this->input->get('identifier', true);
+                $_identifier         = $this->input->get('identifier', true);
             }
 
             // --------------------------------------------------------------------------
@@ -75,15 +75,15 @@ class Forgotten_Password extends Base
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL' :
-                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', '', 'required|trim|valid_email');
                     break;
 
                 case 'USERNAME' :
-                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'required|trim');
                     break;
 
                 default:
-                    $oFormValidation->set_rules('identifier', '', 'xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'trim');
                     break;
             }
 
