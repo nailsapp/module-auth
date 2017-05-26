@@ -23,7 +23,6 @@ class Register extends Base
         parent::__construct();
 
         // --------------------------------------------------------------------------
-
         //  Is registration enabled
         if (!appSetting('user_registration_enabled', 'auth')) {
 
