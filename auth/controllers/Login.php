@@ -98,29 +98,29 @@ class Login extends Base
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL':
-                    $oFormValidation->set_rules('identifier', 'Email', 'required|xss_clean|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', 'Email', 'required|trim|valid_email');
                     break;
 
                 case 'USERNAME':
-                    $oFormValidation->set_rules('identifier', 'Username', 'required|xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', 'Username', 'required|trim');
                     break;
 
                 default:
-                    $oFormValidation->set_rules('identifier', 'Username or Email', 'xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', 'Username or Email', 'trim');
                     break;
             }
 
             //  Password is always required, obviously.
-            $oFormValidation->set_rules('password', 'Password', 'required|xss_clean');
+            $oFormValidation->set_rules('password', 'Password', 'required');
             $oFormValidation->set_message('required', lang('fv_required'));
             $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             if ($oFormValidation->run()) {
 
                 //  Attempt the log in
-                $identifier = $this->input->post('identifier');
-                $password   = $this->input->post('password');
-                $rememberMe = (bool) $this->input->post('remember');
+                $identifier = $this->input->post('identifier', true );
+                $password   = $this->input->post('password', true );
+                $rememberMe = (bool) $this->input->post('remember' );
 
                 $user = $this->auth_model->login($identifier, $password, $rememberMe);
 
