@@ -26,7 +26,7 @@ class Session
 
     /**
      * The session object
-     * @var \CI_DB_mysqli_driver
+     * @var \CI_Session
      */
     private $oSession;
 
@@ -116,5 +116,11 @@ class Session
         if (!$this->bIsCli) {
             $this->oSession->{$sProperty} = $mValue;
         }
+    }
+
+    public function keep_flashdata() {
+        $flashData = $this->oSession->flashdata();
+        $flashDataKeys = array_keys( $flashData );
+        $this->oSession->keep_flashdata( $flashDataKeys );
     }
 }
