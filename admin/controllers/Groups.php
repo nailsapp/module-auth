@@ -149,11 +149,10 @@ class Groups extends BaseAdmin
             $oFormValidation = Factory::service('FormValidation');
 
             //  Define rules
-            $oFormValidation->set_rules('slug', '', 'xss_clean|unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['group']->slug . ']');
-            $oFormValidation->set_rules('label', '', 'xss_clean|required');
-            $oFormValidation->set_rules('description', '', 'xss_clean|required');
-            $oFormValidation->set_rules('default_homepage', '', 'xss_clean|required');
-            $oFormValidation->set_rules('registration_redirect', '', 'xss_clean');
+            $oFormValidation->set_rules('slug', '', 'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['group']->slug . ']');
+            $oFormValidation->set_rules('label', '', 'required');
+            $oFormValidation->set_rules('description', '', 'required');
+            $oFormValidation->set_rules('default_homepage', '', 'required');
 
             //  Set messages
             $oFormValidation->set_message('required', lang('fv_required'));
@@ -162,11 +161,11 @@ class Groups extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 $data                          = array();
-                $data['slug']                  = $this->input->post('slug');
-                $data['label']                 = $this->input->post('label');
-                $data['description']           = $this->input->post('description');
-                $data['default_homepage']      = $this->input->post('default_homepage');
-                $data['registration_redirect'] = $this->input->post('registration_redirect');
+                $data['slug']                  = $this->input->post('slug', true);
+                $data['label']                 = $this->input->post('label', true);
+                $data['description']           = $this->input->post('description', true);
+                $data['default_homepage']      = $this->input->post('default_homepage', true);
+                $data['registration_redirect'] = $this->input->post('registration_redirect', true);
 
                 //  Parse ACL's and password rules
                 $data['acl'] = $this->user_group_model->processPermissions($this->input->post('acl'));
