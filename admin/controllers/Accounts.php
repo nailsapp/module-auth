@@ -210,15 +210,11 @@ class Accounts extends BaseAdmin
             $oFormValidation = Factory::service('FormValidation');
 
             //  Set rules
-            $oFormValidation->set_rules('group_id', '', 'xss_clean|required|is_natural_no_zero');
-            $oFormValidation->set_rules('password', '', 'xss_clean');
-            $oFormValidation->set_rules('send_activation', '', 'xss_clean');
-            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
-            $oFormValidation->set_rules('first_name', '', 'xss_clean|required');
-            $oFormValidation->set_rules('last_name', '', 'xss_clean|required');
+            $oFormValidation->set_rules('group_id', '', 'required|is_natural_no_zero');
+            $oFormValidation->set_rules('first_name', '', 'required');
+            $oFormValidation->set_rules('last_name', '', 'required');
 
             $emailRules   = array();
-            $emailRules[] = 'xss_clean';
             $emailRules[] = 'required';
             $emailRules[] = 'valid_email';
             $emailRules[] = 'is_unique[' . NAILS_DB_PREFIX . 'user_email.email]';
@@ -227,14 +223,9 @@ class Accounts extends BaseAdmin
 
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
 
-                if ($this->input->post('username')) {
-
-                    $oFormValidation->set_rules('username', '', 'xss_clean');
-                }
-
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
 
                 if ($this->input->post('email')) {
 
@@ -244,7 +235,7 @@ class Accounts extends BaseAdmin
             } else {
 
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
             }
 
             //  Set messages
@@ -260,8 +251,8 @@ class Accounts extends BaseAdmin
 
                 //  Success
                 $data             = array();
-                $data['group_id'] = (int) $this->input->post('group_id');
-                $data['password'] = trim($this->input->post('password'));
+                $data['group_id'] = (int) $this->input->post('group_id', true );
+                $data['password'] = trim($this->input->post('password', true));
 
                 if (!$data['password']) {
 
@@ -271,21 +262,21 @@ class Accounts extends BaseAdmin
 
                 if ($this->input->post('email')) {
 
-                    $data['email'] = $this->input->post('email');
+                    $data['email'] = $this->input->post('email', true);
                 }
 
                 if ($this->input->post('username')) {
 
-                    $data['username'] = $this->input->post('username');
+                    $data['username'] = $this->input->post('username', true);
                 }
 
-                $data['first_name']     = $this->input->post('first_name');
-                $data['last_name']      = $this->input->post('last_name');
-                $data['temp_pw']        = stringToBoolean($this->input->post('temp_pw'));
+                $data['first_name']     = $this->input->post('first_name', true);
+                $data['last_name']      = $this->input->post('last_name', true);
+                $data['temp_pw']        = stringToBoolean($this->input->post('temp_pw', true));
                 $data['inform_user_pw'] = true;
 
                 $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-                $new_user   = $oUserModel->create($data, stringToBoolean($this->input->post('send_activation')));
+                $new_user   = $oUserModel->create($data, stringToBoolean($this->input->post('send_activation', true)));
 
                 if ($new_user) {
 
@@ -423,7 +414,7 @@ class Accounts extends BaseAdmin
         $oConfig = Factory::service('Config');
 
         $user_meta_cols = $oConfig->item('user_meta_cols');
-        $group_id       = $this->input->post('group_id') ? $this->input->post('group_id') : $user->group_id;
+        $group_id       = $this->input->post('group_id' ) ? $this->input->post('group_id') : $user->group_id;
 
         if (isset($user_meta_cols[$group_id])) {
 
