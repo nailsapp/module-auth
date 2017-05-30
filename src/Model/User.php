@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Model;
 
+use CI_DB_result;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
@@ -2447,9 +2448,10 @@ class User extends Base
                     AND TABLE_NAME NOT IN (" . $ignoreTablesStr . ")
                     AND TABLE_SCHEMA='" . DEPLOY_DB_DATABASE . "';";
 
+        /** @var CI_DB_result $result */
         $result = $oDb->query($query);
 
-        while ($table = $result->_fetch_object()) {
+        while ($table = $result->unbuffered_row()) {
 
             if (!isset($tables[$table->TABLE_NAME])) {
 
