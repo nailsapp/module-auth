@@ -1090,7 +1090,7 @@ class Accounts extends BaseAdmin
         } else {
 
             //  Non-superusers editing superusers is not cool
-            if (!$isSuperuser() && userHasPermission('superuser', $user)) {
+            if (!isSuperuser() && userHasPermission('superuser', $user)) {
                 $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
                 redirect($returnTo);
             }
