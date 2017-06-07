@@ -48,18 +48,8 @@
             "type": "module",
             "namespace": "Nails\\Auth\\",
             "autoload": {
-                "models": [
-                    {
-                        "user_model": "User",
-                        "user_group_model": "UserGroup",
-                        "user_password_model": "UserPassword"
-                    }
-                ],
-                "services": [
-                    {
-                        "session": "Session"
-                    }
-                ],
+                "models": ["User", "UserGroup", "UserPassword"],
+                "services": ["Session"],
                 "helpers": ["user"]
             },
             "data": {
