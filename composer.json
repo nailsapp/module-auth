@@ -49,7 +49,6 @@
             "namespace": "Nails\\Auth\\",
             "autoload": {
                 "models": ["User", "UserGroup", "UserPassword"],
-                "services": ["Session"],
                 "helpers": ["user"]
             },
             "data": {
