@@ -12,9 +12,9 @@
 
 namespace Nails\Admin\Auth;
 
-use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Factory;
 
 class Accounts extends BaseAdmin
 {
@@ -24,7 +24,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \stdClass
      */
     public static function announce()
     {
@@ -34,22 +34,21 @@ class Accounts extends BaseAdmin
 
         if (userHasPermission('admin:auth:accounts:browse')) {
 
-            $ci =& get_instance();
-
-            $ci->db->where('is_suspended', false);
-            $numTotal = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+            $oDb = Factory::service('Database');
+            $oDb->where('is_suspended', false);
+            $numTotal    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
             $oAlertTotal = Factory::factory('NavAlert', 'nailsapp/module-admin');
             $oAlertTotal->setValue($numTotal);
             $oAlertTotal->setLabel('Number of Users');
 
-            $ci->db->where('is_suspended', true);
-            $numSuspended = $ci->db->count_all_results(NAILS_DB_PREFIX . 'user');
+            $oDb->where('is_suspended', true);
+            $numSuspended    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
             $oAlertSuspended = Factory::factory('NavAlert', 'nailsapp/module-admin');
             $oAlertSuspended->setValue($numSuspended);
             $oAlertSuspended->setSeverity('danger');
             $oAlertSuspended->setLabel('Number of Suspended Users');
 
-            $oNavGroup->addAction('View All Members', 'index', array($oAlertTotal, $oAlertSuspended), 0);
+            $oNavGroup->addAction('View All Members', 'index', [$oAlertTotal, $oAlertSuspended], 0);
         }
 
         return $oNavGroup;
@@ -114,38 +113,38 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tableAlias . '.id';
-        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $oInput    = Factory::service('Input');
+        $page      = $oInput->get('page') ? $oInput->get('page') : 0;
+        $perPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
+        $sortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $tableAlias . '.id';
+        $sortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'desc';
+        $keywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
+        $sortColumns = [
             $tableAlias . '.id'         => 'User ID',
             $tableAlias . '.group_id'   => 'Group ID',
             $tableAlias . '.first_name' => 'First Name, Surname',
             $tableAlias . '.last_name'  => 'Surname, First Name',
-            'ue.email'                   => 'Email'
-        );
+            'ue.email'                  => 'Email',
+        ];
 
         // --------------------------------------------------------------------------
 
-        $groupsFlat   = $this->user_group_model->getAllFlat();
-        $groupsFilter = array();
+        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $groupsFlat      = $oUserGroupModel->getAllFlat();
+        $groupsFilter    = [];
 
         foreach ($groupsFlat as $id => $label) {
-
-            $groupsFilter[] = array($label, $id, true);
+            $groupsFilter[] = [$label, $id, true];
         }
 
         //  Filter Checkboxes
-        $cbFilters   = array();
+        $cbFilters = [];
 
         if (count($groupsFilter) > 1) {
-
             $cbFilters[] = Helper::searchFilterObject(
                 $tableAlias . '.group_id',
                 'User Group',
@@ -156,13 +155,13 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords,
-            'cbFilters' => $cbFilters
-        );
+        $data = [
+            'sort'      => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords'  => $keywords,
+            'cbFilters' => $cbFilters,
+        ];
 
         //  Get the items for the page
         $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
@@ -175,7 +174,7 @@ class Accounts extends BaseAdmin
 
         //  Add a header button
         if (userHasPermission('admin:auth:accounts:create')) {
-             Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
+            Helper::addHeaderButton('admin/auth/accounts/create', 'Create User');
         }
 
         // --------------------------------------------------------------------------
@@ -185,7 +184,6 @@ class Accounts extends BaseAdmin
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Create a new user account
      * @return void
@@ -193,7 +191,6 @@ class Accounts extends BaseAdmin
     public function create()
     {
         if (!userHasPermission('admin:auth:accounts:create')) {
-
             unauthorised();
         }
 
@@ -205,7 +202,8 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Attempt to create the new user account
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
 
@@ -217,7 +215,7 @@ class Accounts extends BaseAdmin
             $oFormValidation->set_rules('first_name', '', 'xss_clean|required');
             $oFormValidation->set_rules('last_name', '', 'xss_clean|required');
 
-            $emailRules   = array();
+            $emailRules   = [];
             $emailRules[] = 'xss_clean';
             $emailRules[] = 'required';
             $emailRules[] = 'valid_email';
@@ -227,8 +225,7 @@ class Accounts extends BaseAdmin
 
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
 
-                if ($this->input->post('username')) {
-
+                if ($oInput->post('username')) {
                     $oFormValidation->set_rules('username', '', 'xss_clean');
                 }
 
@@ -236,13 +233,11 @@ class Accounts extends BaseAdmin
 
                 $oFormValidation->set_rules('username', '', 'xss_clean|required');
 
-                if ($this->input->post('email')) {
-
+                if ($oInput->post('email')) {
                     $oFormValidation->set_rules('email', '', implode('|', $emailRules));
                 }
 
             } else {
-
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
                 $oFormValidation->set_rules('username', '', 'xss_clean|required');
             }
@@ -259,33 +254,31 @@ class Accounts extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 //  Success
-                $data             = array();
-                $data['group_id'] = (int) $this->input->post('group_id');
-                $data['password'] = trim($this->input->post('password'));
+                $data             = [];
+                $data['group_id'] = (int) $oInput->post('group_id');
+                $data['password'] = trim($oInput->post('password'));
 
                 if (!$data['password']) {
-
                     //  Password isn't set, generate one
-                    $data['password'] = $this->user_password_model->generate($data['group_id']);
+                    $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+                    $data['password']   = $oUserPasswordModel->generate($data['group_id']);
                 }
 
-                if ($this->input->post('email')) {
-
-                    $data['email'] = $this->input->post('email');
+                if ($oInput->post('email')) {
+                    $data['email'] = $oInput->post('email');
                 }
 
-                if ($this->input->post('username')) {
-
-                    $data['username'] = $this->input->post('username');
+                if ($oInput->post('username')) {
+                    $data['username'] = $oInput->post('username');
                 }
 
-                $data['first_name']     = $this->input->post('first_name');
-                $data['last_name']      = $this->input->post('last_name');
-                $data['temp_pw']        = stringToBoolean($this->input->post('temp_pw'));
+                $data['first_name']     = $oInput->post('first_name');
+                $data['last_name']      = $oInput->post('last_name');
+                $data['temp_pw']        = stringToBoolean($oInput->post('temp_pw'));
                 $data['inform_user_pw'] = true;
 
                 $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-                $new_user   = $oUserModel->create($data, stringToBoolean($this->input->post('send_activation')));
+                $new_user   = $oUserModel->create($data, stringToBoolean($oInput->post('send_activation')));
 
                 if ($new_user) {
 
@@ -298,7 +291,7 @@ class Accounts extends BaseAdmin
 
                     if ($oUserModel->getErrors()) {
 
-                        $message  = '<strong>Please Note,</strong> while the user was created successfully, the ';
+                        $message = '<strong>Please Note,</strong> while the user was created successfully, the ';
                         $message .= 'following issues were encountered:';
                         $message .= '<ul><li>' . implode('</li><li>', $oUserModel->getErrors()) . '</li></ul>';
 
@@ -311,49 +304,52 @@ class Accounts extends BaseAdmin
                     $name = '#' . number_format($new_user->id);
 
                     if ($new_user->first_name) {
-
                         $name .= ' ' . $new_user->first_name;
                     }
 
                     if ($new_user->last_name) {
-
                         $name .= ' ' . $new_user->last_name;
                     }
 
-                    $this->oChangeLogModel->add('created', 'a', 'user', $new_user->id, $name, 'admin/auth/accounts/edit/' . $new_user->id);
+                    $this->oChangeLogModel->add(
+                        'created',
+                        'a',
+                        'user',
+                        $new_user->id,
+                        $name,
+                        'admin/auth/accounts/edit/' . $new_user->id
+                    );
 
                     // --------------------------------------------------------------------------
 
-                    $status   = 'success';
-                    $message  = 'A user account was created for <strong>';
+                    $status  = 'success';
+                    $message = 'A user account was created for <strong>';
                     $message .= $new_user->first_name . '</strong>, update their details now.';
                     $oSession->set_flashdata($status, $message);
 
                     redirect('admin/auth/accounts/edit/' . $new_user->id);
 
                 } else {
-
-                    $this->data['error']  = 'There was an error when creating the user ';
+                    $this->data['error'] = 'There was an error when creating the user ';
                     $this->data['error'] .= 'account:<br />&rsaquo; ';
                     $this->data['error'] .= implode('<br />&rsaquo; ', $oUserModel->getErrors());
                 }
 
             } else {
-
-                $this->data['error']  = 'There was an error when creating the user account. ';
-                $this->data['error'] .= $oUserModel->lastError();
+                $this->data['error'] = lang('fv_there_were_errors');
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Get data for the view
-        $this->data['groups'] = $this->user_group_model->getAll();
-        $this->data['passwordRules'] = array();
+        $oUserGroupModel             = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserPasswordModel          = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $this->data['groups']        = $oUserGroupModel->getAll();
+        $this->data['passwordRules'] = [];
 
         foreach ($this->data['groups'] as $oGroup) {
-
-            $this->data['passwordRules'][$oGroup->id] = $this->user_password_model->getRulesAsString($oGroup->id);
+            $this->data['passwordRules'][$oGroup->id] = $oUserPasswordModel->getRulesAsString($oGroup->id);
         }
 
         // --------------------------------------------------------------------------
@@ -377,8 +373,10 @@ class Accounts extends BaseAdmin
      */
     public function edit()
     {
-        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
+        $oUri   = Factory::service('Uri');
+        $oInput = Factory::service('Input');
 
+        if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
             unauthorised();
         }
 
@@ -391,24 +389,24 @@ class Accounts extends BaseAdmin
 
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $user       = $oUserModel->getById($this->uri->segment(5));
+        $user       = $oUserModel->getById($oUri->segment(5));
 
         if (!$user) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_unknown_id'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         }
 
         //  Non-superusers editing superusers is not cool
         if (!$oUserModel->isSuperuser() && userHasPermission('superuser', $user)) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
+            $returnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
             redirect($returnTo);
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
         if (activeUser('id') != $user->id && !userHasPermission('admin:auth:accounts:editOthers')) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            $returnTo = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/dashboard';
+            $returnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
             redirect($returnTo);
         }
 
@@ -423,19 +421,16 @@ class Accounts extends BaseAdmin
         $oConfig = Factory::service('Config');
 
         $user_meta_cols = $oConfig->item('user_meta_cols');
-        $group_id       = $this->input->post('group_id') ? $this->input->post('group_id') : $user->group_id;
+        $group_id       = $oInput->post('group_id') ? $oInput->post('group_id') : $user->group_id;
 
         if (isset($user_meta_cols[$group_id])) {
-
             $this->data['user_meta_cols'] = $user_meta_cols[$user->group_id];
-
         } else {
-
             $this->data['user_meta_cols'] = null;
         }
 
         //  Set fields to ignore by default
-        $this->data['ignored_fields']   = array();
+        $this->data['ignored_fields']   = [];
         $this->data['ignored_fields'][] = 'id';
         $this->data['ignored_fields'][] = 'user_id';
 
@@ -446,14 +441,13 @@ class Accounts extends BaseAdmin
 
         if (is_null($this->data['user_meta_cols'])) {
 
-            $describe = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
-            $this->data['user_meta_cols'] = array();
+            $describe                     = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
+            $this->data['user_meta_cols'] = [];
 
             foreach ($describe as $col) {
 
                 //  Always ignore some fields
                 if (array_search($col->Field, $this->data['ignored_fields']) !== false) {
-
                     continue;
                 }
 
@@ -480,18 +474,18 @@ class Accounts extends BaseAdmin
 
                 // --------------------------------------------------------------------------
 
-                $this->data['user_meta_cols'][$col->Field] = array(
+                $this->data['user_meta_cols'][$col->Field] = [
                     'datatype' => $datatype,
                     'type'     => $type,
-                    'label'    => ucwords(str_replace('_', ' ', $col->Field))
-                );
+                    'label'    => ucwords(str_replace('_', ' ', $col->Field)),
+                ];
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Validate if we're saving, otherwise get the data and display the edit form
-        if ($this->input->post()) {
+        if ($oInput->post()) {
 
             //  Load validation library
             $oFormValidation = Factory::service('FormValidation');
@@ -518,7 +512,7 @@ class Accounts extends BaseAdmin
             foreach ($this->data['user_meta_cols'] as $col => $value) {
 
                 $datatype = isset($value['datatype']) ? $value['datatype'] : 'string';
-                $label    = isset($value['label'])    ? $value['label'] : ucwords(str_replace('_', ' ', $col));
+                $label    = isset($value['label']) ? $value['label'] : ucwords(str_replace('_', ' ', $col));
 
                 //  Some data types require different handling
                 switch ($datatype) {
@@ -526,11 +520,12 @@ class Accounts extends BaseAdmin
                     case 'date':
                         //  Dates must validate
                         if (isset($value['validation'])) {
-
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']');
-
+                            $oFormValidation->set_rules(
+                                $col,
+                                $label,
+                                'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']'
+                            );
                         } else {
-
                             $oFormValidation->set_rules($col, $label, 'xss_clean|valid_date[' . $col . ']');
                         }
                         break;
@@ -541,13 +536,9 @@ class Accounts extends BaseAdmin
                     case 'upload':
                     case 'string':
                     default:
-
                         if (isset($value['validation'])) {
-
                             $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
-
                         } else {
-
                             $oFormValidation->set_rules($col, $label, 'xss_clean');
                         }
                         break;
@@ -570,14 +561,15 @@ class Accounts extends BaseAdmin
             if ($oFormValidation->run($this)) {
 
                 //  Define the data var
-                $data = array();
+                $data = [];
 
                 // --------------------------------------------------------------------------
 
                 //  If we have a profile image, attempt to upload it
                 if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
-                    $object = $this->cdn->objectReplace($user->profile_img, 'profile-images', 'profile_img');
+                    $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+                    $object = $oCdn->objectReplace($user->profile_img, 'profile-images', 'profile_img');
 
                     if ($object) {
 
@@ -585,7 +577,7 @@ class Accounts extends BaseAdmin
 
                     } else {
 
-                        $this->data['upload_error'] = $this->cdn->getErrors();
+                        $this->data['upload_error'] = $oCdn->getErrors();
                         $this->data['error']        = lang('accounts_edit_error_profile_img');
                     }
                 }
@@ -595,27 +587,27 @@ class Accounts extends BaseAdmin
                 if (!isset($this->data['upload_error'])) {
 
                     //  Set basic data
-                    $data['temp_pw']              = stringToBoolean($this->input->post('temp_pw'));
-                    $data['reset_mfa_question']   = stringToBoolean($this->input->post('reset_mfa_question'));
-                    $data['reset_mfa_device']     = stringToBoolean($this->input->post('reset_mfa_device'));
-                    $data['first_name']           = $this->input->post('first_name');
-                    $data['last_name']            = $this->input->post('last_name');
-                    $data['username']             = $this->input->post('username');
-                    $data['gender']               = $this->input->post('gender');
-                    $data['dob']                  = $this->input->post('dob');
+                    $data['temp_pw']              = stringToBoolean($oInput->post('temp_pw'));
+                    $data['reset_mfa_question']   = stringToBoolean($oInput->post('reset_mfa_question'));
+                    $data['reset_mfa_device']     = stringToBoolean($oInput->post('reset_mfa_device'));
+                    $data['first_name']           = $oInput->post('first_name');
+                    $data['last_name']            = $oInput->post('last_name');
+                    $data['username']             = $oInput->post('username');
+                    $data['gender']               = $oInput->post('gender');
+                    $data['dob']                  = $oInput->post('dob');
                     $data['dob']                  = !empty($data['dob']) ? $data['dob'] : null;
-                    $data['timezone']             = $this->input->post('timezone');
-                    $data['datetime_format_date'] = $this->input->post('datetime_format_date');
-                    $data['datetime_format_time'] = $this->input->post('datetime_format_time');
+                    $data['timezone']             = $oInput->post('timezone');
+                    $data['datetime_format_date'] = $oInput->post('datetime_format_date');
+                    $data['datetime_format_time'] = $oInput->post('datetime_format_time');
 
-                    if ($this->input->post('password')) {
-                        $data['password']  = $this->input->post('password');
+                    if ($oInput->post('password')) {
+                        $data['password'] = $oInput->post('password');
                     }
 
                     //  Set meta data
                     foreach ($this->data['user_meta_cols'] as $col => $value) {
 
-                        $mValue = $this->input->post($col);
+                        $mValue = $oInput->post($col);
 
                         //  Should the field be made null on empty?
                         if (!empty($value['nullOnEmpty']) && empty($mValue)) {
@@ -645,37 +637,33 @@ class Accounts extends BaseAdmin
                     // --------------------------------------------------------------------------
 
                     //  Update account
-                    if ($oUserModel->update($this->input->post('id'), $data)) {
+                    if ($oUserModel->update($oInput->post('id'), $data)) {
 
-                        $name = $this->input->post('first_name') . ' ' . $this->input->post('last_name');
-                        $this->data['success'] = lang('accounts_edit_ok', array(title_case($name)));
+                        $name                  = $oInput->post('first_name') . ' ' . $oInput->post('last_name');
+                        $this->data['success'] = lang('accounts_edit_ok', [title_case($name)]);
 
                         // --------------------------------------------------------------------------
 
                         //  Set Admin changelogs
-                        $name = '#' . number_format($this->input->post('id'));
+                        $name = '#' . number_format($oInput->post('id'));
 
                         if ($data['first_name']) {
-
                             $name .= ' ' . $data['first_name'];
                         }
 
                         if ($data['last_name']) {
-
                             $name .= ' ' . $data['last_name'];
                         }
 
                         foreach ($data as $field => $value) {
-
                             if (isset($user->$field)) {
-
                                 $this->oChangeLogModel->add(
                                     'updated',
                                     'a',
                                     'user',
-                                    $this->input->post('id'),
+                                    $oInput->post('id'),
                                     $name,
-                                    'admin/auth/accounts/edit/' . $this->input->post('id'),
+                                    'admin/auth/accounts/edit/' . $oInput->post('id'),
                                     $field,
                                     $user->$field,
                                     $value,
@@ -687,9 +675,9 @@ class Accounts extends BaseAdmin
                         // --------------------------------------------------------------------------
 
                         //  refresh the user object
-                        $user = $oUserModel->getById($this->input->post('id'));
+                        $user = $oUserModel->getById($oInput->post('id'));
 
-                    //  The account failed to update, feedback to user
+                        //  The account failed to update, feedback to user
                     } else {
 
                         $this->data['error'] = lang(
@@ -699,7 +687,7 @@ class Accounts extends BaseAdmin
                     }
                 }
 
-            //  Update failed for another reason
+                //  Update failed for another reason
             } else {
 
                 $this->data['error'] = lang('fv_there_were_errors');
@@ -717,8 +705,7 @@ class Accounts extends BaseAdmin
             $user_meta = $oDb->get(NAILS_DB_PREFIX . 'user_meta_app')->row();
 
         } else {
-
-            $user_meta = array();
+            $user_meta = [];
         }
 
         // --------------------------------------------------------------------------
@@ -738,12 +725,13 @@ class Accounts extends BaseAdmin
         );
 
         //  Get the groups, timezones and languages
-        $this->data['groups']       = $this->user_group_model->getAll();
+        $oUserGroupModel      = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $this->data['groups'] = $oUserGroupModel->getAll();
 
-        $oLanguageModel = Factory::model('Language');
+        $oLanguageModel          = Factory::model('Language');
         $this->data['languages'] = $oLanguageModel->getAllEnabledFlat();
 
-        $oDateTimeModel = Factory::model('DateTime');
+        $oDateTimeModel                 = Factory::model('DateTime');
         $this->data['timezones']        = $oDateTimeModel->getAllTimezone();
         $this->data['date_formats']     = $oDateTimeModel->getAllDateFormat();
         $this->data['time_formats']     = $oDateTimeModel->getAllTimeFormat();
@@ -751,8 +739,8 @@ class Accounts extends BaseAdmin
 
         //  Fetch any user uploads
         if (isModuleEnabled('nailsapp/module-cdn')) {
-
-            $this->data['user_uploads'] = $this->cdn->getObjectsForUser($user->id);
+            $oCdn                       = Factory::service('Cdn', 'nailsapp/module-cdn');
+            $this->data['user_uploads'] = $oCdn->getObjectsForUser($user->id);
         }
 
         // --------------------------------------------------------------------------
@@ -775,7 +763,8 @@ class Accounts extends BaseAdmin
             }
         }
 
-        $this->data['passwordRules'] = $this->user_password_model->getRulesAsString($user->group_id);
+        $oUserPasswordModel          = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($user->group_id);
 
         // --------------------------------------------------------------------------
 
@@ -804,8 +793,9 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        $oInput              = Factory::service('Input');
         $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
-        $userIds             = explode(',', $this->input->get('users'));
+        $userIds             = explode(',', $oInput->get('users'));
         $this->data['users'] = $oUserModel->getByIds($userIds);
 
         if (!$this->data['users']) {
@@ -820,21 +810,21 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['userGroups'] = $this->user_group_model->getAllFlat();
+        $oUserGroupModel          = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $this->data['userGroups'] = $oUserGroupModel->getAllFlat();
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        if ($oInput->post()) {
 
-            if ($this->user_group_model->changeUserGroup($userIds, $this->input->post('newGroupId'))) {
+            if ($oUserGroupModel->changeUserGroup($userIds, $oInput->post('newGroupId'))) {
 
                 $oSession = Factory::service('Session', 'nailsapp/module-auth');
                 $oSession->set_flashdata('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts/index');
 
             } else {
-
-                $this->data['error'] = 'Failed to update user group. ' . $this->user_group_model->lastError();
+                $this->data['error'] = 'Failed to update user group. ' . $oUserGroupModel->lastError();
             }
         }
 
@@ -853,16 +843,17 @@ class Accounts extends BaseAdmin
     public function suspend()
     {
         if (!userHasPermission('admin:auth:accounts:suspend')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
         //  Get the user's details
+        $oUri       = Factory::service('Uri');
+        $oInput     = Factory::service('Input');
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $uid        = $this->uri->segment(5);
+        $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
         $oldValue   = $user->is_suspended;
 
@@ -871,7 +862,7 @@ class Accounts extends BaseAdmin
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         }
 
         // --------------------------------------------------------------------------
@@ -882,9 +873,8 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details, again
-        $user      = $oUserModel->getById($uid);
+        $user     = $oUserModel->getById($uid);
         $newValue = $user->is_suspended;
-
 
         // --------------------------------------------------------------------------
 
@@ -919,7 +909,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        redirect($this->input->get('return_to'));
+        redirect($oInput->get('return_to'));
     }
 
     // --------------------------------------------------------------------------
@@ -937,9 +927,11 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details
+        $oUri       = Factory::service('Uri');
+        $oInput     = Factory::service('Input');
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $uid        = $this->uri->segment(5);
+        $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
         $oldValue   = $user->is_suspended;
 
@@ -948,7 +940,7 @@ class Accounts extends BaseAdmin
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         }
 
         // --------------------------------------------------------------------------
@@ -1001,7 +993,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        redirect($this->input->get('return_to'));
+        redirect($oInput->get('return_to'));
     }
 
     // --------------------------------------------------------------------------
@@ -1019,9 +1011,11 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the user's details
+        $oUri       = Factory::service('Uri');
+        $oInput     = Factory::service('Input');
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $uid        = $this->uri->segment(5);
+        $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
 
         // --------------------------------------------------------------------------
@@ -1029,7 +1023,7 @@ class Accounts extends BaseAdmin
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         }
 
         // --------------------------------------------------------------------------
@@ -1039,10 +1033,10 @@ class Accounts extends BaseAdmin
 
         if (!$user) {
             $oSession->set_flashdata('error', lang('accounts_edit_error_unknown_id'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         } elseif ($user->id == activeUser('id')) {
             $oSession->set_flashdata('error', lang('accounts_delete_error_selfie'));
-            redirect($this->input->get('return_to'));
+            redirect($oInput->get('return_to'));
         }
 
         // --------------------------------------------------------------------------
@@ -1074,7 +1068,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        redirect($this->input->get('return_to'));
+        redirect($oInput->get('return_to'));
     }
 
     // --------------------------------------------------------------------------
@@ -1085,17 +1079,19 @@ class Accounts extends BaseAdmin
      */
     public function delete_profile_img()
     {
-        if ($this->uri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
+        $oUri = Factory::service('Uri');
+        if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
+        $oInput     = Factory::service('Input');
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $uid        = $this->uri->segment(5);
+        $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
-        $returnTo   = $this->input->get('return_to') ? $this->input->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
+        $returnTo   = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
 
         // --------------------------------------------------------------------------
 
@@ -1107,7 +1103,7 @@ class Accounts extends BaseAdmin
         } else {
 
             //  Non-superusers editing superusers is not cool
-            if (!$isSuperuser() && userHasPermission('superuser', $user)) {
+            if (!isSuperuser() && userHasPermission('superuser', $user)) {
                 $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
                 redirect($returnTo);
             }
@@ -1116,24 +1112,35 @@ class Accounts extends BaseAdmin
 
             if ($user->profile_img) {
 
-                if ($this->cdn->objectDelete($user->profile_img, 'profile-images')) {
+                $oCdn = Factory::service('Cdn', 'nailsapp/module-cdn');
+
+                if ($oCdn->objectDelete($user->profile_img, 'profile-images')) {
 
                     //  Update the user
-                    $data = array();
+                    $data                = [];
                     $data['profile_img'] = null;
 
                     $oUserModel->update($uid, $data);
 
                     // --------------------------------------------------------------------------
 
-                    $oSession->set_flashdata('success', lang('accounts_delete_img_success'));
+                    $oSession->set_flashdata(
+                        'success',
+                        lang('accounts_delete_img_success')
+                    );
 
                 } else {
-                    $oSession->set_flashdata('error', lang('accounts_delete_img_error', implode('", "', $this->cdn->getErrors())));
+                    $oSession->set_flashdata(
+                        'error',
+                        lang('accounts_delete_img_error', implode('", "', $oCdn->getErrors()))
+                    );
                 }
 
             } else {
-                $oSession->set_flashdata('notice', lang('accounts_delete_img_error_noimg'));
+                $oSession->set_flashdata(
+                    'notice',
+                    lang('accounts_delete_img_error_noimg')
+                );
             }
 
             // --------------------------------------------------------------------------
@@ -1150,16 +1157,17 @@ class Accounts extends BaseAdmin
      */
     public function email()
     {
+        $oInput     = Factory::service('Input');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $action     = $this->input->post('action');
-        $email      = $this->input->post('email');
-        $id         = $this->input->post('id');
+        $action     = $oInput->post('action');
+        $email      = $oInput->post('email');
+        $id         = $oInput->post('id');
 
         switch ($action) {
 
             case 'add':
-                $isPrimary  = (bool) $this->input->post('isPrimary');
-                $isVerified = (bool) $this->input->post('isVerified');
+                $isPrimary  = (bool) $oInput->post('isPrimary');
+                $isVerified = (bool) $oInput->post('isVerified');
 
                 if ($oUserModel->emailAdd($email, $id, $isPrimary, $isVerified)) {
 
@@ -1168,36 +1176,30 @@ class Accounts extends BaseAdmin
 
                 } else {
 
-                    $status   = 'error';
-                    $message  = 'Failed to add email. ';
+                    $status  = 'error';
+                    $message = 'Failed to add email. ';
                     $message .= $oUserModel->lastError();
                 }
                 break;
 
             case 'delete':
                 if ($oUserModel->emailDelete($email, $id)) {
-
                     $status  = 'success';
                     $message = '"' . $email . '" was deleted successfully. ';
-
                 } else {
-
-                    $status   = 'error';
-                    $message  = 'Failed to delete email "' . $email . '". ';
+                    $status  = 'error';
+                    $message = 'Failed to delete email "' . $email . '". ';
                     $message .= $oUserModel->lastError();
                 }
                 break;
 
             case 'makePrimary':
                 if ($oUserModel->emailMakePrimary($email, $id)) {
-
                     $status  = 'success';
                     $message = '"' . $email . '" was set as the primary email.';
-
                 } else {
-
-                    $status   = 'error';
-                    $message  = 'Failed to mark "' . $email . '" as the primary address. ';
+                    $status  = 'error';
+                    $message = 'Failed to mark "' . $email . '" as the primary address. ';
                     $message .= $oUserModel->lastError();
                 }
                 break;
@@ -1208,9 +1210,7 @@ class Accounts extends BaseAdmin
                 $code       = '';
 
                 foreach ($userEmails as $userEmail) {
-
                     if ($userEmail->email == $email) {
-
                         $code = $userEmail->code;
                     }
                 }
@@ -1222,14 +1222,14 @@ class Accounts extends BaseAdmin
 
                 } elseif (empty($code)) {
 
-                    $status   = 'error';
-                    $message  = 'Failed to mark "' . $email . '" as verified. ';
+                    $status  = 'error';
+                    $message = 'Failed to mark "' . $email . '" as verified. ';
                     $message .= 'Could not determine email\'s security code.';
 
                 } else {
 
-                    $status   = 'error';
-                    $message  = 'Failed to mark "' . $email . '" as verified. ';
+                    $status  = 'error';
+                    $message = 'Failed to mark "' . $email . '" as verified. ';
                     $message .= $oUserModel->lastError();
                 }
                 break;
@@ -1242,6 +1242,6 @@ class Accounts extends BaseAdmin
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
         $oSession->set_flashdata($status, $message);
-        redirect($this->input->post('return'));
+        redirect($oInput->post('return'));
     }
 }
