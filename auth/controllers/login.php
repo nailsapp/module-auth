@@ -164,7 +164,8 @@ class Login extends Base
      */
     protected function _login($user, $remember = false, $provider = 'native')
     {
-        $oConfig = Factory::service('Config');
+        $oConfig            = Factory::service('Config');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
 
         if ($user->is_suspended) {
 
@@ -181,7 +182,7 @@ class Login extends Base
             $this->resetPassword($user->id, $user->salt, $remember, 'TEMP');
 
 
-        } elseif ($this->user_password_model->isExpired($user->id)) {
+        } elseif ($oUserPasswordModel->isExpired($user->id)) {
 
             /**
              * Expired password detected, log user out and redirect to

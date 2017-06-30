@@ -8,11 +8,11 @@
  * @category    Controller
  * @author      Nails Dev Team
  * @link
- * @todo  Refactor this class so that not so much code is being duplicated, especially re: MFA
+ * @todo        Refactor this class so that not so much code is being duplicated, especially re: MFA
  */
 
-use Nails\Factory;
 use Nails\Auth\Controller\Base;
+use Nails\Factory;
 
 class Forgotten_Password extends Base
 {
@@ -107,7 +107,8 @@ class Forgotten_Password extends Base
                 $alwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
-                if ($this->user_password_model->setToken($_identifier)) {
+                $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+                if ($oUserPasswordModel->setToken($_identifier)) {
 
                     //  Send email to user
                     $oUserModel = Factory::model('User', 'nailsapp/module-auth');
@@ -254,7 +255,9 @@ class Forgotten_Password extends Base
 
     /**
      * Validate a code
-     * @param   string  $code The code to validate
+     *
+     * @param   string $code The code to validate
+     *
      * @return  void
      */
     public function _validate($code)
@@ -268,8 +271,9 @@ class Forgotten_Password extends Base
          * new password, we'll need the user to jump through some hoops first.
          */
 
-        $generateNewPw = !$oConfig->item('authTwoFactorMode');
-        $newPw         = $this->user_password_model->validateToken($code, $generateNewPw);
+        $generateNewPw      = !$oConfig->item('authTwoFactorMode');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $newPw              = $oUserPasswordModel->validateToken($code, $generateNewPw);
 
         // --------------------------------------------------------------------------
 
@@ -304,7 +308,7 @@ class Forgotten_Password extends Base
                         if ($isValid) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $this->user_password_model->validateToken($code, true);
+                            $newPw = $oUserPasswordModel->validateToken($code, true);
 
                             $this->data['new_password'] = $newPw['password'];
 
@@ -338,7 +342,7 @@ class Forgotten_Password extends Base
                 } else {
 
                     //  No questions, reset and load views
-                    $newPw = $this->user_password_model->validateToken($code, true);
+                    $newPw = $oUserPasswordModel->validateToken($code, true);
 
                     $this->data['new_password'] = $newPw['password'];
 
@@ -372,7 +376,7 @@ class Forgotten_Password extends Base
                         if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $this->user_password_model->validateToken($code, true);
+                            $newPw = $oUserPasswordModel->validateToken($code, true);
 
                             $this->data['new_password'] = $newPw['password'];
 
@@ -394,7 +398,7 @@ class Forgotten_Password extends Base
 
                         } else {
 
-                            $this->data['error']  = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
+                            $this->data['error'] = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
                             $this->data['error'] .= $this->auth_model->lastError();
                         }
                     }
@@ -408,7 +412,7 @@ class Forgotten_Password extends Base
                 } else {
 
                     //  No devices, reset and load views
-                    $newPw = $this->user_password_model->validateToken($code, true);
+                    $newPw = $oUserPasswordModel->validateToken($code, true);
 
                     $this->data['new_password'] = $newPw['password'];
 

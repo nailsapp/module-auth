@@ -307,7 +307,9 @@ class Reset_Password extends Base
             $this->data['auth']->id   = $id;
             $this->data['auth']->hash = $hash;
 
-            $this->data['passwordRules'] = $this->user_password_model->getRulesAsString($user->group_id);
+            $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+
+            $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($user->group_id);
 
             $this->data['return_to'] = $this->input->get('return_to');
             $this->data['remember']  = $this->input->get('remember');
@@ -319,7 +321,7 @@ class Reset_Password extends Base
                     case 'EXPIRED' :
                         $this->data['message'] = lang(
                             'auth_login_pw_expired',
-                            $this->user_password_model->expiresAfter($user->group_id)
+                            $oUserPasswordModel->expiresAfter($user->group_id)
                         );
                         break;
 

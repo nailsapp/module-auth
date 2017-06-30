@@ -12,20 +12,19 @@
 
 namespace Nails\Admin\Auth;
 
-use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Factory;
 
 class Groups extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \stdClass
      */
     public static function announce()
     {
         if (userHasPermission('admin:auth:groups:manage')) {
-
             $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
             $oNavGroup->setLabel('Members');
             $oNavGroup->setIcon('fa-users');
@@ -42,20 +41,13 @@ class Groups extends BaseAdmin
      */
     public static function permissions()
     {
-        $permissions = parent::permissions();
-
-        // --------------------------------------------------------------------------
-
-        //  Define some basic extra permissions
-        $permissions['manage']     = 'Can manage user groups';
-        $permissions['create']     = 'Can create user groups';
-        $permissions['edit']       = 'Can edit user groups';
-        $permissions['delete']     = 'Can delete user groups';
-        $permissions['setDefault'] = 'Can set the default user groups';
-
-        // --------------------------------------------------------------------------
-
-        return $permissions;
+        $aPermissions               = parent::permissions();
+        $aPermissions['manage']     = 'Can manage user groups';
+        $aPermissions['create']     = 'Can create user groups';
+        $aPermissions['edit']       = 'Can edit user groups';
+        $aPermissions['delete']     = 'Can delete user groups';
+        $aPermissions['setDefault'] = 'Can set the default user groups';
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -78,7 +70,6 @@ class Groups extends BaseAdmin
     public function index()
     {
         if (!userHasPermission('admin:auth:groups:manage')) {
-
             unauthorised();
         }
 
@@ -88,12 +79,12 @@ class Groups extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['groups'] = $this->user_group_model->getAll();
+        $oUserGroupModel      = Factory::model('UserGroup', 'nailsap/module-auth');
+        $this->data['groups'] = $oUserGroupModel->getAll();
 
         // --------------------------------------------------------------------------
 
         if (userHasPermission('admin:auth:groups:create')) {
-
             Helper::addHeaderButton('admin/auth/groups/create', 'Create Group');
         }
 
@@ -115,7 +106,10 @@ class Groups extends BaseAdmin
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata('message', '<strong>Coming soon!</strong> The ability to dynamically create groups is on the roadmap.');
+        $oSession->set_flashdata(
+            'message',
+            '<strong>Coming soon!</strong> The ability to dynamically create groups is on the roadmap.'
+        );
         redirect('admin/auth/groups');
     }
 
@@ -133,9 +127,13 @@ class Groups extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $gid = $this->uri->segment(5, null);
+        $oUri               = Factory::service('Uri');
+        $oInput             = Factory::service('Input');
+        $oUserGroupModel    = Factory::model('UserGroup', 'nailsap/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsap/module-auth');
+        $sGroupId           = $oUri->segment(5, null);
 
-        $this->data['group'] = $this->user_group_model->getById($gid);
+        $this->data['group'] = $oUserGroupModel->getById($sGroupId);
 
         if (!$this->data['group']) {
             show_404();
@@ -143,7 +141,7 @@ class Groups extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        if ($oInput->post()) {
 
             //  Load library
             $oFormValidation = Factory::service('FormValidation');
@@ -161,25 +159,25 @@ class Groups extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $data                          = array();
-                $data['slug']                  = $this->input->post('slug');
-                $data['label']                 = $this->input->post('label');
-                $data['description']           = $this->input->post('description');
-                $data['default_homepage']      = $this->input->post('default_homepage');
-                $data['registration_redirect'] = $this->input->post('registration_redirect');
+                $data                          = [];
+                $data['slug']                  = $oInput->post('slug');
+                $data['label']                 = $oInput->post('label');
+                $data['description']           = $oInput->post('description');
+                $data['default_homepage']      = $oInput->post('default_homepage');
+                $data['registration_redirect'] = $oInput->post('registration_redirect');
 
                 //  Parse ACL's and password rules
-                $data['acl'] = $this->user_group_model->processPermissions($this->input->post('acl'));
-                $data['password_rules'] = $this->user_password_model->processRules($this->input->post('pw'));
+                $data['acl']            = $oUserGroupModel->processPermissions($oInput->post('acl'));
+                $data['password_rules'] = $oUserPasswordModel->processRules($oInput->post('pw'));
 
-                if ($this->user_group_model->update($gid, $data)) {
+                if ($oUserGroupModel->update($sGroupId, $data)) {
 
                     $oSession = Factory::service('Session', 'nailsapp/module-auth');
                     $oSession->set_flashdata('success', 'Group updated successfully!');
                     redirect('admin/auth/groups');
 
                 } else {
-                    $this->data['error'] = 'I was unable to update the group. ' . $this->user_group_model->lastError();
+                    $this->data['error'] = 'I was unable to update the group. ' . $oUserGroupModel->lastError();
                 }
 
             } else {
@@ -190,14 +188,14 @@ class Groups extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get all available permissions
-        $this->data['permissions'] = array();
-        foreach ($this->data['adminControllers'] as $module => $moduleDetails) {
-            foreach ($moduleDetails->controllers as $controller => $controllerDetails) {
+        $this->data['permissions'] = [];
+        foreach ($this->data['adminControllers'] as $module => $oModuleDetails) {
+            foreach ($oModuleDetails->controllers as $sController => $aControllerDetails) {
 
                 $temp              = new \stdClass();
-                $temp->label       = ucfirst($module) . ': ' . ucfirst($controller);
-                $temp->slug        = $module . ':' . $controller;
-                $temp->permissions = $controllerDetails['className']::permissions();
+                $temp->label       = ucfirst($module) . ': ' . ucfirst($sController);
+                $temp->slug        = $module . ':' . $sController;
+                $temp->permissions = $aControllerDetails['className']::permissions();
 
                 if (!empty($temp->permissions)) {
                     $this->data['permissions'][] = $temp;
@@ -239,7 +237,10 @@ class Groups extends BaseAdmin
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete groups is on the roadmap.');
+        $oSession->set_flashdata(
+            'message',
+            '<strong>Coming soon!</strong> The ability to delete groups is on the roadmap.'
+        );
         redirect('admin/auth/groups');
     }
 
@@ -255,12 +256,20 @@ class Groups extends BaseAdmin
             show_404();
         }
 
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oUri            = Factory::service('Uri');
+        $oUserGroupModel = Factory::model('UserGroup', 'nailsap/module-auth');
+        $oSession        = Factory::service('Session', 'nailsapp/module-auth');
 
-        if ($this->user_group_model->setAsDefault($this->uri->segment(5))) {
-            $oSession->set_flashdata('success', 'Group set as default successfully.');
+        if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
+            $oSession->set_flashdata(
+                'success',
+                'Group set as default successfully.'
+            );
         } else {
-            $oSession->set_flashdata('error', 'I could not set that group as the default user group. ' . $this->user_group_model->lastError());
+            $oSession->set_flashdata(
+                'error',
+                'I could not set that group as the default user group. ' . $oUserGroupModel->lastError()
+            );
         }
 
         redirect('admin/auth/groups');
