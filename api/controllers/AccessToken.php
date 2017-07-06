@@ -12,9 +12,10 @@
 
 namespace Nails\Api\Auth;
 
+use Nails\Api\Controller\Base;
 use Nails\Factory;
 
-class AccessToken extends \Nails\Api\Controller\Base
+class AccessToken extends Base
 {
     /**
      * Retrieves an access token for a user
@@ -22,12 +23,13 @@ class AccessToken extends \Nails\Api\Controller\Base
      */
     public function postIndex()
     {
+        $oInput            = Factory::service('Input');
         $oAuthModel        = Factory::model('Auth', 'nailsapp/module-auth');
         $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
-        $sIdentifier       = $this->input->post('identifier');
-        $sPassword         = $this->input->post('password');
-        $sScope            = $this->input->post('scope');
-        $sLabel            = $this->input->post('tokenLabel');
+        $sIdentifier       = $oInput->post('identifier');
+        $sPassword         = $oInput->post('password');
+        $sScope            = $oInput->post('scope');
+        $sLabel            = $oInput->post('tokenLabel');
         $bIsValid          = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
 
         if ($bIsValid) {
@@ -40,65 +42,62 @@ class AccessToken extends \Nails\Api\Controller\Base
              * - @todo: handle 2FA, perhaps?
              */
 
-            $oUserModel   = Factory::model('User', 'nailsapp/module-auth');
-            $oUser        = $oUserModel->getByIdentifier($sIdentifier);
-            $bIsSuspended = $oUser->is_suspended;
-            $bPwIsTemp    = $oUser->temp_pw;
-            $bPwIsExpired = $this->user_password_model->isExpired($oUser->id);
+            $oUserModel         = Factory::model('User', 'nailsapp/module-auth');
+            $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+            $oUser              = $oUserModel->getByIdentifier($sIdentifier);
+            $bIsSuspended       = $oUser->is_suspended;
+            $bPwIsTemp          = $oUser->temp_pw;
+            $bPwIsExpired       = $oUserPasswordModel->isExpired($oUser->id);
 
             if ($bIsSuspended) {
 
-                $aOut = array(
+                $aOut = [
                     'status' => 401,
-                    'error'  => 'User account is suspended.'
-                );
+                    'error'  => 'User account is suspended.',
+                ];
 
             } elseif ($bPwIsTemp) {
 
-                $aOut = array(
+                $aOut = [
                     'status' => 400,
-                    'error'  => 'Password is temporary.'
-                );
+                    'error'  => 'Password is temporary.',
+                ];
 
             } elseif ($bPwIsExpired) {
 
-                $aOut = array(
+                $aOut = [
                     'status' => 400,
-                    'error'  => 'Password has expired.'
-                );
+                    'error'  => 'Password has expired.',
+                ];
 
             } else {
 
                 $oToken = $oAccessTokenModel->create(
-                    array(
+                    [
                         'user_id' => $oUser->id,
                         'label'   => $sLabel,
-                        'scope'   => $sScope
-                    )
+                        'scope'   => $sScope,
+                    ]
                 );
 
                 if ($oToken) {
-
-                    $aOut = array(
+                    $aOut = [
                         'token'   => $oToken->token,
-                        'expires' => $oToken->expires
-                    );
-
+                        'expires' => $oToken->expires,
+                    ];
                 } else {
-
-                    $aOut = array(
+                    $aOut = [
                         'status' => 500,
-                        'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->lastError()
-                    );
+                        'error'  => 'Failed to generate access token. ' . $oAccessTokenModel->lastError(),
+                    ];
                 }
             }
 
         } else {
-
-            $aOut = array(
+            $aOut = [
                 'status' => 401,
-                'error'  => 'Invalid login credentials.'
-            );
+                'error'  => 'Invalid login credentials.',
+            ];
         }
 
         return $aOut;
@@ -113,36 +112,34 @@ class AccessToken extends \Nails\Api\Controller\Base
     public function postRevoke()
     {
         $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
-        $aOut              = array();
+        $aOut              = [];
 
         if (isLoggedIn()) {
 
-            $sAccessToken = $this->input->post('access_token');
+            $oInput       = Factory::service('Input');
+            $sAccessToken = $oInput->post('access_token');
 
             if (!empty($sAccessToken)) {
 
                 if (!$oAccessTokenModel->revoke(activeUser('id'), $sAccessToken)) {
-
-                    $aOut = array(
+                    $aOut = [
                         'status' => 500,
-                        'error' => 'Failed to revoke access token. ' . $oAccessTokenModel->lastError()
-                    );
+                        'error'  => 'Failed to revoke access token. ' . $oAccessTokenModel->lastError(),
+                    ];
                 }
 
             } else {
-
-                $aOut = array(
+                $aOut = [
                     'status' => 400,
-                    'error' => 'An access token to revoke must be provided.'
-                );
+                    'error'  => 'An access token to revoke must be provided.',
+                ];
             }
 
         } else {
-
-            $aOut = array(
+            $aOut = [
                 'status' => 401,
-                'error' => 'You must be logged in.'
-            );
+                'error'  => 'You must be logged in.',
+            ];
         }
 
         return $aOut;

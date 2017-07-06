@@ -1,3 +1,9 @@
+<?php
+
+use Nails\Factory;
+$oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+
+?>
 <fieldset>
     <legend><?=lang('accounts_create_basic_legend')?></legend>
     <div class="box-container">
@@ -8,7 +14,7 @@
     $field['key']      = 'group_id';
     $field['label']    = lang('accounts_create_field_group_label');
     $field['required'] = true;
-    $field['default']  = $this->user_group_model->getDefaultGroupId();
+    $field['default']  = $oUserGroupModel->getDefaultGroupId();
     $field['class']    = 'select2';
 
     //  Prepare ID's
@@ -25,7 +31,7 @@
     }
 
     //  Render the group descriptions
-    $iDefaultGroupId = $this->user_group_model->getDefaultGroupId();
+    $iDefaultGroupId = $oUserGroupModel->getDefaultGroupId();
     $field['info'] = '<ul id="user-group-descriptions">';
     foreach ($groups as $group) {
 
