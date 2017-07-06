@@ -29,8 +29,9 @@ class Create extends Base
     /**
      * Executes the app
      *
-     * @param  InputInterface $oInput The Input Interface provided by Symfony
+     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
      * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     *
      * @return int
      * @throws \Exception
      */
@@ -76,7 +77,7 @@ class Create extends Base
         // --------------------------------------------------------------------------
 
         //  Detect super group ID
-        $oDb     = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+        $oDb     = Factory::service('PDODatabase');
         $oResult = $oDb->query(
             'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
@@ -187,12 +188,13 @@ class Create extends Base
      * Create the user
      *
      * @param array $aUser The details to create the user with
+     *
      * @return void
      */
     private function createUser($aUser, $iGroupId)
     {
         //  Get the database
-        $oDb = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+        $oDb = Factory::service('PDODatabase');
 
         //  Test username/email for duplicates
         $oStatement = $oDb->prepare('
@@ -350,8 +352,9 @@ class Create extends Base
     /**
      * Performs the abort functionality and returns the exit code
      *
-     * @param  array $aMessages The error message
+     * @param  array   $aMessages The error message
      * @param  integer $iExitCode The exit code
+     *
      * @return int
      */
     protected function abort($iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
