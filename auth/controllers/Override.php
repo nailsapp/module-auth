@@ -16,13 +16,11 @@ use Nails\Auth\Controller\Base;
 class Override extends Base
 {
     /**
-     * Construct the controller
+     * Override constructor.
      */
     public function __construct()
     {
         parent::__construct();
-
-        // --------------------------------------------------------------------------
 
         //  If you're not a admin then you shouldn't be accessing this class
         if (!wasAdmin() && !isAdmin()) {
@@ -35,7 +33,6 @@ class Override extends Base
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Log in as another user
      * @return  void
@@ -44,12 +41,13 @@ class Override extends Base
     {
         //  Perform lookup of user
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUri       = Factory::service('Uri');
 
-        $hashId = $this->uri->segment(4);
-        $hashPw = $this->uri->segment(5);
-        $user   = $oUserModel->getByHashes($hashId, $hashPw);
+        $iHashId = (int) $oUri->segment(4) ?: null;
+        $sHashPw = $oUri->segment(5);
+        $oUser   = $oUserModel->getByHashes($iHashId, $sHashPw);
 
-        if (!$user) {
+        if (!$oUser) {
             show_404();
         }
 
@@ -66,23 +64,17 @@ class Override extends Base
 
         if (!wasAdmin()) {
 
-            $hasPermission = userHasPermission('admin:auth:accounts:loginAs');
-            $isCloning     = activeUser('id') == $user->id ? true : false;
-            $isSuperuser   = !userHasPermission('superuser') && userHasPermission('superuser', $user) ? true : false;
+            $bHasPermission = userHasPermission('admin:auth:accounts:loginAs');
+            $bIsCloning     = activeUser('id') == $oUser->id;
+            $bIsSuperuser   = !userHasPermission('superuser') && userHasPermission('superuser', $oUser) ? true : false;
 
-            if (!$hasPermission || $isCloning || $isSuperuser) {
-
-                if (!$hasPermission) {
-
+            if (!$bHasPermission || $bIsCloning || $bIsSuperuser) {
+                if (!$bHasPermission) {
                     $oSession->set_flashdata('error', lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
-
-                } elseif ($isCloning) {
-
+                } elseif ($bIsCloning) {
                     show_404();
-
-                } elseif ($isSuperuser) {
-
+                } elseif ($bIsSuperuser) {
                     show_404();
                 }
             }
@@ -90,19 +82,20 @@ class Override extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!$this->input->get('returningAdmin') && isAdmin()) {
+        $oInput = Factory::service('Input');
+        if (!$oInput->get('returningAdmin') && isAdmin()) {
 
             /**
              * The current user is an admin, we should set our Admin Recovery Data so
              * that they can come back.
              */
 
-            $oUserModel->setAdminRecoveryData($user->id, $this->input->get('return_to'));
-            $redirect = $user->group_homepage;
+            $oUserModel->setAdminRecoveryData($oUser->id, $oInput->get('return_to'));
+            $sRedirectUrl = $oUser->group_homepage;
 
             //  A bit of feedback
-            $status  = 'success';
-            $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
+            $sStatus  = 'success';
+            $sMessage = lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name);
 
         } elseif (wasAdmin()) {
 
@@ -111,14 +104,14 @@ class Override extends Base
              * them back to then remove the adminRecovery data.
              */
 
-            $recoveryData = getAdminRecoveryData();
-            $redirect     = !empty($recoveryData->returnTo) ? $recoveryData->returnTo : $user->group_homepage;
+            $oRecoveryData = getAdminRecoveryData();
+            $sRedirectUrl  = !empty($oRecoveryData->returnTo) ? $oRecoveryData->returnTo : $oUser->group_homepage;
 
             unsetAdminRecoveryData();
 
             //  Some feedback
-            $status  = 'success';
-            $message = lang('auth_override_return', $user->first_name . ' ' . $user->last_name);
+            $sStatus  = 'success';
+            $sMessage = lang('auth_override_return', $oUser->first_name . ' ' . $oUser->last_name);
 
         } else {
 
@@ -127,27 +120,27 @@ class Override extends Base
              * verification.
              */
 
-            $redirect = $user->group_homepage;
+            $sRedirectUrl = $oUser->group_homepage;
 
             //  Some feedback
-            $status  = 'success';
-            $message = lang('auth_override_ok', $user->first_name . ' ' . $user->last_name);
+            $sStatus  = 'success';
+            $sMessage = lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name);
         }
 
         // --------------------------------------------------------------------------
 
         //  Replace current user's session data
-        $oUserModel->setLoginData($user->id);
+        $oUserModel->setLoginData($oUser->id);
 
         // --------------------------------------------------------------------------
 
         //  Any feedback?
-        if (!empty($message)) {
-            $oSession->set_flashdata($status, $message);
+        if (!empty($sMessage)) {
+            $oSession->set_flashdata($sStatus, $sMessage);
         }
 
         // --------------------------------------------------------------------------
 
-        redirect($redirect);
+        redirect($sRedirectUrl);
     }
 }

@@ -13,8 +13,11 @@
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
-class Mfa_question extends BaseMfa
+class MfaQuestion extends BaseMfa
 {
+    /**
+     * Ensures we're use the correct MFA type
+     */
     public function _remap()
     {
         if ($this->authMfaMode == 'QUESTION') {
@@ -26,6 +29,10 @@ class Mfa_question extends BaseMfa
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Sets up, or asks an MFA Question
+     * @throws Exception
+     */
     public function index()
     {
         //  Validates the request token and generates a new one for the next request
@@ -131,35 +138,34 @@ class Mfa_question extends BaseMfa
 
                         //  Make sure that we have different questions
                         $aQuestionIndex = [];
-                        $question       = (array) $oInput->post('question', true);
-                        $error          = false;
+                        $aQuestion      = (array) $oInput->post('question', true);
+                        $bError         = false;
 
-                        foreach ($question as $q) {
+                        foreach ($aQuestion as $q) {
                             if (array_search($q['question'], $aQuestionIndex) === false) {
                                 $aQuestionIndex[] = $q['question'];
                             } else {
-                                $error = true;
+                                $bError = true;
                                 break;
                             }
                         }
 
                         $aQuestionIndex = [];
-                        $question       = (array) $oInput->post('custom_question', true);
+                        $aQuestion      = (array) $oInput->post('custom_question', true);
 
-                        foreach ($question as $q) {
-
+                        foreach ($aQuestion as $q) {
                             if (array_search($q['question'], $aQuestionIndex) === false) {
                                 $aQuestionIndex[] = $q['question'];
                             } else {
-                                $error = true;
+                                $bError = true;
                                 break;
                             }
                         }
 
-                        if (!$error) {
+                        if (!$bError) {
 
                             //  Good arrows. Save questions
-                            $data = [];
+                            $aData = [];
 
                             if ($oInput->post('question', true)) {
 
@@ -174,20 +180,20 @@ class Mfa_question extends BaseMfa
                                     }
                                     $oTemp->answer = $q['answer'];
 
-                                    $data[] = $oTemp;
+                                    $aData[] = $oTemp;
                                 }
                             }
 
                             if ($oInput->post('custom_question', true)) {
                                 foreach ((array) $oInput->post('custom_question', true) as $aQuestion) {
-                                    $data[] = (object) [
+                                    $aData[] = (object) [
                                         'question' => trim($aQuestion['question']),
                                         'answer'   => $aQuestion['answer'],
                                     ];
                                 }
                             }
 
-                            if ($oAuthModel->mfaQuestionSet($this->mfaUser->id, $data)) {
+                            if ($oAuthModel->mfaQuestionSet($this->mfaUser->id, $aData)) {
 
                                 $sStatus  = 'success';
                                 $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You ';
@@ -228,6 +234,9 @@ class Mfa_question extends BaseMfa
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Asks one of the user's questions
+     */
     protected function askQuestion()
     {
         //  Ask away cap'n!

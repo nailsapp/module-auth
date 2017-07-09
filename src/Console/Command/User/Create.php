@@ -48,13 +48,11 @@ class Create extends Base
 
         if (!defined('APP_PRIVATE_KEY')) {
             $oOutput->writeln('<error>APP_PRIVATE_KEY is not defined; does Nails need installed?</error>');
-
             return $this->abort();
         }
 
         if (!defined('DEPLOY_PRIVATE_KEY')) {
             $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined; does Nails need installed?</error>');
-
             return $this->abort();
         }
 
@@ -185,11 +183,10 @@ class Create extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Create the user
+     * @param array   $aUser    The details to create the user with
+     * @param integer $iGroupId The group to add the user to
      *
-     * @param array $aUser The details to create the user with
-     *
-     * @return void
+     * @throws \Exception
      */
     private function createUser($aUser, $iGroupId)
     {
@@ -269,20 +266,18 @@ class Create extends Base
                 );
             ');
 
-            $oStatement->execute(
-                [
-                    'group_id'        => $iGroupId,
-                    'ip_address'      => '127.0.0.1',
-                    'last_ip'         => '127.0.0.1',
-                    'username'        => $aUser['username'],
-                    'password'        => $oPassword->password,
-                    'password_md5'    => $oPassword->password_md5,
-                    'password_engine' => $oPassword->engine,
-                    'salt'            => $oPassword->salt,
-                    'first_name'      => $aUser['first_name'],
-                    'last_name'       => $aUser['last_name'],
-                ]
-            );
+            $oStatement->execute([
+                'group_id'        => $iGroupId,
+                'ip_address'      => '127.0.0.1',
+                'last_ip'         => '127.0.0.1',
+                'username'        => $aUser['username'],
+                'password'        => $oPassword->password,
+                'password_md5'    => $oPassword->password_md5,
+                'password_engine' => $oPassword->engine,
+                'salt'            => $oPassword->salt,
+                'first_name'      => $aUser['first_name'],
+                'last_name'       => $aUser['last_name'],
+            ]);
 
             $iUserId = $oDb->lastInsertId();
 
@@ -301,11 +296,9 @@ class Create extends Base
                 );
             ');
 
-            $oStatement->execute(
-                [
-                    'user_id' => $iUserId,
-                ]
-            );
+            $oStatement->execute([
+                'user_id' => $iUserId,
+            ]);
 
             //  Create the user email record
             $oStatement = $oDb->prepare('
@@ -331,13 +324,11 @@ class Create extends Base
                 );
             ');
 
-            $oStatement->execute(
-                [
-                    'user_id' => $iUserId,
-                    'email'   => $aUser['email'],
-                    'code'    => $oPasswordModel->salt(),
-                ]
-            );
+            $oStatement->execute([
+                'user_id' => $iUserId,
+                'email'   => $aUser['email'],
+                'code'    => $oPasswordModel->salt(),
+            ]);
 
         } catch (\Exception $e) {
             if (!empty($iUserId)) {

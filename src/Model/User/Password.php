@@ -548,7 +548,7 @@ class Password extends Base
 
         //  Update the user
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $oUser = $oUserModel->getByIdentifier($sIdentifier);
+        $oUser      = $oUserModel->getByIdentifier($sIdentifier);
 
         if ($oUser) {
 
@@ -677,7 +677,7 @@ class Password extends Base
             $aOut['requirements']['number']      = in_array('number', $aRules['requirements']);
             $aOut['requirements']['lower_alpha'] = in_array('lower_alpha', $aRules['requirements']);
             $aOut['requirements']['upper_alpha'] = in_array('upper_alpha', $aRules['requirements']);
-            $aOut['requirements'] = array_filter($aOut['requirements']);
+            $aOut['requirements']                = array_filter($aOut['requirements']);
         }
 
         //  Banned words

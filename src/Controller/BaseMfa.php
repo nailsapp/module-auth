@@ -50,8 +50,8 @@ class BaseMfa extends Base
 
         $this->returnTo = $oInput->get('return_to', true);
         $this->remember = $oInput->get('remember', true);
-        $userId         = $oUri->segment(3);
-        $this->mfaUser  = $oUserModel->getById($userId);
+        $iUserId        = (int) $oUri->segment(4);
+        $this->mfaUser  = $oUserModel->getById($iUserId);
 
         if (!$this->mfaUser) {
             $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
@@ -62,10 +62,10 @@ class BaseMfa extends Base
             }
         }
 
-        $sSalt             = $oUri->segment(4);
-        $sToken            = $oUri->segment(5);
+        $sSalt             = $oUri->segment(5);
+        $sToken            = $oUri->segment(6);
         $sIpAddress        = $oInput->ipAddress();
-        $this->loginMethod = $oUri->segment(6) ? $oUri->segment(6) : 'native';
+        $this->loginMethod = $oUri->segment(7) ? $oUri->segment(7) : 'native';
 
         //  Safety first
         switch (strtolower($this->loginMethod)) {
@@ -117,6 +117,9 @@ class BaseMfa extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Logs a user In
+     */
     protected function loginUser()
     {
         //  Set login data for this user

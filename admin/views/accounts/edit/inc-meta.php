@@ -16,13 +16,13 @@
 
             $dataType = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'string';
 
-            $field             = array();
+            $field             = [];
             $field['key']      = $metaField;
             $field['type']     = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'text';
             $field['class']    = isset($user_meta_cols[$metaField]['class']) ? $user_meta_cols[$metaField]['class'] : '';
             $field['label']    = isset($user_meta_cols[$metaField]['label']) ? $user_meta_cols[$metaField]['label'] : ucwords(str_replace('_', ' ', $metaField));
             $field['required'] = isset($user_meta_cols[$metaField]['required']) ? $user_meta_cols[$metaField]['required'] : false;
-            $field['options']  = isset($user_meta_cols[$metaField]['options']) ? $user_meta_cols[$metaField]['options'] : array();
+            $field['options']  = isset($user_meta_cols[$metaField]['options']) ? $user_meta_cols[$metaField]['options'] : [];
             $field['default']  = $value;
 
             switch ($dataType) {
@@ -53,9 +53,9 @@
                     //  Fetch items from the joining table
                     if (isset($user_meta_cols[$metaField]['join'])) {
 
-                        $table      = isset($user_meta_cols[$metaField]['join']['table'])     ? $user_meta_cols[$metaField]['join']['table']     : null;
-                        $selectId   = isset($user_meta_cols[$metaField]['join']['id'])        ? $user_meta_cols[$metaField]['join']['id']        : null;
-                        $selectName = isset($user_meta_cols[$metaField]['join']['name'])      ? $user_meta_cols[$metaField]['join']['name']      : null;
+                        $table      = isset($user_meta_cols[$metaField]['join']['table']) ? $user_meta_cols[$metaField]['join']['table'] : null;
+                        $selectId   = isset($user_meta_cols[$metaField]['join']['id']) ? $user_meta_cols[$metaField]['join']['id'] : null;
+                        $selectName = isset($user_meta_cols[$metaField]['join']['name']) ? $user_meta_cols[$metaField]['join']['name'] : null;
                         $orderCol   = isset($user_meta_cols[$metaField]['join']['order_col']) ? $user_meta_cols[$metaField]['join']['order_col'] : null;
                         $orderDir   = isset($user_meta_cols[$metaField]['join']['order_dir']) ? $user_meta_cols[$metaField]['join']['order_dir'] : 'ASC';
 

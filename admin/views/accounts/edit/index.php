@@ -23,7 +23,6 @@
         $this->load->view('accounts/edit/inc-mfa-question');
     }
 
-
     if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
         $this->load->view('accounts/edit/inc-mfa-device');
     }

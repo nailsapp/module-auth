@@ -9,5 +9,4 @@ if (NAILS_BRANDING) {
         </small>
     </p>
     <?php
-
 }

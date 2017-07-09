@@ -1,7 +1,7 @@
 <?php
 
-return array(
-    'services' => array(
+return [
+    'services' => [
         'Session' => function () {
             if (class_exists('\App\Auth\Library\Session')) {
                 return new \App\Auth\Library\Session();
@@ -15,9 +15,9 @@ return array(
             } else {
                 return new \Nails\Auth\Library\SocialSignOn();
             }
-        }
-    ),
-    'models' => array(
+        },
+    ],
+    'models'   => [
         'Auth' => function () {
             if (class_exists('\App\Auth\Model\Auth')) {
                 return new \App\Auth\Model\Auth();
@@ -59,6 +59,6 @@ return array(
             } else {
                 return new \Nails\Auth\Model\User\Password();
             }
-        }
-    )
-);
+        },
+    ],
+];

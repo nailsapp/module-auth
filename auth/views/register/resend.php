@@ -1,7 +1,10 @@
+<?php
+$oView = \Nails\Factory::service('View');
+?>
 <div class="container nails-module-auth register register-resend">
     <?php
 
-    $this->load->view('components/header');
+    $oView->load('components/header');
 
     ?>
     <div class="container">
@@ -17,7 +20,7 @@
     </div>
     <?php
 
-    $this->load->view('components/footer');
+    $oView->load('components/footer');
 
     ?>
 </div>

@@ -15,17 +15,17 @@ use Nails\Factory;
 if (!function_exists('activeUser')) {
 
     /**
-     * Alias to user_model->activeUser(); method
+     * Alias to UserModel->activeUser(); method
      *
-     * @param  boolean|string $keys      The key to look up in activeUser
-     * @param  string         $delimiter If multiple fields are requested they'll be joined by this string
+     * @param  boolean|string $sKey       The key to look up in activeUser
+     * @param  string         $sDelimiter If multiple fields are requested they'll be joined by this string
      *
      * @return mixed
      */
-    function activeUser($keys = false, $delimiter = ' ')
+    function activeUser($sKey = false, $sDelimiter = ' ')
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->activeUser($keys, $delimiter) : false;
+        return $oUserModel->activeUser($sKey, $sDelimiter);
     }
 }
 
@@ -34,17 +34,18 @@ if (!function_exists('activeUser')) {
 if (!function_exists('userHasPermission')) {
 
     /**
-     * Alias to user_model->hasPermission(); method
+     * Alias to UserModel->hasPermission(); method
      *
-     * @param   string $permission The permission to check for
-     * @param   mixed  $user       The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
+     * @param   string $sPermission The permission to check for
+     * @param   mixed  $mUser       The user to check for; if null uses activeUser,
+     *                              if numeric, fetches user, if object uses that object
      *
      * @return  boolean
      */
-    function userHasPermission($permission, $user = null)
+    function userHasPermission($sPermission, $mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->hasPermission($permission, $user) : false;
+        return $oUserModel->hasPermission($sPermission, $mUser);
     }
 }
 
@@ -53,13 +54,13 @@ if (!function_exists('userHasPermission')) {
 if (!function_exists('isLoggedIn')) {
 
     /**
-     * Alias to user_model->isLoggedIn()
+     * Alias to UserModel->isLoggedIn()
      * @return boolean
      */
     function isLoggedIn()
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->isLoggedIn() : false;
+        return $oUserModel->isLoggedIn();
     }
 }
 
@@ -68,16 +69,16 @@ if (!function_exists('isLoggedIn')) {
 if (!function_exists('isAdmin')) {
 
     /**
-     * Alias to user_model->isAdmin()
+     * Alias to UserModel->isAdmin()
      *
-     * @param  mixed $user The user to check, uses activeUser if null
+     * @param  mixed $mUser The user to check, uses activeUser if null
      *
      * @return boolean
      */
-    function isAdmin($user = null)
+    function isAdmin($mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->isAdmin($user) : false;
+        return $oUserModel->isAdmin($mUser);
     }
 }
 
@@ -86,13 +87,13 @@ if (!function_exists('isAdmin')) {
 if (!function_exists('wasAdmin')) {
 
     /**
-     * Alias to user_model->wasAdmin()
+     * Alias to UserModel->wasAdmin()
      * @return boolean
      */
     function wasAdmin()
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->wasAdmin() : false;
+        return $oUserModel->wasAdmin();
     }
 }
 
@@ -101,16 +102,16 @@ if (!function_exists('wasAdmin')) {
 if (!function_exists('isSuperuser')) {
 
     /**
-     * Alias to user_model->isSuperuser()
+     * Alias to UserModel->isSuperuser()
      *
-     * @param  mixed $user The user to check, uses activeUser if null
+     * @param  mixed $mUser The user to check, uses activeUser if null
      *
      * @return boolean
      */
-    function isSuperuser($user = null)
+    function isSuperuser($mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->isSuperuser($user) : false;
+        return $oUserModel->isSuperuser($mUser);
     }
 }
 
@@ -119,14 +120,14 @@ if (!function_exists('isSuperuser')) {
 if (!function_exists('getAdminRecoveryData')) {
 
     /**
-     * Alias to user_model->getAdminRecoveryData()
+     * Alias to UserModel->getAdminRecoveryData()
      *
      * @return boolean
      */
     function getAdminRecoveryData()
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->getAdminRecoveryData() : false;
+        return $oUserModel->getAdminRecoveryData();
     }
 }
 
@@ -135,13 +136,13 @@ if (!function_exists('getAdminRecoveryData')) {
 if (!function_exists('unsetAdminRecoveryData')) {
 
     /**
-     * Alias to user_model->unsetAdminRecoveryData()
+     * Alias to UserModel->unsetAdminRecoveryData()
      *
      * @return boolean
      */
     function unsetAdminRecoveryData()
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel ? $oUserModel->unsetAdminRecoveryData() : false;
+        return $oUserModel->unsetAdminRecoveryData();
     }
 }

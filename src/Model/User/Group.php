@@ -137,7 +137,6 @@ class Group extends Base
         $group = $this->getById($newGroupId);
 
         if (empty($group)) {
-
             $this->setError('"' . $newGroupId . '" is not a valid group ID.');
             return false;
         }
@@ -250,8 +249,7 @@ class Group extends Base
         $aIntegers = [],
         $aBools = [],
         $aFloats = []
-    )
-    {
+    ) {
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
         $oObj->acl            = json_decode($oObj->acl);

@@ -13,17 +13,11 @@
 use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
-class Reset_Password extends Base
+class PasswordReset extends Base
 {
     /**
-     * Constructor
-     *
-     * @access  public
-     *
-     * @param   none
-     *
-     * @return  void
-     **/
+     * PasswordReset constructor.
+     */
     public function __construct()
     {
         parent::__construct();
@@ -47,7 +41,7 @@ class Reset_Password extends Base
      * @param   string $hash The hash to validate against
      *
      * @return  void
-     **/
+     */
     protected function validate($id, $hash)
     {
         $oConfig    = Factory::service('Config');
@@ -358,12 +352,13 @@ class Reset_Password extends Base
     /**
      * Route requests to the right method
      *
-     * @param   string $id The ID of the user to reset, as per the URL
+     * @param   string $sId The ID of the user to reset, as per the URL
      *
      * @return  void
      **/
-    public function _remap($id)
+    public function _remap($sId)
     {
-        $this->validate($id, $this->uri->segment(4));
+        $oUri = Factory::service('Uri');
+        $this->validate($sId, $oUri->segment(5));
     }
 }

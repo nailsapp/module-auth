@@ -204,11 +204,11 @@ class Login extends Base
             switch ($oConfig->item('authTwoFactorMode')) {
 
                 case 'QUESTION':
-                    $sController = 'mfa_question';
+                    $sController = 'mfa/question';
                     break;
 
                 case 'DEVICE':
-                    $sController = 'mfa_device';
+                    $sController = 'mfa/device';
                     break;
 
                 default:
@@ -317,7 +317,7 @@ class Login extends Base
         $oAuthModel->logout();
 
         //  @todo (Pablo - 2017-07-09) - Rework this logic; easy to reverse engineer the user's salt
-        redirect('auth/reset_password/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
+        redirect('auth/password/reset/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
     }
 
     // --------------------------------------------------------------------------
@@ -925,17 +925,17 @@ class Login extends Base
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_email_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_email_already_registered', site_url('auth/password/forgotten'))
                 );
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_username_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_username_already_registered', site_url('auth/password/forgotten'))
                 );
             } else {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_identity_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_identity_already_registered', site_url('auth/password/forgotten'))
                 );
             }
 
@@ -1011,16 +1011,16 @@ class Login extends Base
      */
     public function _remap()
     {
-        $oUri   = Factory::service('Uri');
-        $method = $oUri->segment(3) ? $oUri->segment(3) : 'index';
+        $oUri    = Factory::service('Uri');
+        $sMethod = $oUri->segment(3) ? $oUri->segment(3) : 'index';
 
-        if (method_exists($this, $method) && substr($method, 0, 1) != '_') {
-            $this->{$method}();
+        if (method_exists($this, $sMethod) && substr($sMethod, 0, 1) != '_') {
+            $this->{$sMethod}();
         } else {
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
             $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
-            if ($oSocial->isValidProvider($method)) {
-                $this->socialSignon($method);
+            if ($oSocial->isValidProvider($sMethod)) {
+                $this->socialSignon($sMethod);
             } else {
                 show_404();
             }

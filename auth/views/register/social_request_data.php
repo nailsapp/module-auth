@@ -1,5 +1,7 @@
 <?php
 
+$oView = \Nails\Factory::service('View');
+
 if ($return_to) {
 
     $_returns = '?';
@@ -14,7 +16,7 @@ if ($return_to) {
 <div class="container nails-module-auth register register-social-request-data">
     <?php
 
-    $this->load->view('components/header');
+    $oView->load('components/header');
 
     ?>
     <div class="row">
@@ -24,82 +26,17 @@ if ($return_to) {
                 <p>
                     <?=lang('auth_register_extra_message')?>
                 </p>
-                <hr />
+                <hr/>
                 <?php
 
-                    if (APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME') :
+                if (APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME') :
 
-                        if (isset($required_data['email'])) :
+                    if (isset($required_data['email'])) :
 
-                            $_field         = 'email';
-                            $_label         = lang('form_label_email');
-                            $_placeholder   = lang('auth_register_email_placeholder');
-                            $_default       = $required_data['email'];
-
-                            ?>
-                            <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
-                                <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
-                                <div class="col-sm-9">
-                                    <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
-                                    <?=form_error($_field, '<p class="help-block">', '</p>')?>
-                                </div>
-                            </div>
-                            <?php
-
-                        endif;
-
-                    endif;
-
-                    // --------------------------------------------------------------------------
-
-                    if (APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL') :
-
-                        if (isset($required_data['username'])) :
-
-                            $_field         = 'username';
-                            $_label         = lang('form_label_username');
-                            $_placeholder   = lang('auth_register_username_placeholder');
-                            $_default       = $required_data['username'];
-
-                            ?>
-                            <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
-                                <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
-                                <div class="col-sm-9">
-                                    <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
-                                    <?=form_error($_field, '<p class="help-block">', '</p>')?>
-                                </div>
-                            </div>
-                            <?php
-
-                        endif;
-
-                    endif;
-
-                    // --------------------------------------------------------------------------
-
-                    if (! $required_data['first_name'] || ! $required_data['last_name']) :
-
-                        $_field         = 'first_name';
-                        $_label         = lang('form_label_first_name');
-                        $_placeholder   = lang('auth_register_first_name_placeholder');
-                        $_default       = ! empty($required_data['first_name']) ? $required_data['first_name'] : '';
-
-                        ?>
-                        <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
-                            <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
-                            <div class="col-sm-9">
-                                <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
-                                <?=form_error($_field, '<p class="help-block">', '</p>')?>
-                            </div>
-                        </div>
-                        <?php
-
-                        // --------------------------------------------------------------------------
-
-                        $_field         = 'last_name';
-                        $_label         = lang('form_label_last_name');
-                        $_placeholder   = lang('auth_register_last_name_placeholder');
-                        $_default       = ! empty($required_data['last_name']) ? $required_data['last_name'] : '';
+                        $_field = 'email';
+                        $_label = lang('form_label_email');
+                        $_placeholder = lang('auth_register_email_placeholder');
+                        $_default = $required_data['email'];
 
                         ?>
                         <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
@@ -112,9 +49,74 @@ if ($return_to) {
                         <?php
 
                     endif;
+
+                endif;
+
+                // --------------------------------------------------------------------------
+
+                if (APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL') :
+
+                    if (isset($required_data['username'])) :
+
+                        $_field = 'username';
+                        $_label = lang('form_label_username');
+                        $_placeholder = lang('auth_register_username_placeholder');
+                        $_default = $required_data['username'];
+
+                        ?>
+                        <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
+                            <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+                            <div class="col-sm-9">
+                                <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
+                                <?=form_error($_field, '<p class="help-block">', '</p>')?>
+                            </div>
+                        </div>
+                        <?php
+
+                    endif;
+
+                endif;
+
+                // --------------------------------------------------------------------------
+
+                if (!$required_data['first_name'] || !$required_data['last_name']) :
+
+                    $_field = 'first_name';
+                    $_label = lang('form_label_first_name');
+                    $_placeholder = lang('auth_register_first_name_placeholder');
+                    $_default = !empty($required_data['first_name']) ? $required_data['first_name'] : '';
+
+                    ?>
+                    <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
+                        <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+                        <div class="col-sm-9">
+                            <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
+                            <?=form_error($_field, '<p class="help-block">', '</p>')?>
+                        </div>
+                    </div>
+                    <?php
+
+                    // --------------------------------------------------------------------------
+
+                    $_field       = 'last_name';
+                    $_label       = lang('form_label_last_name');
+                    $_placeholder = lang('auth_register_last_name_placeholder');
+                    $_default     = !empty($required_data['last_name']) ? $required_data['last_name'] : '';
+
+                    ?>
+                    <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
+                        <label class="col-sm-3 control-label" for="input-<?=$_field?>"><?=$_label?></label>
+                        <div class="col-sm-9">
+                            <?=form_input($_field, set_value($_field, $_default), 'id="input-<?=$_field?>" placeholder="' . $_placeholder . '" class="form-control "')?>
+                            <?=form_error($_field, '<p class="help-block">', '</p>')?>
+                        </div>
+                    </div>
+                    <?php
+
+                endif;
 
                 ?>
-                <hr />
+                <hr/>
                 <div class="form-group">
                     <div class="col-sm-offset-3 col-sm-9">
                         <button type="submit" class="btn btn-primary"><?=lang('action_continue')?></button>
@@ -126,7 +128,7 @@ if ($return_to) {
     </div>
     <?php
 
-    $this->load->view('components/footer');
+    $oView->load('components/footer');
 
     ?>
 </div>

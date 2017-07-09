@@ -13,65 +13,47 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Factory;
+use Nails\Common\Traits\Caching;
+use Nails\Common\Traits\ErrorHandling;
 
 class Meta
 {
-    use \Nails\Common\Traits\Caching;
-    use \Nails\Common\Traits\ErrorHandling;
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * The Database service
-     * @var \Nails\Common\Database
-     */
-    private $oDb;
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Construct the model
-     */
-    public function __construct()
-    {
-        $this->oDb = Factory::service('Database');
-    }
+    use Caching;
+    use ErrorHandling;
 
     // --------------------------------------------------------------------------
 
     /**
      * Fetches a record from a user_meta_* table
-     * @param  string   $sTable   The table to fetch from
-     * @param  integer  $iUserId  The ID of the user the record belongs to
-     * @param  array    $aColumns Any specific columns to select
+     *
+     * @param  string  $sTable   The table to fetch from
+     * @param  integer $iUserId  The ID of the user the record belongs to
+     * @param  array   $aColumns Any specific columns to select
+     *
      * @return \stdClass
      */
-    public function get($sTable, $iUserId, $aColumns = array())
+    public function get($sTable, $iUserId, $aColumns = [])
     {
         //  Check cache
+        $oDb       = Factory::service('Database');
         $sCacheKey = 'user-meta-' . $sTable . '-' . $iUserId;
-        $oCache = $this->getCache($sCacheKey);
+        $oCache    = $this->getCache($sCacheKey);
 
         if (!empty($oCache)) {
-
             return $oCache;
         }
 
         if (!empty($aColumns)) {
-
-            $this->oDb->select($aColumns);
+            $oDb->select($aColumns);
         }
 
-        $this->oDb->where('user_id', $iUserId);
-        $aResult = $this->oDb->get($sTable)->result();
+        $oDb->where('user_id', $iUserId);
+        $aResult = $oDb->get($sTable)->result();
 
         if (empty($aResult)) {
-
             $mOut = null;
-
         } else {
-
-            $mOut = $aResult[0];
+            $mOut = reset($aResult);
         }
 
         $this->setCache($sCacheKey, $mOut);
@@ -83,29 +65,30 @@ class Meta
 
     /**
      * Fetches records from a user_meta_table which may have many rows
-     * @param  string   $sTable   The table to fetch from
-     * @param  integer  $iUserId  The ID of the user the records belongs to
-     * @param  array    $aColumns Any specific columns to select
+     *
+     * @param  string  $sTable   The table to fetch from
+     * @param  integer $iUserId  The ID of the user the records belongs to
+     * @param  array   $aColumns Any specific columns to select
+     *
      * @return array
      */
-    public function getMany($sTable, $iUserId, $aColumns = array())
+    public function getMany($sTable, $iUserId, $aColumns = [])
     {
         //  Check cache
+        $oDb       = Factory::service('Database');
         $sCacheKey = 'user-meta-many-' . $sTable . '-' . $iUserId;
-        $oCache = $this->getCache($sCacheKey);
+        $oCache    = $this->getCache($sCacheKey);
 
         if (!empty($oCache)) {
-
             return $oCache;
         }
 
         if (!empty($aColumns)) {
-
-            $this->oDb->select($aColumns);
+            $oDb->select($aColumns);
         }
 
-        $this->oDb->where('user_id', $iUserId);
-        $aResult = $this->oDb->get($sTable)->result();
+        $oDb->where('user_id', $iUserId);
+        $aResult = $oDb->get($sTable)->result();
 
         $this->setCache($sCacheKey, $aResult);
 
@@ -116,9 +99,11 @@ class Meta
 
     /**
      * Updates a user_meta_* table
+     *
      * @param  string  $sTable  The table to update
      * @param  integer $iUserId The ID of the user the record belongs to
      * @param  array   $aData   The data to set
+     *
      * @return boolean
      */
     public function update($sTable, $iUserId, $aData)
@@ -126,21 +111,21 @@ class Meta
         //  Safety: Ensure that the user_id is not overridden
         $aData['user_id'] = $iUserId;
 
-        $this->oDb->where('user_id', $iUserId);
-        if ($this->oDb->count_all_results($sTable)) {
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $iUserId);
+        if ($oDb->count_all_results($sTable)) {
 
-            $this->oDb->set($aData);
-            $this->oDb->where('user_id', $iUserId);
-            $bResult = $this->oDb->update($sTable);
+            $oDb->set($aData);
+            $oDb->where('user_id', $iUserId);
+            $bResult = $oDb->update($sTable);
 
         } else {
 
-            $this->oDb->set($aData);
-            $bResult = $this->oDb->insert($sTable);
+            $oDb->set($aData);
+            $bResult = $oDb->insert($sTable);
         }
 
         if ($bResult) {
-
             $this->unsetCache('user-meta-' . $sTable . '-' . $iUserId);
         }
 
@@ -151,19 +136,22 @@ class Meta
 
     /**
      * Updates a user_meta_* table
+     *
      * @param  string  $sTable           The table to update
      * @param  integer $iUserId          The ID of the user ID being updated
      * @param  array   $aData            An array of rows to update
-     * @param  boolean $bDeleteUntouched Whether to delete records whichw ere not updated or created
+     * @param  boolean $bDeleteUntouched Whether to delete records which were not updated or created
+     *
      * @return boolean
      */
     public function updateMany($sTable, $iUserId, $aData, $bDeleteUntouched = true)
     {
+        $oDb = Factory::service('Database');
         try {
 
-            $aTouchedIds = array();
+            $aTouchedIds = [];
 
-            $this->oDb->trans_begin();
+            $oDb->trans_begin();
             foreach ($aData as $aRow) {
 
                 if (empty($aRow['id'])) {
@@ -172,12 +160,12 @@ class Meta
                     unset($aRow['id']);
                     //  Safety: overrwrite any user_id which may be passed
                     $aRow['user_id'] = $iUserId;
-                    $this->oDb->set($aRow);
-                    if (!$this->oDb->insert($sTable)) {
+                    $oDb->set($aRow);
+                    if (!$oDb->insert($sTable)) {
                         throw new \Exception('Failed to create item.', 1);
                     }
 
-                    $aTouchedIds[] = $this->oDb->insert_id();
+                    $aTouchedIds[] = $oDb->insert_id();
 
                 } else {
 
@@ -185,10 +173,10 @@ class Meta
                     $iId = $aRow['id'];
                     unset($aRow['id']);
 
-                    $this->oDb->where('id', $iId);
-                    $this->oDb->where('user_id', $iUserId);
-                    $this->oDb->set($aRow);
-                    if (!$this->oDb->update($sTable)) {
+                    $oDb->where('id', $iId);
+                    $oDb->where('user_id', $iUserId);
+                    $oDb->set($aRow);
+                    if (!$oDb->update($sTable)) {
                         throw new \Exception('Failed to update item.', 1);
                     }
 
@@ -197,23 +185,22 @@ class Meta
             }
 
             if ($bDeleteUntouched && !empty($aTouchedIds)) {
-                $this->oDb->where('user_id', $iUserId);
-                $this->oDb->where_not_in('id', $aTouchedIds);
+                $oDb->where('user_id', $iUserId);
+                $oDb->where_not_in('id', $aTouchedIds);
 
-                if (!$this->oDb->delete($sTable)) {
+                if (!$oDb->delete($sTable)) {
                     throw new \Exception('Failed to delete old items.', 1);
                 }
             }
 
-
-            $this->oDb->trans_commit();
+            $oDb->trans_commit();
             $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
             return true;
 
         } catch (\Exception $e) {
 
             $this->setError($e->getMessage());
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
             return false;
         }
     }
@@ -222,14 +209,17 @@ class Meta
 
     /**
      * Deletes a user_meta_* row
+     *
      * @param  string  $sTable  The table to delete from
      * @param  integer $iUserId The ID of the user the record belongs to
+     *
      * @return boolean
      */
     public function delete($sTable, $iUserId)
     {
-        $this->oDb->where('user_id', $iUserId);
-        if (!$this->oDb->delete($sTable)) {
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $iUserId);
+        if (!$oDb->delete($sTable)) {
             return false;
         }
 
@@ -241,25 +231,25 @@ class Meta
 
     /**
      * Deletes from a user_meta_* table
+     *
      * @param  string        $sTable  The table to delete from
      * @param  integer       $iUserId The ID of the user the record belongs to
      * @param  integer|array $mRowIds An array of row IDs to delete (or a single row ID)
+     *
      * @return boolean
      */
     public function deleteMany($sTable, $iUserId, $mRowIds = null)
     {
-        $this->oDb->where('user_id', $iUserId);
+        $oDb = Factory::service('Database');
+        $oDb->where('user_id', $iUserId);
 
         if (is_numeric($mRowIds)) {
-
-            $this->oDb->where('id', $mRowIds);
-
+            $oDb->where('id', $mRowIds);
         } elseif (is_array($mRowIds)) {
-
-            $this->oDb->where_in('id', $mRowIds);
+            $oDb->where_in('id', $mRowIds);
         }
 
-        if (!$this->oDb->delete($sTable)) {
+        if (!$oDb->delete($sTable)) {
             return false;
         }
 

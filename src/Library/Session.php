@@ -2,8 +2,8 @@
 
 /**
  * The class handles the user's session
- * @todo remove dependency on CodeIgniter's Session library
- * @todo properly handle CLI behaviour
+ * @todo        remove dependency on CodeIgniter's Session library
+ * @todo        properly handle CLI behaviour
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -49,7 +49,6 @@ class Session
             $sSessionTable = $oCi->config->item('sess_table_name');
 
             if ($sSessionTable === 'nails_session' && NAILS_DB_PREFIX !== 'nails_') {
-
                 $sSessionTable = str_replace('nails_', NAILS_DB_PREFIX, $sSessionTable);
                 $oCi->config->set_item('sess_table_name', $sSessionTable);
             }
@@ -59,7 +58,6 @@ class Session
             $this->bIsCli   = false;
 
         } else {
-
             $this->bIsCli = true;
         }
     }
@@ -68,18 +66,17 @@ class Session
 
     /**
      * Route calls to the CodeIgniter Session class
+     *
      * @param  string $sMethod    The method being called
      * @param  array  $aArguments Any arguments being passed
+     *
      * @return mixed
      */
     public function __call($sMethod, $aArguments)
     {
         if (!$this->bIsCli) {
-
-            return call_user_func_array(array($this->oSession, $sMethod), $aArguments);
-
+            return call_user_func_array([$this->oSession, $sMethod], $aArguments);
         } else {
-
             return null;
         }
     }
@@ -88,17 +85,16 @@ class Session
 
     /**
      * Pass any property "gets" to the CodeIgniter Session class
+     *
      * @param  string $sProperty The property to get
+     *
      * @return mixed
      */
     public function __get($sProperty)
     {
         if (!$this->bIsCli) {
-
             return $this->oSession->{$sProperty};
-
         } else {
-
             return null;
         }
     }
@@ -107,9 +103,11 @@ class Session
 
     /**
      * Pass any property "sets" to the CodeIgniter Session class
+     *
      * @param  string $sProperty The property to set
      * @param  mixed  $mValue    The value to set
-     * @return mixed
+     *
+     * @return void
      */
     public function __set($sProperty, $mValue)
     {
@@ -118,9 +116,15 @@ class Session
         }
     }
 
-    public function keep_flashdata() {
-        $flashData = $this->oSession->flashdata();
-        $flashDataKeys = array_keys( $flashData );
-        $this->oSession->keep_flashdata( $flashDataKeys );
+    // --------------------------------------------------------------------------
+
+    /**
+     * Keep flashdata around for another cycle
+     */
+    public function keep_flashdata()
+    {
+        $aFlashData     = $this->oSession->flashdata();
+        $aFlashDataKeys = array_keys($aFlashData);
+        $this->oSession->keep_flashdata($aFlashDataKeys);
     }
 }

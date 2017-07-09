@@ -16,10 +16,6 @@ use Nails\Factory;
 
 class Base extends \App\Controller\Base
 {
-    protected $auth_model;
-
-    // --------------------------------------------------------------------------
-
     public function __construct()
     {
         parent::__construct();

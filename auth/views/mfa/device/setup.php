@@ -1,6 +1,7 @@
 <?php
 
-$query              = array();
+$oView              = \Nails\Factory::service('View');
+$query              = [];
 $query['return_to'] = $return_to;
 $query['remember']  = $remember;
 
@@ -19,7 +20,7 @@ if (!empty($query)) {
 <div class="container nails-module-auth mfa mfa-device mfa-device-setup">
     <?php
 
-    $this->load->view('components/header');
+    $oView->load('components/header');
 
     ?>
     <div class="row">
@@ -27,61 +28,60 @@ if (!empty($query)) {
             <div class="well well-lg">
                 <?php
 
-                echo form_open('auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
+                echo form_open('auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
 
-                    echo form_hidden('mfaSecret', $secret['secret']);
+                echo form_hidden('mfaSecret', $secret['secret']);
 
-                    ?>
-                    <div class="panel panel-defaul">
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-xs-5">
+                ?>
+                <div class="panel panel-defaul">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-xs-5">
                                 <?php
 
-                                    echo img(
-                                        array(
-                                            'src' => $secret['url'],
-                                            'class' => 'img-responsive img-thumbnail'
-                                        )
-                                    );
+                                echo img(
+                                    [
+                                        'src'   => $secret['url'],
+                                        'class' => 'img-responsive img-thumbnail',
+                                    ]
+                                );
 
                                 ?>
-                                </div>
-                                <div class="col-xs-7">
-                                    <p>
-                                        This site requires that you use Multi Factor Authentication when logging in.
-                                    </p>
-                                    <p>
-                                        Scan the QR code to the left with your MFA Device, then add two
-                                        sequential codes in the boxes below.
-                                    </p>
-                                    <?php
+                            </div>
+                            <div class="col-xs-7">
+                                <p>
+                                    This site requires that you use Multi Factor Authentication when logging in.
+                                </p>
+                                <p>
+                                    Scan the QR code to the left with your MFA Device, then add two
+                                    sequential codes in the boxes below.
+                                </p>
+                                <?php
 
-                                        $hasError = form_error('mfaCode1') ? 'has-error' : '';
-                                        echo '<div class="form-group ' . $hasError . '">';
-                                            echo form_input('mfaCode1', '', 'class="form-control" placeholder="Code 1"');
-                                            echo form_error('mfaCode1', '<p class="help-block">', '</p>');
-                                        echo '</div>';
+                                $hasError = form_error('mfaCode1') ? 'has-error' : '';
+                                echo '<div class="form-group ' . $hasError . '">';
+                                echo form_input('mfaCode1', '', 'class="form-control" placeholder="Code 1"');
+                                echo form_error('mfaCode1', '<p class="help-block">', '</p>');
+                                echo '</div>';
 
-                                        $hasError = form_error('mfaCode2') ? 'has-error' : '';
-                                        echo '<div class="form-group ' . $hasError . '">';
-                                            echo form_input('mfaCode2', '', 'class="form-control" placeholder="Code 2"');
-                                            echo form_error('mfaCode2', '<p class="help-block">', '</p>');
-                                        echo '</div>';
+                                $hasError = form_error('mfaCode2') ? 'has-error' : '';
+                                echo '<div class="form-group ' . $hasError . '">';
+                                echo form_input('mfaCode2', '', 'class="form-control" placeholder="Code 2"');
+                                echo form_error('mfaCode2', '<p class="help-block">', '</p>');
+                                echo '</div>';
 
-
-                                    ?>
-                                    <p>
-                                        <button type="submit" class="btn btn-primary btn-block">
+                                ?>
+                                <p>
+                                    <button type="submit" class="btn btn-primary btn-block">
                                         Verify Codes &amp; Sign in
-                                        </button>
-                                    </p>
-                                </div>
+                                    </button>
+                                </p>
                             </div>
                         </div>
                     </div>
+                </div>
                 <?=form_close()?>
-                <hr />
+                <hr/>
                 <p>
                     <small>
                         MFA stands for Multi Factor Authentication. Once set up you will require your
@@ -104,7 +104,7 @@ if (!empty($query)) {
     </div>
     <?php
 
-    $this->load->view('components/footer');
+    $oView->load('components/footer');
 
     ?>
 </div>

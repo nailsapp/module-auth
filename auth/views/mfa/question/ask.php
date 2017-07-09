@@ -1,6 +1,7 @@
 <?php
 
-$query              = array();
+$oView              = \Nails\Factory::service('View');
+$query              = [];
 $query['return_to'] = isset($return_to) ? $return_to : '';
 $query['remember']  = isset($remember) ? $remember : '';
 
@@ -22,15 +23,15 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
 } else {
 
     $login_method = $login_method && $login_method != 'native' ? '/' . $login_method : '';
-    $formUrl = 'auth/mfa_question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
-    $formUrl = site_url($formUrl);
+    $formUrl      = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
+    $formUrl      = site_url($formUrl);
 }
 
 ?>
 <div class="container nails-module-auth mfa mfa-question mfa-question-ask">
     <?php
 
-    $this->load->view('components/header');
+    $oView->load('components/header');
 
     ?>
     <div class="row">
@@ -39,21 +40,21 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
                 <p>
                     <?=lang('auth_twofactor_answer_body')?>
                 </p>
-                <hr />
+                <hr/>
                 <h4 style="margin-bottom:1.25em;">
                     <strong><?=$question->question?></strong>
                 </h4>
                 <p>
-                <?php
+                    <?php
 
                     echo form_open($formUrl);
 
-                ?>
+                    ?>
                 </p>
                 <p>
-                    <?=form_password('answer', NULL, 'class="form-control" placeholder="Type your answer here"')?>
+                    <?=form_password('answer', null, 'class="form-control" placeholder="Type your answer here"')?>
                 </p>
-                <hr />
+                <hr/>
                 <button class="btn btn-lg btn-primary" type="submit">Login</button>
                 <?=form_close()?>
             </div>
@@ -61,7 +62,7 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
     </div>
     <?php
 
-    $this->load->view('components/footer');
+    $oView->load('components/footer');
 
     ?>
 </div>

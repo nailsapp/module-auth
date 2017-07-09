@@ -440,7 +440,7 @@ class User extends Base
      */
     public function getAdminRecoveryData()
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession             = Factory::service('Session', 'nailsapp/module-auth');
         $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -898,7 +898,6 @@ class User extends Base
         }
 
         // --------------------------------------------------------------------------
-
 
         //  If there's some data we'll need to know the columns of `user`
         //  We also want to unset any 'dangerous' items then set it for the query
@@ -1534,7 +1533,6 @@ class User extends Base
     }
 
     // --------------------------------------------------------------------------
-
 
     /**
      * Verifies whether the supplied $code is valid for the requested user ID or email
@@ -2493,7 +2491,7 @@ class User extends Base
 
         if ($preview) {
 
-            $out        = new \stdClass;
+            $out        = new \stdClass();
             $out->user  = $this->getById($userId);
             $out->merge = [];
 
@@ -2579,8 +2577,7 @@ class User extends Base
         $aIntegers = [],
         $aBools = [],
         $aFloats = []
-    )
-    {
+    ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 

@@ -4,4 +4,4 @@ The request was made at {{updatedAt}}{{#updatedBy}} by <strong>{{updatedBy}}</st
 
 If it was not you who made this change, or you didn't request it, please IMMEDIATELY reset your password using the forgotten password facility (link below) and please let us know of any fraudulent activity on your account.
 
-<?=site_url('auth/forgotten_password')?>
+<?=site_url('auth/password/forgotten')?>

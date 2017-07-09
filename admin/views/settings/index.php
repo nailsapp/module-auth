@@ -2,11 +2,11 @@
     <p>
         Configure how the site handles authentication.
     </p>
-    <hr />
+    <hr/>
     <?php
 
-        echo form_open();
-        echo '<input type="hidden" name="activeTab" value="' . set_value('activeTab') . '" id="activeTab" />';
+    echo form_open();
+    echo '<input type="hidden" name="activeTab" value="' . set_value('activeTab') . '" id="activeTab" />';
 
     ?>
     <ul class="tabs">
@@ -60,16 +60,16 @@
             ?>
             <div class="tab-page tab-registration <?=$display?>">
                 <div class="fieldset">
-                <?php
+                    <?php
 
-                    $field            = array();
+                    $field            = [];
                     $field['key']     = 'user_registration_enabled';
                     $field['label']   = 'Registration Enabled';
                     $field['default'] = appSetting($field['key'], 'auth') ? true : false;
 
                     echo form_field_boolean($field, 'Admin will always be able to create users.');
 
-                ?>
+                    ?>
                 </div>
             </div>
             <?php
@@ -105,7 +105,9 @@
                         their account.
                     </p>
                     <p>
-                        You can refer to <?=anchor('http://hybridauth.sourceforge.net/userguide.html', 'HybridAuth\'s Documentation', 'target="_blank"')?> for
+                        You can refer
+                        to <?=anchor('http://hybridauth.sourceforge.net/userguide.html', 'HybridAuth\'s Documentation', 'target="_blank"')?>
+                        for
                         instructions on how to create these applications.
                     </p>
                     <div class="fieldset" id="site-settings-socialsignin">
@@ -113,7 +115,7 @@
 
                         foreach ($providers as $provider) {
 
-                            $field            = array();
+                            $field            = [];
                             $field['key']     = 'auth_social_signon_' . $provider['slug'] . '_enabled';
                             $field['label']   = $provider['label'];
                             $field['default'] = appSetting($field['key'], 'auth') ? true : false;
@@ -130,7 +132,7 @@
 
                                     echo '<div class="toggle toggle-modern"></div>';
                                     echo form_checkbox($field['key'], true, $selected);
-                                    echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="btn btn-warning fancybox">Configure</a>' : '';
+                                    echo $provider['fields'] ? '<a href="#configure-provider-' . $provider['slug'] . '" class="btn btn-primary pull-right fancybox">Configure</a>' : '';
                                     echo form_error($field['key'], '<span class="error">', '</span>');
 
                                     ?>
@@ -152,7 +154,7 @@
 
                                             foreach ($label as $key1 => $label1) {
 
-                                                $field             = array();
+                                                $field             = [];
                                                 $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1;
                                                 $field['label']    = $label1['label'];
                                                 $field['required'] = $label1['required'];
@@ -163,7 +165,7 @@
 
                                         } else {
 
-                                            $field             = array();
+                                            $field             = [];
                                             $field['key']      = 'auth_social_signon_' . $provider['slug'] . '_' . $key;
                                             $field['label']    = $label['label'];
                                             $field['required'] = $label['required'];
@@ -186,7 +188,7 @@
             }
         }
 
-    ?>
+        ?>
     </section>
     <p>
         <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>

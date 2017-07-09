@@ -13,8 +13,9 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Factory;
+use Nails\Common\Model\Base;
 
-class AccessToken extends \Nails\Common\Model\Base
+class AccessToken extends Base
 {
     protected $defaultExpiration;
     protected $tokenTemplate;
@@ -30,7 +31,7 @@ class AccessToken extends \Nails\Common\Model\Base
     {
         parent::__construct();
 
-        $this->table       = NAILS_DB_PREFIX . 'user_auth_access_token';
+        $this->table      = NAILS_DB_PREFIX . 'user_auth_access_token';
         $this->tableAlias = 'uaat';
 
         //  Load the config file and specify values
@@ -47,17 +48,20 @@ class AccessToken extends \Nails\Common\Model\Base
          * request a certain scope. This should be an array of callables.
          */
 
-        $this->scopeHandler = array();
+        $this->scopeHandler = [];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Creates a new access token
-     * @param  array $data The data to create the access token with
+     *
+     * @param  array  $data          The data to create the access token with
+     * @param boolean $bReturnObject Whether to return the object, or the ID
+     *
      * @return mixed false on failure, stdClass on success
      */
-    public function create($data = array(), $bReturnObject = false)
+    public function create($data = [], $bReturnObject = false)
     {
         //  User ID is a required field
         if (empty($data['user_id'])) {
@@ -99,7 +103,6 @@ class AccessToken extends \Nails\Common\Model\Base
 
         foreach ($data['scope'] as $sScope) {
 
-
             if (empty($this->scopeHandler[$sScope])) {
 
                 $this->setError('"' . $sScope . '" is not a valid token scope.');
@@ -109,7 +112,7 @@ class AccessToken extends \Nails\Common\Model\Base
 
                 $sScopeHandler = 'scopeHandler' . $this->scopeHandler[$sScope];
 
-                if (!is_callable(array($this, $sScopeHandler))) {
+                if (!is_callable([$this, $sScopeHandler])) {
 
                     $this->setError('"' . $this->scopeHandler[$sScope] . '" is not a valid token scope callback.');
                     return false;
@@ -133,7 +136,7 @@ class AccessToken extends \Nails\Common\Model\Base
                 '/[X]/',
                 function ($matches) {
 
-                    $start = rand(0, strlen($this->tokenCharacters)-1);
+                    $start = rand(0, strlen($this->tokenCharacters) - 1);
                     return substr($this->tokenCharacters, $start, 1);
                 },
                 $this->tokenTemplate
@@ -165,35 +168,30 @@ class AccessToken extends \Nails\Common\Model\Base
 
     /**
      * Revoke an access token for a user
-     * @param  integer $iUserId The ID of the suer the token belongs to
+     *
+     * @param  integer $iUserId The ID of the user the token belongs to
      * @param  mixed   $mToken  The token object, or a token ID
+     *
      * @return boolean
      */
     public function revoke($iUserId, $mToken)
     {
         if (is_string($mToken)) {
-
             $oToken = $this->getByToken($mToken);
-
         } else {
-
             $oToken = $mToken;
         }
 
         if ($oToken) {
 
             if ($oToken->user_id === $iUserId) {
-
                 return $this->delete($oToken->id);
-
             } else {
-
                 $this->setError('Not authorised to revoke that token.');
                 return false;
             }
 
         } else {
-
             return false;
         }
     }
@@ -202,8 +200,10 @@ class AccessToken extends \Nails\Common\Model\Base
 
     /**
      * Prevent update of access tokens
+     *
      * @param  int   $id   The accessToken's ID
      * @param  array $data Data to update the access token with
+     *
      * @return boolean
      */
     public function update($id, $data = [])
@@ -216,27 +216,25 @@ class AccessToken extends \Nails\Common\Model\Base
 
     /**
      * Returns a token by it's token
-     * @param  string $token The token to return
-     * @param  array  $data  Data to pass to getAll()
+     *
+     * @param  string $sToken The token to return
+     * @param  array  $aData  Data to pass to getAll()
+     *
      * @return mixed         false on failure, stdClass on success
      */
-    public function getByToken($token, $data = array())
+    public function getByToken($sToken, $aData = [])
     {
-        if (empty($data['where'])) {
-
-            $data['where'] = array();
+        if (empty($aData['where'])) {
+            $aData['where'] = [];
         }
 
-        $data['where'][] = array($this->tableAlias . '.token', hash('sha256', $token . APP_PRIVATE_KEY));
+        $aData['where'][] = [$this->tableAlias . '.token', hash('sha256', $sToken . APP_PRIVATE_KEY)];
 
-        $token = $this->getAll(null, null, $data);
+        $aTokens = $this->getAll(null, null, $aData);
 
-        if ($token) {
-
-            return $token[0];
-
+        if ($aTokens) {
+            return reset($aTokens);
         } else {
-
             return false;
         }
     }
@@ -245,16 +243,18 @@ class AccessToken extends \Nails\Common\Model\Base
 
     /**
      * Returns a token by it's token, but only if valid (i.e not expired)
+     *
      * @param  string $token The token to return
+     *
      * @return mixed         false on failure, stdClass on success
      */
     public function getByValidToken($token)
     {
-        $data = array(
-            'where' => array(
-                '(' . $this->tableAlias . '.expires IS NULL OR ' . $this->tableAlias . '.expires > NOW())'
-            )
-        );
+        $data = [
+            'where' => [
+                '(' . $this->tableAlias . '.expires IS NULL OR ' . $this->tableAlias . '.expires > NOW())',
+            ],
+        ];
 
         return $this->getByToken($token, $data);
     }
@@ -263,27 +263,23 @@ class AccessToken extends \Nails\Common\Model\Base
 
     /**
      * Determines whether a token has a given scope
-     * @param  mixed   $mToken   The token object, or a token ID
-     * @param  string  $sScope   The scope(s) to check for
+     *
+     * @param  mixed  $mToken The token object, or a token ID
+     * @param  string $sScope The scope(s) to check for
+     *
      * @return boolean
      */
     public function hasScope($mToken, $sScope)
     {
         if (is_numeric($mToken)) {
-
             $oToken = $this->getById($mToken);
-
         } else {
-
             $oToken = $mToken;
         }
 
         if ($oToken) {
-
             return in_array($sScope, $oToken->scope);
-
         } else {
-
             return false;
         }
     }
@@ -301,16 +297,16 @@ class AccessToken extends \Nails\Common\Model\Base
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
+        $aData = [],
+        $aIntegers = [],
+        $aBools = [],
+        $aFloats = []
     ) {
-
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
         $oObj->scope = explode(',', $oObj->scope);
     }

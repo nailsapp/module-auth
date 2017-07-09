@@ -25,7 +25,7 @@
             ?>
             Please note that the following tables will not be merged and any data in them which belongs to
             the users listed below will be deleted:
-            <br />
+            <br/>
             <code><?=implode('</code>, <code>', $mergeResult->ignoreTables)?></code>';
             <?php
         }
@@ -40,17 +40,17 @@
             </tr>
         </thead>
         <tbody>
-        <?php
+            <?php
 
-        foreach ($mergeResult->tables as $table) {
+            foreach ($mergeResult->tables as $table) {
 
-            echo '<tr>';
+                echo '<tr>';
                 echo '<td class="tableName">' . $table->name . '</td>';
                 echo '<td class="tableRows">' . $table->numRows . '</td>';
-            echo '</tr>';
-        }
+                echo '</tr>';
+            }
 
-        ?>
+            ?>
         </tbody>
     </table>
     <p class="alert alert-warning">
@@ -64,25 +64,25 @@
             </tr>
         </thead>
         <tbody>
-        <?php
+            <?php
 
-        foreach ($mergeResult->merge as $mergeUser) {
+            foreach ($mergeResult->merge as $mergeUser) {
 
-            echo '<tr>';
+                echo '<tr>';
                 echo '<td class="userId">' . number_format($mergeUser->id) . '</td>';
                 echo adminHelper('loadUserCell', $mergeUser);
-            echo '</tr>';
-        }
+                echo '</tr>';
+            }
 
-        ?>
+            ?>
         </tbody>
     </table>
 </div>
 <?php
 
-    echo form_open();
-    echo form_hidden('userId', $this->input->post('userId'));
-    echo form_hidden('mergeIds', $this->input->post('mergeIds'));
-    echo form_hidden('doMerge', true);
-    echo form_submit('submit', 'Perform Merge', 'class="btn btn-success"');
-    echo form_close();
+echo form_open();
+echo form_hidden('userId', $this->input->post('userId'));
+echo form_hidden('mergeIds', $this->input->post('mergeIds'));
+echo form_hidden('doMerge', true);
+echo form_submit('submit', 'Perform Merge', 'class="btn btn-success"');
+echo form_close();

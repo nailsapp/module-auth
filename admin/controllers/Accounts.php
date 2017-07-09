@@ -152,6 +152,15 @@ class Accounts extends BaseAdmin
             );
         }
 
+        $cbFilters[] = Helper::searchFilterObject(
+            $tableAlias . '.is_suspended',
+            'Suspended',
+            [
+                ['Yes', true, false],
+                ['No', false, true]
+            ]
+        );
+
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
@@ -247,7 +256,7 @@ class Accounts extends BaseAdmin
 
                 //  Success
                 $data             = [];
-                $data['group_id'] = (int) $this->input->post('group_id', true );
+                $data['group_id'] = (int) $this->input->post('group_id', true);
                 $data['password'] = trim($this->input->post('password', true));
 
                 if (!$data['password']) {
@@ -414,7 +423,7 @@ class Accounts extends BaseAdmin
 
         $user_meta_cols = $oConfig->item('user_meta_cols');
 
-        $group_id       = $oInput->post('group_id') ? $oInput->post('group_id', true) : $user->group_id;
+        $group_id = $oInput->post('group_id') ? $oInput->post('group_id', true) : $user->group_id;
 
         if (isset($user_meta_cols[$group_id])) {
             $this->data['user_meta_cols'] = $user_meta_cols[$user->group_id];
@@ -591,7 +600,6 @@ class Accounts extends BaseAdmin
                     foreach ($this->data['user_meta_cols'] as $col => $value) {
 
                         $mValue = $oInput->post($col, true);
-
 
                         //  Should the field be made null on empty?
                         if (!empty($value['nullOnEmpty']) && empty($mValue)) {
