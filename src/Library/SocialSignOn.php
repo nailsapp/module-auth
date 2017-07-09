@@ -38,7 +38,7 @@ class SocialSignOn
         $this->oDb        = Factory::service('Database');
         $this->oUserModel = Factory::model('User', 'nailsapp/module-auth');
 
-        $this->aProviders = array('all' => array(), 'enabled' => array(), 'disabled' => array());
+        $this->aProviders = ['all' => [], 'enabled' => [], 'disabled' => []];
 
         //  Set up Providers
         $oCi->config->load('auth/auth');
@@ -72,16 +72,16 @@ class SocialSignOn
 
         //  Set up Hybrid Auth
         $oDate                 = Factory::factory('DateTime');
-        $aConfig               = array();
+        $aConfig               = [];
         $aConfig['base_url']   = site_url('vendor/hybridauth/hybridauth/hybridauth/index.php');
-        $aConfig['providers']  = array();
+        $aConfig['providers']  = [];
         $aConfig['debug_mode'] = Environment::not('PRODUCTION');
-        $aConfig['debug_file'] = DEPLOY_LOG_DIR .  'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php';
+        $aConfig['debug_file'] = DEPLOY_LOG_DIR . 'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php';
 
         foreach ($this->aProviders['enabled'] as $aProvider) {
 
-            $aTemp              = array();
-            $aTemp['enabled']   = true;
+            $aTemp            = [];
+            $aTemp['enabled'] = true;
 
             if ($aProvider['fields']) {
 
@@ -89,7 +89,7 @@ class SocialSignOn
 
                     if (is_array($label) && !isset($label['label'])) {
 
-                        $aTemp[$key] = array();
+                        $aTemp[$key] = [];
 
                         foreach ($label as $key1 => $label1) {
 
@@ -160,7 +160,9 @@ class SocialSignOn
 
     /**
      * Returns a list of providers, optionally filtered by availability
+     *
      * @param  string $status The filter to apply
+     *
      * @return array
      */
     public function getProviders($status = null)
@@ -183,7 +185,9 @@ class SocialSignOn
 
     /**
      * Returns the details of a particular provider
+     *
      * @param  string $provider The provider to return
+     *
      * @return mixed            Array on success, false on failure
      */
     public function getProvider($provider)
@@ -202,7 +206,9 @@ class SocialSignOn
 
     /**
      * Returns the correct casing for a provider
+     *
      * @param  string $provider The provider to return
+     *
      * @return mixed            String on success, null on failure
      */
     protected function getProviderClass($provider)
@@ -215,7 +221,9 @@ class SocialSignOn
 
     /**
      * Determines whether a provider is valid and enabled
-     * @param  string  $provider The provider to check
+     *
+     * @param  string $provider The provider to check
+     *
      * @return boolean
      */
     public function isValidProvider($provider)
@@ -227,8 +235,10 @@ class SocialSignOn
 
     /**
      * Authenticates a user using Hybrid Auth's authenticate method
+     *
      * @param  string $provider The provider to authenticate against
-     * @param  mixed $params    Additional parameters to pass to the Provider
+     * @param  mixed  $params   Additional parameters to pass to the Provider
+     *
      * @return Hybrid_Provider_Adapter
      */
     public function authenticate($provider, $params = null)
@@ -248,7 +258,9 @@ class SocialSignOn
 
     /**
      * Returns the user's profile for a particular provider.
+     *
      * @param  sting $provider The name of the provider.
+     *
      * @return mixed           Hybrid_User_Profile on success, false on failure
      */
     public function getUserProfile($provider)
@@ -281,8 +293,10 @@ class SocialSignOn
 
     /**
      * Fetches a local user profile via a provider and provider ID
-     * @param  string  $provider   The provider to use
-     * @param  string  $identifier The provider's user ID
+     *
+     * @param  string $provider   The provider to use
+     * @param  string $identifier The provider's user ID
+     *
      * @return mixed               stdClass on success, false on failure
      */
     public function getUserByProviderId($provider, $identifier)
@@ -305,11 +319,13 @@ class SocialSignOn
 
     /**
      * Saves the social session data to the user's account
+     *
      * @param  mixed  $user_id  The User's ID (if null, then the active user ID is used)
      * @param  string $provider The providers to save
+     *
      * @return boolean
      */
-    public function saveSession($user_id = null, $provider = array())
+    public function saveSession($user_id = null, $provider = [])
     {
         if (empty($user_id)) {
 
@@ -347,8 +363,8 @@ class SocialSignOn
 
         $_session     = $this->oHybridAuth->getSessionData();
         $_session     = unserialize($_session);
-        $_save        = array();
-        $_identifiers = array();
+        $_save        = [];
+        $_identifiers = [];
 
         //  Now we sort the session into individual providers
         foreach ($_session as $key => $value) {
@@ -358,7 +374,7 @@ class SocialSignOn
 
             if (!isset($_save[$provider])) {
 
-                $_save[$provider] = array();
+                $_save[$provider] = [];
             }
 
             $_save[$provider][$key] = $value;
@@ -412,8 +428,8 @@ class SocialSignOn
          */
 
         $this->oDb->where('user_id', $user_id);
-        $_existing  = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
-        $_exists    = array();
+        $_existing = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $_exists   = [];
 
         foreach ($_existing as $existing) {
 
@@ -432,10 +448,10 @@ class SocialSignOn
             if (isset($_exists[$provider])) {
 
                 //  Update
-                $_data                  = array();
-                $_data['identifier']    = $_identifiers[$provider];
-                $_data['session_data']  = serialize($keys);
-                $_data['modified']      = $oDate->format('Y-m-d H:i{s');
+                $_data                 = [];
+                $_data['identifier']   = $_identifiers[$provider];
+                $_data['session_data'] = serialize($keys);
+                $_data['modified']     = $oDate->format('Y-m-d H:i{s');
 
                 $this->oDb->set($_data);
                 $this->oDb->where('id', $_exists[$provider]);
@@ -444,13 +460,13 @@ class SocialSignOn
             } else {
 
                 //  Insert
-                $_data                  = array();
-                $_data['user_id']       = (int) $user_id;
-                $_data['provider']      = $provider;
-                $_data['identifier']    = $_identifiers[$provider];
-                $_data['session_data']  = serialize($keys);
-                $_data['created']       = $oDate->format('Y-m-d H:i:s');
-                $_data['modified']      = $_data['created'];
+                $_data                 = [];
+                $_data['user_id']      = (int) $user_id;
+                $_data['provider']     = $provider;
+                $_data['identifier']   = $_identifiers[$provider];
+                $_data['session_data'] = serialize($keys);
+                $_data['created']      = $oDate->format('Y-m-d H:i:s');
+                $_data['modified']     = $_data['created'];
 
                 $this->oDb->set($_data);
                 $this->oDb->insert(NAILS_DB_PREFIX . 'user_social');
@@ -475,7 +491,9 @@ class SocialSignOn
 
     /**
      * Restores a user's social session
+     *
      * @param  mixed $user_id The User's ID (if null, then the active user ID is used)
+     *
      * @return boolean
      */
     public function restoreSession($user_id = null)
@@ -507,13 +525,13 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         $this->oDb->where('user_id', $_user->id);
-        $_sessions  = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
-        $_restore   = array();
+        $_sessions = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $_restore  = [];
 
         foreach ($_sessions as $session) {
 
             $session->session_data = unserialize($session->session_data);
-            $_restore = array_merge($_restore, $session->session_data);
+            $_restore              = array_merge($_restore, $session->session_data);
         }
 
         return $this->oHybridAuth->restoreSessionData(serialize($_restore));
@@ -523,7 +541,9 @@ class SocialSignOn
 
     /**
      * Determines whether the active user is connected with $provider
-     * @param  string  $provider the provider to test for
+     *
+     * @param  string $provider the provider to test for
+     *
      * @return boolean
      */
     public function isConnectedWith($provider)
@@ -547,13 +567,15 @@ class SocialSignOn
 
     /**
      * Abstraction to a provider's API
+     *
      * @param  string $provider The provider whose API you wish to call
      * @param  string $call     The API call
+     *
      * @return mixed
      */
     public function api($provider, $call = '')
     {
-        if (!  $this->isConnectedWith($provider)) {
+        if (!$this->isConnectedWith($provider)) {
 
             $this->setError('Not connected with provider "' . $provider . '"');
             return false;

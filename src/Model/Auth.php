@@ -281,7 +281,7 @@ class Auth extends Base
      *
      * @param  int $userId The user ID to generate the token for
      *
-     * @return string
+     * @return array
      */
     public function mfaTokenGenerate($userId)
     {
@@ -522,12 +522,13 @@ class Auth extends Base
 
         foreach ($data as $d) {
 
-            $questionData[$counter]             = [];
-            $questionData[$counter]['user_id']  = $userId;
-            $questionData[$counter]['salt']     = $oPasswordModel->salt();
-            $questionData[$counter]['question'] = $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
-            $questionData[$counter]['answer']   = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
-            $questionData[$counter]['created']  = $sDateTime;
+            $questionData[$counter]                   = [];
+            $questionData[$counter]['user_id']        = $userId;
+            $questionData[$counter]['salt']           = $oPasswordModel->salt();
+            $questionData[$counter]['question']       = $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
+            $questionData[$counter]['answer']         = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
+            $questionData[$counter]['created']        = $sDateTime;
+            $questionData[$counter]['last_requested'] = null;
 
             $counter++;
         }

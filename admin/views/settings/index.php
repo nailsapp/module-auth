@@ -81,8 +81,10 @@
 
             ?>
             <div class="tab-page tab-password <?=$display?>">
-                Configure user password rules and properties from within the
-                <?=anchor('admin/auth/groups/index', 'Groups')?> section of admin.
+                <p>
+                    Configure user password rules and properties from within the
+                    <?=anchor('admin/auth/groups/index', 'Groups')?> section of admin.
+                </p>
             </div>
             <?php
         }
@@ -95,19 +97,18 @@
 
                 ?>
                 <div class="tab-page tab-social <?=$display?>">
+                    <p>
+                        With the exception of OpenID providers, each social network requires that you
+                        create an external application which links your website to theirs. These external
+                        applications ensure that users are logging into the proper website and allows the
+                        network to send the user back to the correct website after successfully authenticating
+                        their account.
+                    </p>
+                    <p>
+                        You can refer to <?=anchor('http://hybridauth.sourceforge.net/userguide.html', 'HybridAuth\'s Documentation', 'target="_blank"')?> for
+                        instructions on how to create these applications.
+                    </p>
                     <div class="fieldset" id="site-settings-socialsignin">
-                        <p>
-                            With the exception of OpenID providers, each social network requires that you
-                            create an external application which links your website to theirs. These external
-                            applications ensure that users are logging into the proper website and allows the
-                            network to send the user back to the correct website after successfully authenticating
-                            their account.
-                        </p>
-                        <p>
-                            You can refer to <?=anchor('http://hybridauth.sourceforge.net/userguide.html', 'HybridAuth\'s Documentation', 'target="_blank"')?> for
-                            instructions on how to create these applications.
-                        </p>
-                        <hr />
                         <?php
 
                         foreach ($providers as $provider) {

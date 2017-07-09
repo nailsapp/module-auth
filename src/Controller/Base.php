@@ -31,7 +31,5 @@ class Base extends \App\Controller\Base
 
         $oAsset = Factory::service('Asset');
         $oAsset->load('styles.css', 'nailsapp/module-auth');
-
-        $this->auth_model = Factory::model('Auth', 'nailsapp/module-auth');
     }
 }

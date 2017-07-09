@@ -290,16 +290,18 @@ class Forgotten_Password extends Base
 
         } else {
 
+            $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+
             if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
-                $this->data['question'] = $this->auth_model->mfaQuestionGet($newPw['user_id']);
+                $this->data['question'] = $oAuthModel->mfaQuestionGet($newPw['user_id']);
 
                 if ($this->data['question']) {
 
                     if ($this->input->post()) {
 
-                        $isValid = $this->auth_model->mfaQuestionValidate(
+                        $isValid = $oAuthModel->mfaQuestionValidate(
                             $this->data['question']->id,
                             $newPw['user_id'],
                             $this->input->post('answer')
@@ -364,7 +366,7 @@ class Forgotten_Password extends Base
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
-                $secret = $this->auth_model->mfaDeviceSecretGet($newPw['user_id']);
+                $secret = $oAuthModel->mfaDeviceSecretGet($newPw['user_id']);
 
                 if ($secret) {
 
@@ -373,7 +375,7 @@ class Forgotten_Password extends Base
                         $mfaCode = $this->input->post('mfaCode');
 
                         //  Verify the inout
-                        if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
+                        if ($oAuthModel->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
                             //  Correct answer, reset password and render views
                             $newPw = $oUserPasswordModel->validateToken($code, true);
@@ -399,7 +401,7 @@ class Forgotten_Password extends Base
                         } else {
 
                             $this->data['error'] = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
-                            $this->data['error'] .= $this->auth_model->lastError();
+                            $this->data['error'] .= $oAuthModel->lastError();
                         }
                     }
 

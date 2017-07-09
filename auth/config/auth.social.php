@@ -21,138 +21,138 @@ $config['auth_social_signon_init_fail_behaviour'] = 'error';
  * Define which providers to use (as supported by HybridAuth)
  * http://hybridauth.sourceforge.net/userguide.html
  */
-
-$config['auth_social_signon_providers'] = array();
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'facebook',
-    'class'     => 'Facebook',
-    'label'     => 'Facebook',
-    'fields'    => array(
-        'keys'  => array(
-            'id'        => array('label' => 'App ID', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        ),
-        'scope' => array('label' => 'Scope', 'required' => false),
-        'page'  => array('label' => 'Page', 'required' => false)
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'twitter',
-    'class'     => 'Twitter',
-    'label'     => 'Twitter',
-    'fields'    => array(
-        'keys'  => array(
-            'key'       => array('label' => 'Key', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'linkedin',
-    'class'     => 'LinkedIn',
-    'label'     => 'LinkedIn',
-    'fields'    => array(
-        'keys'  => array(
-            'key'       => array('label' => 'Key', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'foursquare',
-    'class'     => 'Foursquare',
-    'label'     => 'FourSquare',
-    'fields'    => array(
-        'keys'  => array(
-            'id'        => array('label' => 'App ID', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'google',
-    'class'     => 'Google',
-    'label'     => 'Google',
-    'fields'    => array(
-        'keys'  => array(
-            'id'        => array('label' => 'App ID', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        ),
-        'scope' => array('label' => 'Scope', 'required' => false)
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'instagram',
-    'class'     => 'Instagram',
-    'label'     => 'Instagram',
-    'fields'    => array(
-        'keys'  => array(
-            'id'        => array('label' => 'App ID', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    ),
-    'wrapper'   => array(
-        'class' => 'Hybrid_Providers_Instagram',
-        'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-instagram/Providers/Instagram.php'
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'github',
-    'class'     => 'GitHub',
-    'label'     => 'Github',
-    'fields'    => array(
-        'keys'  => array(
-            'id'        => array('label' => 'App ID', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    ),
-    'wrapper'   => array(
-        'class' => 'Hybrid_Providers_GitHub',
-        'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-github/Providers/GitHub.php'
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => '500px',
-    'class'     => 'px500',
-    'label'     => '500px',
-    'fields'    => array(
-        'keys'  => array(
-            'key'       => array('label' => 'Key', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    ),
-    'wrapper'   => array(
-        'class' => 'Hybrid_Providers_px500',
-        'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-500px/Providers/px500.php'
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'tumblr',
-    'class'     => 'Tumblr',
-    'label'     => 'Tumblr',
-    'fields'    => array(
-        'keys'  => array(
-            'key'       => array('label' => 'Key', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    ),
-    'wrapper'   => array(
-        'class' => 'Hybrid_Providers_Tumblr',
-        'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-tumblr/Providers/Tumblr.php'
-    )
-);
-$config['auth_social_signon_providers'][] = array(
-    'slug'      => 'vimeo',
-    'class'     => 'Vimeo',
-    'label'     => 'Vimeo',
-    'fields'    => array(
-        'keys'  => array(
-            'key'       => array('label' => 'Key', 'required' => true),
-            'secret'    => array('label' => 'Secret', 'required' => true, 'encrypted' => true)
-        )
-    ),
-    'wrapper'   => array(
-        'class' => 'Hybrid_Providers_Vimeo',
-        'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-vimeo/Providers/Vimeo.php'
-    )
-);
+$config['auth_social_signon_providers'] = [
+    [
+        'slug'   => 'facebook',
+        'class'  => 'Facebook',
+        'label'  => 'Facebook',
+        'fields' => [
+            'keys'  => [
+                'id'     => ['label' => 'App ID', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+            'scope' => ['label' => 'Scope', 'required' => false],
+            'page'  => ['label' => 'Page', 'required' => false],
+        ],
+    ],
+    [
+        'slug'   => 'twitter',
+        'class'  => 'Twitter',
+        'label'  => 'Twitter',
+        'fields' => [
+            'keys' => [
+                'key'    => ['label' => 'Key', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+    ],
+    [
+        'slug'   => 'linkedin',
+        'class'  => 'LinkedIn',
+        'label'  => 'LinkedIn',
+        'fields' => [
+            'keys' => [
+                'key'    => ['label' => 'Key', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+    ],
+    [
+        'slug'   => 'foursquare',
+        'class'  => 'Foursquare',
+        'label'  => 'FourSquare',
+        'fields' => [
+            'keys' => [
+                'id'     => ['label' => 'App ID', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+    ],
+    [
+        'slug'   => 'google',
+        'class'  => 'Google',
+        'label'  => 'Google',
+        'fields' => [
+            'keys'  => [
+                'id'     => ['label' => 'App ID', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+            'scope' => ['label' => 'Scope', 'required' => false],
+        ],
+    ],
+    [
+        'slug'    => 'instagram',
+        'class'   => 'Instagram',
+        'label'   => 'Instagram',
+        'fields'  => [
+            'keys' => [
+                'id'     => ['label' => 'App ID', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+        'wrapper' => [
+            'class' => 'Hybrid_Providers_Instagram',
+            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-instagram/Providers/Instagram.php',
+        ],
+    ],
+    [
+        'slug'    => 'github',
+        'class'   => 'GitHub',
+        'label'   => 'Github',
+        'fields'  => [
+            'keys' => [
+                'id'     => ['label' => 'App ID', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+        'wrapper' => [
+            'class' => 'Hybrid_Providers_GitHub',
+            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-github/Providers/GitHub.php',
+        ],
+    ],
+    [
+        'slug'    => '500px',
+        'class'   => 'px500',
+        'label'   => '500px',
+        'fields'  => [
+            'keys' => [
+                'key'    => ['label' => 'Key', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+        'wrapper' => [
+            'class' => 'Hybrid_Providers_px500',
+            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-500px/Providers/px500.php',
+        ],
+    ],
+    [
+        'slug'    => 'tumblr',
+        'class'   => 'Tumblr',
+        'label'   => 'Tumblr',
+        'fields'  => [
+            'keys' => [
+                'key'    => ['label' => 'Key', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+        'wrapper' => [
+            'class' => 'Hybrid_Providers_Tumblr',
+            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-tumblr/Providers/Tumblr.php',
+        ],
+    ],
+    [
+        'slug'    => 'vimeo',
+        'class'   => 'Vimeo',
+        'label'   => 'Vimeo',
+        'fields'  => [
+            'keys' => [
+                'key'    => ['label' => 'Key', 'required' => true],
+                'secret' => ['label' => 'Secret', 'required' => true, 'encrypted' => true],
+            ],
+        ],
+        'wrapper' => [
+            'class' => 'Hybrid_Providers_Vimeo',
+            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-vimeo/Providers/Vimeo.php',
+        ],
+    ],
+];

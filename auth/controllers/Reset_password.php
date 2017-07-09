@@ -19,7 +19,9 @@ class Reset_Password extends Base
      * Constructor
      *
      * @access  public
+     *
      * @param   none
+     *
      * @return  void
      **/
     public function __construct()
@@ -40,14 +42,17 @@ class Reset_Password extends Base
      * Validate the supplied assets and if valid present the user with a reset form
      *
      * @access  public
-     * @param   int     $id     The ID of the user to reset
-     * @param   strgin  hash    The hash to validate against
+     *
+     * @param   int    $id   The ID of the user to reset
+     * @param   string $hash The hash to validate against
+     *
      * @return  void
      **/
     protected function validate($id, $hash)
     {
         $oConfig    = Factory::service('Config');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
 
         //  Check auth credentials
         $user = $oUserModel->getById($id);
@@ -74,14 +79,14 @@ class Reset_Password extends Base
                 switch ($oConfig->item('authTwoFactorMode')) {
 
                     case 'QUESTION':
-                        $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($user->id);
+                        $this->data['mfaQuestion'] = $oAuthModel->mfaQuestionGet($user->id);
 
                         if ($this->data['mfaQuestion']) {
 
                             if ($this->input->post()) {
 
                                 //  Validate answer
-                                $isValid = $this->auth_model->mfaQuestionValidate(
+                                $isValid = $oAuthModel->mfaQuestionValidate(
                                     $this->data['mfaQuestion']->id,
                                     $user->id,
                                     $this->input->post('mfaAnswer')
@@ -93,7 +98,7 @@ class Reset_Password extends Base
 
                                 } else {
 
-                                    $this->data['error']  = '<strong>Sorry,</strong> the answer to your security ';
+                                    $this->data['error'] = '<strong>Sorry,</strong> the answer to your security ';
                                     $this->data['error'] .= 'question was incorrect.';
                                 }
                             }
@@ -107,14 +112,14 @@ class Reset_Password extends Base
                         break;
 
                     case 'DEVICE':
-                        $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($user->id);
+                        $this->data['mfaDevice'] = $oAuthModel->mfaDeviceSecretGet($user->id);
 
                         if ($this->data['mfaDevice']) {
 
                             if ($this->input->post()) {
 
                                 //  Validate answer
-                                $isValid = $this->auth_model->mfaDeviceCodeValidate(
+                                $isValid = $oAuthModel->mfaDeviceCodeValidate(
                                     $user->id,
                                     $this->input->post('mfaCode')
                                 );
@@ -125,8 +130,8 @@ class Reset_Password extends Base
 
                                 } else {
 
-                                    $this->data['error']  = '<strong>Sorry,</strong> that code could not be validated. ';
-                                    $this->data['error'] .= $this->auth_model->lastError();
+                                    $this->data['error'] = '<strong>Sorry,</strong> that code could not be validated. ';
+                                    $this->data['error'] .= $oAuthModel->lastError();
                                 }
                             }
 
@@ -172,7 +177,7 @@ class Reset_Password extends Base
                 if ($oFormValidation->run()) {
 
                     //  Validated, update user and login.
-                    $data                            = array();
+                    $data                            = [];
                     $data['forgotten_password_code'] = null;
                     $data['temp_pw']                 = false;
                     $data['password']                = $this->input->post('new_password');
@@ -184,16 +189,16 @@ class Reset_Password extends Base
                         //  Log the user in
                         switch (APP_NATIVE_LOGIN_USING) {
 
-                            case 'EMAIL' :
-                                $loginUser = $this->auth_model->login(
+                            case 'EMAIL':
+                                $loginUser = $oAuthModel->login(
                                     $user->email,
                                     $this->input->post('new_password'),
                                     $remember
                                 );
                                 break;
 
-                            case 'USERNAME' :
-                                $loginUser = $this->auth_model->login(
+                            case 'USERNAME':
+                                $loginUser = $oAuthModel->login(
                                     $user->username,
                                     $this->input->post('new_password'),
                                     $remember
@@ -201,7 +206,7 @@ class Reset_Password extends Base
                                 break;
 
                             default :
-                                $loginUser = $this->auth_model->login(
+                                $loginUser = $oAuthModel->login(
                                     $user->email,
                                     $this->input->post('new_password'),
                                     $remember
@@ -228,11 +233,11 @@ class Reset_Password extends Base
                                     $status  = 'positive';
                                     $message = lang(
                                         'auth_login_ok_welcome_with_ip',
-                                        array(
+                                        [
                                             $loginUser->first_name,
                                             $lastLogin,
-                                            $loginUser->last_ip
-                                        )
+                                            $loginUser->last_ip,
+                                        ]
                                     );
 
                                 } else {
@@ -240,10 +245,10 @@ class Reset_Password extends Base
                                     $status  = 'positive';
                                     $message = lang(
                                         'auth_login_ok_welcome',
-                                        array(
+                                        [
                                             $loginUser->first_name,
-                                            $lastLogin
-                                        )
+                                            $lastLogin,
+                                        ]
                                     );
                                 }
 
@@ -252,9 +257,9 @@ class Reset_Password extends Base
                                 $status  = 'positive';
                                 $message = lang(
                                     'auth_login_ok_welcome_notime',
-                                    array(
-                                        $loginUser->first_name
-                                    )
+                                    [
+                                        $loginUser->first_name,
+                                    ]
                                 );
                             }
 
@@ -318,14 +323,14 @@ class Reset_Password extends Base
 
                 switch ($this->input->get('reason')) {
 
-                    case 'EXPIRED' :
+                    case 'EXPIRED':
                         $this->data['message'] = lang(
                             'auth_login_pw_expired',
                             $oUserPasswordModel->expiresAfter($user->group_id)
                         );
                         break;
 
-                    case 'TEMP' :
+                    case 'TEMP':
                     default :
                         $this->data['message'] = lang('auth_login_pw_temp');
                         break;
@@ -352,7 +357,9 @@ class Reset_Password extends Base
 
     /**
      * Route requests to the right method
-     * @param   string  $id The ID of the user to reset, as per the URL
+     *
+     * @param   string $id The ID of the user to reset, as per the URL
+     *
      * @return  void
      **/
     public function _remap($id)

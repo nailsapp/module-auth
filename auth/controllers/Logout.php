@@ -19,7 +19,9 @@ class Logout extends Base
      * Log user out and forward to homepage (or via helper method if needed).
      *
      * @access  public
+     *
      * @param   none
+     *
      * @return  void
      **/
     public function index()
@@ -37,12 +39,13 @@ class Logout extends Base
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
 
-        $aFlash             = array();
-        $aFlash['name']     = activeUser('first_name');
-        $aFlash['success']  = $oSession->flashdata('success');
-        $aFlash['error']    = $oSession->flashdata('error');
-        $aFlash['notice']   = $oSession->flashdata('notice');
-        $aFlash['message']  = $oSession->flashdata('message');
+        $aFlash = [
+            'name'    => activeUser('first_name'),
+            'success' => $oSession->flashdata('success'),
+            'error'   => $oSession->flashdata('error'),
+            'notice'  => $oSession->flashdata('notice'),
+            'message' => $oSession->flashdata('message'),
+        ];
 
         // --------------------------------------------------------------------------
 
@@ -52,7 +55,8 @@ class Logout extends Base
         // --------------------------------------------------------------------------
 
         //  Log user out
-        $this->auth_model->logout();
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel->logout();
 
         //  Log social media out, too
         $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
@@ -67,13 +71,14 @@ class Logout extends Base
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Helper function to recreate a session (seeing as we destroyed it
      * during logout); allows us to pass a message along if needed.
      *
      * @access  public
+     *
      * @param   none
+     *
      * @return  void
      **/
     public function bye()
