@@ -43,9 +43,9 @@ class Override extends Base
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
         $oUri       = Factory::service('Uri');
 
-        $iHashId = (int) $oUri->segment(4) ?: null;
+        $sHashId = $oUri->segment(4);
         $sHashPw = $oUri->segment(5);
-        $oUser   = $oUserModel->getByHashes($iHashId, $sHashPw);
+        $oUser   = $oUserModel->getByHashes($sHashId, $sHashPw);
 
         if (!$oUser) {
             show_404();
@@ -66,7 +66,7 @@ class Override extends Base
 
             $bHasPermission = userHasPermission('admin:auth:accounts:loginAs');
             $bIsCloning     = activeUser('id') == $oUser->id;
-            $bIsSuperuser   = !userHasPermission('superuser') && userHasPermission('superuser', $oUser) ? true : false;
+            $bIsSuperuser   = !isSuperuser() && isSuperuser($oUser) ? true : false;
 
             if (!$bHasPermission || $bIsCloning || $bIsSuperuser) {
                 if (!$bHasPermission) {
