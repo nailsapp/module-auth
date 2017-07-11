@@ -10,8 +10,8 @@
  * @link
  */
 
-use Nails\Factory;
 use Nails\Auth\Controller\Base;
+use Nails\Factory;
 
 class Register extends Base
 {
@@ -152,25 +152,27 @@ class Register extends Base
 
                 if ($oNewUser) {
 
-                    //  Fetch user and group data
-                    $oGroup = $oUserGroupModel->getById($aInsertData['group_id']);
-
-                    // --------------------------------------------------------------------------
-
-                    //  Log the user in
-                    $oUserModel->setLoginData($oNewUser->id);
-
-                    // --------------------------------------------------------------------------
-
                     //  Create an event for this event
                     create_event('did_register', ['method' => 'native'], $oNewUser->id);
+
+                    //  Log the user in
+                    if (!$oUserModel->setLoginData($oNewUser->id)) {
+                        //  Login failed for some reason, send them to the login page to try again
+                        redirect('auth/login');
+                    } else {
+                        $oSession->set_flashdata(
+                            'success',
+                            lang('auth_register_flashdata_welcome', $oNewUser->first_name)
+                        );
+                    }
 
                     // --------------------------------------------------------------------------
 
                     //  Redirect to the group homepage
-                    //  @todo: There should be the option to enable/disable forced activation
+                    //  @todo (Pablo - 2017-07-11) - Setting for forced email activation
+                    //  @todo (Pablo - 2017-07-11) - Handle setting MFA questions and/or devices
 
-                    $oSession->set_flashdata('success', lang('auth_register_flashdata_welcome', $oNewUser->first_name));
+                    $oGroup = $oUserGroupModel->getById($aInsertData['group_id']);
 
                     if ($oGroup->registration_redirect) {
                         $sRedirectUrl = $oGroup->registration_redirect;
