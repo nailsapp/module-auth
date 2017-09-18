@@ -13,15 +13,24 @@ class Create extends Base
 {
     protected function configure()
     {
-        $this->setName('make:user');
-        $this->setDescription('Creates a new super user');
+        $this->setName('make:user')
+             ->setDescription('Creates a new super user')
+             ->addOption(
+                 'defaults',
+                 'd',
+                 InputOption::VALUE_NONE,
+                 'Use Default Values'
+             );
 
-        $this->addOption(
-            'defaults',
-            'd',
-            InputOption::VALUE_NONE,
-            'Use Default Values'
-        );
+        //  Allow user to pass in specific fields; these will override any values picked up using --default
+        foreach (['first_name', 'last_name', 'username', 'email', 'password'] as $sField) {
+            $this->addOption(
+                $sField,
+                substr($sField, 0, 1),
+                InputOption::VALUE_OPTIONAL,
+                'The user\'s ' . str_replace('_', ' ', $sField)
+            );
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -29,8 +38,9 @@ class Create extends Base
     /**
      * Executes the app
      *
-     * @param  InputInterface $oInput The Input Interface provided by Symfony
+     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
      * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     *
      * @return int
      * @throws \Exception
      */
@@ -104,7 +114,12 @@ class Create extends Base
 
         //  Ask for any fields which are empty
         foreach ($aUser as $sField => &$sValue) {
-            if (empty($sValue)) {
+
+            //  Check if an argument has been passed, overwrite if so
+            $sArgument = $oInput->getOption($sField);
+            if (!empty($sArgument)) {
+                $sValue = $sArgument;
+            } elseif (empty($sValue)) {
                 $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
                 $sError = '';
                 do {
@@ -129,7 +144,7 @@ class Create extends Base
         $oOutput->writeln('');
 
         //  Execute
-        if (!$this->confirm('Continue?', true, $oInput, $oOutput)) {
+        if (!$this->confirm('Continue?', true)) {
             return $this->abort();
         }
 
@@ -186,8 +201,10 @@ class Create extends Base
     /**
      * Create the user
      *
-     * @param array $aUser The details to create the user with
-     * @return void
+     * @param array   $aUser    The details to create the user with
+     * @param integer $iGroupId The user's Group Id
+     *
+     * @throws \Exception
      */
     private function createUser($aUser, $iGroupId)
     {
@@ -350,8 +367,9 @@ class Create extends Base
     /**
      * Performs the abort functionality and returns the exit code
      *
-     * @param  array $aMessages The error message
+     * @param  array   $aMessages The error message
      * @param  integer $iExitCode The exit code
+     *
      * @return int
      */
     protected function abort($iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
