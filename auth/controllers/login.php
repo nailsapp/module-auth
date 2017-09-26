@@ -43,7 +43,7 @@ class Login extends Base
 
         if ($returnTo) {
 
-            $returnTo = preg_match('#^(http|https)\://#', $returnTo) ? $returnTo : site_url($returnTo);
+            $returnTo = preg_match('#^https?\://#', $returnTo) ? $returnTo : site_url($returnTo);
             $returnTo = parse_url($returnTo);
 
             //  urlencode the query if there is one
@@ -54,17 +54,26 @@ class Login extends Base
                 $returnTo['query'] = http_build_query($query_ar);
             }
 
-            $this->data['return_to']  = '';
-            $this->data['return_to'] .= !empty($returnTo['scheme']) ? $returnTo['scheme'] . '://' : 'http://';
-            $this->data['return_to'] .= !empty($returnTo['host']) ? $returnTo['host'] : site_url();
-            $this->data['return_to'] .= !empty($returnTo['port']) ? ':' . $returnTo['port'] : '';
-            $this->data['return_to'] .= !empty($returnTo['path']) ? $returnTo['path'] : '';
-            $this->data['return_to'] .= !empty($returnTo['query']) ? '?' . $returnTo['query'] : '';
+            if (empty($returnTo['host']) && site_url() === '/') {
+                $this->data['return_to'] = [
+                    !empty($returnTo['path']) ? $returnTo['path'] : '',
+                    !empty($returnTo['query']) ? '?' . $returnTo['query'] : '',
+                ];
+            } else {
+                $this->data['return_to'] = [
+                    !empty($returnTo['scheme']) ? $returnTo['scheme'] . '://' : 'http://',
+                    !empty($returnTo['host']) ? $returnTo['host'] : site_url(),
+                    !empty($returnTo['port']) ? ':' . $returnTo['port'] : '',
+                    !empty($returnTo['path']) ? $returnTo['path'] : '',
+                    !empty($returnTo['query']) ? '?' . $returnTo['query'] : '',
+                ];
+            }
 
         } else {
-
             $this->data['return_to'] = '';
         }
+
+        $this->data['return_to'] = implode('', $this->data['return_to']);
 
         // --------------------------------------------------------------------------
 
