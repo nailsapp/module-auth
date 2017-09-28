@@ -31,6 +31,16 @@ class Create extends Base
                 'The user\'s ' . str_replace('_', ' ', $sField)
             );
         }
+
+        //  Allow the user to specify database details
+        foreach (['host', 'username', 'password', 'name'] as $sField) {
+            $this->addOption(
+                'db-' . $sField,
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The database ' . $sField
+            );
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -57,13 +67,11 @@ class Create extends Base
 
         if (!defined('APP_PRIVATE_KEY')) {
             $oOutput->writeln('<error>APP_PRIVATE_KEY is not defined; does Nails need installed?</error>');
-
             return $this->abort();
         }
 
         if (!defined('DEPLOY_PRIVATE_KEY')) {
             $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined; does Nails need installed?</error>');
-
             return $this->abort();
         }
 
@@ -86,7 +94,18 @@ class Create extends Base
         // --------------------------------------------------------------------------
 
         //  Detect super group ID
-        $oDb     = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+        $oDb = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+
+        //  If any DB credentials have been passed then connect using those
+        $sDbHost = $oInput->getOption('db-host');
+        $sDbUser = $oInput->getOption('db-username');
+        $sDbPass = $oInput->getOption('db-password');
+        $sDbName = $oInput->getOption('db-name');
+
+        if (!empty($sDbHost) || !empty($sDbUser) || !empty($sDbPass) || !empty($sDbName)) {
+            $oDb->connect($sDbHost, $sDbUser, $sDbPass, $sDbName);
+        }
+
         $oResult = $oDb->query(
             'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
