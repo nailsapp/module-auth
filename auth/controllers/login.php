@@ -70,7 +70,7 @@ class Login extends Base
             }
 
         } else {
-            $this->data['return_to'] = '';
+            $this->data['return_to'] = [];
         }
 
         $this->data['return_to'] = implode('', $this->data['return_to']);
