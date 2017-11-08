@@ -13,15 +13,34 @@ class Create extends Base
 {
     protected function configure()
     {
-        $this->setName('make:user');
-        $this->setDescription('Creates a new super user');
+        $this->setName('make:user')
+             ->setDescription('Creates a new super user')
+             ->addOption(
+                 'defaults',
+                 'd',
+                 InputOption::VALUE_NONE,
+                 'Use Default Values'
+             );
 
-        $this->addOption(
-            'defaults',
-            'd',
-            InputOption::VALUE_NONE,
-            'Use Default Values'
-        );
+        //  Allow user to pass in specific fields; these will override any values picked up using --default
+        foreach (['first_name', 'last_name', 'username', 'email', 'password'] as $sField) {
+            $this->addOption(
+                $sField,
+                substr($sField, 0, 1),
+                InputOption::VALUE_OPTIONAL,
+                'The user\'s ' . str_replace('_', ' ', $sField)
+            );
+        }
+
+        //  Allow the user to specify database details
+        foreach (['host', 'username', 'password', 'name'] as $sField) {
+            $this->addOption(
+                'db-' . $sField,
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The database ' . $sField
+            );
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -75,7 +94,18 @@ class Create extends Base
         // --------------------------------------------------------------------------
 
         //  Detect super group ID
-        $oDb     = Factory::service('PDODatabase');
+        $oDb = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+
+        //  If any DB credentials have been passed then connect using those
+        $sDbHost = $oInput->getOption('db-host');
+        $sDbUser = $oInput->getOption('db-username');
+        $sDbPass = $oInput->getOption('db-password');
+        $sDbName = $oInput->getOption('db-name');
+
+        if (!empty($sDbHost) || !empty($sDbUser) || !empty($sDbPass) || !empty($sDbName)) {
+            $oDb->connect($sDbHost, $sDbUser, $sDbPass, $sDbName);
+        }
+
         $oResult = $oDb->query(
             'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
@@ -103,7 +133,12 @@ class Create extends Base
 
         //  Ask for any fields which are empty
         foreach ($aUser as $sField => &$sValue) {
-            if (empty($sValue)) {
+
+            //  Check if an argument has been passed, overwrite if so
+            $sArgument = $oInput->getOption($sField);
+            if (!empty($sArgument)) {
+                $sValue = $sArgument;
+            } elseif (empty($sValue)) {
                 $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
                 $sError = '';
                 do {
@@ -128,7 +163,7 @@ class Create extends Base
         $oOutput->writeln('');
 
         //  Execute
-        if (!$this->confirm('Continue?', true, $oInput, $oOutput)) {
+        if (!$this->confirm('Continue?', true)) {
             return $this->abort();
         }
 
@@ -183,8 +218,10 @@ class Create extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Create the user
+     *
      * @param array   $aUser    The details to create the user with
-     * @param integer $iGroupId The group to add the user to
+     * @param integer $iGroupId The user's Group Id
      *
      * @throws \Exception
      */

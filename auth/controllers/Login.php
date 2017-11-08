@@ -31,7 +31,7 @@ class Login extends Base
 
         if ($sReturnTo) {
 
-            $sReturnTo = preg_match('#^(http|https)\://#', $sReturnTo) ? $sReturnTo : site_url($sReturnTo);
+            $sReturnTo = preg_match('#^https?\://#', $sReturnTo) ? $sReturnTo : site_url($sReturnTo);
             $aReturnTo = parse_url($sReturnTo);
 
             //  urlencode the query if there is one
@@ -41,16 +41,26 @@ class Login extends Base
                 $aReturnTo['query'] = http_build_query($query_ar);
             }
 
-            $this->data['return_to'] = '';
-            $this->data['return_to'] .= !empty($aReturnTo['scheme']) ? $aReturnTo['scheme'] . '://' : 'http://';
-            $this->data['return_to'] .= !empty($aReturnTo['host']) ? $aReturnTo['host'] : site_url();
-            $this->data['return_to'] .= !empty($aReturnTo['port']) ? ':' . $aReturnTo['port'] : '';
-            $this->data['return_to'] .= !empty($aReturnTo['path']) ? $aReturnTo['path'] : '';
-            $this->data['return_to'] .= !empty($aReturnTo['query']) ? '?' . $aReturnTo['query'] : '';
+            if (empty($aReturnTo['host']) && site_url() === '/') {
+                $this->data['return_to'] = [
+                    !empty($aReturnTo['path']) ? $aReturnTo['path'] : '',
+                    !empty($aReturnTo['query']) ? '?' . $aReturnTo['query'] : '',
+                ];
+            } else {
+                $this->data['return_to'] = [
+                    !empty($aReturnTo['scheme']) ? $aReturnTo['scheme'] . '://' : 'http://',
+                    !empty($aReturnTo['host']) ? $aReturnTo['host'] : site_url(),
+                    !empty($aReturnTo['port']) ? ':' . $aReturnTo['port'] : '',
+                    !empty($aReturnTo['path']) ? $aReturnTo['path'] : '',
+                    !empty($aReturnTo['query']) ? '?' . $aReturnTo['query'] : '',
+                ];
+            }
 
         } else {
-            $this->data['return_to'] = '';
+            $this->data['return_to'] = [];
         }
+
+        $this->data['return_to'] = implode('', $this->data['return_to']);
 
         // --------------------------------------------------------------------------
 
