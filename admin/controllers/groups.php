@@ -79,7 +79,7 @@ class Groups extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUserGroupModel      = Factory::model('UserGroup', 'nailsap/module-auth');
+        $oUserGroupModel      = Factory::model('UserGroup', 'nailsapp/module-auth');
         $this->data['groups'] = $oUserGroupModel->getAll();
 
         // --------------------------------------------------------------------------
@@ -129,8 +129,8 @@ class Groups extends BaseAdmin
 
         $oUri               = Factory::service('Uri');
         $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', 'nailsap/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsap/module-auth');
+        $oUserGroupModel    = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
         $sGroupId           = $oUri->segment(5, null);
 
         $this->data['group'] = $oUserGroupModel->getById($sGroupId);
@@ -257,7 +257,7 @@ class Groups extends BaseAdmin
         }
 
         $oUri            = Factory::service('Uri');
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsap/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
         $oSession        = Factory::service('Session', 'nailsapp/module-auth');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
