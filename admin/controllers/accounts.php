@@ -129,6 +129,8 @@ class Accounts extends BaseAdmin
             $tableAlias . '.first_name' => 'First Name, Surname',
             $tableAlias . '.last_name'  => 'Surname, First Name',
             'ue.email'                  => 'Email',
+            $tableAlias . '.last_seen'  => 'Last Active',
+            $tableAlias . '.last_login' => 'Last Log-In',
         ];
 
         // --------------------------------------------------------------------------

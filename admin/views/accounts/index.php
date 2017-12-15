@@ -16,6 +16,8 @@
                     <th class="id">User ID</th>
                     <th class="details">User</th>
                     <th class="group">Group</th>
+                    <th>Last Log-In</th>
+                    <th>Last Active</th>
                     <th class="actions">Actions</th>
                 </tr>
             </thead>
@@ -91,29 +93,42 @@
                                     }
 
                                     ?>
-                            </small>
-                            <small>
-                                Last login:
-                                <?php
-
-                                if ($member->last_login) {
-
-                                    echo '<span class="nice-time">';
-                                    echo toUserDate($member->last_login, 'Y-m-d H:i:s');
-                                    echo '</span> ';
-                                    echo '(' . $member->login_count . ' logins)';
-
-                                } else {
-
-                                    echo 'Never Logged In';
-                                }
-
-                                ?>
-                            </small>
+                                </small>
                             </div>
                         </td>
                         <td class="group">
                             <?=$member->group_name?>
+                        </td>
+                        <td>
+                            <?php
+
+                            if ($member->last_login) {
+                                ?>
+                                <p class="nice-time"><?=niceTime($member->last_login)?></p>
+                                <p><small><?=toUserDate($member->last_login, 'Y-m-d H:i:s')?></small></p>
+                                <p><small>(<?=$member->login_count?> logins total)</small></p>
+                                <?php
+
+                            } else {
+
+                                echo 'Never Logged In';
+                            }
+
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            if ($member->last_seen) {
+                                ?>
+                                <p class="nice-time"><?=niceTime($member->last_seen)?></p>
+                                <p><small><?=$member->last_seen?></small></p>
+                                <?php
+
+                            } else {
+                                
+                                echo 'Never Been Active';
+                            }
+                            ?>
                         </td>
                         <td class="actions">
                             <?php
