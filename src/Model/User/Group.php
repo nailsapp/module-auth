@@ -28,9 +28,10 @@ class Group extends Base
     {
         parent::__construct();
 
-        $this->table        = NAILS_DB_PREFIX . 'user_group';
-        $this->tableAlias   = 'ug';
-        $this->defaultGroup = $this->getDefaultGroup();
+        $this->table             = NAILS_DB_PREFIX . 'user_group';
+        $this->tableAlias        = 'ug';
+        $this->defaultGroup      = $this->getDefaultGroup();
+        $this->defaultSortColumn = 'id';
     }
 
     // --------------------------------------------------------------------------
@@ -231,6 +232,82 @@ class Group extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Determines whether the specified group has a certain ACL permission
+     *
+     * @param   string $sSearch The permission to check for
+     * @param   mixed  $mGroup  The group to check for;  if numeric, fetches group, if object
+     *                          uses that object
+     *
+     * @return  boolean
+     */
+    public function hasPermission($sSearch, $mGroup)
+    {
+        //  Fetch the correct ACL
+        if (is_numeric($mGroup)) {
+
+            $oGroup = $this->getById($mGroup);
+
+            if (isset($oGroup->acl)) {
+                $aAcl = $oGroup->acl;
+                unset($oGroup);
+            } else {
+                return false;
+            }
+
+        } elseif (isset($mGroup->acl)) {
+            $aAcl = $mGroup->acl;
+        } else {
+            return false;
+        }
+
+        if (!$aAcl) {
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        // Super users or CLI users can do anything their heart's desire
+        $oInput = Factory::service('Input');
+        if (in_array('admin:superuser', $aAcl) || $oInput->is_cli_request()) {
+            return true;
+        }
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * Test the ACL
+         * We're going to use regular expressions here so we can allow for some
+         * flexibility in the search, i.e admin:* would return true if the user has
+         * access to any of admin.
+         */
+
+        $bHasPermission = false;
+
+        /**
+         * Replace :* with :.* - this is a common mistake when using the permission
+         * system (i.e., assuming that star on it's own will match)
+         */
+
+        $sSearch = preg_replace('/:\*/', ':.*', $sSearch);
+
+        foreach ($aAcl as $sPermission) {
+
+            $sPattern = '/^' . $sSearch . '$/';
+            $bMatch   = preg_match($sPattern, $sPermission);
+
+            if ($bMatch) {
+                $bHasPermission = true;
+                break;
+            }
+        }
+
+        return $bHasPermission;
+    }
+
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Formats a single object
      *
      * The getAll() method iterates over each returned item with this method so as to
@@ -250,8 +327,7 @@ class Group extends Base
         $aIntegers = [],
         $aBools = [],
         $aFloats = []
-    )
-    {
+    ) {
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
         $oObj->acl            = json_decode($oObj->acl);
