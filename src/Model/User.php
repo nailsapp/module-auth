@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Model;
 
+use Nails\Auth\Events;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
@@ -23,20 +24,6 @@ class User extends Base
     protected $isRemembered;
     protected $isLoggedIn;
     protected $adminRecoveryField;
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Event fired when a user is created.
-     */
-    const EVENT_USER_CREATED = 'USER.CREATED';
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Event fired when a user is modified
-     */
-    const EVENT_USER_MODIFIED = 'USER.MODIFIED';
 
     // --------------------------------------------------------------------------
 
@@ -1190,13 +1177,7 @@ class User extends Base
         $this->setCacheUser($iUserId);
 
         $oEventService = Factory::service('Event');
-        $oEventService->trigger(
-            static::EVENT_USER_MODIFIED,
-            'nailsapp/module-auth',
-            [
-                'user' => $this->getById($iUserId),
-            ]
-        );
+        $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iUserId]);
 
         return true;
     }
@@ -2190,13 +2171,7 @@ class User extends Base
             $oUser = $this->getById($iId);
 
             $oEventService = Factory::service('Event');
-            $oEventService->trigger(
-                static::EVENT_USER_CREATED,
-                'nailsapp/module-auth',
-                [
-                    'user' => $oUser,
-                ]
-            );
+            $oEventService->trigger(Events::USER_MODIFIED, 'nailsapp/module-auth', [$iId]);
 
             return $oUser;
 
