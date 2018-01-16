@@ -1177,7 +1177,7 @@ class User extends Base
         $this->setCacheUser($iUserId);
 
         $oEventService = Factory::service('Event');
-        $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iUserId]);
+        $oEventService->trigger(Events::USER_MODIFIED, 'nailsapp/module-auth', [$iUserId]);
 
         return true;
     }
@@ -2171,7 +2171,7 @@ class User extends Base
             $oUser = $this->getById($iId);
 
             $oEventService = Factory::service('Event');
-            $oEventService->trigger(Events::USER_MODIFIED, 'nailsapp/module-auth', [$iId]);
+            $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iId]);
 
             return $oUser;
 
