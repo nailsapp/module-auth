@@ -276,7 +276,7 @@
 
                     ?>
                     <tr>
-                        <td colspan="4" class="no-data">
+                        <td colspan="6" class="no-data">
                             <p>No Users Found</p>
                         </td>
                     </tr>
