@@ -20,6 +20,7 @@ class Groups extends DefaultController
     const CONFIG_MODEL_NAME     = 'UserGroup';
     const CONFIG_MODEL_PROVIDER = 'nailsapp/module-auth';
     const CONFIG_SIDEBAR_GROUP  = 'Members';
+    const CONFIG_PERMISSION     = 'groups';
     const CONFIG_SORT_OPTIONS   = [
         'id'       => 'ID',
         'label'    => 'Label',
