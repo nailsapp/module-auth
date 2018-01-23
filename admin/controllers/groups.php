@@ -76,18 +76,17 @@ class Groups extends DefaultController
      */
     protected function runFormValidation($aOverrides = [])
     {
-        $oFormValidation = Factory::service('FormValidation');
-
-        $oFormValidation->set_rules('slug', '', 'xss_clean|required|unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']');
-        $oFormValidation->set_rules('label', '', 'xss_clean|required');
-        $oFormValidation->set_rules('description', '', 'xss_clean|required');
-        $oFormValidation->set_rules('default_homepage', '', 'xss_clean');
-        $oFormValidation->set_rules('registration_redirect', '', 'xss_clean');
-
-        $oFormValidation->set_message('required', lang('fv_required'));
-        $oFormValidation->set_message('required', lang('fv_unique_if_diff'));
-
-        return $oFormValidation->run();
+        parent::runFormValidation([
+            'slug'                  => [
+                'xss_clean',
+                'required',
+                'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']'
+            ],
+            'label'                 => ['xss_clean', 'required'],
+            'description'           => ['xss_clean', 'required'],
+            'default_homepage'      => ['xss_clean'],
+            'registration_redirect' => ['xss_clean'],
+        ]);
     }
 
     // --------------------------------------------------------------------------
