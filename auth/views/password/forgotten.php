@@ -1,67 +1,67 @@
-<div class="container nails-module-auth password password-forgotten">
-    <?php
+<div class="nailsapp-auth forgotten-password u-center-screen">
+    <div class="panel">
+        <h1 class="panel__header text-center">
+            Password Reset
+        </h1>
+        <?=form_open('auth/forgotten_password')?>
+        <div class="panel__body">
+            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
+                <?=$error?>
+            </p>
+            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
+                <?=$success?>
+            </p>
+            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
+                <?=$message?>
+            </p>
+            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
+                <?=$info?>
+            </p>
+            <p>
+                <?=lang('auth_forgot_message')?>
+            </p>
+            <?php
 
-    $this->load->view('components/header');
+            switch (APP_NATIVE_LOGIN_USING) {
 
-    ?>
-    <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
-            <div class="well well-lg">
-                <?=form_open('auth/forgotten_password', 'class="form form-horizontal"')?>
-                    <p>
-                        <?=lang('auth_forgot_message')?>
-                    </p>
-                    <hr />
-                    <?php
+                case 'EMAIL':
 
-                    switch (APP_NATIVE_LOGIN_USING) {
+                    $sFieldLabel       = lang('form_label_email');
+                    $sFieldPlaceholder = lang('auth_forgot_email_placeholder');
+                    $sFieldType        = 'form_email';
+                    break;
 
-                        case 'EMAIL' :
+                case 'USERNAME':
 
-                            $_label       = lang('form_label_email');
-                            $_placeholder = lang('auth_forgot_email_placeholder');
-                            $_input_type  = 'form_email';
-                            break;
+                    $sFieldLabel       = lang('form_label_username');
+                    $sFieldPlaceholder = lang('auth_forgot_username_placeholder');
+                    $sFieldType        = 'form_input';
+                    break;
 
-                        case 'USERNAME' :
+                default:
 
-                            $_label       = lang('form_label_username');
-                            $_placeholder = lang('auth_forgot_username_placeholder');
-                            $_input_type  = 'form_input';
-                            break;
+                    $sFieldLabel       = lang('auth_forgot_both');
+                    $sFieldPlaceholder = lang('auth_forgot_both_placeholder');
+                    $sFieldType        = 'form_input';
+                    break;
+            }
 
-                        default :
+            $_field = 'identifier';
+            $_error = form_error($_field) ? 'error' : null
 
-                            $_label       = lang('auth_forgot_both');
-                            $_placeholder = lang('auth_forgot_both_placeholder');
-                            $_input_type  = 'form_input';
-                            break;
-                    }
-
-                    $_field = 'identifier';
-                    $_error = form_error($_field) ? 'error' : null
-
-                    ?>
-                    <div class="form-group <?=form_error($_field) ? 'has-error' : ''?>">
-                        <label class="col-sm-3 control-label" for="input-email"><?=$_label?>: </label>
-                        <div class="col-sm-9">
-                            <?=$_input_type($_field, set_value($_field, $this->input->get('email')), 'id="input-email" placeholder="' . $_placeholder . '" class="form-control "')?>
-                            <?=form_error($_field, '<p class="help-block">', '</p>')?>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="col-sm-offset-3 col-sm-9">
-                            <button type="submit" class="btn btn-primary"><?=lang('auth_forgot_action_reset')?></button>
-                            <?=anchor('auth/login', 'Log In', 'class="btn btn-default"')?>
-                        </div>
-                    </div>
-                <?=form_close()?>
+            ?>
+            <div class="form__group <?=form_error($_field) ? 'has-error' : ''?>">
+                <label><?=$sFieldLabel?></label>
+                <?=$sFieldType($_field, set_value($_field, $this->input->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
+                <?=form_error($_field, '<p class="help-block">', '</p>')?>
             </div>
+            <p>
+                <button type="submit" class="btn btn--block">
+                    <?=lang('auth_forgot_action_reset')?>
+                </button>
+                <?=anchor('auth/login', 'Log In', 'class="btn btn--block btn--link"')?>
+            </p>
         </div>
+        <?=form_close()?>
     </div>
-    <?php
-
-    $this->load->view('components/footer');
-
-    ?>
 </div>

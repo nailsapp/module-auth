@@ -29,9 +29,24 @@ class Base extends \App\Controller\Base
 
         $this->lang->load('auth/auth');
 
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('styles.css', 'nailsapp/module-auth');
-
         $this->auth_model = Factory::model('Auth', 'nailsapp/module-auth');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Loads Auth styles if supplied view does not exist
+     *
+     * @param string $sView The view to test
+     */
+    protected function loadStyles($sView)
+    {
+        //  Test if a view has been provided by the app
+        if (!is_file($sView)) {
+            $oAsset = Factory::service('Asset');
+            $oAsset->clear();
+            $oAsset->load('nails.min.css', 'nailsapp/common');
+            $oAsset->load('styles.css', 'nailsapp/module-auth');
+        }
     }
 }

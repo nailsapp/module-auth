@@ -1,9 +1,4 @@
 <div class="container nails-module-auth register register-resend">
-    <?php
-
-    $this->load->view('components/header');
-
-    ?>
     <div class="container">
         <div class="col-sm-6 col-sm-offset-3">
             <p class="alert alert-success">
@@ -15,9 +10,4 @@
             </p>
         </div>
     </div>
-    <?php
-
-    $this->load->view('components/footer');
-
-    ?>
 </div>

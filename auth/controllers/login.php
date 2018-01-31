@@ -10,9 +10,9 @@
  * @link
  */
 
-use Nails\Factory;
 use Nails\Auth\Controller\Base;
 use Nails\Common\Exception\NailsException;
+use Nails\Factory;
 
 class Login extends Base
 {
@@ -34,12 +34,13 @@ class Login extends Base
         // --------------------------------------------------------------------------
 
         //  Load libraries
+        $oInput        = Factory::service('Input');
         $this->oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
 
         // --------------------------------------------------------------------------
 
         //  Where are we returning user to?
-        $returnTo = $this->input->get('return_to');
+        $returnTo = $oInput->get('return_to');
 
         if ($returnTo) {
 
@@ -48,7 +49,6 @@ class Login extends Base
 
             //  urlencode the query if there is one
             if (!empty($returnTo['query'])) {
-
                 //  Break it apart and glue it together (urlencoded)
                 parse_str($returnTo['query'], $query_ar);
                 $returnTo['query'] = http_build_query($query_ar);
@@ -91,14 +91,14 @@ class Login extends Base
     {
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-
             redirect($this->data['return_to']);
         }
 
         // --------------------------------------------------------------------------
 
         //  If there's POST data attempt to log user in
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Validate input
             $oFormValidation = Factory::service('FormValidation');
@@ -127,19 +127,15 @@ class Login extends Base
             if ($oFormValidation->run()) {
 
                 //  Attempt the log in
-                $identifier = $this->input->post('identifier');
-                $password   = $this->input->post('password');
-                $rememberMe = (bool) $this->input->post('remember');
+                $identifier = $oInput->post('identifier');
+                $password   = $oInput->post('password');
+                $rememberMe = (bool) $oInput->post('remember');
 
                 $user = $this->auth_model->login($identifier, $password, $rememberMe);
 
                 if ($user) {
-
                     $this->_login($user, $rememberMe);
-
                 } else {
-
-                    //  Login failed
                     $this->data['error'] = $this->auth_model->lastError();
                 }
 
@@ -156,6 +152,7 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
+        $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/login/form.php');
         $oView = Factory::service('View');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/login/form', $this->data);
@@ -166,9 +163,11 @@ class Login extends Base
 
     /**
      * Handles the next stage of login after successfully authenticating
+     *
      * @param  stdClass $user     The user object
      * @param  boolean  $remember Whether to set the rememberMe cookie or not
      * @param  string   $provider Which provider authenticated the login
+     *
      * @return void
      */
     protected function _login($user, $remember = false, $provider = 'native')
@@ -179,7 +178,7 @@ class Login extends Base
         if ($user->is_suspended) {
 
             $this->data['error'] = lang('auth_login_fail_suspended');
-            return false;
+            return;
 
         } elseif (!empty($user->temp_pw)) {
 
@@ -189,7 +188,6 @@ class Login extends Base
              **/
 
             $this->resetPassword($user->id, $user->salt, $remember, 'TEMP');
-
 
         } elseif ($oUserPasswordModel->isExpired($user->id)) {
 
@@ -206,22 +204,19 @@ class Login extends Base
             $twoFactorToken = $this->auth_model->mfaTokenGenerate($user->id);
 
             if (!$twoFactorToken) {
-
                 $subject = 'Failed to generate two-factor auth token';
                 $message = 'A user tried to login and the system failed to generate a two-factor auth token.';
                 showFatalError($subject, $message);
             }
 
             //  Is there any query data?
-            $query = array();
+            $query = [];
 
             if ($this->data['return_to']) {
-
                 $query['return_to'] = $this->data['return_to'];
             }
 
             if ($remember) {
-
                 $query['remember'] = true;
             }
 
@@ -240,13 +235,13 @@ class Login extends Base
             }
 
             //  Compile the URL
-            $url = array(
+            $url = [
                 'auth',
                 $controller,
                 $user->id,
                 $twoFactorToken['salt'],
-                $twoFactorToken['token']
-            );
+                $twoFactorToken['token'],
+            ];
 
             $url = implode($url, '/') . $query;
 
@@ -261,20 +256,16 @@ class Login extends Base
                 $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
                 if ($oConfig->item('authShowLastIpOnLogin')) {
-
                     $status  = 'positive';
-                    $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
-
+                    $message = lang('auth_login_ok_welcome_with_ip', [$user->first_name, $lastLogin, $user->last_ip]);
                 } else {
-
                     $status  = 'positive';
-                    $message = lang('auth_login_ok_welcome', array($user->first_name, $lastLogin));
+                    $message = lang('auth_login_ok_welcome', [$user->first_name, $lastLogin]);
                 }
 
             } else {
-
                 $status  = 'positive';
-                $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
+                $message = lang('auth_login_ok_welcome_notime', [$user->first_name]);
             }
 
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
@@ -285,7 +276,7 @@ class Login extends Base
             // --------------------------------------------------------------------------
 
             //  Generate an event for this log in
-            create_event('did_log_in', array('provider' => $provider), $user->id);
+            create_event('did_log_in', ['provider' => $provider], $user->id);
 
             // --------------------------------------------------------------------------
 
@@ -297,20 +288,17 @@ class Login extends Base
 
     protected function resetPassword($iUserId, $sUserSalt, $bRemember, $sReason = '')
     {
-        $aQuery = array();
+        $aQuery = [];
 
         if ($this->data['return_to']) {
-
             $aQuery['return_to'] = $this->data['return_to'];
         }
 
         if ($bRemember) {
-
             $aQuery['remember'] = true;
         }
 
         if ($sReason) {
-
             $aQuery['reason'] = $sReason;
         }
 
@@ -332,21 +320,23 @@ class Login extends Base
     /**
      * Log a user in using hashes of their user ID and password; easy way of
      * automatically logging a user in from the likes of an email.
+     *
+     * @throws NailsException
      * @return  void
      **/
     public function with_hashes()
     {
+        $oUri    = Factory::service('Uri');
         $oConfig = Factory::service('Config');
 
         if (!$oConfig->item('authEnableHashedLogin')) {
-
             show_404();
         }
 
         // --------------------------------------------------------------------------
 
-        $hash['id'] = $this->uri->segment(4);
-        $hash['pw'] = $this->uri->segment(5);
+        $hash['id'] = $oUri->segment(4);
+        $hash['pw'] = $oUri->segment(5);
 
         if (empty($hash['id']) || empty($hash['pw'])) {
             throw new NailsException(lang('auth_with_hashes_incomplete_creds'), 1);
@@ -410,20 +400,16 @@ class Login extends Base
                 $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($user->last_login)) : toUserDatetime($user->last_login);
 
                 if ($oConfig->item('authShowLastIpOnLogin')) {
-
                     $status  = 'positive';
-                    $message = lang('auth_login_ok_welcome_with_ip', array($user->first_name, $lastLogin, $user->last_ip));
-
+                    $message = lang('auth_login_ok_welcome_with_ip', [$user->first_name, $lastLogin, $user->last_ip]);
                 } else {
-
                     $status  = 'positive';
-                    $message = lang('auth_login_ok_welcome', array($user->first_name, $user->last_login));
+                    $message = lang('auth_login_ok_welcome', [$user->first_name, $user->last_login]);
                 }
 
             } else {
-
                 $status  = 'positive';
-                $message = lang('auth_login_ok_welcome_notime', array($user->first_name));
+                $message = lang('auth_login_ok_welcome_notime', [$user->first_name]);
             }
 
             $oSession->set_flashdata($status, $message);
@@ -459,11 +445,14 @@ class Login extends Base
 
     /**
      * Handle login/registration via social provider
+     *
      * @param  string $provider The provider to use
+     *
      * @return void
      */
     protected function socialSignon($provider)
     {
+        $oUri       = Factory::service('Uri');
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
 
@@ -497,7 +486,7 @@ class Login extends Base
                 );
             }
 
-            if ($this->uri->segment(4) == 'register') {
+            if ($oUri->segment(4) == 'register') {
                 $redirectUrl = 'auth/register';
             } else {
                 $redirectUrl = 'auth/login';
@@ -516,7 +505,7 @@ class Login extends Base
 
         /**
          * See if we already know about this user, react accordingly.
-         * If a user already exists for this provder/identifier then it's logical
+         * If a user already exists for this provider/identifier then it's logical
          * to spok them in, I mean, log them in - provided of course they aren't
          * already logged in, if they are then silly user. If no user is recognised
          * then we need to register them, providing, of course that registration is
@@ -538,11 +527,8 @@ class Login extends Base
                 $oSession->set_flashdata('message', lang('auth_social_already_linked', $provider['label']));
 
                 if ($this->data['return_to']) {
-
                     redirect($this->data['return_to']);
-
                 } else {
-
                     redirect($user->group_homepage);
                 }
 
@@ -553,14 +539,11 @@ class Login extends Base
                  * in user. This means that this provider account is already registered.
                  */
 
-                $oSession->set_flashdata('error', lang('auth_social_account_in_use', array($provider['label'], APP_NAME)));
+                $oSession->set_flashdata('error', lang('auth_social_account_in_use', [$provider['label'], APP_NAME]));
 
                 if ($this->data['return_to']) {
-
                     redirect($this->data['return_to']);
-
                 } else {
-
                     redirect($user->group_homepage);
                 }
 
@@ -577,7 +560,6 @@ class Login extends Base
                     $redirectUrl = 'auth/login';
 
                     if ($this->data['return_to']) {
-
                         $redirectUrl .= '?return_to=' . urlencode($this->data['return_to']);
                     }
 
@@ -594,11 +576,10 @@ class Login extends Base
 
             if ($this->oSocial->saveSession(activeUser('id'), $provider)) {
 
-                create_event('did_link_provider', array('provider' => $provider));
+                create_event('did_link_provider', ['provider' => $provider]);
                 $oSession->set_flashdata('success', lang('auth_social_linked_ok', $provider['label']));
 
             } else {
-
                 $oSession->set_flashdata('error', lang('auth_social_linked_fail', $provider['label']));
             }
 
@@ -608,13 +589,13 @@ class Login extends Base
 
             /**
              * Didn't find a user and the active user isn't logged in, assume they want
-             * to regster an account. I mean, who wouldn't, this site is AwEsOmE.
+             * to register an account. I mean, who wouldn't, this site is AwEsOmE.
              */
 
             if (appSetting('user_registration_enabled', 'auth')) {
 
-                $requiredData = array();
-                $optionalData = array();
+                $requiredData = [];
+                $optionalData = [];
 
                 //  Fetch required data
                 switch (APP_NATIVE_LOGIN_USING) {
@@ -633,13 +614,13 @@ class Login extends Base
                         break;
                 }
 
-                $requiredData['first_name']   = trim($socialUser->firstName);
-                $requiredData['last_name']    = trim($socialUser->lastName);
+                $requiredData['first_name'] = trim($socialUser->firstName);
+                $requiredData['last_name']  = trim($socialUser->lastName);
 
                 //  And any optional data
                 if (checkdate($socialUser->birthMonth, $socialUser->birthDay, $socialUser->birthYear)) {
 
-                    $optionalData['dob']          = array();
+                    $optionalData['dob']          = [];
                     $optionalData['dob']['year']  = trim($socialUser->birthYear);
                     $optionalData['dob']['month'] = str_pad(trim($socialUser->birthMonth), 2, 0, STR_PAD_LEFT);
                     $optionalData['dob']['day']   = str_pad(trim($socialUser->birthDay), 2, 0, STR_PAD_LEFT);
@@ -648,11 +629,11 @@ class Login extends Base
 
                 switch (strtoupper($socialUser->gender)) {
 
-                    case 'MALE' :
+                    case 'MALE':
                         $optionalData['gender'] = 'MALE';
                         break;
 
-                    case 'FEMALE' :
+                    case 'FEMALE':
                         $optionalData['gender'] = 'FEMALE';
                         break;
                 }
@@ -668,7 +649,7 @@ class Login extends Base
 
                     /**
                      * @TODO: One day work out a way of doing this so that we don't need to call
-                     * the API again etc, uses unnessecary calls. Then again, maybe it *is*
+                     * the API again etc, uses unnecessary calls. Then again, maybe it *is*
                      * necessary.
                      */
 
@@ -687,7 +668,6 @@ class Login extends Base
                     $check = $oUserModel->getByEmail($requiredData['email']);
 
                     if ($check) {
-
                         $requiredData['email'] = '';
                         $requestData           = true;
                     }
@@ -727,19 +707,18 @@ class Login extends Base
                         $username = $requiredData['first_name'] . ' ' . $requiredData['last_name'];
 
                     } else {
-
                         $oDate    = Factory::factory('DateTime');
                         $username = 'user' . $oDate->format('YmdHis');
                     }
 
-                    $basename = url_title($username, '-', true);
+                    $basename                 = url_title($username, '-', true);
                     $requiredData['username'] = $basename;
 
                     $user = $oUserModel->getByUsername($requiredData['username']);
 
                     while ($user) {
                         $requiredData['username'] = increment_string($basename, '');
-                        $user = $oUserModel->getByUsername($requiredData['username']);
+                        $user                     = $oUserModel->getByUsername($requiredData['username']);
                     }
                 }
 
@@ -808,11 +787,11 @@ class Login extends Base
 
                                 if (@file_put_contents($cacheFile, (string) $oResponse->getBody)) {
 
-                                    $_upload = $oCdn->objectCreate($cacheFile, 'profile-images', array());
+                                    $_upload = $oCdn->objectCreate($cacheFile, 'profile-images', []);
 
                                     if ($_upload) {
 
-                                        $data                = array();
+                                        $data                = [];
                                         $data['profile_img'] = $_upload->id;
 
                                         $oUserModel->update($newUser->id, $data);
@@ -832,13 +811,13 @@ class Login extends Base
 
                     // --------------------------------------------------------------------------
 
-                    //  Aint that swell, all registered!Redirect!
+                    //  Aint that swell, all registered! Redirect!
                     $oUserModel->setLoginData($newUser->id);
 
                     // --------------------------------------------------------------------------
 
                     //  Create an event for this event
-                    create_event('did_register', array('method' => $provider), $newUser->id);
+                    create_event('did_register', ['method' => $provider], $newUser->id);
 
                     // --------------------------------------------------------------------------
 
@@ -846,8 +825,9 @@ class Login extends Base
                     $oSession->set_flashdata('success', lang('auth_social_register_ok', $newUser->first_name));
 
                     if (empty($this->data['return_to'])) {
-                        $group       = $this->user_group_model->getById($newUser->group_id);
-                        $redirectUrl = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
+                        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+                        $group           = $oUserGroupModel->getById($newUser->group_id);
+                        $redirectUrl     = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
                     } else {
                         $redirectUrl = $this->data['return_to'];
                     }
@@ -872,7 +852,7 @@ class Login extends Base
 
             } else {
 
-                //  How unfortunate, registration is disabled. Redrect back to the login page
+                //  How unfortunate, registration is disabled. Redirect back to the login page
                 $oSession->set_flashdata('error', lang('auth_social_register_disabled'));
 
                 $redirectUrl = 'auth/login';
@@ -890,13 +870,16 @@ class Login extends Base
 
     /**
      * Handles requesting of additional data from the user
+     *
      * @param  array  &$requiredData An array of fields to request
      * @param  string $provider      The provider to use
+     *
      * @return void
      */
     protected function requestData(&$requiredData, $provider)
     {
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
 
@@ -940,23 +923,22 @@ class Login extends Base
 
                 //  Valid!Ensure required data is set correctly then allow system to move on.
                 if (isset($requiredData['email'])) {
-                    $requiredData['email'] = $this->input->post('email');
+                    $requiredData['email'] = $oInput->post('email');
                 }
 
                 if (isset($requiredData['username'])) {
-                    $requiredData['username'] = $this->input->post('username');
+                    $requiredData['username'] = $oInput->post('username');
                 }
 
                 if (empty($requiredData['first_name'])) {
-                    $requiredData['first_name'] = $this->input->post('first_name');
+                    $requiredData['first_name'] = $oInput->post('first_name');
                 }
 
                 if (empty($requiredData['last_name'])) {
-                    $requiredData['last_name'] = $this->input->post('last_name');
+                    $requiredData['last_name'] = $oInput->post('last_name');
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
                 $this->requestDataForm($requiredData, $provider);
             }
@@ -970,16 +952,19 @@ class Login extends Base
 
     /**
      * Renders the "request data" form
-     * @param  array &$requiredData An array of fields to request
-     * @param  string $provider     The provider being used
+     *
+     * @param  array  &$requiredData An array of fields to request
+     * @param  string $provider      The provider being used
+     *
      * @return void
      */
     protected function requestDataForm(&$requiredData, $provider)
     {
+        $oUri                        = Factory::service('Uri');
         $this->data['required_data'] = $requiredData;
         $this->data['form_url']      = 'auth/login/' . $provider;
 
-        if ($this->uri->segment(4) == 'register') {
+        if ($oUri->segment(4) == 'register') {
             $this->data['form_url'] .= '/register';
         }
 
@@ -1000,12 +985,13 @@ class Login extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Route requests aprpopriately
+     * Route requests appropriately
      * @return void
      */
     public function _remap()
     {
-        $method = $this->uri->segment(3) ? $this->uri->segment(3) : 'index';
+        $oUri   = Factory::service('Uri');
+        $method = $oUri->segment(3) ? $oUri->segment(3) : 'index';
 
         if (method_exists($this, $method) && substr($method, 0, 1) != '_') {
 
