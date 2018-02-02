@@ -2168,12 +2168,10 @@ class User extends Base
 
             $oDb->trans_commit();
 
-            $oUser = $this->getById($iId);
-
             $oEventService = Factory::service('Event');
             $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iId]);
 
-            return $oUser;
+            return $this->getById($iId);;
 
         } else {
 
