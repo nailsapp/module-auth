@@ -426,7 +426,7 @@ class User extends Base
      */
     public function getAdminRecoveryData()
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession             = Factory::service('Session', 'nailsapp/module-auth');
         $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -857,20 +857,20 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Update a user, if $user_id is not set method will attempt to update the
+     * Update a user, if $iUserId is not set method will attempt to update the
      * active user. If $data is passed then the method will attempt to update
      * the user and/or user_meta_* tables
      *
-     * @param  integer $user_id The ID of the user to update
+     * @param  integer $iUserId The ID of the user to update
      * @param  array   $data    Any data to be updated
      *
      * @return boolean
      */
-    public function update($user_id = null, $data = null)
+    public function update($iUserId = null, $data = null)
     {
         $oDate   = Factory::factory('DateTime');
         $data    = (array) $data;
-        $iUserId = $this->getUserId($user_id);
+        $iUserId = $this->getUserId($iUserId);
         if (empty($iUserId)) {
             return false;
         }
@@ -884,7 +884,6 @@ class User extends Base
         }
 
         // --------------------------------------------------------------------------
-
 
         //  If there's some data we'll need to know the columns of `user`
         //  We also want to unset any 'dangerous' items then set it for the query
@@ -1174,7 +1173,8 @@ class User extends Base
             }
         }
 
-        $this->setCacheUser($iUserId);
+        //  Clear the caches for this user
+        $this->unsetCacheUser($iUserId);
 
         $oEventService = Factory::service('Event');
         $oEventService->trigger(Events::USER_MODIFIED, 'nailsapp/module-auth', [$iUserId]);
@@ -1208,35 +1208,26 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Returns a user from the cache
-     *
-     * @param  int $userId The ID of the user to return
-     *
-     * @return mixed
-     */
-    public function getCacheUser($userId)
-    {
-        return $this->getCache('user-' . $userId);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Saves a user object to the persistent cache
      *
-     * @param int $userId The user ID to cache
+     * @param integer $iUserId The user ID to cache
+     * @param array   $aData   The data array
      *
      * @return boolean
      */
-    public function setCacheUser($userId)
+    public function setCacheUser($iUserId, $aData = [])
     {
-        $user = $this->getById($userId);
+        $this->unsetCacheUser($iUserId);
+        $oUser = $this->getById($iUserId);
 
-        if (empty($user)) {
+        if (empty($oUser)) {
             return false;
         }
 
-        $this->setCacheUserObj($user);
+        $this->setCache(
+            $this->prepareCacheKey($this->tableIdColumn, $oUser->id, $aData),
+            $oUser
+        );
 
         return true;
     }
@@ -1244,29 +1235,15 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Sets the user's object into the cache
+     * Removes a user from the cache
      *
-     * @param  \stdClass $userObj The complete user Object to cache
-     *
-     * @return void
+     * @param integer $iUserId The User ID to remove
      */
-    protected function setCacheUserObj($userObj)
+    protected function unsetCacheUser($iUserId)
     {
-        $this->setCache('user-' . $userObj->id, $userObj);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Removes a user object from the persistent cache
-     *
-     * @param int $userId The user ID to remove from cache
-     *
-     * @return void
-     */
-    public function unsetCacheUser($userId)
-    {
-        $this->unsetCache('user-' . $userId);
+        $this->unsetCachePrefix(
+            $this->prepareCacheKey($this->tableIdColumn, $iUserId)
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -1275,21 +1252,20 @@ class User extends Base
      * Adds a new email to the user_email table. Will optionally send the verification email, too.
      *
      * @param  string  $email       The email address to add
-     * @param  int     $user_id     The ID of the user to add for, defaults to $this->activeUser('id')
+     * @param  integer $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
      * @param  boolean $bIsPrimary  Whether or not the email address should be the primary email address for the user
      * @param  boolean $is_verified Whether ot not the email should be marked as verified
      * @param  boolean $send_email  If unverified, whether or not the verification email should be sent
      *
      * @return mixed                String containing verification code on success, false on failure
      */
-    public function emailAdd($email, $user_id = null, $bIsPrimary = false, $is_verified = false, $send_email = true)
+    public function emailAdd($email, $iUserId = null, $bIsPrimary = false, $is_verified = false, $send_email = true)
     {
-        $iUserId = empty($user_id) ? $this->activeUser('id') : $user_id;
+        $iUserId = empty($iUserId) ? $this->activeUser('id') : $iUserId;
         $oEmail  = trim(strtolower($email));
         $oUser   = $this->getById($iUserId);
 
         if (empty($oUser)) {
-
             $this->setError('Invalid User ID');
             return false;
         }
@@ -1332,8 +1308,7 @@ class User extends Base
                     $this->emailAddSendVerify($oTest->id);
                 }
 
-                //  Recache the user
-                $this->setCacheUser($oUser->id);
+                $this->unsetCacheUser($oUser->id);
 
                 return $oTest->code;
 
@@ -1377,8 +1352,8 @@ class User extends Base
                 $this->emailAddSendVerify($iEmailId);
             }
 
-            //  Recache the user
-            $this->setCacheUser($oUser->id);
+            //  Cache the user
+            $this->unsetCacheUser($oUser->id);
 
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
@@ -1408,11 +1383,11 @@ class User extends Base
      * Send, or resend, the verify email for a particular email address
      *
      * @param  integer $email_id The email's ID
-     * @param  integer $user_id  The user's ID
+     * @param  integer $iUserId  The user's ID
      *
      * @return boolean
      */
-    public function emailAddSendVerify($email_id, $user_id = null)
+    public function emailAddSendVerify($email_id, $iUserId = null)
     {
         //  Fetch the email and the user's group
         $oDb = Factory::service('Database');
@@ -1432,8 +1407,8 @@ class User extends Base
             $oDb->where('ue.email', $email_id);
         }
 
-        if (!empty($user_id)) {
-            $oDb->where('ue.user_id', $user_id);
+        if (!empty($iUserId)) {
+            $oDb->where('ue.user_id', $iUserId);
         }
 
         $oDb->join(NAILS_DB_PREFIX . 'user u', $this->tableAlias . '.id = ue.user_id');
@@ -1478,24 +1453,24 @@ class User extends Base
 
     /**
      * Deletes a non-primary email from the user_email table, optionally filtering
-     * by $user_id
+     * by $iUserId
      *
-     * @param  mixed $email_id The email address, or the ID of the email address to remove
-     * @param  int   $user_id  The ID of the user to restrict to
+     * @param  mixed   $mEmailId The email address, or the ID of the email address to remove
+     * @param  integer $iUserId  The ID of the user to restrict to
      *
      * @return boolean
      */
-    public function emailDelete($email_id, $user_id = null)
+    public function emailDelete($mEmailId, $iUserId = null)
     {
         $oDb = Factory::service('Database');
-        if (is_numeric($email_id)) {
-            $oDb->where('id', $email_id);
+        if (is_numeric($mEmailId)) {
+            $oDb->where('id', $mEmailId);
         } else {
-            $oDb->where('email', $email_id);
+            $oDb->where('email', $mEmailId);
         }
 
-        if (!empty($user_id)) {
-            $oDb->where('user_id', $user_id);
+        if (!empty($iUserId)) {
+            $oDb->where('user_id', $iUserId);
         }
 
         $oDb->where('is_primary', false);
@@ -1503,39 +1478,37 @@ class User extends Base
 
         if ((bool) $oDb->affected_rows()) {
 
-            //  @todo: update the activeUser if required
-            $this->setCacheUser($user_id);
+            if (is_numeric($iUserId)) {
+                $this->unsetCacheUser($iUserId);
+            }
             return true;
 
         } else {
-
             return false;
         }
     }
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Verifies whether the supplied $code is valid for the requested user ID or email
      * address. If it is then the email is marked as verified.
      *
      * @param  mixed  $mIdEmail The numeric ID of the user, or the email address
-     * @param  string $code     The verification code as generated by emailAdd()
+     * @param  string $sCode     The verification code as generated by emailAdd()
      *
      * @return boolean
      */
-    public function emailVerify($mIdEmail, $code)
+    public function emailVerify($mIdEmail, $sCode)
     {
         //  Check user exists
         if (is_numeric($mIdEmail)) {
-            $user = $this->getById($mIdEmail);
+            $oUser = $this->getById($mIdEmail);
         } else {
-            $user = $this->getByEmail($mIdEmail);
+            $oUser = $this->getByEmail($mIdEmail);
         }
 
-        if (!$user) {
-
+        if (!$oUser) {
             $this->setError('User does not exist.');
             return false;
         }
@@ -1544,9 +1517,9 @@ class User extends Base
 
         //  Check if email has already been verified
         $oDb = Factory::service('Database');
-        $oDb->where('user_id', $user->id);
+        $oDb->where('user_id', $oUser->id);
         $oDb->where('is_verified', true);
-        $oDb->where('code', $code);
+        $oDb->where('code', $sCode);
 
         if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
             $this->setError('Email has already been verified.');
@@ -1558,18 +1531,18 @@ class User extends Base
         //  Go ahead and set as verified
         $oDb->set('is_verified', true);
         $oDb->set('date_verified', 'NOW()', false);
-        $oDb->where('user_id', $user->id);
+        $oDb->where('user_id', $oUser->id);
         $oDb->where('is_verified', false);
-        $oDb->where('code', $code);
+        $oDb->where('code', $sCode);
 
         $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
         if ((bool) $oDb->affected_rows()) {
 
-            $this->setCacheUser($user->id);
+            $this->unsetCacheUser($oUser->id);
 
             //  Update the activeUser
-            if ($user->id == $this->activeUser('id')) {
+            if ($oUser->id == $this->activeUser('id')) {
 
                 $oDate                         = Factory::factory('DateTime');
                 $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
@@ -1589,25 +1562,25 @@ class User extends Base
     /**
      * Sets an email address as the primary email address for that user.
      *
-     * @param  mixed $id_email The numeric  ID of the email address, or the email address itself
-     * @param  int   $user_id  Specify the user ID which this should apply to
+     * @param  mixed   $mIdEmail The numeric  ID of the email address, or the email address itself
+     * @param  integer $iUserId  Specify the user ID which this should apply to
      *
      * @return boolean
      */
-    public function emailMakePrimary($id_email, $user_id = null)
+    public function emailMakePrimary($mIdEmail, $iUserId = null)
     {
         //  Fetch email
         $oDb = Factory::service('Database');
         $oDb->select('id,user_id,email');
 
-        if (is_numeric($id_email)) {
-            $oDb->where('id', $id_email);
+        if (is_numeric($mIdEmail)) {
+            $oDb->where('id', $mIdEmail);
         } else {
-            $oDb->where('email', $id_email);
+            $oDb->where('email', $mIdEmail);
         }
 
-        if (!is_null($user_id)) {
-            $oDb->where('user_id', $user_id);
+        if (!is_null($iUserId)) {
+            $oDb->where('user_id', $iUserId);
         }
 
         $oEmail = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
@@ -1637,7 +1610,7 @@ class User extends Base
         } else {
 
             $oDb->trans_commit();
-            $this->setCacheUser($oEmail->user_id);
+            $this->unsetCacheUser($oEmail->user_id);
 
             //  Update the activeUser
             if ($oEmail->user_id == $this->activeUser('id')) {
@@ -1658,12 +1631,12 @@ class User extends Base
     /**
      * Increment the user's failed logins
      *
-     * @param  integer $user_id The user ID to increment
+     * @param  integer $iUserId The user ID to increment
      * @param  integer $expires How long till the block, if the threshold is reached, expires.
      *
      * @return boolean
      */
-    public function incrementFailedLogin($user_id, $expires = 300)
+    public function incrementFailedLogin($iUserId, $expires = 300)
     {
         $oDate = Factory::factory('DateTime');
         $oDate->add(new \DateInterval('PT' . $expires . 'S'));
@@ -1671,7 +1644,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->set('failed_login_count', '`failed_login_count`+1', false);
         $oDb->set('failed_login_expires', $oDate->format('Y-m-d H:i:s'));
-        return $this->update($user_id);
+        return $this->update($iUserId);
     }
 
     // --------------------------------------------------------------------------
@@ -1679,16 +1652,16 @@ class User extends Base
     /**
      * Reset a user's failed login
      *
-     * @param  integer $user_id The user ID to reset
+     * @param  integer $iUserId The user ID to reset
      *
      * @return boolean
      */
-    public function resetFailedLogin($user_id)
+    public function resetFailedLogin($iUserId)
     {
         $oDb = Factory::service('Database');
         $oDb->set('failed_login_count', 0);
         $oDb->set('failed_login_expires', 'null', false);
-        return $this->update($user_id);
+        return $this->update($iUserId);
     }
 
     // --------------------------------------------------------------------------
@@ -1696,16 +1669,16 @@ class User extends Base
     /**
      * Update a user's `last_login` field
      *
-     * @param  integer $user_id The user ID to update
+     * @param  integer $iUserId The user ID to update
      *
      * @return boolean
      */
-    public function updateLastLogin($user_id)
+    public function updateLastLogin($iUserId)
     {
         $oDb = Factory::service('Database');
         $oDb->set('last_login', 'NOW()', false);
         $oDb->set('login_count', 'login_count+1', false);
-        return $this->update($user_id);
+        return $this->update($iUserId);
     }
 
     // --------------------------------------------------------------------------
@@ -2171,7 +2144,7 @@ class User extends Base
             $oEventService = Factory::service('Event');
             $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iId]);
 
-            return $this->getById($iId);;
+            return $this->getById($iId);
 
         } else {
 
@@ -2184,23 +2157,22 @@ class User extends Base
     /**
      * Delete a user
      *
-     * @param  integer $userId The ID of the user to delete
+     * @param  integer $iUserId The ID of the user to delete
      *
      * @return boolean
      */
-    public function destroy($userId)
+    public function destroy($iUserId)
     {
         $oDb = Factory::service('Database');
-        $oDb->where('id', $userId);
+        $oDb->where('id', $iUserId);
         $oDb->delete(NAILS_DB_PREFIX . 'user');
 
         if ((bool) $oDb->affected_rows()) {
 
-            $this->unsetCacheUser($userId);
+            $this->unsetCacheUser($iUserId);
             return true;
 
         } else {
-
             return false;
         }
     }
@@ -2210,13 +2182,13 @@ class User extends Base
     /**
      * Alias to destroy()
      *
-     * @param  integer $userId The ID of the user to delete
+     * @param  integer $iUserId The ID of the user to delete
      *
      * @return boolean
      */
-    public function delete($userId)
+    public function delete($iUserId)
     {
-        return $this->destroy($userId);
+        return $this->destroy($iUserId);
     }
 
     // --------------------------------------------------------------------------
@@ -2249,12 +2221,12 @@ class User extends Base
     /**
      * Rewards a user for their referral
      *
-     * @param  integer $userId     The ID of the user who signed up
+     * @param  integer $iUserId    The ID of the user who signed up
      * @param  integer $referrerId The ID of the user who made the referral
      *
      * @return void
      */
-    public function rewardReferral($userId, $referrerId)
+    public function rewardReferral($iUserId, $referrerId)
     {
         // @todo Implement this emthod where appropriate
     }
@@ -2264,13 +2236,13 @@ class User extends Base
     /**
      * Suspend a user
      *
-     * @param  integer $userId The ID of the user to suspend
+     * @param  integer $iUserId The ID of the user to suspend
      *
      * @return boolean
      */
-    public function suspend($userId)
+    public function suspend($iUserId)
     {
-        return $this->update($userId, ['is_suspended' => true]);
+        return $this->update($iUserId, ['is_suspended' => true]);
     }
 
     // --------------------------------------------------------------------------
@@ -2278,13 +2250,13 @@ class User extends Base
     /**
      * Unsuspend a user
      *
-     * @param  integer $userId The ID of the user to unsuspend
+     * @param  integer $iUserId The ID of the user to unsuspend
      *
      * @return boolean
      */
-    public function unsuspend($userId)
+    public function unsuspend($iUserId)
     {
-        return $this->update($userId, ['is_suspended' => false]);
+        return $this->update($iUserId, ['is_suspended' => false]);
     }
 
     // --------------------------------------------------------------------------
@@ -2356,18 +2328,18 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Merges users with ID in $mergeIds into $userId
+     * Merges users with ID in $mergeIds into $iUserId
      *
-     * @param  int   $userId   The user ID to keep
-     * @param  array $mergeIds An array of user ID's to merge into $userId
+     * @param  integer $iUserId  The user ID to keep
+     * @param  array   $mergeIds An array of user ID's to merge into $iUserId
      *
      * @return boolean
      */
-    public function merge($userId, $mergeIds, $preview = false)
+    public function merge($iUserId, $mergeIds, $preview = false)
     {
         $oDb = Factory::service('Database');
 
-        if (!is_numeric($userId)) {
+        if (!is_numeric($iUserId)) {
             $this->setError('"userId" must be numeric.');
             return false;
         }
@@ -2385,7 +2357,7 @@ class User extends Base
             $mergeIds[$i] = $oDb->escape((int) $mergeIds[$i]);
         }
 
-        if (in_array($userId, $mergeIds)) {
+        if (in_array($iUserId, $mergeIds)) {
             $this->setError('"userId" cannot be listed as a merge user.');
             return false;
         }
@@ -2464,8 +2436,8 @@ class User extends Base
 
         if ($preview) {
 
-            $out        = new \stdClass;
-            $out->user  = $this->getById($userId);
+            $out        = new \stdClass();
+            $out->user  = $this->getById($iUserId);
             $out->merge = [];
 
             foreach ($mergeIds as $mergeUserId) {
@@ -2491,7 +2463,7 @@ class User extends Base
                             break;
                     }
 
-                    $oDb->set($column, $userId);
+                    $oDb->set($column, $iUserId);
                     $oDb->where_in($column, $mergeIds);
                     if (!$oDb->update($tables[$i]->name)) {
 
@@ -2550,8 +2522,7 @@ class User extends Base
         $aIntegers = [],
         $aBools = [],
         $aFloats = []
-    )
-    {
+    ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
