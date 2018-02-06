@@ -132,7 +132,7 @@ class Session
      *
      * @return void
      **/
-    public function keep_flashdata($mKey = null)
+    public function keepFlashData($mKey = null)
     {
         /**
          * 'old' flashdata gets removed.  Here we mark all flashdata as 'new' to preserve
@@ -144,12 +144,12 @@ class Session
 
             foreach ($this->oSession->userdata as $k => $v) {
 
-                $sOldFlashdataKey = $this->oSession->flashdata_key . ':old:';
+                $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:';
 
-                if (strpos($k, $sOldFlashdataKey) !== false) {
-                    $sNewFlashdataKey = $this->oSession->flashdata_key . ':new:';
-                    $sNewFlashdataKey = str_replace($sOldFlashdataKey, $sNewFlashdataKey, $k);
-                    $this->oSession->set_userdata($sNewFlashdataKey, $v);
+                if (strpos($k, $sOldFlashDataKey) !== false) {
+                    $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:';
+                    $sNewFlashDataKey = str_replace($sOldFlashDataKey, $sNewFlashDataKey, $k);
+                    $this->oSession->set_userdata($sNewFlashDataKey, $v);
                 }
             }
 
@@ -157,18 +157,62 @@ class Session
 
         } elseif (is_array($mKey)) {
             foreach ($mKey as $k) {
-                $this->keep_flashdata($k);
+                $this->keepFlashData($k);
             }
         }
 
         // --------------------------------------------------------------------------
 
-        $sOldFlashdataKey = $this->oSession->flashdata_key . ':old:' . $mKey;
-        $value            = $this->oSession->userdata($sOldFlashdataKey);
+        $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:' . $mKey;
+        $value            = $this->oSession->userdata($sOldFlashDataKey);
 
         // --------------------------------------------------------------------------
 
-        $sNewFlashdataKey = $this->oSession->flashdata_key . ':new:' . $mKey;
-        $this->oSession->set_userdata($sNewFlashdataKey, $value);
+        $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:' . $mKey;
+        $this->oSession->set_userdata($sNewFlashDataKey, $value);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alias of Session::keepFlashData()
+     * @see Session::keepFlashData()
+     */
+    public function keep_flashdata($mKey = null)
+    {
+        $this->keepFlashData($mKey);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::set_flashdata
+     * @see \CI_Session::set_flashdata()
+     */
+    public function setFlashData($newdata = [], $newval = '')
+    {
+        return $this->oSession->set_flashdata($newdata, $newval);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::set_userdata
+     * @see \CI_Session::set_userdata()
+     */
+    public function setUserData($newdata = [], $newval = '')
+    {
+        return $this->oSession->set_userdata($newdata, $newval);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::unset_userdata
+     * @see \CI_Session::unset_userdata()
+     */
+    public function unsetUserData($newdata = [], $newval = '')
+    {
+        return $this->oSession->unset_userdata($newdata, $newval);
     }
 }
