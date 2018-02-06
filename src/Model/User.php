@@ -898,8 +898,8 @@ class User extends Base
             $aCols = $this->getUserColumns();
 
             //  Safety first, no updating of user's ID.
-            unset($data->id);
-            unset($data->id_md5);
+            unset($data['id']);
+            unset($data['id_md5']);
 
             //  If we're updating the user's password we should generate a new hash
             if (array_key_exists('password', $data)) {
@@ -920,7 +920,6 @@ class User extends Base
                 $bPasswordUpdated = true;
 
             } else {
-
                 $bPasswordUpdated = false;
             }
 
@@ -983,42 +982,30 @@ class User extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Resetting security questions?
-            $oConfig = Factory::service('Config');
-            $oConfig->load('auth/auth');
+            //  Resetting 2FA?
+            if ($dataResetMfaQuestion || $dataResetMfaDevice) {
 
-            if ($oConfig->item('authTwoFactorMode') == 'QUESTION' && $dataResetMfaQuestion) {
+                $oConfig = Factory::service('Config');
+                $oConfig->load('auth/auth');
+                $sTwoFactorMode = $oConfig->item('authTwoFactorMode');
 
-                $oDb->where('user_id', $iUserId);
-                if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
+                if ($sTwoFactorMode == 'QUESTION' && $dataResetMfaQuestion) {
 
-                    /**
-                     * Rollback immediately in case there's email or password changes which
-                     * might send an email.
-                     */
+                    $oDb->where('user_id', $iUserId);
+                    if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
+                        $oDb->trans_rollback();
+                        $this->setError('Could not reset user\'s Multi Factor Authentication questions.');
+                        return false;
+                    }
 
-                    $oDb->trans_rollback();
+                } elseif ($sTwoFactorMode == 'DEVICE' && $dataResetMfaDevice) {
 
-                    $this->setError('could not reset user\'s Multi Factor Authentication questions.');
-
-                    return false;
-                }
-
-            } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE' && $dataResetMfaDevice) {
-
-                $oDb->where('user_id', $iUserId);
-                if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
-
-                    /**
-                     * Rollback immediately in case there's email or password changes which
-                     * might send an email.
-                     */
-
-                    $oDb->trans_rollback();
-
-                    $this->setError('could not reset user\'s Multi Factor Authentication device.');
-
-                    return false;
+                    $oDb->where('user_id', $iUserId);
+                    if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+                        $oDb->trans_rollback();
+                        $this->setError('Could not reset user\'s Multi Factor Authentication device.');
+                        return false;
+                    }
                 }
             }
 
