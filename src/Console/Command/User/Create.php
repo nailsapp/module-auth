@@ -228,7 +228,7 @@ class Create extends Base
     private function createUser($aUser, $iGroupId)
     {
         $oUserModel        = Factory::model('User', 'nailsapp/module-auth');
-        $aUSer['group_id'] = $iGroupId;
+        $aUser['group_id'] = $iGroupId;
         try {
             $oUser = $oUserModel->create($aUser, false);
         } catch (\Exception $e) {
