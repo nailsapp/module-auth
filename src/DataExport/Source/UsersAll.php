@@ -45,6 +45,17 @@ class UsersAll implements Source
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of additional options for the export
+     * @return array
+     */
+    public function getOptions()
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Provides an opportunity for the source to decide whether it is available or not to the user
      * @return bool
      */
@@ -68,53 +79,34 @@ class UsersAll implements Source
         $oUserModel      = Factory::model('User', 'nailsapp/module-auth');
         $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
 
-        $aOut = [
-            (object) [
-                'label'    => 'Table: ' . $oUserModel->getTableName(),
-                'filename' => $oUserModel->getTableName(),
-                'fields'   => [],
-                'data'     => [],
-            ],
-            (object) [
-                'label'    => 'Table: ' . $oUserGroupModel->getTableName(),
-                'filename' => $oUserGroupModel->getTableName(),
-                'fields'   => [],
-                'data'     => [],
-            ],
-            (object) [
-                'label'    => 'Table: ' . NAILS_DB_PREFIX . 'user_email',
-                //  @todo - Use the email model (when it exists)
-                'filename' => NAILS_DB_PREFIX . 'user_email',
-                'fields'   => [],
-                'data'     => [],
-            ],
+        $aTables = [
+            $oUserModel->getTableName(),
+            $oUserGroupModel->getTableName(),
+            NAILS_DB_PREFIX . 'user_email',
         ];
 
-        $aTables = $oDb->query('
+        $aResult = $oDb->query('
             SHOW TABLES
             FROM `' . DEPLOY_DB_DATABASE . '`
-            WHERE 
+            WHERE
                 `Tables_in_' . DEPLOY_DB_DATABASE . '` LIKE "' . NAILS_DB_PREFIX . 'user_meta_%"
                 OR `Tables_in_' . DEPLOY_DB_DATABASE . '` LIKE "' . APP_DB_PREFIX . 'user_meta_%"
         ')->result();
 
-        foreach ($aTables as $oTable) {
-            $sTable = $oTable->{'Tables_in_' . DEPLOY_DB_DATABASE};
-            $aOut[] = (object) [
-                'label'    => 'Table: ' . $sTable,
-                'filename' => $sTable,
-                'fields'   => [],
-                'data'     => [],
-            ];
+        foreach ($aResult as $oTable) {
+            $aTables[] = $oTable->{'Tables_in_' . DEPLOY_DB_DATABASE};
         }
 
-        //  Fetch the data from the tables
-        foreach ($aOut as $oItem) {
-            $aFields = $oDb->query('DESCRIBE ' . $oItem->filename)->result();
-            foreach ($aFields as $oField) {
-                $oItem->fields[] = $oField->Field;
-            }
-            $oItem->data = $oDb->get($oItem->filename)->result_array();
+        $aOut = [];
+        foreach ($aTables as $sTable) {
+            $oResponse = Factory::factory('DataExportSourceResponse', 'nailsapp/module-admin');
+            $oSource   = $oDb->get($sTable);
+            $aFields   = arrayExtractProperty($oDb->query('DESCRIBE ' . $sTable)->result(), 'Field');
+            $aOut[]    = $oResponse
+                ->setLabel('Table: ' . $sTable)
+                ->setFilename($sTable)
+                ->setFields($aFields)
+                ->setSource($oSource);
         }
 
         return $aOut;

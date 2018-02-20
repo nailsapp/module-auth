@@ -28,7 +28,7 @@ class UsersEmail implements Source
      */
     public function getFileName()
     {
-        return 'members-all';
+        return 'members-name-email';
     }
 
     // --------------------------------------------------------------------------
@@ -40,6 +40,17 @@ class UsersEmail implements Source
     public function getDescription()
     {
         return 'Export a list of all the site\'s registered users and their email addresses.';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns an array of additional options for the export
+     * @return array
+     */
+    public function getOptions()
+    {
+        return [];
     }
 
     // --------------------------------------------------------------------------
@@ -64,28 +75,19 @@ class UsersEmail implements Source
      */
     public function execute($aData = [])
     {
-        //  Fetch all users via the User model
+        $oDb        = Factory::service('Database');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $aUsers     = $oUserModel->getAll();
+        $oResponse  = Factory::factory('DataExportSourceResponse', 'nailsapp/module-admin');
 
-        //  Set column headings
-        $oOut = (object) [
-            'label'    => $this->getLabel(),
-            'filename' => 'members-name-email',
-            'fields'   => ['id', 'first_name', 'last_name', 'email'],
-            'data'     => [],
-        ];
+        $oSource = $oDb
+            ->select('u.id, u.first_name, u.last_name, ue.email')
+            ->join(NAILS_DB_PREFIX . 'user_email ue', 'u.id = ue.user_id AND ue.is_primary = 1', 'LEFT')
+            ->get($oUserModel->getTableName() . ' u');
 
-        //  Add each user to the output array
-        foreach ($aUsers as $oUser) {
-            $oOut->data[] = [
-                $oUser->id,
-                $oUser->first_name,
-                $oUser->last_name,
-                $oUser->email,
-            ];
-        }
-
-        return $oOut;
+        return $oResponse
+            ->setLabel($this->getLabel())
+            ->setFilename($this->getFileName())
+            ->setFields(['id', 'first_name', 'last_name', 'email'])
+            ->setSource($oSource);
     }
 }
