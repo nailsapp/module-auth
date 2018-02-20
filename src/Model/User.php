@@ -503,11 +503,7 @@ class User extends Base
         } elseif (isset($mUser->acl)) {
             $aAcl = $mUser->acl;
         } else {
-            $aAcl = $this->activeUser('acl');
-        }
-
-        if (!$aAcl) {
-            return false;
+            $aAcl = (array) $this->activeUser('acl');
         }
 
         // --------------------------------------------------------------------------
