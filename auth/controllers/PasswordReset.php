@@ -329,7 +329,7 @@ class Reset_Password extends Base
             // --------------------------------------------------------------------------
 
             //  Load the views
-            $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/change_temp.php');
+            $this->loadStyles(APPPATH . 'modules/auth/views/password/change_temp.php');
             $oView = Factory::service('View');
             $oView->load('structure/header/blank', $this->data);
             $oView->load('auth/password/change_temp', $this->data);

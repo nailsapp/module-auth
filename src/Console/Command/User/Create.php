@@ -94,7 +94,7 @@ class Create extends Base
         // --------------------------------------------------------------------------
 
         //  Detect super group ID
-        $oDb = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
+        $oDb = Factory::service('PDODatabase');
 
         //  If any DB credentials have been passed then connect using those
         $sDbHost = $oInput->getOption('db-host');

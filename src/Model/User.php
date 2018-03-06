@@ -530,7 +530,7 @@ class User extends Base
          * system (i.e., assuming that star on it's own will match)
          */
 
-        $sSearch = preg_replace('/:\*/', ':.*', $sSearch);
+        $sSearch = strtolower(preg_replace('/:\*/', ':.*', $sSearch));
 
         foreach ($aAcl as $sPermission) {
 

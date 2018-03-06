@@ -74,15 +74,15 @@ class Forgotten_Password extends Base
             switch (APP_NATIVE_LOGIN_USING) {
 
                 case 'EMAIL':
-                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', '', 'required|trim|valid_email');
                     break;
 
                 case 'USERNAME':
-                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'required|trim');
                     break;
 
                 default:
-                    $oFormValidation->set_rules('identifier', '', 'xss_clean|trim');
+                    $oFormValidation->set_rules('identifier', '', 'trim');
                     break;
             }
 
@@ -244,7 +244,7 @@ class Forgotten_Password extends Base
         }
 
         //  Load the views
-        $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten.php');
+        $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten.php');
         $oView = Factory::service('View');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
@@ -323,7 +323,7 @@ class Forgotten_Password extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer/blank', $this->data);
@@ -336,7 +336,7 @@ class Forgotten_Password extends Base
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/mfa/question/ask.php');
+                    $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/question/ask', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -359,7 +359,7 @@ class Forgotten_Password extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -394,7 +394,7 @@ class Forgotten_Password extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer', $this->data);
@@ -409,7 +409,7 @@ class Forgotten_Password extends Base
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
-                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/mfa/device/ask.php');
+                    $this->loadStyles(APPPATH . 'modules/auth/views/mfa/device/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/device/ask', $this->data);
                     $oView->load('structure/footer', $this->data);
@@ -432,7 +432,7 @@ class Forgotten_Password extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -454,7 +454,7 @@ class Forgotten_Password extends Base
                 // --------------------------------------------------------------------------
 
                 //  Load the views
-                $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                 $oView->load('structure/header/blank', $this->data);
                 $oView->load('auth/password/forgotten_reset', $this->data);
                 $oView->load('structure/footer/blank', $this->data);
@@ -466,7 +466,7 @@ class Forgotten_Password extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten.php');
+        $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten.php');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
         $oView->load('structure/footer/blank', $this->data);

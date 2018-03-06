@@ -19,7 +19,7 @@ class Groups extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'UserGroup';
     const CONFIG_MODEL_PROVIDER = 'nailsapp/module-auth';
-    const CONFIG_SIDEBAR_GROUP  = 'Members';
+    const CONFIG_SIDEBAR_GROUP  = 'Users';
     const CONFIG_PERMISSION     = 'groups';
     const CONFIG_SORT_OPTIONS   = [
         'id'       => 'ID',
@@ -51,13 +51,22 @@ class Groups extends DefaultController
         foreach ($this->data['adminControllers'] as $module => $oModuleDetails) {
             foreach ($oModuleDetails->controllers as $sController => $aControllerDetails) {
 
-                $temp              = new \stdClass();
-                $temp->label       = ucfirst($module) . ': ' . ucfirst($sController);
-                $temp->slug        = $module . ':' . $sController;
-                $temp->permissions = $aControllerDetails['className']::permissions();
+                $oTemp              = new \stdClass();
+                $oTemp->label       = ucfirst($module) . ': ' . ucfirst($sController);
+                $oTemp->slug        = strtolower($module . ':' . $sController);
+                $oTemp->permissions = $aControllerDetails['className']::permissions();
 
-                if (!empty($temp->permissions)) {
-                    $this->data['aPermissions'][] = $temp;
+                $aKeys   = array_keys($oTemp->permissions);
+                $aLabels = array_values($oTemp->permissions);
+
+                array_walk($aKeys, function (&$sValue) {
+                    $sValue = strtolower($sValue);
+                });
+
+                $oTemp->permissions = array_combine($aKeys, $aLabels);
+
+                if (!empty($oTemp->permissions)) {
+                    $this->data['aPermissions'][] = $oTemp;
                 }
             }
         }
@@ -78,15 +87,12 @@ class Groups extends DefaultController
     protected function runFormValidation($aOverrides = [])
     {
         parent::runFormValidation([
-            'slug'                  => [
-                'xss_clean',
+            'slug'        => [
                 'required',
-                'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']'
+                'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']',
             ],
-            'label'                 => ['xss_clean', 'required'],
-            'description'           => ['xss_clean', 'required'],
-            'default_homepage'      => ['xss_clean'],
-            'registration_redirect' => ['xss_clean'],
+            'label'       => ['required'],
+            'description' => ['required'],
         ]);
     }
 

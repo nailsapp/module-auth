@@ -18,9 +18,15 @@ class Migration7 extends Base
      */
     public function execute()
     {
-        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}session` CHANGE `session_id` `id` VARCHAR(128)  CHARACTER SET utf8  COLLATE utf8_general_ci  NOT NULL  DEFAULT '0';");
-        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}session` CHANGE `user_data` `data` BLOB  NOT NULL;");
-        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}session` CHANGE `last_activity` `timestamp` INT(10)  UNSIGNED  NOT NULL  DEFAULT '0';");
-        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}session` DROP `user_agent`;");
+        $this->query("DROP TABLE `{{NAIL_DB_PREFIX}}session`;");
+        $this->query("
+            CREATE TABLE IF NOT EXISTS `{{NAILS_DB_PREFIX}}_session` (
+                `id` varchar(128) NOT NULL,
+                `ip_address` varchar(45) NOT NULL,
+                `timestamp` int(10) unsigned DEFAULT 0 NOT NULL,
+                `data` blob NOT NULL,
+                KEY `{{NAILS_DB_PREFIX}}_session_timestamp` (`timestamp`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ");
     }
 }

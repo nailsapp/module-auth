@@ -23,10 +23,10 @@ class Routes implements RouteGenerator
     public static function generate()
     {
         return [
-            'auth/password/forgotten(/:any)?'                => 'auth/PasswordForgotten/$1',
-            'auth/password/reset/(:num)/(:any)'              => 'auth/PasswordReset/$1/$2',
-            'auth/mfa/device/(:num)/(:any)/(:any)(/:any)?'   => 'auth/MfaDevice',
-            'auth/mfa/question/(:num)/(:any)/(:any)(/:any)?' => 'auth/MfaQuestion',
+            'auth/password/forgotten(/(.+))?'           => 'auth/PasswordForgotten/$2',
+            'auth/password/reset/(\d+)/(.+)'            => 'auth/PasswordReset/$1/$2',
+            'auth/mfa/device/(\d+)/(.+)/(.+)(/(.+))?'   => 'auth/MfaDevice',
+            'auth/mfa/question/(\d+)/(.+)/(.+)(/(.+))?' => 'auth/MfaQuestion',
         ];
     }
 }

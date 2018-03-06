@@ -12,15 +12,15 @@
 
 namespace Nails\Admin\Auth;
 
-use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Factory;
 
 class Settings extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \stdClass
      */
     public static function announce()
     {
@@ -29,7 +29,6 @@ class Settings extends BaseAdmin
         $oNavGroup->setIcon('fa-wrench');
 
         if (userHasPermission('admin:auth:settings:update:.*')) {
-
             $oNavGroup->addAction('Authentication');
         }
 
@@ -77,8 +76,8 @@ class Settings extends BaseAdmin
         if ($this->input->post()) {
 
             //  Prepare update
-            $settings          = array();
-            $settingsEncrypted = array();
+            $settings          = [];
+            $settingsEncrypted = [];
 
             if (userHasPermission('admin:auth:settings:update:registration')) {
 
@@ -202,7 +201,7 @@ class Settings extends BaseAdmin
 
                         if (!$oAppSettingModel->set($settings, 'auth')) {
 
-                            $error    = $oAppSettingModel->lastError();
+                            $error     = $oAppSettingModel->lastError();
                             $bRollback = true;
                         }
                     }
@@ -211,7 +210,7 @@ class Settings extends BaseAdmin
 
                         if (!$oAppSettingModel->set($settingsEncrypted, 'auth', null, true)) {
 
-                            $error    = $oAppSettingModel->lastError();
+                            $error     = $oAppSettingModel->lastError();
                             $bRollback = true;
                         }
                     }
