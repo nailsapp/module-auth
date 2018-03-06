@@ -14,10 +14,12 @@
 
 namespace Nails\Auth\Library;
 
+use Nails\Factory;
+
 class Session
 {
     /**
-     * Whether on the cLI or not
+     * Whether on the CLI or not
      * @var boolean
      */
     private $bIsCli;
@@ -37,7 +39,8 @@ class Session
      */
     public function __construct()
     {
-        if (!isCli()) {
+        $oInput = Factory::service('Input');
+        if (!$oInput::isCli()) {
 
             /**
              * STOP! Before we load the session library, we need to check if we're using
@@ -75,7 +78,11 @@ class Session
     public function __call($sMethod, $aArguments)
     {
         if (!$this->bIsCli) {
-            return call_user_func_array([$this->oSession, $sMethod], $aArguments);
+            if (method_exists($this, $sMethod)) {
+                return call_user_func_array([$this, $sMethod], $aArguments);
+            } else {
+                return call_user_func_array([$this->oSession, $sMethod], $aArguments);
+            }
         } else {
             return null;
         }
@@ -119,12 +126,94 @@ class Session
     // --------------------------------------------------------------------------
 
     /**
-     * Keep flashdata around for another cycle
-     */
-    public function keep_flashdata()
+     * Keeps existing flashdata available to next request.
+     * http://codeigniter.com/forums/viewthread/104392/#917834
+     *
+     * @param  string|array $mKey The key to keep, null will retain all flashdata
+     *
+     * @return void
+     **/
+    public function keepFlashData($mKey = null)
     {
-        $aFlashData     = $this->oSession->flashdata();
-        $aFlashDataKeys = array_keys($aFlashData);
-        $this->oSession->keep_flashdata($aFlashDataKeys);
+        /**
+         * 'old' flashdata gets removed.  Here we mark all flashdata as 'new' to preserve
+         * it from _flashdata_sweep(). Note the function will NOT return FALSE if the $mKey
+         * provided cannot be found, it will retain ALL flashdata
+         */
+
+        if (is_null($mKey)) {
+
+            foreach ($this->oSession->userdata as $k => $v) {
+
+                $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:';
+
+                if (strpos($k, $sOldFlashDataKey) !== false) {
+                    $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:';
+                    $sNewFlashDataKey = str_replace($sOldFlashDataKey, $sNewFlashDataKey, $k);
+                    $this->oSession->set_userdata($sNewFlashDataKey, $v);
+                }
+            }
+
+            return;
+
+        } elseif (is_array($mKey)) {
+            foreach ($mKey as $k) {
+                $this->keepFlashData($k);
+            }
+        }
+
+        // --------------------------------------------------------------------------
+
+        $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:' . $mKey;
+        $value            = $this->oSession->userdata($sOldFlashDataKey);
+
+        // --------------------------------------------------------------------------
+
+        $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:' . $mKey;
+        $this->oSession->set_userdata($sNewFlashDataKey, $value);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alias of Session::keepFlashData()
+     * @see Session::keepFlashData()
+     */
+    public function keep_flashdata($mKey = null)
+    {
+        $this->keepFlashData($mKey);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::set_flashdata
+     * @see \CI_Session::set_flashdata()
+     */
+    public function setFlashData($newdata = [], $newval = '')
+    {
+        return $this->oSession->set_flashdata($newdata, $newval);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::set_userdata
+     * @see \CI_Session::set_userdata()
+     */
+    public function setUserData($newdata = [], $newval = '')
+    {
+        return $this->oSession->set_userdata($newdata, $newval);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Alia of CI_Session::unset_userdata
+     * @see \CI_Session::unset_userdata()
+     */
+    public function unsetUserData($newdata = [], $newval = '')
+    {
+        return $this->oSession->unset_userdata($newdata, $newval);
     }
 }

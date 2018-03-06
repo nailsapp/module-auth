@@ -17,15 +17,15 @@ if (!function_exists('activeUser')) {
     /**
      * Alias to UserModel->activeUser(); method
      *
-     * @param  boolean|string $sKey       The key to look up in activeUser
+     * @param  boolean|string $mKeys      The key to look up in activeUser
      * @param  string         $sDelimiter If multiple fields are requested they'll be joined by this string
      *
      * @return mixed
      */
-    function activeUser($sKey = false, $sDelimiter = ' ')
+    function activeUser($mKeys = false, $sDelimiter = ' ')
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel->activeUser($sKey, $sDelimiter);
+        return $oUserModel ? $oUserModel->activeUser($mKeys, $sDelimiter) : false;
     }
 }
 
@@ -37,15 +37,33 @@ if (!function_exists('userHasPermission')) {
      * Alias to UserModel->hasPermission(); method
      *
      * @param   string $sPermission The permission to check for
-     * @param   mixed  $mUser       The user to check for; if null uses activeUser,
-     *                              if numeric, fetches user, if object uses that object
+     * @param   mixed  $mUser       The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
      *
      * @return  boolean
      */
     function userHasPermission($sPermission, $mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel->hasPermission($sPermission, $mUser);
+        return $oUserModel ? $oUserModel->hasPermission($sPermission, $mUser) : false;
+    }
+}
+
+// --------------------------------------------------------------------------
+
+if (!function_exists('groupHasPermission')) {
+
+    /**
+     * Alias to user_model->groupHasPermission(); method
+     *
+     * @param   string $sPermission The permission to check for
+     * @param   mixed  $mGroup      The group to check for; if numeric, fetches group, if object uses that object
+     *
+     * @return  boolean
+     */
+    function groupHasPermission($sPermission, $mGroup)
+    {
+        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        return $oUserGroupModel ? $oUserGroupModel->hasPermission($sPermission, $mGroup) : false;
     }
 }
 
@@ -78,7 +96,7 @@ if (!function_exists('isAdmin')) {
     function isAdmin($mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel->isAdmin($mUser);
+        return $oUserModel ? $oUserModel->isAdmin($mUser) : false;
     }
 }
 
@@ -111,7 +129,7 @@ if (!function_exists('isSuperuser')) {
     function isSuperuser($mUser = null)
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel->isSuperuser($mUser);
+        return $oUserModel ? $oUserModel->isSuperuser($mUser) : false;
     }
 }
 
@@ -143,6 +161,6 @@ if (!function_exists('unsetAdminRecoveryData')) {
     function unsetAdminRecoveryData()
     {
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        return $oUserModel->unsetAdminRecoveryData();
+        return $oUserModel ? $oUserModel->unsetAdminRecoveryData() : false;
     }
 }

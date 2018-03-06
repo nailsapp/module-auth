@@ -14,11 +14,11 @@
 use Nails\Auth\Controller\Base;
 use Nails\Factory;
 
-class PasswordForgotten extends Base
+class Forgotten_Password extends Base
 {
     /**
-     * PasswordForgotten constructor.
-     */
+     * Constructor
+     **/
     public function __construct()
     {
         parent::__construct();
@@ -33,8 +33,9 @@ class PasswordForgotten extends Base
 
     /**
      * Reset password form
-     */
-    protected function index()
+     * @return  void
+     **/
+    public function index()
     {
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -44,11 +45,10 @@ class PasswordForgotten extends Base
         }
 
         //  If there's POST data attempt to validate the user
-        $oInput = Factory::service('Input');
-        if ($oInput->post() || $oInput->get('identifier')) {
+        if ($this->input->post() || $this->input->get('identifier')) {
 
             //  Define vars
-            $sIdentifier = $oInput->post('identifier');
+            $_identifier = $this->input->post('identifier');
 
             /**
              * Override with the $_GET variable if POST failed to return anything. Populate
@@ -56,9 +56,10 @@ class PasswordForgotten extends Base
              * hacky but works.
              */
 
-            if (!$sIdentifier && $oInput->get('identifier')) {
-                $_POST['identifier'] = $oInput->get('identifier');
-                $sIdentifier         = $oInput->get('identifier');
+            if (!$_identifier && $this->input->get('identifier')) {
+
+                $_POST['identifier'] = $this->input->get('identifier');
+                $_identifier         = $this->input->get('identifier');
             }
 
             // --------------------------------------------------------------------------
@@ -71,16 +72,17 @@ class PasswordForgotten extends Base
             $oFormValidation = Factory::service('FormValidation');
 
             switch (APP_NATIVE_LOGIN_USING) {
+
                 case 'EMAIL':
-                    $oFormValidation->set_rules('identifier', '', 'required|trim|valid_email');
+                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim|valid_email');
                     break;
 
                 case 'USERNAME':
-                    $oFormValidation->set_rules('identifier', '', 'required|trim');
+                    $oFormValidation->set_rules('identifier', '', 'required|xss_clean|trim');
                     break;
 
                 default:
-                    $oFormValidation->set_rules('identifier', '', 'trim');
+                    $oFormValidation->set_rules('identifier', '', 'xss_clean|trim');
                     break;
             }
 
@@ -100,66 +102,70 @@ class PasswordForgotten extends Base
                  * even if it wasn't. Bad UX, if you ask me, but I'm not the client.
                  */
 
-                $oConfig        = Factory::service('Config');
-                $bAlwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
+                $oConfig       = Factory::service('Config');
+                $alwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
                 $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-                if ($oUserPasswordModel->setToken($sIdentifier)) {
+                if ($oUserPasswordModel->setToken($_identifier)) {
 
                     //  Send email to user
                     $oUserModel = Factory::model('User', 'nailsapp/module-auth');
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL':
+                            $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
+
                             //  User provided an email, send to that email
-                            $this->data['reset_user'] = $oUserModel->getByEmail($sIdentifier);
-                            $sSendToEmail             = $sIdentifier;
+                            $sendToEmail = $_identifier;
                             break;
 
                         case 'USERNAME':
+                            $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
+
                             /**
                              * Can't email a username, send to their ID and let the email library
                              * handle the routing
                              */
 
-                            $this->data['reset_user'] = $oUserModel->getByUsername($sIdentifier);
-                            $iSendToId                = $this->data['reset_user']->id;
+                            $sendToId = $this->data['reset_user']->id;
                             break;
 
                         default:
-                            if (valid_email($sIdentifier)) {
+                            if (valid_email($_identifier)) {
+
+                                $this->data['reset_user'] = $oUserModel->getByEmail($_identifier);
 
                                 //  User provided an email, send to that email
-                                $this->data['reset_user'] = $oUserModel->getByEmail($sIdentifier);
-                                $sSendToEmail             = $sIdentifier;
+                                $sendToEmail = $_identifier;
 
                             } else {
+
+                                $this->data['reset_user'] = $oUserModel->getByUsername($_identifier);
 
                                 /**
                                  * Can't email a username, send to their ID and let the email library handle
                                  * the routing
                                  */
 
-                                $this->data['reset_user'] = $oUserModel->getByUsername($sIdentifier);
-                                $iSendToId                = $this->data['reset_user']->id;
+                                $sendToId = $this->data['reset_user']->id;
                             }
                             break;
                     }
 
                     // --------------------------------------------------------------------------
 
-                    if (!$bAlwaysSucceed && isset($sSendToEmail) && !$sSendToEmail) {
+                    if (!$alwaysSucceed && isset($sendToEmail) && !$sendToEmail) {
 
                         //  If we're expecting an email, and none is available then we're kinda stuck
                         $this->data['error'] = lang('auth_forgot_email_fail_no_email');
 
-                    } elseif (!$bAlwaysSucceed && isset($iSendToId) && !$iSendToId) {
+                    } elseif (!$alwaysSucceed && isset($sendToId) && !$sendToId) {
 
                         //  If we're expecting an ID and it's empty then we're stuck again
                         $this->data['error'] = lang('auth_forgot_email_fail_no_id');
 
-                    } elseif ($bAlwaysSucceed) {
+                    } elseif ($alwaysSucceed) {
 
                         //  Failed, but we always succeed so, yeah, succeed
                         $this->data['success'] = lang('auth_forgot_success');
@@ -167,51 +173,63 @@ class PasswordForgotten extends Base
                     } else {
 
                         //  We've got something, go go go
-                        $oEmail       = new stdClass();
-                        $oEmail->type = 'forgotten_password';
+                        $_data       = new stdClass();
+                        $_data->type = 'forgotten_password';
 
-                        if (!empty($sSendToEmail)) {
-                            $oEmail->to_email = $sSendToEmail;
-                        } elseif (!empty($iSendToId)) {
-                            $oEmail->to_id = $iSendToId;
+                        if (isset($sendToEmail) && $sendToEmail) {
+
+                            $_data->to_email = $sendToEmail;
+
+                        } elseif (isset($sendToId) && $sendToId) {
+
+                            $_data->to_id = $sendToId;
                         }
 
                         // --------------------------------------------------------------------------
 
                         //  Add data for the email view
-                        $aCode = explode(':', $this->data['reset_user']->forgotten_password_code);
+                        $_code = explode(':', $this->data['reset_user']->forgotten_password_code);
 
-                        $oEmail->data             = new \stdClass();
-                        $oEmail->data->resetUrl   = site_url('auth/password/forgotten/' . $aCode[1]);
-                        $oEmail->data->identifier = $sIdentifier;
+                        $_data->data             = new \stdClass();
+                        $_data->data->resetUrl   = site_url('auth/forgotten_password/' . $_code[1]);
+                        $_data->data->identifier = $_identifier;
 
                         // --------------------------------------------------------------------------
 
                         //  Send user the password reset email
-                        $oEmailer = Factory::service('Emailer', 'nailsapp/module-email');
-                        if ($oEmailer->send($oEmail)) {
+                        if ($this->emailer->send($_data)) {
+
                             $this->data['success'] = lang('auth_forgot_success');
-                        } elseif ($bAlwaysSucceed) {
+
+                        } elseif ($alwaysSucceed) {
+
                             $this->data['success'] = lang('auth_forgot_success');
+
                         } else {
+
                             $this->data['error'] = lang('auth_forgot_email_fail');
                         }
                     }
 
-                } elseif ($bAlwaysSucceed) {
+                } elseif ($alwaysSucceed) {
 
                     $this->data['success'] = lang('auth_forgot_success');
 
                 } else {
 
                     switch (APP_NATIVE_LOGIN_USING) {
+
                         case 'EMAIL':
-                            $this->data['error'] = lang('auth_forgot_code_not_set_email', $sIdentifier);
+                            $this->data['error'] = lang('auth_forgot_code_not_set_email', $_identifier);
                             break;
 
+                        // --------------------------------------------------------------------------
+
                         case 'USERNAME':
-                            $this->data['error'] = lang('auth_forgot_code_not_set_username', $sIdentifier);
+                            $this->data['error'] = lang('auth_forgot_code_not_set_username', $_identifier);
                             break;
+
+                        // --------------------------------------------------------------------------
 
                         default:
                             $this->data['error'] = lang('auth_forgot_code_not_set');
@@ -220,11 +238,13 @@ class PasswordForgotten extends Base
                 }
 
             } else {
+
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
 
         //  Load the views
+        $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten.php');
         $oView = Factory::service('View');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
@@ -236,11 +256,11 @@ class PasswordForgotten extends Base
     /**
      * Validate a code
      *
-     * @param   string $sCode The code to validate
+     * @param   string $code The code to validate
      *
      * @return  void
      */
-    protected function validate($sCode)
+    public function _validate($code)
     {
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
         $oConfig  = Factory::service('Config');
@@ -250,61 +270,60 @@ class PasswordForgotten extends Base
          * Attempt to verify code, if two factor auth is enabled then don't generate a
          * new password, we'll need the user to jump through some hoops first.
          */
-        $bGenerateNewPw     = !$oConfig->item('authTwoFactorMode');
+
+        $generateNewPw      = !$oConfig->item('authTwoFactorMode');
         $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-        $aNewPw             = $oUserPasswordModel->validateToken($sCode, $bGenerateNewPw);
+        $newPw              = $oUserPasswordModel->validateToken($code, $generateNewPw);
 
         // --------------------------------------------------------------------------
 
         //  Determine outcome of validation
-        if ($aNewPw === 'EXPIRED') {
+        if ($newPw === 'EXPIRED') {
 
             //  Code has expired
             $this->data['error'] = lang('auth_forgot_expired_code');
 
-        } elseif ($aNewPw === false) {
+        } elseif ($newPw === false) {
 
             //  Code was invalid
             $this->data['error'] = lang('auth_forgot_invalid_code');
 
         } else {
 
-            $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
-            $oInput     = Factory::service('Input');
-
             if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
-                $this->data['question'] = $oAuthModel->mfaQuestionGet($aNewPw['user_id']);
+                $this->data['question'] = $this->auth_model->mfaQuestionGet($newPw['user_id']);
 
                 if ($this->data['question']) {
 
-                    if ($oInput->post()) {
+                    if ($this->input->post()) {
 
-                        $bIsValid = $oAuthModel->mfaQuestionValidate(
+                        $isValid = $this->auth_model->mfaQuestionValidate(
                             $this->data['question']->id,
-                            $aNewPw['user_id'],
-                            $oInput->post('answer')
+                            $newPw['user_id'],
+                            $this->input->post('answer')
                         );
 
-                        if ($bIsValid) {
+                        if ($isValid) {
 
                             //  Correct answer, reset password and render views
-                            $aNewPw = $oUserPasswordModel->validateToken($sCode, true);
+                            $newPw = $oUserPasswordModel->validateToken($code, true);
 
-                            $this->data['new_password'] = $aNewPw['password'];
+                            $this->data['new_password'] = $newPw['password'];
 
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $sStatus  = 'notice';
-                            $sMessage = lang('auth_forgot_reminder', htmlentities($aNewPw['password']));
+                            $status  = 'notice';
+                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $oSession->set_flashdata($sStatus, $sMessage);
+                            $oSession->set_flashdata($status, $message);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
+                            $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer/blank', $this->data);
@@ -317,6 +336,7 @@ class PasswordForgotten extends Base
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
+                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/mfa/question/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/question/ask', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -324,21 +344,22 @@ class PasswordForgotten extends Base
                 } else {
 
                     //  No questions, reset and load views
-                    $aNewPw = $oUserPasswordModel->validateToken($sCode, true);
+                    $newPw = $oUserPasswordModel->validateToken($code, true);
 
-                    $this->data['new_password'] = $aNewPw['password'];
+                    $this->data['new_password'] = $newPw['password'];
 
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $sStatus  = 'notice';
-                    $sMessage = lang('auth_forgot_reminder', htmlentities($aNewPw['password']));
+                    $status  = 'notice';
+                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $oSession->set_flashdata($sStatus, $sMessage);
+                    $oSession->set_flashdata($status, $message);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
+                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -346,33 +367,34 @@ class PasswordForgotten extends Base
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
-                $oSecret = $oAuthModel->mfaDeviceSecretGet($aNewPw['user_id']);
+                $secret = $this->auth_model->mfaDeviceSecretGet($newPw['user_id']);
 
-                if ($oSecret) {
+                if ($secret) {
 
-                    if ($oInput->post()) {
+                    if ($this->input->post()) {
 
-                        $sMfaCode = $oInput->post('mfaCode');
+                        $mfaCode = $this->input->post('mfaCode');
 
                         //  Verify the inout
-                        if ($oAuthModel->mfaDeviceCodeValidate($aNewPw['user_id'], $sMfaCode)) {
+                        if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
                             //  Correct answer, reset password and render views
-                            $aNewPw = $oUserPasswordModel->validateToken($sCode, true);
+                            $newPw = $oUserPasswordModel->validateToken($code, true);
 
-                            $this->data['new_password'] = $aNewPw['password'];
+                            $this->data['new_password'] = $newPw['password'];
 
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $sStatus  = 'notice';
-                            $sMessage = lang('auth_forgot_reminder', htmlentities($aNewPw['password']));
+                            $status  = 'notice';
+                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $oSession->set_flashdata($sStatus, $sMessage);
+                            $oSession->set_flashdata($status, $message);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
+                            $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer', $this->data);
@@ -380,13 +402,14 @@ class PasswordForgotten extends Base
 
                         } else {
 
-                            $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
-                            $this->data['error'] .= $oAuthModel->lastError();
+                            $this->data['error'] = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
+                            $this->data['error'] .= $this->auth_model->lastError();
                         }
                     }
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
+                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/mfa/device/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/device/ask', $this->data);
                     $oView->load('structure/footer', $this->data);
@@ -394,21 +417,22 @@ class PasswordForgotten extends Base
                 } else {
 
                     //  No devices, reset and load views
-                    $aNewPw = $oUserPasswordModel->validateToken($sCode, true);
+                    $newPw = $oUserPasswordModel->validateToken($code, true);
 
-                    $this->data['new_password'] = $aNewPw['password'];
+                    $this->data['new_password'] = $newPw['password'];
 
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $sStatus  = 'notice';
-                    $sMessage = lang('auth_forgot_reminder', htmlentities($aNewPw['password']));
+                    $status  = 'notice';
+                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $oSession->set_flashdata($sStatus, $sMessage);
+                    $oSession->set_flashdata($status, $message);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
+                    $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -417,19 +441,20 @@ class PasswordForgotten extends Base
             } else {
 
                 //  Everything worked!
-                $this->data['new_password'] = $aNewPw['password'];
+                $this->data['new_password'] = $newPw['password'];
 
                 // --------------------------------------------------------------------------
 
                 //  Set some flashdata for the login page when they go to it; just a little reminder
-                $sStatus  = 'notice';
-                $sMessage = lang('auth_forgot_reminder', htmlentities($aNewPw['password']));
+                $status  = 'notice';
+                $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                $oSession->set_flashdata($sStatus, $sMessage);
+                $oSession->set_flashdata($status, $message);
 
                 // --------------------------------------------------------------------------
 
                 //  Load the views
+                $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten_reset.php');
                 $oView->load('structure/header/blank', $this->data);
                 $oView->load('auth/password/forgotten_reset', $this->data);
                 $oView->load('structure/footer/blank', $this->data);
@@ -441,6 +466,7 @@ class PasswordForgotten extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
+        $this->loadStyles(FCPATH . APPPATH . 'modules/auth/views/password/forgotten.php');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
         $oView->load('structure/footer/blank', $this->data);
@@ -464,12 +490,10 @@ class PasswordForgotten extends Base
 
         // --------------------------------------------------------------------------
 
-        $oUri  = Factory::service('Uri');
-        $sCode = $oUri->segment(4);
-        if (empty($sCode)) {
+        if ($sMethod == 'index') {
             $this->index();
         } else {
-            $this->validate($sCode);
+            $this->_validate($sMethod);
         }
     }
 }

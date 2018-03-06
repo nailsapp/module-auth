@@ -1,6 +1,5 @@
 <?php
 
-$oView              = \Nails\Factory::service('View');
 $query              = [];
 $query['return_to'] = isset($return_to) ? $return_to : '';
 $query['remember']  = isset($remember) ? $remember : '';
@@ -23,17 +22,12 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
 } else {
 
     $login_method = $login_method && $login_method != 'native' ? '/' . $login_method : '';
-    $formUrl      = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
+    $formUrl      = 'auth/mfa_question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
     $formUrl      = site_url($formUrl);
 }
 
 ?>
 <div class="container nails-module-auth mfa mfa-question mfa-question-ask">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg text-center">
@@ -60,9 +54,4 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

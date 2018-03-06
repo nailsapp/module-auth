@@ -1,12 +1,4 @@
-<?php
-$oView = \Nails\Factory::service('View');
-?>
 <div class="container nails-module-auth register register-resend">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="container">
         <div class="col-sm-6 col-sm-offset-3">
             <p class="alert alert-success">
@@ -18,9 +10,4 @@ $oView = \Nails\Factory::service('View');
             </p>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

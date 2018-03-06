@@ -1,6 +1,5 @@
 <?php
 
-$oView              = \Nails\Factory::service('View');
 $query              = [];
 $query['return_to'] = isset($return_to) ? $return_to : '';
 $query['remember']  = isset($remember) ? $remember : '';
@@ -22,17 +21,12 @@ if (!isset($user_id) || !isset($token)) {
 
 } else {
 
-    $formUrl = 'auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
+    $formUrl = 'auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
     $formUrl = site_url($formUrl);
 }
 
 ?>
 <div class="container nails-module-auth mfa mfa-device mfa-device-ask">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row text-center">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg">
@@ -56,9 +50,4 @@ if (!isset($user_id) || !isset($token)) {
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

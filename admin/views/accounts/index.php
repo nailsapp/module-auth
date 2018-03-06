@@ -16,6 +16,8 @@
                     <th class="id">User ID</th>
                     <th class="details">User</th>
                     <th class="group">Group</th>
+                    <th class="last-login">Last Login</th>
+                    <th class="last-seen">Last Seen</th>
                     <th class="actions">Actions</th>
                 </tr>
             </thead>
@@ -53,7 +55,6 @@
                                     );
 
                                 } else {
-
                                     echo img([
                                         'src'   => cdnBlankAvatar(65, 65, $member->gender),
                                         'class' => 'profile-img',
@@ -67,12 +68,10 @@
                                     switch ($this->input->get('sort')) {
 
                                         case 'u.last_name':
-
                                             echo '<strong>' . $sMemberNameLF . '</strong>';
                                             break;
 
                                         default:
-
                                             echo '<strong>' . $sMemberNameFL . '</strong>';
                                             break;
                                     }
@@ -82,9 +81,7 @@
                                         <?php
 
                                         echo $member->email;
-
                                         if ($member->email_is_verified) {
-
                                             echo '<span class="verified" rel="tipsy" title="Verified email address">';
                                             echo '&nbsp;<span class="fa fa-check-circle"></span>';
                                             echo '<span>';
@@ -93,28 +90,31 @@
                                         ?>
                                     </small>
                                     <small>
-                                        Last login:
                                         <?php
 
-                                        if ($member->last_login) {
+                                        if ($member->login_count > 0) {
+                                            ?>
 
-                                            echo '<span class="nice-time">';
-                                            echo toUserDate($member->last_login, 'Y-m-d H:i:s');
-                                            echo '</span> ';
-                                            echo '(' . $member->login_count . ' logins)';
-
+                                            Logged in <?=$member->login_count . ' ' . pluralise($member->login_count, 'time')?>
+                                            <?php
                                         } else {
-
-                                            echo 'Never Logged In';
+                                            ?>
+                                            <span class="text-muted">Never logged in</span>
+                                            <?php
                                         }
 
                                         ?>
-                                    </small>
                                 </div>
                             </td>
                             <td class="group">
                                 <?=$member->group_name?>
                             </td>
+                            <?php
+
+                            echo \Nails\Admin\Helper::loadDateTimeCell($member->last_login, 'Never logged in');
+                            echo \Nails\Admin\Helper::loadDateTimeCell($member->last_seen, 'Never been seen');
+
+                            ?>
                             <td class="actions">
                                 <?php
 
@@ -151,7 +151,6 @@
                                             unset($params['isModal']);
 
                                             if ($params) {
-
                                                 $url .= '?' . http_build_query($params);
                                             }
                                         }
@@ -171,7 +170,6 @@
 
                                     //  Edit
                                     if ($bIsActiveUser || userHasPermission($sPermPrefix . 'editOthers')) {
-
                                         $buttons[] = anchor(
                                             'admin/auth/accounts/edit/' . $member->id . $return,
                                             lang('action_edit'),
@@ -185,7 +183,6 @@
                                     if ($member->is_suspended) {
 
                                         if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'unsuspend')) {
-
                                             $buttons[] = anchor(
                                                 'admin/auth/accounts/unsuspend/' . $member->id . $return,
                                                 lang('action_unsuspend'),
@@ -194,9 +191,7 @@
                                         }
 
                                     } else {
-
                                         if (!$bIsActiveUser && userHasPermission($sPermPrefix . 'suspend')) {
-
                                             $buttons[] = anchor(
                                                 'admin/auth/accounts/suspend/' . $member->id . $return,
                                                 lang('action_suspend'),
@@ -234,9 +229,7 @@
                                          */
 
                                         if ($bMemberIsSuper && !$bActiveIsSuper) {
-
                                             //  Nothing
-
                                         } else {
 
                                             $buttons[] = anchor(
@@ -251,9 +244,7 @@
 
                                     //  These buttons are variable between views
                                     if (!empty($actions)) {
-
                                         foreach ($actions as $button) {
-
                                             $buttons[] = anchor(
                                                 $button['url'] . $return,
                                                 $button['label'],
@@ -266,12 +257,9 @@
 
                                     //  Render all the buttons, if any
                                     if ($buttons) {
-
                                         foreach ($buttons as $button) {
-
                                             echo $button;
                                         }
-
                                     } else {
 
                                         echo '<span class="not-editable">' . lang('accounts_index_noactions') . '</span>';
@@ -288,7 +276,7 @@
 
                     ?>
                     <tr>
-                        <td colspan="4" class="no-data">
+                        <td colspan="6" class="no-data">
                             <p>No Users Found</p>
                         </td>
                     </tr>

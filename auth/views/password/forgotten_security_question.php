@@ -1,12 +1,4 @@
-<?php
-$oView = \Nails\Factory::service('View');
-?>
 <div class="container nails-module-auth password forgotten forgotten-security-question">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg text-center">
@@ -27,9 +19,4 @@ $oView = \Nails\Factory::service('View');
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

@@ -1,6 +1,5 @@
 <?php
 
-$oView              = \Nails\Factory::service('View');
 $query              = [];
 $query['return_to'] = $return_to;
 $query['remember']  = $remember;
@@ -18,11 +17,6 @@ if ($query) {
 
 ?>
 <div class="container nails-module-auth mfa mfa-question mfa-question-set">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg">
@@ -33,7 +27,7 @@ if ($query) {
 
                 echo form_open(
                     site_url(
-                        'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query
+                        'auth/mfa_question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query
                     )
                 );
 
@@ -164,9 +158,4 @@ if ($query) {
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

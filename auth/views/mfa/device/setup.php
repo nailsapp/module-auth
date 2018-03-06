@@ -1,6 +1,5 @@
 <?php
 
-$oView              = \Nails\Factory::service('View');
 $query              = [];
 $query['return_to'] = $return_to;
 $query['remember']  = $remember;
@@ -18,17 +17,12 @@ if (!empty($query)) {
 
 ?>
 <div class="container nails-module-auth mfa mfa-device mfa-device-setup">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg">
                 <?php
 
-                echo form_open('auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
+                echo form_open('auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
 
                 echo form_hidden('mfaSecret', $secret['secret']);
 
@@ -102,9 +96,4 @@ if (!empty($query)) {
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

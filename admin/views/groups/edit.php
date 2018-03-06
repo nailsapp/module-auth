@@ -1,212 +1,157 @@
 <div class="group-accounts groups edit">
     <div class="alert alert-warning">
-        <div class="padder">
-            <p>
-                <?=lang('accounts_groups_edit_warning')?>
-            </p>
-        </div>
+        <strong>Please note:</strong> while the system will do its best to validate the content you set
+        sometimes a valid combination can render an entire group useless (including your own). Please be
+        extra careful and only change things when you know what you're doing. Remember that you won't see
+        the effect of changing the permissions of a group other than your own, check that your changes
+        have worked before considering the job done!
     </div>
     <hr/>
     <?=form_open()?>
     <!--    BASICS  -->
     <fieldset>
-        <legend>
-            <?=lang('accounts_groups_edit_basic_legend')?>
-        </legend>
+        <legend>Basics</legend>
         <?php
 
-        //  Display Name
-        $aField                = [];
-        $aField['key']         = 'label';
-        $aField['label']       = lang('accounts_groups_edit_basic_field_label_label');
-        $aField['default']     = $group->label;
-        $aField['required']    = true;
-        $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_label');
+        echo form_field([
+            'key'         => 'label',
+            'label'       => 'Label',
+            'default'     => isset($item) ? $item->label : '',
+            'required'    => true,
+            'placeholder' => 'Type the group\'s label name here.',
+        ]);
 
-        echo form_field($aField);
+        echo form_field([
+            'key'         => 'slug',
+            'label'       => 'Slug',
+            'default'     => isset($item) ? $item->slug : '',
+            'required'    => true,
+            'placeholder' => 'Type the group\'s slug here.',
+        ]);
 
-        // --------------------------------------------------------------------------
+        echo form_field([
+            'key'         => 'description',
+            'label'       => 'Description',
+            'default'     => isset($item) ? $item->description : '',
+            'required'    => true,
+            'placeholder' => 'Type the group\'s description here.',
+        ]);
 
-        //  Name
-        $aField                = [];
-        $aField['key']         = 'slug';
-        $aField['label']       = lang('accounts_groups_edit_basic_field_label_slug');
-        $aField['default']     = $group->slug;
-        $aField['required']    = true;
-        $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_slug');
+        echo form_field([
+            'key'         => 'default_homepage',
+            'label'       => 'Default Homepage',
+            'default'     => isset($item) ? $item->default_homepage : '',
+            'placeholder' => 'Type the group\'s homepage here.',
+            'info'        => 'This is where users are sent after login, unless a specific redirect is already in place. If not specified the user will be sent to the homepage.',
+        ]);
 
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        //  Description
-        $aField                = [];
-        $aField['key']         = 'description';
-        $aField['label']       = lang('accounts_groups_edit_basic_field_label_description');
-        $aField['default']     = $group->description;
-        $aField['required']    = true;
-        $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_description');
-
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        //  Default Homepage
-        $aField                = [];
-        $aField['key']         = 'default_homepage';
-        $aField['label']       = lang('accounts_groups_edit_basic_field_label_homepage');
-        $aField['default']     = $group->default_homepage;
-        $aField['required']    = true;
-        $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_homepage');
-
-        echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_homepage'));
-
-        // --------------------------------------------------------------------------
-
-        //  Registration Redirect
-        $aField                = [];
-        $aField['key']         = 'registration_redirect';
-        $aField['label']       = lang('accounts_groups_edit_basic_field_label_registration');
-        $aField['default']     = $group->registration_redirect;
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_groups_edit_basic_field_placeholder_registration');
-
-        echo form_field($aField, lang('accounts_groups_edit_basic_field_tip_registration'));
+        echo form_field([
+            'key'         => 'registration_redirect',
+            'label'       => 'Registration Redirect',
+            'default'     => isset($item) ? $item->registration_redirect : '',
+            'placeholder' => 'Redirect new registrants of this group here.',
+            'info'        => 'If not defined new registrants will be redirected to the group\'s homepage.',
+        ]);
 
         ?>
     </fieldset>
     <!--    PASSWORD RULES  -->
     <fieldset>
-        <legend>
-            <?=lang('accounts_groups_edit_password_legend')?>
-        </legend>
+        <legend>Password Properties</legend>
         <?php
 
-        $aField                = [];
-        $aField['key']         = 'pw[min]';
-        $aField['label']       = lang('accounts_groups_edit_password_field_label_min_length');
-        $aField['default']     = isset($group->password_rules->min) ? $group->password_rules->min : '';
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_groups_edit_password_field_placeholder_min_length');
-        $aField['tip']         = lang('accounts_groups_edit_password_field_tip_min_length');
+        echo form_field([
+            'key'         => 'pw[min]',
+            'label'       => 'Min. Length',
+            'default'     => isset($item->password_rules->min) ? $item->password_rules->min : '',
+            'required'    => false,
+            'placeholder' => 'The minimum number of characters a password must contain.',
+            'info'        => 'If this is undefined, or set to 0 then there is no minimum length',
+        ]);
 
-        echo form_field($aField);
+        echo form_field([
+            'key'         => 'pw[max]',
+            'label'       => 'Max. Length',
+            'default'     => isset($item->password_rules->max) ? $item->password_rules->max : '',
+            'required'    => false,
+            'placeholder' => 'The maximum number of characters a password must contain.',
+            'info'        => 'If this is undefined, or set to 0 then there is no maximum length',
+        ]);
 
-        // --------------------------------------------------------------------------
+        echo form_field_number([
+            'key'         => 'pw[expires_after]',
+            'label'       => 'Expires After',
+            'default'     => isset($item->password_rules->expiresAfter) ? $item->password_rules->expiresAfter : '',
+            'required'    => false,
+            'placeholder' => 'The expiration policy for passwords, expressed in days',
+            'info'        => 'If this is undefined, or set to 0 then there is no expiration policy',
+        ]);
 
-        $aField                = [];
-        $aField['key']         = 'pw[max]';
-        $aField['label']       = lang('accounts_groups_edit_password_field_label_max_length');
-        $aField['default']     = isset($group->password_rules->max) ? $group->password_rules->max : '';
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_groups_edit_password_field_placeholder_max_length');
-        $aField['tip']         = lang('accounts_groups_edit_password_field_tip_max_length');
-
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        $aField                = [];
-        $aField['key']         = 'pw[expires_after]';
-        $aField['label']       = lang('accounts_groups_edit_password_field_label_expires_after');
-        $aField['default']     = isset($group->password_rules->expiresAfter) ? $group->password_rules->expiresAfter : '';
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_groups_edit_password_field_placeholder_expires_after');
-        $aField['tip']         = lang('accounts_groups_edit_password_field_tip_expires_after');
-
-        echo form_field_number($aField);
-
-        // --------------------------------------------------------------------------
-
-        $aField             = [];
-        $aField['key']      = 'pw[requirements][]';
-        $aField['label']    = lang('accounts_groups_edit_password_field_label_requirements');
-        $aField['default']  = isset($group->password_rules->requirements) ? $group->password_rules->requirements : ['symbol' => true];
-        $aField['required'] = false;
-
-        $aOptions = [
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_symbol'),
-                'value'    => 'symbol',
-                'selected' => !empty($group->password_rules->requirements->symbol),
+        echo form_field_checkbox([
+            'key'      => 'pw[requirements][]',
+            'label'    => 'Requirements',
+            'default'  => isset($item->password_rules->requirements) ? $item->password_rules->requirements : ['symbol' => true],
+            'required' => false,
+            'options'  => [
+                [
+                    'label'    => 'Must contain a symbol',
+                    'value'    => 'symbol',
+                    'selected' => !empty($item->password_rules->requirements->symbol),
+                ],
+                [
+                    'label'    => 'Must contain a number',
+                    'value'    => 'number',
+                    'selected' => !empty($item->password_rules->requirements->number),
+                ],
+                [
+                    'label'    => 'Must contain a lowercase letter',
+                    'value'    => 'lower_alpha',
+                    'selected' => !empty($item->password_rules->requirements->lower_alpha),
+                ],
+                [
+                    'label'    => 'Must contain an uppercase letter',
+                    'value'    => 'upper_alpha',
+                    'selected' => !empty($item->password_rules->requirements->upper_alpha),
+                ],
             ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_number'),
-                'value'    => 'number',
-                'selected' => !empty($group->password_rules->requirements->number),
-            ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_lower'),
-                'value'    => 'lower_alpha',
-                'selected' => !empty($group->password_rules->requirements->lower),
-            ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_upper'),
-                'value'    => 'upper_alpha',
-                'selected' => !empty($group->password_rules->requirements->upper),
-            ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_not_username'),
-                'value'    => 'not_username',
-                'selected' => !empty($group->password_rules->requirements->not_username),
-                'disabled' => true,
-            ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_not_name'),
-                'value'    => 'not_name',
-                'selected' => !empty($group->password_rules->requirements->not_name),
-                'disabled' => true,
-            ],
-            [
-                'label'    => lang('accounts_groups_edit_password_field_label_requirements_not_dob'),
-                'value'    => 'not_dob',
-                'selected' => !empty($group->password_rules->requirements->not_dob),
-                'disabled' => true,
-            ],
-        ];
+        ]);
 
-        echo form_field_checkbox($aField, $aOptions);
-
-        // --------------------------------------------------------------------------
-
-        $aField['key']         = 'pw[banned]';
-        $aField['label']       = lang('accounts_groups_edit_password_field_label_banned');
-        $aField['default']     = isset($group->password_rules->banned) ? implode(',', $group->password_rules->banned) : '';
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_groups_edit_password_field_placeholder_banned');
-
-        echo form_field($aField);
+        echo form_field([
+            'key'         => 'pw[banned]',
+            'label'       => 'Banned Words',
+            'default'     => isset($item->password_rules->banned) ? implode(',', $item->password_rules->banned) : '',
+            'required'    => false,
+            'placeholder' => 'A comma separated list of words which cannot be used as a password',
+        ]);
 
         ?>
     </fieldset>
     <!--    PERMISSIONS -->
     <fieldset id="permissions">
-        <legend>
-            <?=lang('accounts_groups_edit_permission_legend')?>
-        </legend>
+        <legend>Permissions</legend>
         <p class="alert alert-warning">
-            <?=lang('accounts_groups_edit_permission_warn')?>
+            <strong>Please note:</strong> Superusers have full, unrestricted access to admin, regardless of what
+            extra permissions are set.
         </p>
         <p>
-            <?=lang('accounts_groups_edit_permission_intro')?>
+            For non-superuser groups you may also grant a access to the administration area by selecting which
+            admin modules they have permission to access.
+            <strong>It goes without saying that you should be careful with these options.</strong>
         </p>
         <?php
 
         //  Enable Super User status for this user group
-        $aField          = [];
-        $aField['key']   = 'acl[admin][superuser]';
-        $aField['label'] = lang('accounts_groups_edit_permissions_field_label_superuser');
-        if (!empty($group->acl)) {
-
+        $aField = [
+            'key'      => 'acl[admin][superuser]',
+            'label'    => 'Is Super User',
+            'required' => false,
+            'default'  => false,
+            'id'       => 'toggleSuperuser',
+        ];
+        if (!empty($item->acl)) {
             $sCheckKey         = 'admin:superuser';
-            $aField['default'] = in_array($sCheckKey, $group->acl);
-
-        } else {
-
-            $aField['default'] = false;
+            $aField['default'] = in_array($sCheckKey, $item->acl);
         }
-        $aField['required'] = false;
-        $aField['id']       = 'toggleSuperuser';
 
         echo form_field_boolean($aField);
 
@@ -223,42 +168,37 @@
             </div>
             <?php
 
-            $iNumPermissions = count($permissions);
+            $iNumPermissions = count($aPermissions);
 
             for ($i = 0; $i < $iNumPermissions; $i++) {
-
-                $sPermissionSlug = $permissions[$i]->slug;
-
+                $sPermissionSlug = $aPermissions[$i]->slug;
                 ?>
                 <fieldset class="permission-group">
-                    <legend><?=$permissions[$i]->label?></legend>
+                    <legend><?=$aPermissions[$i]->label?></legend>
                     <table>
                         <thead>
                             <tr>
-                                <th class="permission">Permission</th>
-                                <th class="enabled text-center">
+                                <th class="enabled text-center" width="50">
                                     <input type="checkbox" class="toggleAll">
+                                </th>
+                                <th class="permission">
+                                    Permission
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
 
-                            foreach ($permissions[$i]->permissions as $permission => $label) {
+                            foreach ($aPermissions[$i]->permissions as $permission => $label) {
 
                                 $key       = 'acl[admin][' . $sPermissionSlug . '][' . $permission . ']';
                                 $sCheckKey = 'admin:' . $sPermissionSlug . ':' . $permission;
 
                                 if (!empty($_POST)) {
-
                                     $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$permission]);
-
-                                } elseif (!empty($group->acl)) {
-
-                                    $bIsChecked = in_array($sCheckKey, $group->acl);
-
+                                } elseif (!empty($item->acl)) {
+                                    $bIsChecked = in_array($sCheckKey, $item->acl);
                                 } else {
-
                                     $bIsChecked = false;
                                 }
 
@@ -266,12 +206,12 @@
 
                                 ?>
                                 <tr>
-                                    <td class="permission"><?=$label?></td>
                                     <td class="enabled text-center <?=$contextColor?>">
                                         <label>
                                             <?=form_checkbox($key, true, $bIsChecked)?>
                                         </label>
                                     </td>
+                                    <td class="permission"><?=$label?></td>
                                 </tr>
                                 <?php
 
@@ -282,7 +222,6 @@
                     </table>
                 </fieldset>
                 <?php
-
             }
 
             ?>

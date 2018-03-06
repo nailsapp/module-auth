@@ -1,12 +1,4 @@
-<?php
-$oView = \Nails\Factory::service('View');
-?>
 <div class="container nails-module-auth register register-form">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg">
@@ -186,9 +178,4 @@ $oView = \Nails\Factory::service('View');
         </div>
     </div>
     <?=form_close()?>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>

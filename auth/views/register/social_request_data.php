@@ -1,7 +1,5 @@
 <?php
 
-$oView = \Nails\Factory::service('View');
-
 if ($return_to) {
 
     $_returns = '?';
@@ -14,11 +12,6 @@ if ($return_to) {
 
 ?>
 <div class="container nails-module-auth register register-social-request-data">
-    <?php
-
-    $oView->load('components/header');
-
-    ?>
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <div class="well well-lg">
@@ -126,9 +119,4 @@ if ($return_to) {
             </div>
         </div>
     </div>
-    <?php
-
-    $oView->load('components/footer');
-
-    ?>
 </div>
