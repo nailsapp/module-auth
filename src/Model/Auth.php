@@ -58,9 +58,7 @@ class Auth extends Base
         // --------------------------------------------------------------------------
 
         if (empty($identifier) || empty($password)) {
-
-            $error = lang('auth_login_fail_missing_field');
-            $this->setError($error);
+            $this->setError(lang('auth_login_fail_missing_field'));
             return false;
         }
 
@@ -71,48 +69,44 @@ class Auth extends Base
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-                $user = $oUserModel->getByEmail($identifier);
+                $oUser = $oUserModel->getByEmail($identifier);
                 break;
 
             case 'USERNAME':
-                $user = $oUserModel->getByUsername($identifier);
+                $oUser = $oUserModel->getByUsername($identifier);
                 break;
 
             default:
                 if (valid_email($identifier)) {
-                    $user = $oUserModel->getByEmail($identifier);
+                    $oUser = $oUserModel->getByEmail($identifier);
                 } else {
-                    $user = $oUserModel->getByUsername($identifier);
+                    $oUser = $oUserModel->getByUsername($identifier);
                 }
                 break;
         }
 
         // --------------------------------------------------------------------------
 
-        if ($user) {
+        if ($oUser) {
 
             //  User was recognised; validate credentials
             $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-            if ($oPasswordModel->isCorrect($user->id, $password)) {
+            if ($oPasswordModel->isCorrect($oUser->id, $password)) {
 
                 //  Password accepted! Final checks...
 
                 //  Exceeded login count, temporarily blocked
-                if ($user->failed_login_count >= $this->aBruteProtection['limit']) {
-
+                if ($oUser->failed_login_count >= $this->aBruteProtection['limit']) {
                     //  Check if the block has expired
-                    if (time() < strtotime($user->failed_login_expires)) {
-
+                    if (time() < strtotime($oUser->failed_login_expires)) {
                         $blockTime = ceil($this->aBruteProtection['expire'] / 60);
-
-                        $error = lang('auth_login_fail_blocked', $blockTime);
-                        $this->setError($error);
+                        $this->setError(lang('auth_login_fail_blocked', $blockTime));
                         return false;
                     }
                 }
 
                 //  Reset user's failed login counter and allow login
-                $oUserModel->resetFailedLogin($user->id);
+                $oUserModel->resetFailedLogin($oUser->id);
 
                 /**
                  * If two factor auth is enabled then don't _actually_ set login data the
@@ -124,38 +118,38 @@ class Auth extends Base
                 if (!$oConfig->item('authTwoFactorMode')) {
 
                     //  Set login data for this user
-                    $oUserModel->setLoginData($user->id);
+                    $oUserModel->setLoginData($oUser->id);
 
                     //  If we're remembering this user set a cookie
                     if ($remember) {
-                        $oUserModel->setRememberCookie($user->id, $user->password, $user->email);
+                        $oUserModel->setRememberCookie($oUser->id, $oUser->password, $oUser->email);
                     }
 
                     //  Update their last login and increment their login count
-                    $oUserModel->updateLastLogin($user->id);
+                    $oUserModel->updateLastLogin($oUser->id);
                 }
 
-                return $user;
+                return $oUser;
 
                 //  Is the password null? If so it means the account was created using an API of sorts
-            } elseif (is_null($user->password)) {
+            } elseif (is_null($oUser->password)) {
 
                 switch (APP_NATIVE_LOGIN_USING) {
 
                     case 'EMAIL':
-                        $identifier = $user->email;
+                        $identifier = $oUser->email;
                         break;
 
                     case 'USERNAME':
-                        $identifier = $user->username;
+                        $identifier = $oUser->username;
                         break;
 
                     default:
-                        $identifier = $user->email;
+                        $identifier = $oUser->email;
                         break;
                 }
 
-                $error = lang('auth_login_fail_social', site_url('auth/forgotten_password?identifier=' . $identifier));
+                $error = lang('auth_login_fail_social', site_url('auth/password/forgotten?identifier=' . $identifier));
                 $this->setError($error);
 
                 return false;
@@ -163,34 +157,30 @@ class Auth extends Base
             } else {
 
                 //  User was recognised but the password was wrong
-
                 //  Increment the user's failed login count
-                $oUserModel->incrementFailedLogin($user->id, $this->aBruteProtection['expire']);
+                $oUserModel->incrementFailedLogin($oUser->id, $this->aBruteProtection['expire']);
 
                 //  Are we already blocked? Let them know...
-                if ($user->failed_login_count >= $this->aBruteProtection['limit']) {
+                if ($oUser->failed_login_count >= $this->aBruteProtection['limit']) {
 
                     //  Check if the block has expired
-                    if (time() < strtotime($user->failed_login_expires)) {
-
+                    if (time() < strtotime($oUser->failed_login_expires)) {
                         $blockTime = ceil($this->aBruteProtection['expire'] / 60);
-                        $error     = lang('auth_login_fail_blocked', $blockTime);
-                        $this->setError($error);
+                        $this->setError(lang('auth_login_fail_blocked', $blockTime));
                         return false;
                     }
 
                     //  Block has expired, reset the counter
-                    $oUserModel->resetFailedLogin($user->id);
+                    $oUserModel->resetFailedLogin($oUser->id);
                 }
 
                 //  Check if the password was changed recently
-                if ($user->password_changed) {
+                if ($oUser->password_changed) {
 
-                    $changed = strtotime($user->password_changed);
+                    $changed = strtotime($oUser->password_changed);
                     $recent  = strtotime('-2 WEEKS');
 
                     if ($changed > $recent) {
-
                         $changedRecently = niceTime($changed);
                     }
                 }
@@ -199,14 +189,9 @@ class Auth extends Base
 
         //  Login failed
         if (empty($changedRecently)) {
-
-            $error = lang('auth_login_fail_general');
-            $this->setError($error);
-
+            $this->setError(lang('auth_login_fail_general'));
         } else {
-
-            $error = lang('auth_login_fail_general_recent', $changedRecently);
-            $this->setError($error);
+            $this->setError(lang('auth_login_fail_general_recent', $changedRecently));
         }
 
         return false;
@@ -217,19 +202,19 @@ class Auth extends Base
     /**
      * Verifies a user's login credentials
      *
-     * @param  string $identifier The identifier to use for the lookup
-     * @param  string $password   The user's password
+     * @param  string $sIdentifier The identifier to use for the lookup
+     * @param  string $sPassword   The user's password
      *
      * @return boolean
      */
-    public function verifyCredentials($identifier, $password)
+    public function verifyCredentials($sIdentifier, $sPassword)
     {
         //  Look up the user, how we do so depends on the login mode that the app is using
         $oUserModel     = Factory::model('User', 'nailsapp/module-auth');
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-        $user           = $oUserModel->getByIdentifier($identifier);
+        $oUser          = $oUserModel->getByIdentifier($sIdentifier);
 
-        return !empty($user) ? $oPasswordModel->isCorrect($user->id, $password) : false;
+        return !empty($oUser) ? $oPasswordModel->isCorrect($oUser->id, $sPassword) : false;
     }
 
     // --------------------------------------------------------------------------
@@ -258,7 +243,7 @@ class Auth extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Destory CI session
+        //  Destroy CI session
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
         $oSession->sess_destroy();
 
@@ -279,40 +264,38 @@ class Auth extends Base
     /**
      * Generate an MFA token
      *
-     * @param  int $userId The user ID to generate the token for
+     * @param  int $iUserId The user ID to generate the token for
      *
-     * @return string
+     * @return array|false
      */
-    public function mfaTokenGenerate($userId)
+    public function mfaTokenGenerate($iUserId)
     {
         $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-        $oDate          = Factory::factory('DateTime');
+        $oNow           = Factory::factory('DateTime');
         $oInput         = Factory::service('Input');
-        $salt           = $oPasswordModel->salt();
-        $ip             = $oInput->ipAddress();
-        $created        = $oDate->format('Y-m-d H:i:s');
-        $expires        = $oDate->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
+        $oDb            = Factory::service('Database');
 
-        $token          = [];
-        $token['token'] = sha1(sha1(APP_PRIVATE_KEY . $userId . $created . $expires . $ip) . $salt);
-        $token['salt']  = md5($salt);
+        $sSalt    = $oPasswordModel->salt();
+        $sIp      = $oInput->ipAddress();
+        $sCreated = $oNow->format('Y-m-d H:i:s');
+        $sExpires = $oNow->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
+        $aToken   = [
+            'token' => sha1(sha1(APP_PRIVATE_KEY . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
+            'salt'  => md5($sSalt),
+        ];
 
         //  Add this to the DB
-        $oDb = Factory::service('Database');
-        $oDb->set('user_id', $userId);
-        $oDb->set('token', $token['token']);
-        $oDb->set('salt', $token['salt']);
-        $oDb->set('created', $created);
-        $oDb->set('expires', $expires);
-        $oDb->set('ip', $ip);
+        $oDb->set('user_id', $iUserId);
+        $oDb->set('token', $aToken['token']);
+        $oDb->set('salt', $aToken['salt']);
+        $oDb->set('created', $sCreated);
+        $oDb->set('expires', $sExpires);
+        $oDb->set('ip', $sIp);
 
         if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) {
-
-            $token['id'] = $oDb->insert_id();
-            return $token;
-
+            $aToken['id'] = $oDb->insert_id();
+            return $aToken;
         } else {
-
             $error = lang('auth_twofactor_token_could_not_generate');
             $this->setError($error);
             return false;
@@ -324,46 +307,43 @@ class Auth extends Base
     /**
      * Validate a MFA token
      *
-     * @param  int    $userId The ID of the user the token belongs to
-     * @param  string $salt   The token's salt
-     * @param  string $token  The token's hash
-     * @param  string $ip     The user's IP address
+     * @param  int    $iUserId The ID of the user the token belongs to
+     * @param  string $sSalt   The token's salt
+     * @param  string $sToken  The token's hash
+     * @param  string $sIp     The user's IP address
      *
      * @return boolean
      */
-    public function mfaTokenValidate($userId, $salt, $token, $ip)
+    public function mfaTokenValidate($iUserId, $sSalt, $sToken, $sIp)
     {
         $oDb = Factory::service('Database');
-        $oDb->where('user_id', $userId);
-        $oDb->where('salt', $salt);
-        $oDb->where('token', $token);
+        $oDb->where('user_id', $iUserId);
+        $oDb->where('salt', $sSalt);
+        $oDb->where('token', $sToken);
 
-        $token  = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
-        $return = true;
+        $oToken  = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
+        $bReturn = true;
 
-        if (!$token) {
+        if (!$oToken) {
 
-            $error = lang('auth_twofactor_token_invalid');
-            $this->setError($error);
+            $this->setError(lang('auth_twofactor_token_invalid'));
             return false;
 
-        } elseif (strtotime($token->expires) <= time()) {
+        } elseif (strtotime($oToken->expires) <= time()) {
 
-            $error = lang('auth_twofactor_token_expired');
-            $this->setError($error);
-            $return = false;
+            $this->setError(lang('auth_twofactor_token_expired'));
+            $bReturn = false;
 
-        } elseif ($token->ip != $ip) {
+        } elseif ($oToken->ip != $sIp) {
 
-            $error = lang('auth_twofactor_token_bad_ip');
-            $this->setError($error);
-            $return = false;
+            $this->setError(lang('auth_twofactor_token_bad_ip'));
+            $bReturn = false;
         }
 
         //  Delete the token
-        $this->mfaTokenDelete($token->id);
+        $this->mfaTokenDelete($oToken->id);
 
-        return $return;
+        return $bReturn;
     }
 
     // --------------------------------------------------------------------------
@@ -371,14 +351,14 @@ class Auth extends Base
     /**
      * Delete an MFA token
      *
-     * @param  int $tokenId The token's ID
+     * @param  int $iTokenId The token's ID
      *
      * @return boolean
      */
-    public function mfaTokenDelete($tokenId)
+    public function mfaTokenDelete($iTokenId)
     {
         $oDb = Factory::service('Database');
-        $oDb->where('id', $tokenId);
+        $oDb->where('id', $iTokenId);
         $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
         return (bool) $oDb->affected_rows();
     }
@@ -388,20 +368,20 @@ class Auth extends Base
     /**
      * Fetches a random MFA question for a user
      *
-     * @param  int $userId The user's ID
+     * @param  int $iUserId The user's ID
      *
      * @return boolean|\stdClass
      */
-    public function mfaQuestionGet($userId)
+    public function mfaQuestionGet($iUserId)
     {
         $oDb    = Factory::service('Database');
         $oInput = Factory::service('Input');
 
-        $oDb->where('user_id', $userId);
+        $oDb->where('user_id', $iUserId);
         $oDb->order_by('last_requested', 'DESC');
-        $questions = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
+        $aQuestions = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
 
-        if (!$questions) {
+        if (!$aQuestions) {
             $this->setError('No security questions available for this user.');
             return false;
         }
@@ -409,12 +389,12 @@ class Auth extends Base
         // --------------------------------------------------------------------------
 
         //  Choose a question to return
-        if (count($questions) == 1) {
+        if (count($aQuestions) == 1) {
 
             //  No choice, just return the lonely question
-            $out = $questions[0];
+            $oOut = reset($aQuestions);
 
-        } elseif (count($questions) > 1) {
+        } elseif (count($aQuestions) > 1) {
 
             /**
              * Has the most recently asked question been asked in the last 10 minutes?
@@ -422,33 +402,27 @@ class Auth extends Base
              * a little more time consuming). If not randomly choose one.
              */
 
-            if (strtotime($questions[0]->last_requested) > strtotime('-10 MINS')) {
-
-                $out = $questions[0];
-
-            } else {
-
-                $out = $questions[array_rand($questions)];
+            $oOut = reset($aQuestions);
+            if (strtotime($oOut->last_requested) < strtotime('-10 MINS')) {
+                $oOut = $aQuestions[array_rand($aQuestions)];
             }
 
         } else {
-
-            //  Derp.
             $this->setError('Could not determine security question.');
             return false;
         }
 
         //  Decode the question
-        $oEncrypt      = Factory::service('Encrypt');
-        $out->question = $oEncrypt->decode($out->question, APP_PRIVATE_KEY . $out->salt);
+        $oEncrypt       = Factory::service('Encrypt');
+        $oOut->question = $oEncrypt->decode($oOut->question, APP_PRIVATE_KEY . $oOut->salt);
 
         //  Update the last requested details
         $oDb->set('last_requested', 'NOW()', false);
         $oDb->set('last_requested_ip', $oInput->ipAddress());
-        $oDb->where('id', $out->id);
+        $oDb->where('id', $oOut->id);
         $oDb->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
 
-        return $out;
+        return $oOut;
     }
 
     // --------------------------------------------------------------------------
@@ -456,27 +430,27 @@ class Auth extends Base
     /**
      * Validates the answer to an MFA Question
      *
-     * @param  int    $questionId The question's ID
-     * @param  int    $userId     The user's ID
-     * @param  string $answer     The user's answer
+     * @param  int    $iQuestionId The question's ID
+     * @param  int    $iUserId     The user's ID
+     * @param  string $answer      The user's answer
      *
      * @return boolean
      */
-    public function mfaQuestionValidate($questionId, $userId, $answer)
+    public function mfaQuestionValidate($iQuestionId, $iUserId, $answer)
     {
         $oDb = Factory::service('Database');
         $oDb->select('answer, salt');
-        $oDb->where('id', $questionId);
-        $oDb->where('user_id', $userId);
-        $question = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
+        $oDb->where('id', $iQuestionId);
+        $oDb->where('user_id', $iUserId);
+        $oQuestion = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
 
-        if (!$question) {
+        if (!$oQuestion) {
             return false;
         }
 
-        $hash = sha1(sha1(strtolower($answer)) . APP_PRIVATE_KEY . $question->salt);
+        $hash = sha1(sha1(strtolower($answer)) . APP_PRIVATE_KEY . $oQuestion->salt);
 
-        return $hash === $question->answer;
+        return $hash === $oQuestion->answer;
     }
 
     // --------------------------------------------------------------------------
@@ -484,19 +458,17 @@ class Auth extends Base
     /**
      * Sets MFA questions for a user
      *
-     * @param  int     $userId   The user's ID
+     * @param  int     $iUserId  The user's ID
      * @param  array   $data     An array of question and answers
      * @param  boolean $clearOld Whether or not to clear old questions
      *
      * @return boolean
      */
-    public function mfaQuestionSet($userId, $data, $clearOld = true)
+    public function mfaQuestionSet($iUserId, $data, $clearOld = true)
     {
         //  Check input
         foreach ($data as $d) {
-
             if (empty($d->question) || empty($d->answer)) {
-
                 $this->setError('Malformed question/answer data.');
                 return false;
             }
@@ -508,7 +480,7 @@ class Auth extends Base
 
         //  Delete old questions?
         if ($clearOld) {
-            $oDb->where('user_id', $userId);
+            $oDb->where('user_id', $iUserId);
             $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
 
@@ -517,18 +489,19 @@ class Auth extends Base
 
         $questionData = [];
         $counter      = 0;
-        $oDate        = Factory::factory('DateTime');
-        $sDateTime    = $oDate->format('Y-m-d H:i:s');
+        $oNow         = Factory::factory('DateTime');
+        $sDateTime    = $oNow->format('Y-m-d H:i:s');
 
         foreach ($data as $d) {
-
-            $questionData[$counter]             = [];
-            $questionData[$counter]['user_id']  = $userId;
-            $questionData[$counter]['salt']     = $oPasswordModel->salt();
-            $questionData[$counter]['question'] = $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $questionData[$counter]['salt']);
-            $questionData[$counter]['answer']   = sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $questionData[$counter]['salt']);
-            $questionData[$counter]['created']  = $sDateTime;
-
+            $sSalt                  = $oPasswordModel->salt();
+            $questionData[$counter] = [
+                'user_id'        => $iUserId,
+                'salt'           => $sSalt,
+                'question'       => $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $sSalt),
+                'answer'         => sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $sSalt),
+                'created'        => $sDateTime,
+                'last_requested' => null,
+            ];
             $counter++;
         }
 
@@ -537,18 +510,14 @@ class Auth extends Base
             $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $questionData);
 
             if ($oDb->trans_status() !== false) {
-
                 $oDb->trans_commit();
                 return true;
-
             } else {
-
                 $oDb->trans_rollback();
                 return false;
             }
 
         } else {
-
             $oDb->trans_rollback();
             $this->setError('No data to save.');
             return false;
@@ -560,27 +529,27 @@ class Auth extends Base
     /**
      * Gets the user's MFA device if there is one
      *
-     * @param  int $userId The user's ID
+     * @param  int $iUserId The user's ID
      *
      * @return mixed         \stdClass on success, false on failure
      */
-    public function mfaDeviceSecretGet($userId)
+    public function mfaDeviceSecretGet($iUserId)
     {
         $oDb      = Factory::service('Database');
         $oEncrypt = Factory::service('Encrypt');
 
-        $oDb->where('user_id', $userId);
+        $oDb->where('user_id', $iUserId);
         $oDb->limit(1);
-        $result = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
+        $aResult = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
 
-        if (empty($result)) {
+        if (empty($aResult)) {
             return false;
         }
 
-        $return         = $result[0];
-        $return->secret = $oEncrypt->decode($return->secret, APP_PRIVATE_KEY);
+        $oReturn         = reset($aResult);
+        $oReturn->secret = $oEncrypt->decode($oReturn->secret, APP_PRIVATE_KEY);
 
-        return $result[0];
+        return $oReturn;
     }
 
     // --------------------------------------------------------------------------
@@ -588,43 +557,42 @@ class Auth extends Base
     /**
      * Generates a MFA Device Secret
      *
-     * @param  int    $userId         The user ID to generate for
-     * @param  string $existingSecret The existing secret to use instead of generating a new one
+     * @param  int    $iUserId         The user ID to generate for
+     * @param  string $sExistingSecret The existing secret to use instead of generating a new one
      *
      * @return boolean|array
      */
-    public function mfaDeviceSecretGenerate($userId, $existingSecret = null)
+    public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
         //  Get an identifier for the user
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $user       = $oUserModel->getById($userId);
+        $oUser      = $oUserModel->getById($iUserId);
 
-        if (!$user) {
-
+        if (!$oUser) {
             $this->setError('User does not exist.');
             return false;
         }
 
-        $g = new GoogleAuthenticator();
+        $oGoogleAuth = new GoogleAuthenticator();
 
         //  Generate the secret
-        if (empty($existingSecret)) {
-            $secret = $g->generateSecret();
+        if (empty($sExistingSecret)) {
+            $sSecret = $oGoogleAuth->generateSecret();
         } else {
-            $secret = $existingSecret;
+            $sSecret = $sExistingSecret;
         }
 
         //  Get the hostname
-        $hostname = getDomainFromUrl(BASE_URL);
+        $sHostname = getDomainFromUrl(BASE_URL);
 
         //  User identifier
-        $username = $user->username;
-        $username = empty($username) ? preg_replace('/[^a-z]/', '', strtolower($user->first_name . $user->last_name)) : $username;
-        $username = empty($username) ? preg_replace('/[^a-z]/', '', strtolower($user->email)) : $username;
+        $sUsername = $oUser->username;
+        $sUsername = empty($sUsername) ? preg_replace('/[^a-z]/', '', strtolower($oUser->first_name . $oUser->last_name)) : $sUsername;
+        $sUsername = empty($sUsername) ? preg_replace('/[^a-z]/', '', strtolower($oUser->email)) : $sUsername;
 
         return [
-            'secret' => $secret,
-            'url'    => $g->getUrl($username, $hostname, $secret),
+            'secret' => $sSecret,
+            'url'    => $oGoogleAuth->getUrl($sUsername, $sHostname, $sSecret),
         ];
     }
 
@@ -634,27 +602,27 @@ class Auth extends Base
      * Validates a secret against two given codes, if valid adds as a device for
      * the user
      *
-     * @param  int    $userId The user's ID
-     * @param  string $secret The secret being used
-     * @param  int    $code1  The first code to be generate
-     * @param  int    $code2  The second code to be generated
+     * @param  int    $iUserId The user's ID
+     * @param  string $sSecret The secret being used
+     * @param  int    $iCode1  The first code to be generate
+     * @param  int    $iCode2  The second code to be generated
      *
      * @return boolean
      */
-    public function mfaDeviceSecretValidate($userId, $secret, $code1, $code2)
+    public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode1, $iCode2)
     {
         //  Tidy up codes so that they only contain digits
-        $code1 = preg_replace('/[^\d]/', '', $code1);
-        $code2 = preg_replace('/[^\d]/', '', $code2);
+        $sCode1 = preg_replace('/[^\d]/', '', $iCode1);
+        $sCode2 = preg_replace('/[^\d]/', '', $iCode2);
 
         //  New instance of the authenticator
-        $g = new GoogleAuthenticator();
+        $oGoogleAuth = new GoogleAuthenticator();
 
         //  Check the codes
-        $checkCode1 = $g->checkCode($secret, $code1);
-        $checkCode2 = $g->checkCode($secret, $code2);
+        $bCheckCode1 = $oGoogleAuth->checkCode($sSecret, $sCode1);
+        $bCheckCode2 = $oGoogleAuth->checkCode($sSecret, $sCode2);
 
-        if ($checkCode1 && $checkCode2) {
+        if ($bCheckCode1 && $bCheckCode2) {
 
             /**
              * Both codes are valid, which means they are sequential and recent.
@@ -665,39 +633,38 @@ class Auth extends Base
             $oDb      = Factory::service('Database');
             $oEncrypt = Factory::service('Encrypt');
 
-            $oDb->set('user_id', $userId);
-            $oDb->set('secret', $oEncrypt->encode($secret, APP_PRIVATE_KEY));
+            $oDb->set('user_id', $iUserId);
+            $oDb->set('secret', $oEncrypt->encode($sSecret, APP_PRIVATE_KEY));
             $oDb->set('created', 'NOW()', false);
 
             if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
 
-                $secret_id = $oDb->insert_id();
-                $oDate     = Factory::factory('DateTime');
+                $iSecretId = $oDb->insert_id();
+                $oNow      = Factory::factory('DateTime');
 
-                $data   = [];
-                $data[] = [
-                    'secret_id' => $secret_id,
-                    'code'      => $code1,
-                    'used'      => $oDate->format('Y-m-d H:i:s'),
-                ];
-                $data[] = [
-                    'secret_id' => $secret_id,
-                    'code'      => $code2,
-                    'used'      => $oDate->format('Y-m-d H:i:s'),
+                $aData = [
+                    [
+                        'secret_id' => $iSecretId,
+                        'code'      => $sCode1,
+                        'used'      => $oNow->format('Y-m-d H:i:s'),
+                    ],
+                    [
+                        'secret_id' => $iSecretId,
+                        'code'      => $sCode2,
+                        'used'      => $oNow->format('Y-m-d H:i:s'),
+                    ],
                 ];
 
-                $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $data);
+                $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $aData);
 
                 return true;
 
             } else {
-
                 $this->setError('Could not save secret.');
                 return false;
             }
 
         } else {
-
             $this->setError('Codes did not validate.');
             return false;
         }
@@ -708,25 +675,25 @@ class Auth extends Base
     /**
      * Validates an MFA Device code
      *
-     * @param  int    $userId The user's ID
-     * @param  string $code   The code to validate
+     * @param  int    $iUserId The user's ID
+     * @param  string $sCode   The code to validate
      *
      * @return boolean
      */
-    public function mfaDeviceCodeValidate($userId, $code)
+    public function mfaDeviceCodeValidate($iUserId, $sCode)
     {
         //  Get the user's secret
-        $secret = $this->mfaDeviceSecretGet($userId);
+        $oSecret = $this->mfaDeviceSecretGet($iUserId);
 
-        if (!$secret) {
+        if (!$oSecret) {
             $this->setError('Invalid User');
             return false;
         }
 
         //  Has the code been used before?
         $oDb = Factory::service('Database');
-        $oDb->where('secret_id', $secret->id);
-        $oDb->where('code', $code);
+        $oDb->where('secret_id', $oSecret->id);
+        $oDb->where('code', $sCode);
 
         if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
             $this->setError('Code has already been used.');
@@ -734,18 +701,17 @@ class Auth extends Base
         }
 
         //  Tidy up codes so that they only contain digits
-        $code = preg_replace('/[^\d]/', '', $code);
+        $sCode = preg_replace('/[^\d]/', '', $sCode);
 
         //  New instance of the authenticator
-        $g = new GoogleAuthenticator();
-
-        $checkCode = $g->checkCode($secret->secret, $code);
+        $oGoogleAuth = new GoogleAuthenticator();
+        $checkCode   = $oGoogleAuth->checkCode($oSecret->secret, $sCode);
 
         if ($checkCode) {
 
             //  Log the code so it can't be used again
-            $oDb->set('secret_id', $secret->id);
-            $oDb->set('code', $code);
+            $oDb->set('secret_id', $oSecret->id);
+            $oDb->set('code', $sCode);
             $oDb->set('used', 'NOW()', false);
 
             $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
@@ -753,7 +719,6 @@ class Auth extends Base
             return true;
 
         } else {
-
             return false;
         }
     }

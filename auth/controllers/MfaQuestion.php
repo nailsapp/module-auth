@@ -13,22 +13,26 @@
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
-class Mfa_question extends BaseMfa
+class MfaQuestion extends BaseMfa
 {
+    /**
+     * Ensures we're use the correct MFA type
+     */
     public function _remap()
     {
         if ($this->authMfaMode == 'QUESTION') {
-
             $this->index();
-
         } else {
-
             show_404();
         }
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Sets up, or asks an MFA Question
+     * @throws Exception
+     */
     public function index()
     {
         //  Validates the request token and generates a new one for the next request
@@ -36,26 +40,26 @@ class Mfa_question extends BaseMfa
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post('answer')) {
+        $oInput     = Factory::service('Input');
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+
+        if ($oInput->post('answer')) {
 
             /**
              * Validate the answer, if correct then log user in and forward, if
              * not then generate a new token and show errors
              */
 
-            $this->data['question'] = $this->auth_model->mfaQuestionGet($this->mfaUser->id);
-            $isValid                = $this->auth_model->mfaQuestionValidate(
+            $this->data['question'] = $oAuthModel->mfaQuestionGet($this->mfaUser->id);
+            $bIsValid               = $oAuthModel->mfaQuestionValidate(
                 $this->data['question']->id,
                 $this->mfaUser->id,
-                $this->input->post('answer')
+                $oInput->post('answer')
             );
 
-            if ($isValid) {
-
+            if ($bIsValid) {
                 $this->loginUser();
-
             } else {
-
                 $this->data['error'] = lang('auth_twofactor_answer_incorrect');
                 $this->askQuestion();
             }
@@ -63,7 +67,7 @@ class Mfa_question extends BaseMfa
         } else {
 
             //  Determine whether the user has any security questions set
-            $this->data['question'] = $this->auth_model->mfaQuestionGet($this->mfaUser->id);
+            $this->data['question'] = $oAuthModel->mfaQuestionGet($this->mfaUser->id);
 
             if ($this->data['question']) {
 
@@ -81,11 +85,8 @@ class Mfa_question extends BaseMfa
                  */
 
                 if (count($this->data['questions']) < $this->authMfaConfig['numQuestions']) {
-
                     $this->data['num_questions'] = count($this->data['questions']);
-
                 } else {
-
                     $this->data['num_questions'] = count($this->authMfaConfig['numQuestions']);
                 }
 
@@ -93,15 +94,10 @@ class Mfa_question extends BaseMfa
                 $this->data['num_custom_questions'] = $this->authMfaConfig['numUserQuestions'];
 
                 if ($this->data['num_questions'] + $this->data['num_custom_questions'] <= 0) {
-
-                    $subject  = 'Two-factor auth is enabled, but no questions available';
-                    $message  = 'A user tried to set security questions but there are no questions available ';
-                    $message .= 'for them to choose. Please ensure auth.twofactor.php is configured correctly.';
-
-                    showFatalError($subject, $message);
+                    throw new \Exception('Two-factor auth is enabled, but no questions available');
                 }
 
-                if ($this->input->post()) {
+                if ($oInput->post()) {
 
                     $oFormValidation = Factory::service('FormValidation');
 
@@ -110,13 +106,13 @@ class Mfa_question extends BaseMfa
                         $oFormValidation->set_rules(
                             'question[' . $i . '][question]',
                             '',
-                            'xss_clean|required|is_natural_no_zero'
+                            'required|is_natural_no_zero'
                         );
 
                         $oFormValidation->set_rules(
                             'question[' . $i . '][answer]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
                     }
 
@@ -125,13 +121,13 @@ class Mfa_question extends BaseMfa
                         $oFormValidation->set_rules(
                             'custom_question[' . $i . '][question]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
 
                         $oFormValidation->set_rules(
                             'custom_question[' . $i . '][answer]',
                             '',
-                            'xss_clean|trim|required'
+                            'trim|required'
                         );
                     }
 
@@ -141,103 +137,86 @@ class Mfa_question extends BaseMfa
                     if ($oFormValidation->run()) {
 
                         //  Make sure that we have different questions
-                        $questionIndex = array();
-                        $question      = (array) $this->input->post('question');
-                        $error         = false;
+                        $aQuestionIndex = [];
+                        $aQuestion      = (array) $oInput->post('question', true);
+                        $bError         = false;
 
-                        foreach ($question as $q) {
-
-                            if (array_search($q['question'], $questionIndex) === false) {
-
-                                $questionIndex[] = $q['question'];
-
+                        foreach ($aQuestion as $q) {
+                            if (array_search($q['question'], $aQuestionIndex) === false) {
+                                $aQuestionIndex[] = $q['question'];
                             } else {
-
-                                $error = true;
+                                $bError = true;
                                 break;
                             }
                         }
 
-                        $questionIndex = array();
-                        $question      = (array) $this->input->post('custom_question');
+                        $aQuestionIndex = [];
+                        $aQuestion      = (array) $oInput->post('custom_question', true);
 
-                        foreach ($question as $q) {
-
-                            if (array_search($q['question'], $questionIndex) === false) {
-
-                                $questionIndex[] = $q['question'];
-
+                        foreach ($aQuestion as $q) {
+                            if (array_search($q['question'], $aQuestionIndex) === false) {
+                                $aQuestionIndex[] = $q['question'];
                             } else {
-
-                                $error = true;
+                                $bError = true;
                                 break;
                             }
                         }
 
-                        if (!$error) {
+                        if (!$bError) {
 
                             //  Good arrows. Save questions
-                            $data = array();
+                            $aData = [];
 
-                            if ($this->input->post('question')) {
+                            if ($oInput->post('question', true)) {
 
-                                foreach ($this->input->post('question') as $q) {
+                                foreach ($oInput->post('question', true) as $q) {
 
-                                    $temp = new stdClass();
+                                    $oTemp = new stdClass();
 
-                                    if (isset($this->data['questions'][$q['question']-1])) {
-
-                                        $temp->question = $this->data['questions'][$q['question']-1];
-
+                                    if (isset($this->data['questions'][$q['question'] - 1])) {
+                                        $oTemp->question = $this->data['questions'][$q['question'] - 1];
                                     } else {
-
-                                        $temp->question = null;
+                                        $oTemp->question = null;
                                     }
-                                    $temp->answer = $q['answer'];
+                                    $oTemp->answer = $q['answer'];
 
-                                    $data[] = $temp;
+                                    $aData[] = $oTemp;
                                 }
                             }
 
-                            if ($this->input->post('custom_question')) {
-
-                                foreach ((array) $this->input->post('custom_question') as $q) {
-
-                                    $temp           = new stdClass();
-                                    $temp->question = trim($q['question']);
-                                    $temp->answer   = $q['answer'];
-
-                                    $data[] = $temp;
+                            if ($oInput->post('custom_question', true)) {
+                                foreach ((array) $oInput->post('custom_question', true) as $aQuestion) {
+                                    $aData[] = (object) [
+                                        'question' => trim($aQuestion['question']),
+                                        'answer'   => $aQuestion['answer'],
+                                    ];
                                 }
                             }
 
-                            if ($this->auth_model->mfaQuestionSet($this->mfaUser->id, $data)) {
+                            if ($oAuthModel->mfaQuestionSet($this->mfaUser->id, $aData)) {
 
-                                $status   = 'success';
-                                $message  = '<strong>Multi Factor Authentication Enabled!</strong><br />You ';
-                                $message .= 'successfully set your security questions. You will be asked to answer ';
-                                $message .= 'one of them every time you log in.';
+                                $sStatus  = 'success';
+                                $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You ';
+                                $sMessage .= 'successfully set your security questions. You will be asked to answer ';
+                                $sMessage .= 'one of them every time you log in.';
 
                                 $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                                $oSession->set_flashdata($status, $message);
+                                $oSession->set_flashdata($sStatus, $sMessage);
 
                                 $this->loginUser();
 
                             } else {
 
-                                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-
-                                $this->data['error']  = lang('auth_twofactor_question_set_fail');
+                                $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
+                                $this->data['error'] = lang('auth_twofactor_question_set_fail');
                                 $this->data['error'] .= ' ' . $oUserModel->lastError();
                             }
 
                         } else {
-
                             $this->data['error'] = lang('auth_twofactor_question_unique');
                         }
 
                     } else {
-
                         $this->data['error'] = lang('fv_there_were_errors');
                     }
                 }
@@ -255,6 +234,9 @@ class Mfa_question extends BaseMfa
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Asks one of the user's questions
+     */
     protected function askQuestion()
     {
         //  Ask away cap'n!

@@ -2,7 +2,7 @@
     <p>
         Use this tool to merge two or more accounts into one
     </p>
-    <hr />
+    <hr/>
     <?=form_open(null, 'id="theForm"')?>
     <fieldset>
         <legend>User to Keep</legend>
@@ -10,7 +10,7 @@
             This user account is the one you wish to merge other user's data into.
         </p>
         <p>
-            <input type="text" id="userId" name="userId" />
+            <input type="text" id="userId" name="userId"/>
         </p>
     </fieldset>
     <fieldset>
@@ -19,7 +19,7 @@
             These accounts will have their data merged into the above user and then be deleted.
         </p>
         <p>
-            <input type="text" id="mergeIds" name="mergeIds" />
+            <input type="text" id="mergeIds" name="mergeIds"/>
         </p>
     </fieldset>
     <?=form_submit('submit', 'Preview Merge', 'class="btn btn-success"')?>

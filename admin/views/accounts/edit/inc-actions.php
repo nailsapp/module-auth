@@ -1,6 +1,6 @@
 <?php
 
-$buttons      = array();
+$buttons      = [];
 $returnString = '?return_to=' . urlencode(uri_string() . '?' . $this->input->server('QUERY_STRING'));
 
 //  Login as
@@ -70,7 +70,6 @@ if ($user_edit->is_suspended) {
         );
     }
 }
-
 
 if ($buttons) {
 

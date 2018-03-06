@@ -13,7 +13,6 @@
 namespace Nails\Auth\Controller;
 
 use Nails\Factory;
-use Nails\Auth\Controller\Base;
 
 class BaseMfa extends Base
 {
@@ -36,8 +35,8 @@ class BaseMfa extends Base
         $oConfig = Factory::service('Config');
 
         $this->authMfaMode   = $oConfig->item('authTwoFactorMode');
-        $config              = $oConfig->item('authTwoFactor');
-        $this->authMfaConfig = $config[$this->authMfaMode];
+        $aConfig             = $oConfig->item('authTwoFactor');
+        $this->authMfaConfig = $aConfig[$this->authMfaMode];
     }
 
     // --------------------------------------------------------------------------
@@ -46,16 +45,16 @@ class BaseMfa extends Base
     {
         $oSession   = Factory::service('Session', 'nailsapp/module-auth');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oInput     = Factory::service('Input');
+        $oUri       = Factory::service('Uri');
 
-        $this->returnTo = $this->input->get('return_to', true);
-        $this->remember = $this->input->get('remember', true);
-        $userId         = $this->uri->segment(3);
-        $this->mfaUser  = $oUserModel->getById($userId);
+        $this->returnTo = $oInput->get('return_to', true);
+        $this->remember = $oInput->get('remember', true);
+        $iUserId        = (int) $oUri->segment(4);
+        $this->mfaUser  = $oUserModel->getById($iUserId);
 
         if (!$this->mfaUser) {
-
             $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
-
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);
             } else {
@@ -63,10 +62,10 @@ class BaseMfa extends Base
             }
         }
 
-        $salt              = $this->uri->segment(4);
-        $token             = $this->uri->segment(5);
-        $ipAddress         = $this->input->ipAddress();
-        $this->loginMethod = $this->uri->segment(6) ? $this->uri->segment(6) : 'native';
+        $sSalt             = $oUri->segment(5);
+        $sToken            = $oUri->segment(6);
+        $sIpAddress        = $oInput->ipAddress();
+        $this->loginMethod = $oUri->segment(7) ? $oUri->segment(7) : 'native';
 
         //  Safety first
         switch (strtolower($this->loginMethod)) {
@@ -83,28 +82,30 @@ class BaseMfa extends Base
                 break;
         }
 
-        if (!$this->auth_model->mfaTokenValidate($this->mfaUser->id, $salt, $token, $ipAddress)) {
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        if (!$oAuthModel->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
             $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
 
-            $query              = array();
-            $query['return_to'] = $this->returnTo;
-            $query['remember']  = $this->remember;
+            $aQuery = [
+                'return_to' => $this->returnTo,
+                'remember'  => $this->remember,
+            ];
 
-            $query = array_filter($query);
+            $aQuery = array_filter($aQuery);
 
-            if ($query) {
-                $query = '?' . http_build_query($query);
+            if ($aQuery) {
+                $sQuery = '?' . http_build_query($aQuery);
             } else {
-                $query = '';
+                $sQuery = '';
             }
 
-            redirect('auth/login' . $query);
+            redirect('auth/login' . $sQuery);
 
         } else {
 
             //  Token is valid, generate a new one for the next request
-            $this->data['token'] = $this->auth_model->mfaTokenGenerate($this->mfaUser->id);
+            $this->data['token'] = $oAuthModel->mfaTokenGenerate($this->mfaUser->id);
 
             //  Set other data for the views
             $this->data['user_id']      = $this->mfaUser->id;
@@ -116,6 +117,9 @@ class BaseMfa extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Logs a user In
+     */
     protected function loginUser()
     {
         //  Set login data for this user
@@ -137,7 +141,7 @@ class BaseMfa extends Base
         // --------------------------------------------------------------------------
 
         //  Generate an event for this log in
-        create_event('did_log_in', array('method' => $this->loginMethod), $this->mfaUser->id);
+        create_event('did_log_in', ['method' => $this->loginMethod], $this->mfaUser->id);
 
         // --------------------------------------------------------------------------
 
@@ -147,9 +151,9 @@ class BaseMfa extends Base
             $oConfig = Factory::service('Config');
 
             if ($oConfig->item('authShowNicetimeOnLogin')) {
-                $lastLogin = niceTime(strtotime($this->mfaUser->last_login));
+                $sLastLogin = niceTime(strtotime($this->mfaUser->last_login));
             } else {
-                $lastLogin = toUserDatetime($this->mfaUser->last_login);
+                $sLastLogin = toUserDatetime($this->mfaUser->last_login);
             }
 
             if ($oConfig->item('authShowLastIpOnLogin')) {
@@ -157,11 +161,11 @@ class BaseMfa extends Base
                 $status  = 'positive';
                 $message = lang(
                     'auth_login_ok_welcome_with_ip',
-                    array(
+                    [
                         $this->mfaUser->first_name,
-                        $lastLogin,
-                        $this->mfaUser->last_ip
-                    )
+                        $sLastLogin,
+                        $this->mfaUser->last_ip,
+                    ]
                 );
 
             } else {
@@ -169,10 +173,10 @@ class BaseMfa extends Base
                 $status  = 'positive';
                 $message = lang(
                     'auth_login_ok_welcome',
-                    array(
+                    [
                         $this->mfaUser->first_name,
-                        $lastLogin
-                    )
+                        $sLastLogin,
+                    ]
                 );
             }
 
@@ -181,34 +185,31 @@ class BaseMfa extends Base
             $status  = 'positive';
             $message = lang(
                 'auth_login_ok_welcome_notime',
-                array(
-                    $this->mfaUser->first_name
-                )
+                [
+                    $this->mfaUser->first_name,
+                ]
             );
         }
 
         if (function_exists('cdnAvatar')) {
-
             $sAvatarUrl   = cdnAvatar($this->mfaUser->id, 100, 100);
-            $sloginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
-
+            $sLoginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
         } else {
-
-            $sloginAvatar = '';
+            $sLoginAvatar = '';
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata($status, $sloginAvatar . $message);
+        $oSession->set_flashdata($status, $sLoginAvatar . $message);
 
         // --------------------------------------------------------------------------
 
-        //  Delete the token we generated, its no needed, eh!
-        $this->auth_model->mfaTokenDelete($this->data['token']['id']);
+        //  Delete the token we generated, it's no needed, eh!
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel->mfaTokenDelete($this->data['token']['id']);
 
         // --------------------------------------------------------------------------
 
-        $redirect = $this->returnTo != site_url() ? $this->returnTo : $this->mfaUser->group_homepage;
-
-        redirect($redirect);
+        $sRedirectUrl = $this->returnTo != site_url() ? $this->returnTo : $this->mfaUser->group_homepage;
+        redirect($sRedirectUrl);
     }
 }

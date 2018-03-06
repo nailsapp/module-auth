@@ -19,6 +19,17 @@ class Migration0 extends Base
     public function execute()
     {
         $this->query("
+            CREATE TABLE `nails_session` (
+                `session_id` varchar(40) NOT NULL DEFAULT '0',
+                `ip_address` varchar(45) NOT NULL DEFAULT '0',
+                `user_agent` varchar(120) NOT NULL,
+                `last_activity` int(10) unsigned NOT NULL DEFAULT '0',
+                `user_data` text NOT NULL,
+                PRIMARY KEY (`session_id`),
+                KEY `last_activity_idx` (`last_activity`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ");
+        $this->query("
             CREATE TABLE `{{NAILS_DB_PREFIX}}user` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `id_md5` char(32) DEFAULT NULL,

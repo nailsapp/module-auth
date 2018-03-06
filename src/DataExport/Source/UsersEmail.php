@@ -71,7 +71,7 @@ class UsersEmail implements Source
      *
      * @param array $aData Any data to pass to the source
      *
-     * @return bool|array
+     * @return \stdClass
      */
     public function execute($aData = [])
     {

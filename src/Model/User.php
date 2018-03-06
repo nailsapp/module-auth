@@ -1829,7 +1829,7 @@ class User extends Base
      *
      * @return mixed                StdClass on success, false on failure
      */
-    public function create($data, $sendWelcome = true)
+    public function create($data = [], $sendWelcome = true)
     {
         $oDate              = Factory::factory('DateTime');
         $oDb                = Factory::service('Database');
@@ -2377,9 +2377,10 @@ class User extends Base
                     AND TABLE_NAME NOT IN (" . $ignoreTablesStr . ")
                     AND TABLE_SCHEMA='" . DEPLOY_DB_DATABASE . "';";
 
+        /** @var CI_DB_result $result */
         $result = $oDb->query($query);
 
-        while ($table = $result->_fetch_object()) {
+        while ($table = $result->unbuffered_row()) {
 
             if (!isset($tables[$table->TABLE_NAME])) {
 

@@ -10,6 +10,7 @@
  * @link
  */
 
+//  @todo (Pablo - 2017-07-09) - Rework configurations to come from appSettings() + admin panel
 
 /**
  * Disable errors when submitting the forgotten password form
@@ -42,24 +43,22 @@ $config['authShowLastIpOnLogin'] = false;
  * Auth sub config files
  * Load both versions, app version overrides Nails version
  */
-$appPath   = FCPATH . APPPATH . 'modules/auth/config/';
-$nailsPath = NAILS_PATH . 'module-auth/auth/config/';
+$sAppPath   = APPPATH . 'modules/auth/config/';
+$sNailsPath = NAILS_PATH . 'module-auth/auth/config/';
 
-$files = array(
+$aFiles = [
     'auth.social.php',
     'auth.twofactor.php',
-    'auth.accesstoken.php'
-);
+    'auth.accesstoken.php',
+];
 
-foreach ($files as $file) {
+foreach ($aFiles as $sFile) {
 
-    if (file_exists($nailsPath . $file)) {
-
-        include $nailsPath . $file;
+    if (file_exists($sNailsPath . $sFile)) {
+        include $sNailsPath . $sFile;
     }
 
-    if (file_exists($appPath . $file)) {
-
-        include $appPath . $file;
+    if (file_exists($sAppPath . $sFile)) {
+        include $sAppPath . $sFile;
     }
 }

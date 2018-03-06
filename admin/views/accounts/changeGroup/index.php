@@ -2,11 +2,11 @@
     <p>
         Use the following tool to change the group a user belongs to.
     </p>
-    <hr />
+    <hr/>
     <?php
 
-        $formUrl = uri_string() . '?users=' . $this->input->get('users');
-        echo form_open($formUrl);
+    $formUrl = uri_string() . '?users=' . $this->input->get('users');
+    echo form_open($formUrl);
 
     ?>
     <fieldset>
@@ -20,41 +20,41 @@
                 </tr>
             </thead>
             <tbody>
-            <?php
+                <?php
 
-            foreach ($users as $theUser) {
+                foreach ($users as $theUser) {
 
-                echo '<tr>';
-                echo '<td class="userId">' . number_format($theUser->id) . '</td>';
-                echo adminHelper('loadUserCell', $theUser);
-                echo '<td>' . $theUser->group_name . '</td>';
-                echo '</tr>';
+                    echo '<tr>';
+                    echo '<td class="userId">' . number_format($theUser->id) . '</td>';
+                    echo adminHelper('loadUserCell', $theUser);
+                    echo '<td>' . $theUser->group_name . '</td>';
+                    echo '</tr>';
 
-            }
+                }
 
-            ?>
+                ?>
             </tbody>
         </table>
     </fieldset>
     <fieldset>
         <legend>New Group</legend>
         <select name="newGroupId" class="select2">
-        <?php
+            <?php
 
-        foreach ($userGroups as $id => $label) {
+            foreach ($userGroups as $id => $label) {
 
-            echo '<option value="' . $id. '">';
-            echo $label;
-            echo '</option>';
-        }
+                echo '<option value="' . $id . '">';
+                echo $label;
+                echo '</option>';
+            }
 
-        ?>
+            ?>
         </select>
     </fieldset>
     <?php
 
-        echo form_submit('submit', 'Update User Groups', 'class="btn btn-success"');
-        echo form_close();
+    echo form_submit('submit', 'Update User Groups', 'class="btn btn-success"');
+    echo form_close();
 
     ?>
 </div>

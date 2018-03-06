@@ -10,8 +10,8 @@
  * @link
  */
 
-use Nails\Factory;
 use Nails\Auth\Controller\Base;
+use Nails\Factory;
 
 class Register extends Base
 {
@@ -26,7 +26,6 @@ class Register extends Base
 
         //  Is registration enabled
         if (!appSetting('user_registration_enabled', 'auth')) {
-
             show_404();
         }
 
@@ -57,42 +56,39 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        $iDefaultGroupId = $this->user_group_model->getDefaultGroupId();
+        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $iDefaultGroupId = $oUserGroupModel->getDefaultGroupId();
 
         // --------------------------------------------------------------------------
 
         //  If there's POST data attempt to log user in
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Validate input
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('first_name', '', 'required|xss_clean');
-            $oFormValidation->set_rules('last_name', '', 'required|xss_clean');
-            $oFormValidation->set_rules('password', '', 'required|xss_clean');
+            $oFormValidation->set_rules('first_name', '', 'required');
+            $oFormValidation->set_rules('last_name', '', 'required');
+            $oFormValidation->set_rules('password', '', 'required');
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
 
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                 );
-
-                if ($this->input->post('username')) {
-
-                    $oFormValidation->set_rules('email', '', 'xss_clean');
-                }
 
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
 
-                if ($this->input->post('email')) {
+                if ($oInput->post('email')) {
 
                     $oFormValidation->set_rules(
                         'email',
                         '',
-                        'xss_clean|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                        'valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                     );
                 }
 
@@ -101,12 +97,12 @@ class Register extends Base
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'xss_clean|required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
                 );
                 $oFormValidation->set_rules(
                     'username',
                     '',
-                    'xss_clean|required'
+                    'required'
                 );
             }
 
@@ -117,26 +113,14 @@ class Register extends Base
             $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
-
-                $oFormValidation->set_message(
-                    'is_unique',
-                    lang('auth_register_email_is_unique', site_url('auth/forgotten_password'))
-                );
-
+                $sMessage = lang('auth_register_email_is_unique', site_url('auth/password/forgotten'));
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
-
-                $oFormValidation->set_message(
-                    'is_unique',
-                    lang('auth_register_username_is_unique', site_url('auth/forgotten_password'))
-                );
-
+                $sMessage = lang('auth_register_username_is_unique', site_url('auth/password/forgotten'));
             } else {
-
-                $oFormValidation->set_message(
-                    'is_unique',
-                    lang('auth_register_identity_is_unique', site_url('auth/forgotten_password'))
-                );
+                $sMessage = lang('auth_register_identity_is_unique', site_url('auth/password/forgotten'));
             }
+
+            $oFormValidation->set_message('is_unique', $sMessage);
 
             // --------------------------------------------------------------------------
 
@@ -144,13 +128,14 @@ class Register extends Base
             if ($oFormValidation->run()) {
 
                 //  Attempt the registration
-                $aInsertData               = array();
-                $aInsertData['email']      = $this->input->post('email');
-                $aInsertData['username']   = $this->input->post('username');
-                $aInsertData['group_id']   = $iDefaultGroupId;
-                $aInsertData['password']   = $this->input->post('password');
-                $aInsertData['first_name'] = $this->input->post('first_name');
-                $aInsertData['last_name']  = $this->input->post('last_name');
+                $aInsertData = [
+                    'email'      => $oInput->post('email', true),
+                    'username'   => $oInput->post('username', true),
+                    'group_id'   => $iDefaultGroupId,
+                    'password'   => $oInput->post('password', true),
+                    'first_name' => $oInput->post('first_name', true),
+                    'last_name'  => $oInput->post('last_name', true),
+                ];
 
                 // --------------------------------------------------------------------------
 
@@ -167,37 +152,41 @@ class Register extends Base
 
                 if ($oNewUser) {
 
-                    //  Fetch user and group data
-                    $oGroup = $this->user_group_model->getById($aInsertData['group_id']);
-
-                    // --------------------------------------------------------------------------
+                    //  Create an event for this event
+                    create_event('did_register', ['method' => 'native'], $oNewUser->id);
 
                     //  Log the user in
-                    $oUserModel->setLoginData($oNewUser->id);
-
-                    // --------------------------------------------------------------------------
-
-                    //  Create an event for this event
-                    create_event('did_register', array('method' => 'native'), $oNewUser->id);
+                    if (!$oUserModel->setLoginData($oNewUser->id)) {
+                        //  Login failed for some reason, send them to the login page to try again
+                        redirect('auth/login');
+                    } else {
+                        $oSession->set_flashdata(
+                            'success',
+                            lang('auth_register_flashdata_welcome', $oNewUser->first_name)
+                        );
+                    }
 
                     // --------------------------------------------------------------------------
 
                     //  Redirect to the group homepage
-                    //  @todo: There should be the option to enable/disable forced activation
+                    //  @todo (Pablo - 2017-07-11) - Setting for forced email activation
+                    //  @todo (Pablo - 2017-07-11) - Handle setting MFA questions and/or devices
 
-                    $oSession->set_flashdata('success', lang('auth_register_flashdata_welcome', $oNewUser->first_name));
+                    $oGroup = $oUserGroupModel->getById($aInsertData['group_id']);
 
-                    $sRedirect = $oGroup->registration_redirect ? $oGroup->registration_redirect : $oGroup->default_homepage;
+                    if ($oGroup->registration_redirect) {
+                        $sRedirectUrl = $oGroup->registration_redirect;
+                    } else {
+                        $sRedirectUrl = $oGroup->default_homepage;
+                    }
 
-                    redirect($sRedirect);
+                    redirect($sRedirectUrl);
 
                 } else {
-
                     $this->data['error'] = 'Could not create new user account. ' . $oUserModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -231,8 +220,8 @@ class Register extends Base
         $oUri     = Factory::service('Uri');
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
 
-        $iId    = (int) $oUri->segment(4);
-        $sHash  = $oUri->segment(5);
+        $iId   = (int) $oUri->segment(4);
+        $sHash = $oUri->segment(5);
 
         // --------------------------------------------------------------------------
 
@@ -275,18 +264,21 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  All good, resend now
-        $oEmail                          = new StdClass();
-        $oEmail->to                      = $oUser->email;
-        $oEmail->type                    = 'register_activate_resend';
-        $oEmail->data                    = array();
-        $oEmail->data['first_name']      = $oUser->first_name;
-        $oEmail->data['user_id']         = $oUser->id;
-        $oEmail->data['activation_code'] = $oUser->activation_code;
+        $oEmail = (object) [
+            'to'   => $oUser->email,
+            'type' => 'register_activate_resend',
+            'data' => (object) [
+                'first_name'      => $oUser->first_name,
+                'user_id'         => $oUser->id,
+                'activation_code' => $oUser->activation_code,
+            ],
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Send it off now
-        $this->emailer->send_now($oEmail);
+        $oEmailer = Factory::service('Emailer', 'nailsapp/module-email');
+        $oEmailer->send_now($oEmail);
 
         // --------------------------------------------------------------------------
 

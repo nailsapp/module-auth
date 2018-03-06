@@ -7,7 +7,6 @@
     echo form_hidden('username_orig', $user_edit->username);
 
     if (!empty($isModal)) {
-
         $this->load->view('accounts/edit/inc-actions');
     }
 
@@ -15,14 +14,13 @@
     $this->load->view('accounts/edit/inc-emails');
     $this->load->view('accounts/edit/inc-password');
 
-    $oConfig = nailsFactory('service', 'Config');
+    $oConfig = \Nails\Factory::service('Config');
 
     $oConfig->load('auth/auth');
 
     if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
         $this->load->view('accounts/edit/inc-mfa-question');
     }
-
 
     if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
         $this->load->view('accounts/edit/inc-mfa-device');

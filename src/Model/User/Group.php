@@ -138,7 +138,6 @@ class Group extends Base
         $group = $this->getById($newGroupId);
 
         if (empty($group)) {
-
             $this->setError('"' . $newGroupId . '" is not a valid group ID.');
             return false;
         }

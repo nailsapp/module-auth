@@ -7,22 +7,22 @@
 
         if (empty($user_edit->profile_img)) {
 
-            echo img(array(
-                'src' => cdnBlankAvatar(100, 125, $user_edit->gender),
-                'id' => 'preview_image',
+            echo img([
+                'src'   => cdnBlankAvatar(100, 125, $user_edit->gender),
+                'id'    => 'preview_image',
                 'class' => 'left img-thumbnail',
-                'style' => 'margin-right:10px;'
-            ));
+                'style' => 'margin-right:10px;',
+            ]);
             echo form_upload('profile_img');
 
         } else {
 
-            $img = array(
+            $img = [
                 'src'   => cdnCrop($user_edit->profile_img, 100, 125),
                 'id'    => 'preview_image',
                 'style' => 'border:1px solid #CCC;padding:0;margin-right:10px;',
-                'class' => 'img-thumbnail'
-            );
+                'class' => 'img-thumbnail',
+            ];
 
             echo anchor(cdnServe($user_edit->profile_img), img($img), 'class="fancybox left"');
             echo '<p>';

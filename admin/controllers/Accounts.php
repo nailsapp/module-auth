@@ -154,6 +154,15 @@ class Accounts extends BaseAdmin
             );
         }
 
+        $cbFilters[] = Helper::searchFilterObject(
+            $tableAlias . '.is_suspended',
+            'Suspended',
+            [
+                ['Yes', true, false],
+                ['No', false, true]
+            ]
+        );
+
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
@@ -210,15 +219,11 @@ class Accounts extends BaseAdmin
             $oFormValidation = Factory::service('FormValidation');
 
             //  Set rules
-            $oFormValidation->set_rules('group_id', '', 'xss_clean|required|is_natural_no_zero');
-            $oFormValidation->set_rules('password', '', 'xss_clean');
-            $oFormValidation->set_rules('send_activation', '', 'xss_clean');
-            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
-            $oFormValidation->set_rules('first_name', '', 'xss_clean|required');
-            $oFormValidation->set_rules('last_name', '', 'xss_clean|required');
+            $oFormValidation->set_rules('group_id', '', 'required|is_natural_no_zero');
+            $oFormValidation->set_rules('first_name', '', 'required');
+            $oFormValidation->set_rules('last_name', '', 'required');
 
             $emailRules   = [];
-            $emailRules[] = 'xss_clean';
             $emailRules[] = 'required';
             $emailRules[] = 'valid_email';
             $emailRules[] = 'is_unique[' . NAILS_DB_PREFIX . 'user_email.email]';
@@ -227,13 +232,9 @@ class Accounts extends BaseAdmin
 
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
 
-                if ($oInput->post('username')) {
-                    $oFormValidation->set_rules('username', '', 'xss_clean');
-                }
-
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
 
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
 
                 if ($oInput->post('email')) {
                     $oFormValidation->set_rules('email', '', implode('|', $emailRules));
@@ -241,7 +242,7 @@ class Accounts extends BaseAdmin
 
             } else {
                 $oFormValidation->set_rules('email', '', implode('|', $emailRules));
-                $oFormValidation->set_rules('username', '', 'xss_clean|required');
+                $oFormValidation->set_rules('username', '', 'required');
             }
 
             //  Set messages
@@ -257,8 +258,8 @@ class Accounts extends BaseAdmin
 
                 //  Success
                 $data             = [];
-                $data['group_id'] = (int) $oInput->post('group_id');
-                $data['password'] = trim($oInput->post('password'));
+                $data['group_id'] = (int) $this->input->post('group_id', true);
+                $data['password'] = trim($this->input->post('password', true));
 
                 if (!$data['password']) {
                     //  Password isn't set, generate one
@@ -267,20 +268,20 @@ class Accounts extends BaseAdmin
                 }
 
                 if ($oInput->post('email')) {
-                    $data['email'] = $oInput->post('email');
+                    $data['email'] = $oInput->post('email', true);
                 }
 
                 if ($oInput->post('username')) {
-                    $data['username'] = $oInput->post('username');
+                    $data['username'] = $oInput->post('username', true);
                 }
 
-                $data['first_name']     = $oInput->post('first_name');
-                $data['last_name']      = $oInput->post('last_name');
-                $data['temp_pw']        = stringToBoolean($oInput->post('temp_pw'));
+                $data['first_name']     = $oInput->post('first_name', true);
+                $data['last_name']      = $oInput->post('last_name', true);
+                $data['temp_pw']        = stringToBoolean($oInput->post('temp_pw', true));
                 $data['inform_user_pw'] = true;
 
                 $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-                $new_user   = $oUserModel->create($data, stringToBoolean($oInput->post('send_activation')));
+                $new_user   = $oUserModel->create($data, stringToBoolean($oInput->post('send_activation', true)));
 
                 if ($new_user) {
 
@@ -423,7 +424,8 @@ class Accounts extends BaseAdmin
         $oConfig = Factory::service('Config');
 
         $user_meta_cols = $oConfig->item('user_meta_cols');
-        $group_id       = $oInput->post('group_id') ? $oInput->post('group_id') : $user->group_id;
+
+        $group_id = $oInput->post('group_id') ? $oInput->post('group_id', true) : $user->group_id;
 
         if (isset($user_meta_cols[$group_id])) {
             $this->data['user_meta_cols'] = $user_meta_cols[$user->group_id];
@@ -495,18 +497,13 @@ class Accounts extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Define user table rules
-            $oFormValidation->set_rules('username', '', 'xss-clean');
-            $oFormValidation->set_rules('first_name', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('last_name', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('gender', '', 'xss_clean|required');
-            $oFormValidation->set_rules('dob', '', 'xss_clean|valid_date');
-            $oFormValidation->set_rules('timezone', '', 'xss_clean|required');
-            $oFormValidation->set_rules('datetime_format_date', '', 'xss_clean|required');
-            $oFormValidation->set_rules('datetime_format_time', '', 'xss_clean|required');
-            $oFormValidation->set_rules('password', '', 'xss_clean');
-            $oFormValidation->set_rules('temp_pw', '', 'xss_clean');
-            $oFormValidation->set_rules('reset_mfa_question', '', 'xss_clean');
-            $oFormValidation->set_rules('reset_mfa_device', '', 'xss_clean');
+            $oFormValidation->set_rules('first_name', '', 'trim|required');
+            $oFormValidation->set_rules('last_name', '', 'trim|required');
+            $oFormValidation->set_rules('gender', '', 'required');
+            $oFormValidation->set_rules('dob', '', 'valid_date');
+            $oFormValidation->set_rules('timezone', '', 'required');
+            $oFormValidation->set_rules('datetime_format_date', '', 'required');
+            $oFormValidation->set_rules('datetime_format_time', '', 'required');
 
             // --------------------------------------------------------------------------
 
@@ -522,13 +519,9 @@ class Accounts extends BaseAdmin
                     case 'date':
                         //  Dates must validate
                         if (isset($value['validation'])) {
-                            $oFormValidation->set_rules(
-                                $col,
-                                $label,
-                                'xss_clean|' . $value['validation'] . '|valid_date[' . $col . ']'
-                            );
+                            $oFormValidation->set_rules($col, $label, $value['validation'] . '|valid_date[' . $col . ']');
                         } else {
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|valid_date[' . $col . ']');
+                            $oFormValidation->set_rules($col, $label, 'valid_date[' . $col . ']');
                         }
                         break;
 
@@ -539,9 +532,7 @@ class Accounts extends BaseAdmin
                     case 'string':
                     default:
                         if (isset($value['validation'])) {
-                            $oFormValidation->set_rules($col, $label, 'xss_clean|' . $value['validation']);
-                        } else {
-                            $oFormValidation->set_rules($col, $label, 'xss_clean');
+                            $oFormValidation->set_rules($col, $label, $value['validation']);
                         }
                         break;
                 }
@@ -589,27 +580,28 @@ class Accounts extends BaseAdmin
                 if (!isset($this->data['upload_error'])) {
 
                     //  Set basic data
-                    $data['temp_pw']              = stringToBoolean($oInput->post('temp_pw'));
-                    $data['reset_mfa_question']   = stringToBoolean($oInput->post('reset_mfa_question'));
-                    $data['reset_mfa_device']     = stringToBoolean($oInput->post('reset_mfa_device'));
-                    $data['first_name']           = $oInput->post('first_name');
-                    $data['last_name']            = $oInput->post('last_name');
-                    $data['username']             = $oInput->post('username');
-                    $data['gender']               = $oInput->post('gender');
-                    $data['dob']                  = $oInput->post('dob');
-                    $data['dob']                  = !empty($data['dob']) ? $data['dob'] : null;
-                    $data['timezone']             = $oInput->post('timezone');
-                    $data['datetime_format_date'] = $oInput->post('datetime_format_date');
-                    $data['datetime_format_time'] = $oInput->post('datetime_format_time');
 
-                    if ($oInput->post('password')) {
-                        $data['password'] = $oInput->post('password');
+                    $data['temp_pw']              = stringToBoolean($oInput->post('temp_pw', true));
+                    $data['reset_mfa_question']   = stringToBoolean($oInput->post('reset_mfa_question', true));
+                    $data['reset_mfa_device']     = stringToBoolean($oInput->post('reset_mfa_device', true));
+                    $data['first_name']           = $oInput->post('first_name', true);
+                    $data['last_name']            = $oInput->post('last_name', true);
+                    $data['username']             = $oInput->post('username', true);
+                    $data['gender']               = $oInput->post('gender', true);
+                    $data['dob']                  = $oInput->post('dob', true);
+                    $data['dob']                  = !empty($data['dob']) ? $data['dob'] : null;
+                    $data['timezone']             = $oInput->post('timezone', true);
+                    $data['datetime_format_date'] = $oInput->post('datetime_format_date', true);
+                    $data['datetime_format_time'] = $oInput->post('datetime_format_time', true);
+
+                    if ($oInput->post('password', true)) {
+                        $data['password'] = $oInput->post('password', true);
                     }
 
                     //  Set meta data
                     foreach ($this->data['user_meta_cols'] as $col => $value) {
 
-                        $mValue = $oInput->post($col);
+                        $mValue = $oInput->post($col, true);
 
                         //  Should the field be made null on empty?
                         if (!empty($value['nullOnEmpty']) && empty($mValue)) {
@@ -641,9 +633,8 @@ class Accounts extends BaseAdmin
                     //  Update account
                     if ($oUserModel->update($oInput->post('id'), $data)) {
 
-                        $name                  = $oInput->post('first_name') . ' ' . $oInput->post('last_name');
+                        $name                  = $oInput->post('first_name', true) . ' ' . $oInput->post('last_name', true);
                         $this->data['success'] = lang('accounts_edit_ok', [title_case($name)]);
-
                         // --------------------------------------------------------------------------
 
                         //  Set Admin changelogs

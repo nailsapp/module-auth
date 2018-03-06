@@ -13,22 +13,25 @@
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
-class Mfa_device extends BaseMfa
+class MfaDevice extends BaseMfa
 {
+    /**
+     * Ensures we're use the correct MFA type
+     */
     public function _remap()
     {
         if ($this->authMfaMode == 'DEVICE') {
-
             $this->index();
-
         } else {
-
             show_404();
         }
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Remaps requests to the correct method
+     */
     public function index()
     {
         //  Validates the request token and generates a new one for the next request
@@ -37,49 +40,53 @@ class Mfa_device extends BaseMfa
         // --------------------------------------------------------------------------
 
         //  Has this user already set up an MFA?
-        $mfaDevice = $this->auth_model->mfaDeviceSecretGet($this->mfaUser->id);
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oMfaDevice = $oAuthModel->mfaDeviceSecretGet($this->mfaUser->id);
 
-        if ($mfaDevice) {
-
+        if ($oMfaDevice) {
             $this->requestCode();
-
         } else {
-
             $this->setupDevice();
         }
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Sets up a new MFA device
+     */
     protected function setupDevice()
     {
-        if ($this->input->post()) {
+        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oInput     = Factory::service('Input');
 
-            $oSession        = Factory::service('Session', 'nailsapp/module-auth');
+        if ($oInput->post()) {
+
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('mfaSecret', '', 'xss_clean|required');
-            $oFormValidation->set_rules('mfaCode1', '', 'xss_clean|required');
-            $oFormValidation->set_rules('mfaCode2', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaSecret', '', 'required');
+            $oFormValidation->set_rules('mfaCode1', '', 'required');
+            $oFormValidation->set_rules('mfaCode2', '', 'required');
 
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
-                $secret = $this->input->post('mfaSecret');
-                $code1  = $this->input->post('mfaCode1');
-                $code2  = $this->input->post('mfaCode2');
+                $sSecret = $oInput->post('mfaSecret');
+                $sCode1  = $oInput->post('mfaCode1');
+                $sCode2  = $oInput->post('mfaCode2');
 
                 //  Verify the inout
-                if ($this->auth_model->mfaDeviceSecretValidate($this->mfaUser->id, $secret, $code1, $code2)) {
+                if ($oAuthModel->mfaDeviceSecretValidate($this->mfaUser->id, $sSecret, $sCode1, $sCode2)) {
 
                     //  Codes have been validated and saved to the DB, sign the user in and move on
-                    $status   = 'success';
-                    $message  = '<strong>Multi Factor Authentication Enabled!</strong><br />You successfully';
-                    $message .= 'associated an MFA device with your account. You will be required ot use it ';
-                    $message .= 'the next time you log in.';
+                    $sStatus  = 'success';
+                    $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You successfully';
+                    $sMessage .= 'associated an MFA device with your account. You will be required to use it ';
+                    $sMessage .= 'the next time you log in.';
 
-                    $oSession->set_flashdata($status, $message);
+                    $oSession->set_flashdata($sStatus, $sMessage);
 
                     $this->loginUser();
 
@@ -93,18 +100,18 @@ class Mfa_device extends BaseMfa
         }
 
         //  Generate the secret
-        $this->data['secret'] = $this->auth_model->mfaDeviceSecretGenerate(
+        $this->data['secret'] = $oAuthModel->mfaDeviceSecretGenerate(
             $this->mfaUser->id,
-            $this->input->post('mfaSecret')
+            $oInput->post('mfaSecret', true)
         );
 
         if (!$this->data['secret']) {
 
-            $status   = 'error';
-            $message  = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
-            $message .= $this->auth_model->lastError();
+            $sStatus  = 'error';
+            $sMessage = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
+            $sMessage .= $oAuthModel->lastError();
 
-            $oSession->set_flashdata($status, $message);
+            $oSession->set_flashdata($sStatus, $sMessage);
 
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);
@@ -124,33 +131,33 @@ class Mfa_device extends BaseMfa
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Requests a code from the user
+     */
     protected function requestCode()
     {
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('mfaCode', '', 'xss_clean|required');
+            $oFormValidation->set_rules('mfaCode', '', 'required');
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
-                $code = $this->input->post('mfaCode');
+                $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+                $sCode      = $oInput->post('mfaCode');
 
                 //  Verify the inout
-                if ($this->auth_model->mfaDeviceCodeValidate($this->mfaUser->id, $code)) {
-
-                    //  Valid code, go ahead and log in!
+                if ($oAuthModel->mfaDeviceCodeValidate($this->mfaUser->id, $sCode)) {
                     $this->loginUser();
-
                 } else {
-
-                    $this->data['error']  = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
-                    $this->data['error'] .= $this->auth_model->lastError();
+                    $this->data['error'] = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
+                    $this->data['error'] .= $oAuthModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
