@@ -312,7 +312,7 @@ class Login extends Base
 
         $this->auth_model->logout();
 
-        redirect('auth/reset_password/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
+        redirect('auth/password/reset/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
     }
 
     // --------------------------------------------------------------------------
@@ -905,17 +905,17 @@ class Login extends Base
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_email_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_email_already_registered', site_url('auth/password/forgotten'))
                 );
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_username_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_username_already_registered', site_url('auth/password/forgotten'))
                 );
             } else {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_identity_already_registered', site_url('auth/forgotten_password'))
+                    lang('fv_identity_already_registered', site_url('auth/password/forgotten'))
                 );
             }
 

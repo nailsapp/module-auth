@@ -18,7 +18,7 @@
         $sQuery = $aQuery ? '?' . http_build_query($aQuery) : '';
 
         echo form_open(
-            'auth/reset_password/' . $auth->id . '/' . $auth->hash . $sQuery,
+            'auth/password/reset/' . $auth->id . '/' . $auth->hash . $sQuery,
             'class="form form-horizontal"'
         );
 

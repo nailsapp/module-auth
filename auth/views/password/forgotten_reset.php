@@ -3,7 +3,7 @@
         <h1 class="panel__header text-center">
             Password Reset
         </h1>
-        <?=form_open('auth/forgotten_password')?>
+        <?=form_open('auth/password/forgotten')?>
         <div class="panel__body">
             <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
                 <?=$error?>

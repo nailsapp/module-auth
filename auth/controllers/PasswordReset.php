@@ -13,10 +13,10 @@
 use Nails\Auth\Controller\Base;
 use Nails\Factory;
 
-class Reset_Password extends Base
+class PasswordReset extends Base
 {
     /**
-     * Reset_Password constructor.
+     * PasswordReset constructor.
      */
     public function __construct()
     {
@@ -47,11 +47,11 @@ class Reset_Password extends Base
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
 
         //  Check auth credentials
-        $user = $oUserModel->getById($id);
+        $oUser = $oUserModel->getById($id);
 
         // --------------------------------------------------------------------------
 
-        if ($user !== false && isset($user->salt) && $hash == md5($user->salt)) {
+        if ($oUser && isset($oUser->salt) && $hash == md5($oUser->salt)) {
 
             //  Valid combination, is there MFA on the account?
             if ($oConfig->item('authTwoFactorMode')) {
@@ -61,7 +61,7 @@ class Reset_Password extends Base
                  * that MFA has been passed
                  */
 
-                $mfaValid = false;
+                $bMfaValid = false;
 
                 /**
                  * Check the user's account to see if they have MFA enabled, if so
@@ -71,7 +71,7 @@ class Reset_Password extends Base
                 switch ($oConfig->item('authTwoFactorMode')) {
 
                     case 'QUESTION':
-                        $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($user->id);
+                        $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($oUser->id);
 
                         if ($this->data['mfaQuestion']) {
 
@@ -80,13 +80,13 @@ class Reset_Password extends Base
                                 //  Validate answer
                                 $isValid = $this->auth_model->mfaQuestionValidate(
                                     $this->data['mfaQuestion']->id,
-                                    $user->id,
+                                    $oUser->id,
                                     $oInput->post('mfaAnswer')
                                 );
 
                                 if ($isValid) {
 
-                                    $mfaValid = true;
+                                    $bMfaValid = true;
 
                                 } else {
 
@@ -98,13 +98,13 @@ class Reset_Password extends Base
                         } else {
 
                             //  No questions set up, allow for now
-                            $mfaValid = true;
+                            $bMfaValid = true;
                         }
 
                         break;
 
                     case 'DEVICE':
-                        $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($user->id);
+                        $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($oUser->id);
 
                         if ($this->data['mfaDevice']) {
 
@@ -112,13 +112,13 @@ class Reset_Password extends Base
 
                                 //  Validate answer
                                 $isValid = $this->auth_model->mfaDeviceCodeValidate(
-                                    $user->id,
+                                    $oUser->id,
                                     $oInput->post('mfaCode')
                                 );
 
                                 if ($isValid) {
 
-                                    $mfaValid = true;
+                                    $bMfaValid = true;
 
                                 } else {
 
@@ -130,7 +130,7 @@ class Reset_Password extends Base
                         } else {
 
                             //  No devices set up, allow for now
-                            $mfaValid = true;
+                            $bMfaValid = true;
                         }
                         break;
                 }
@@ -138,13 +138,13 @@ class Reset_Password extends Base
             } else {
 
                 //  No MFA so just set this to true
-                $mfaValid = true;
+                $bMfaValid = true;
             }
 
             // --------------------------------------------------------------------------
 
             // Only run if MFA has been passed and there's POST data
-            if ($mfaValid && $oInput->post()) {
+            if ($bMfaValid && $oInput->post()) {
 
                 // Validate data
                 $oFormValidation = Factory::service('FormValidation');
@@ -169,112 +169,110 @@ class Reset_Password extends Base
                 if ($oFormValidation->run()) {
 
                     //  Validated, update user and login.
-                    $data                            = [];
-                    $data['forgotten_password_code'] = null;
-                    $data['temp_pw']                 = false;
-                    $data['password']                = $oInput->post('new_password');
-                    $remember                        = (bool) $oInput->get('remember');
+                    $aData     = [
+                        'forgotten_password_code' => null,
+                        'temp_pw'                 => false,
+                        'password'                => $oInput->post('new_password'),
+                    ];
+                    $bRemember = (bool) $oInput->get('remember');
 
                     //  Reset the password
-                    if ($oUserModel->update($user->id, $data)) {
+                    if ($oUserModel->update($oUser->id, $aData)) {
 
                         //  Log the user in
                         switch (APP_NATIVE_LOGIN_USING) {
 
                             case 'EMAIL':
-                                $loginUser = $this->auth_model->login(
-                                    $user->email,
+                                $oLoginUser = $this->auth_model->login(
+                                    $oUser->email,
                                     $oInput->post('new_password'),
-                                    $remember
+                                    $bRemember
                                 );
                                 break;
 
                             case 'USERNAME':
-                                $loginUser = $this->auth_model->login(
-                                    $user->username,
+                                $oLoginUser = $this->auth_model->login(
+                                    $oUser->username,
                                     $oInput->post('new_password'),
-                                    $remember
+                                    $bRemember
                                 );
                                 break;
 
                             default:
-                                $loginUser = $this->auth_model->login(
-                                    $user->email,
+                                $oLoginUser = $this->auth_model->login(
+                                    $oUser->email,
                                     $oInput->post('new_password'),
-                                    $remember
+                                    $bRemember
                                 );
                                 break;
                         }
 
-                        if ($loginUser) {
+                        if ($oLoginUser) {
 
                             //  Say hello
-                            if ($loginUser->last_login) {
+                            if ($oLoginUser->last_login) {
 
                                 if ($oConfig->item('authShowNicetimeOnLogin')) {
-                                    $lastLogin = niceTime(strtotime($loginUser->last_login));
+                                    $sLastLogin = niceTime(strtotime($oLoginUser->last_login));
                                 } else {
-                                    $lastLogin = toUserDatetime($loginUser->last_login);
+                                    $sLastLogin = toUserDatetime($oLoginUser->last_login);
                                 }
 
                                 if ($oConfig->item('authShowLastIpOnLogin')) {
 
-                                    $status  = 'positive';
-                                    $message = lang(
+                                    $sStatus  = 'positive';
+                                    $sMessage = lang(
                                         'auth_login_ok_welcome_with_ip',
                                         [
-                                            $loginUser->first_name,
-                                            $lastLogin,
-                                            $loginUser->last_ip,
+                                            $oLoginUser->first_name,
+                                            $sLastLogin,
+                                            $oLoginUser->last_ip,
                                         ]
                                     );
 
                                 } else {
 
-                                    $status  = 'positive';
-                                    $message = lang(
+                                    $sStatus  = 'positive';
+                                    $sMessage = lang(
                                         'auth_login_ok_welcome',
                                         [
-                                            $loginUser->first_name,
-                                            $lastLogin,
+                                            $oLoginUser->first_name,
+                                            $sLastLogin,
                                         ]
                                     );
                                 }
 
                             } else {
 
-                                $status  = 'positive';
-                                $message = lang(
+                                $sStatus  = 'positive';
+                                $sMessage = lang(
                                     'auth_login_ok_welcome_notime',
                                     [
-                                        $loginUser->first_name,
+                                        $oLoginUser->first_name,
                                     ]
                                 );
                             }
 
                             if (function_exists('cdnAvatar')) {
-
-                                $sAvatarUrl   = cdnAvatar($loginUser->id, 100, 100);
+                                $sAvatarUrl   = cdnAvatar($oLoginUser->id, 100, 100);
                                 $sLoginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
-
                             } else {
-
                                 $sLoginAvatar = '';
                             }
 
                             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                            $oSession->set_flashdata($status, $sLoginAvatar . $message);
+                            $oSession->set_flashdata($sStatus, $sLoginAvatar . $sMessage);
 
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($oConfig->item('authTwoFactorMode')) {
-                                $oUserModel->setLoginData($user->id);
+                                $oUserModel->setLoginData($oUser->id);
                             }
 
                             //  Log user in and forward to wherever they need to go
                             if ($oInput->get('return_to')) {
                                 redirect($oInput->get('return_to'));
-                            } elseif ($user->group_homepage) {
-                                redirect($user->group_homepage);
+                            } elseif ($oUser->group_homepage) {
+                                redirect($oUser->group_homepage);
                             } else {
                                 redirect('/');
                             }
@@ -303,7 +301,7 @@ class Reset_Password extends Base
 
             $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
 
-            $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($user->group_id);
+            $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
 
             $this->data['return_to'] = $oInput->get('return_to');
             $this->data['remember']  = $oInput->get('remember');
@@ -315,7 +313,7 @@ class Reset_Password extends Base
                     case 'EXPIRED':
                         $this->data['message'] = lang(
                             'auth_login_pw_expired',
-                            $oUserPasswordModel->expiresAfter($user->group_id)
+                            $oUserPasswordModel->expiresAfter($oUser->group_id)
                         );
                         break;
 
@@ -330,10 +328,12 @@ class Reset_Password extends Base
 
             //  Load the views
             $this->loadStyles(APPPATH . 'modules/auth/views/password/change_temp.php');
-            $oView = Factory::service('View');
-            $oView->load('structure/header/blank', $this->data);
-            $oView->load('auth/password/change_temp', $this->data);
-            $oView->load('structure/footer/blank', $this->data);
+            Factory::service('View')
+                   ->load([
+                       'structure/header/blank',
+                       'auth/password/change_temp',
+                       'structure/footer/blank',
+                   ]);
 
             return;
         }
@@ -355,6 +355,6 @@ class Reset_Password extends Base
     public function _remap($id)
     {
         $oUri = Factory::service('Uri');
-        $this->validate($id, $oUri->segment(4));
+        $this->validate($id, $oUri->rsegment(3));
     }
 }

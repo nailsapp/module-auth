@@ -551,7 +551,7 @@ class Accounts extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Data is valid; ALL GOOD :]
-            if ($oFormValidation->run($this)) {
+            if ($oFormValidation->run()) {
 
                 //  Define the data var
                 $data = [];

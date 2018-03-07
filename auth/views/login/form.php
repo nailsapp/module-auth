@@ -120,7 +120,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             </div>
             <p>
                 <button type="submit" class="btn btn--block">Sign in</button>
-                <?=anchor('auth/forgotten_password', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
+                <?=anchor('auth/password/forgotten', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
             </p>
         </div>
         <?php
