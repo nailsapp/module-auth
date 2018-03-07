@@ -231,6 +231,9 @@ class Create extends Base
         $aUser['group_id'] = $iGroupId;
         try {
             $oUser = $oUserModel->create($aUser, false);
+            if (empty($oUser)) {
+                throw new \Exception($oUserModel->lastError());
+            }
         } catch (\Exception $e) {
             if (!empty($oUser)) {
                 $oUserModel->delete($oUser->id);
