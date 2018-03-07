@@ -25,11 +25,11 @@
 
         if (userHasPermission('admin:auth:groups:edit')) {
 
-            $active = $this->input->post('activeTab') == 'tab-password' ? 'active' : '';
+            $active = $this->input->post('activeTab') == 'tab-security' ? 'active' : '';
 
             ?>
             <li class="tab <?=$active?>">
-                <a href="#" data-tab="tab-password">Password</a>
+                <a href="#" data-tab="tab-security">Security</a>
             </li>
             <?php
         }
@@ -64,10 +64,11 @@
 
                     $field            = [];
                     $field['key']     = 'user_registration_enabled';
-                    $field['label']   = 'Registration Enabled';
+                    $field['label']   = 'Enabled';
                     $field['default'] = appSetting($field['key'], 'auth') ? true : false;
+                    $field['info']    = 'If not using a custom registration flow, you may enable or disable public registrations. Admin will always be able to create users.';
 
-                    echo form_field_boolean($field, 'Admin will always be able to create users.');
+                    echo form_field_boolean($field);
 
                     ?>
                 </div>
@@ -77,13 +78,15 @@
 
         if (userHasPermission('admin:auth:groups:edit')) {
 
-            $display = $this->input->post('activeTab') == 'tab-password' ? 'active' : '';
+            $display = $this->input->post('activeTab') == 'tab-security' ? 'active' : '';
 
             ?>
-            <div class="tab-page tab-password <?=$display?>">
+            <div class="tab-page tab-security <?=$display?>">
                 <p>
-                    Configure user password rules and properties from within the
-                    <?=anchor('admin/auth/groups/index', 'Groups')?> section of admin.
+                    Security settings are configured on a per group basis.
+                </p>
+                <p>
+                    <?=anchor('admin/auth/groups/index', 'Edit Groups', 'class="btn btn-primary btn-xs"')?>
                 </p>
             </div>
             <?php

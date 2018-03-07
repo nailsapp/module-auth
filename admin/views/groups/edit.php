@@ -8,225 +8,254 @@
     </div>
     <hr/>
     <?=form_open()?>
-    <!--    BASICS  -->
-    <fieldset>
-        <legend>Basics</legend>
-        <?php
+    <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab"/>
 
-        echo form_field([
-            'key'         => 'label',
-            'label'       => 'Label',
-            'default'     => isset($item) ? $item->label : '',
-            'required'    => true,
-            'placeholder' => 'Type the group\'s label name here.',
-        ]);
 
-        echo form_field([
-            'key'         => 'slug',
-            'label'       => 'Slug',
-            'default'     => isset($item) ? $item->slug : '',
-            'required'    => true,
-            'placeholder' => 'Type the group\'s slug here.',
-        ]);
+    <?php $oInput = \Nails\Factory::service('Input'); ?>
+    <ul class="tabs">
+        <li class="tab <?=$oInput->post('activeTab') == 'tab-basic' || !$oInput->post('activeTab') ? 'active' : ''?>">
+            <a href="#" data-tab="tab-basic">Basic Details</a>
+        </li>
+        <li class="tab <?=$oInput->post('activeTab') == 'tab-password' ? 'active' : ''?>">
+            <a href="#" data-tab="tab-password">Password</a>
+        </li>
+        <li class="tab <?=$oInput->post('activeTab') == 'tab-2fa' ? 'active' : ''?>">
+            <a href="#" data-tab="tab-2fa">2FA</a>
+        </li>
+        <li class="tab <?=$oInput->post('activeTab') == 'tab-permissions' ? 'active' : ''?>">
+            <a href="#" data-tab="tab-permissions">Permissions</a>
+        </li>
+    </ul>
+    <section class="tabs">
+        <!--    BASICS  -->
+        <div class="tab-page tab-basic <?=$this->input->post('activeTab') == 'tab-basic' || !$this->input->post('activeTab') ? 'active' : ''?>">
+            <div class="fieldset">
+                <?php
 
-        echo form_field([
-            'key'         => 'description',
-            'label'       => 'Description',
-            'default'     => isset($item) ? $item->description : '',
-            'required'    => true,
-            'placeholder' => 'Type the group\'s description here.',
-        ]);
+                echo form_field([
+                    'key'         => 'label',
+                    'label'       => 'Label',
+                    'default'     => isset($item) ? $item->label : '',
+                    'required'    => true,
+                    'placeholder' => 'Type the group\'s label name here.',
+                ]);
 
-        echo form_field([
-            'key'         => 'default_homepage',
-            'label'       => 'Default Homepage',
-            'default'     => isset($item) ? $item->default_homepage : '',
-            'placeholder' => 'Type the group\'s homepage here.',
-            'info'        => 'This is where users are sent after login, unless a specific redirect is already in place. If not specified the user will be sent to the homepage.',
-        ]);
+                echo form_field([
+                    'key'         => 'slug',
+                    'label'       => 'Slug',
+                    'default'     => isset($item) ? $item->slug : '',
+                    'required'    => true,
+                    'placeholder' => 'Type the group\'s slug here.',
+                ]);
 
-        echo form_field([
-            'key'         => 'registration_redirect',
-            'label'       => 'Registration Redirect',
-            'default'     => isset($item) ? $item->registration_redirect : '',
-            'placeholder' => 'Redirect new registrants of this group here.',
-            'info'        => 'If not defined new registrants will be redirected to the group\'s homepage.',
-        ]);
+                echo form_field([
+                    'key'         => 'description',
+                    'label'       => 'Description',
+                    'default'     => isset($item) ? $item->description : '',
+                    'required'    => true,
+                    'placeholder' => 'Type the group\'s description here.',
+                ]);
 
-        ?>
-    </fieldset>
-    <!--    PASSWORD RULES  -->
-    <fieldset>
-        <legend>Password Properties</legend>
-        <?php
+                echo form_field([
+                    'key'         => 'default_homepage',
+                    'label'       => 'Default Homepage',
+                    'default'     => isset($item) ? $item->default_homepage : '',
+                    'placeholder' => 'Type the group\'s homepage here.',
+                    'info'        => 'This is where users are sent after login, unless a specific redirect is already in place. If not specified the user will be sent to the homepage.',
+                ]);
 
-        echo form_field([
-            'key'         => 'pw[min]',
-            'label'       => 'Min. Length',
-            'default'     => isset($item->password_rules->min) ? $item->password_rules->min : '',
-            'required'    => false,
-            'placeholder' => 'The minimum number of characters a password must contain.',
-            'info'        => 'If this is undefined, or set to 0 then there is no minimum length',
-        ]);
+                echo form_field([
+                    'key'         => 'registration_redirect',
+                    'label'       => 'Registration Redirect',
+                    'default'     => isset($item) ? $item->registration_redirect : '',
+                    'placeholder' => 'Redirect new registrants of this group here.',
+                    'info'        => 'If not defined new registrants will be redirected to the group\'s homepage.',
+                ]);
 
-        echo form_field([
-            'key'         => 'pw[max]',
-            'label'       => 'Max. Length',
-            'default'     => isset($item->password_rules->max) ? $item->password_rules->max : '',
-            'required'    => false,
-            'placeholder' => 'The maximum number of characters a password must contain.',
-            'info'        => 'If this is undefined, or set to 0 then there is no maximum length',
-        ]);
+                ?>
+            </div>
+        </div>
+        <!--    PASSWORD RULES  -->
+        <div class="tab-page tab-password <?=$this->input->post('activeTab') == 'tab-password' ? 'active' : ''?>">
+            <div class="fieldset">
+                <?php
 
-        echo form_field_number([
-            'key'         => 'pw[expires_after]',
-            'label'       => 'Expires After',
-            'default'     => isset($item->password_rules->expiresAfter) ? $item->password_rules->expiresAfter : '',
-            'required'    => false,
-            'placeholder' => 'The expiration policy for passwords, expressed in days',
-            'info'        => 'If this is undefined, or set to 0 then there is no expiration policy',
-        ]);
+                echo form_field([
+                    'key'         => 'pw[min]',
+                    'label'       => 'Min. Length',
+                    'default'     => isset($item->password_rules->min) ? $item->password_rules->min : '',
+                    'required'    => false,
+                    'placeholder' => 'The minimum number of characters a password must contain.',
+                    'info'        => 'If this is undefined, or set to 0 then there is no minimum length',
+                ]);
 
-        echo form_field_checkbox([
-            'key'      => 'pw[requirements][]',
-            'label'    => 'Requirements',
-            'default'  => isset($item->password_rules->requirements) ? $item->password_rules->requirements : ['symbol' => true],
-            'required' => false,
-            'options'  => [
-                [
-                    'label'    => 'Must contain a symbol',
-                    'value'    => 'symbol',
-                    'selected' => !empty($item->password_rules->requirements->symbol),
-                ],
-                [
-                    'label'    => 'Must contain a number',
-                    'value'    => 'number',
-                    'selected' => !empty($item->password_rules->requirements->number),
-                ],
-                [
-                    'label'    => 'Must contain a lowercase letter',
-                    'value'    => 'lower_alpha',
-                    'selected' => !empty($item->password_rules->requirements->lower_alpha),
-                ],
-                [
-                    'label'    => 'Must contain an uppercase letter',
-                    'value'    => 'upper_alpha',
-                    'selected' => !empty($item->password_rules->requirements->upper_alpha),
-                ],
-            ],
-        ]);
+                echo form_field([
+                    'key'         => 'pw[max]',
+                    'label'       => 'Max. Length',
+                    'default'     => isset($item->password_rules->max) ? $item->password_rules->max : '',
+                    'required'    => false,
+                    'placeholder' => 'The maximum number of characters a password must contain.',
+                    'info'        => 'If this is undefined, or set to 0 then there is no maximum length',
+                ]);
 
-        echo form_field([
-            'key'         => 'pw[banned]',
-            'label'       => 'Banned Words',
-            'default'     => isset($item->password_rules->banned) ? implode(',', $item->password_rules->banned) : '',
-            'required'    => false,
-            'placeholder' => 'A comma separated list of words which cannot be used as a password',
-        ]);
+                echo form_field_number([
+                    'key'         => 'pw[expires_after]',
+                    'label'       => 'Expires After',
+                    'default'     => isset($item->password_rules->expiresAfter) ? $item->password_rules->expiresAfter : '',
+                    'required'    => false,
+                    'placeholder' => 'The expiration policy for passwords, expressed in days',
+                    'info'        => 'If this is undefined, or set to 0 then there is no expiration policy',
+                ]);
 
-        ?>
-    </fieldset>
-    <!--    PERMISSIONS -->
-    <fieldset id="permissions">
-        <legend>Permissions</legend>
-        <p class="alert alert-warning">
-            <strong>Please note:</strong> Superusers have full, unrestricted access to admin, regardless of what
-            extra permissions are set.
-        </p>
-        <p>
-            For non-superuser groups you may also grant a access to the administration area by selecting which
-            admin modules they have permission to access.
-            <strong>It goes without saying that you should be careful with these options.</strong>
-        </p>
-        <?php
+                echo form_field_checkbox([
+                    'key'      => 'pw[requirements][]',
+                    'label'    => 'Requirements',
+                    'default'  => isset($item->password_rules->requirements) ? $item->password_rules->requirements : ['symbol' => true],
+                    'required' => false,
+                    'options'  => [
+                        [
+                            'label'    => 'Must contain a symbol',
+                            'value'    => 'symbol',
+                            'selected' => !empty($item->password_rules->requirements->symbol),
+                        ],
+                        [
+                            'label'    => 'Must contain a number',
+                            'value'    => 'number',
+                            'selected' => !empty($item->password_rules->requirements->number),
+                        ],
+                        [
+                            'label'    => 'Must contain a lowercase letter',
+                            'value'    => 'lower_alpha',
+                            'selected' => !empty($item->password_rules->requirements->lower_alpha),
+                        ],
+                        [
+                            'label'    => 'Must contain an uppercase letter',
+                            'value'    => 'upper_alpha',
+                            'selected' => !empty($item->password_rules->requirements->upper_alpha),
+                        ],
+                    ],
+                ]);
 
-        //  Enable Super User status for this user group
-        $aField = [
-            'key'      => 'acl[admin][superuser]',
-            'label'    => 'Is Super User',
-            'required' => false,
-            'default'  => false,
-            'id'       => 'toggleSuperuser',
-        ];
-        if (!empty($item->acl)) {
-            $sCheckKey         = 'admin:superuser';
-            $aField['default'] = in_array($sCheckKey, $item->acl);
-        }
+                echo form_field([
+                    'key'         => 'pw[banned]',
+                    'label'       => 'Banned Words',
+                    'default'     => isset($item->password_rules->banned) ? implode(',', $item->password_rules->banned) : '',
+                    'required'    => false,
+                    'placeholder' => 'A comma separated list of words which cannot be used as a password',
+                ]);
 
-        echo form_field_boolean($aField);
+                ?>
+            </div>
+        </div>
+        <!-- 2FA -->
+        <div class="tab-page tab-2fa <?=$this->input->post('activeTab') == 'tab-2fa' ? 'active' : ''?>">
+            <p class="alert alert-warning">
+                Currently, 2FA settings are done at a code-level and apply to all users.
+            </p>
+        </div>
+        <!--    PERMISSIONS -->
+        <div class="tab-page tab-permissions <?=$this->input->post('activeTab') == 'tab-permissions' ? 'active' : ''?>">
+            <p>
+                For non-superuser groups you may also grant a access to the administration area by selecting which
+                admin modules they have permission to access.
+                <strong>It goes without saying that you should be careful with these options.</strong>
+            </p>
+            <p class="alert alert-warning">
+                <strong>Please note:</strong> Superusers have full, unrestricted access to admin, regardless of what
+                extra permissions are set.
+            </p>
+            <div class="fieldset">
+                <?php
 
-        // --------------------------------------------------------------------------
+                //  Enable Super User status for this user group
+                $aField = [
+                    'key'      => 'acl[admin][superuser]',
+                    'label'    => 'Is Super User',
+                    'required' => false,
+                    'default'  => false,
+                    'id'       => 'toggleSuperuser',
+                ];
+                if (!empty($item->acl)) {
+                    $sCheckKey         = 'admin:superuser';
+                    $aField['default'] = in_array($sCheckKey, $item->acl);
+                }
 
-        $sDisplay = $aField['default'] ? 'none' : 'block';
+                echo form_field_boolean($aField);
 
-        ?>
-        <div id="adminPermissions" class="permission-groups" style="display:<?=$sDisplay?>;">
-            <div class="search" id="permissionSearch">
-                <div class="search-text">
-                    <?=form_input('', '', 'autocomplete="off" placeholder="Type to filter permissions"')?>
+                // --------------------------------------------------------------------------
+
+                $sDisplay = $aField['default'] ? 'none' : 'block';
+
+                ?>
+                <div id="adminPermissions" class="permission-groups" style="display:<?=$sDisplay?>;">
+                    <div class="search noOptions" id="permissionSearch">
+                        <div class="search-text">
+                            <?=form_input('', '', 'autocomplete="off" placeholder="Type to filter permissions"')?>
+                        </div>
+                    </div>
+                    <?php
+
+                    $iNumPermissions = count($aPermissions);
+
+                    for ($i = 0; $i < $iNumPermissions; $i++) {
+                        $sPermissionSlug = $aPermissions[$i]->slug;
+                        ?>
+                        <fieldset class="permission-group">
+                            <legend><?=$aPermissions[$i]->label?></legend>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="enabled text-center" width="50">
+                                            <input type="checkbox" class="toggleAll">
+                                        </th>
+                                        <th class="permission">
+                                            Permission
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+
+                                    foreach ($aPermissions[$i]->permissions as $permission => $label) {
+
+                                        $key       = 'acl[admin][' . $sPermissionSlug . '][' . $permission . ']';
+                                        $sCheckKey = 'admin:' . $sPermissionSlug . ':' . $permission;
+
+                                        if (!empty($_POST)) {
+                                            $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$permission]);
+                                        } elseif (!empty($item->acl)) {
+                                            $bIsChecked = in_array($sCheckKey, $item->acl);
+                                        } else {
+                                            $bIsChecked = false;
+                                        }
+
+                                        $contextColor = $bIsChecked ? 'success' : 'error';
+
+                                        ?>
+                                        <tr>
+                                            <td class="enabled text-center <?=$contextColor?>">
+                                                <label>
+                                                    <?=form_checkbox($key, true, $bIsChecked)?>
+                                                </label>
+                                            </td>
+                                            <td class="permission"><?=$label?></td>
+                                        </tr>
+                                        <?php
+
+                                    }
+
+                                    ?>
+                                <tbody>
+                            </table>
+                        </fieldset>
+                        <?php
+                    }
+
+                    ?>
                 </div>
             </div>
-            <?php
-
-            $iNumPermissions = count($aPermissions);
-
-            for ($i = 0; $i < $iNumPermissions; $i++) {
-                $sPermissionSlug = $aPermissions[$i]->slug;
-                ?>
-                <fieldset class="permission-group">
-                    <legend><?=$aPermissions[$i]->label?></legend>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="enabled text-center" width="50">
-                                    <input type="checkbox" class="toggleAll">
-                                </th>
-                                <th class="permission">
-                                    Permission
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-
-                            foreach ($aPermissions[$i]->permissions as $permission => $label) {
-
-                                $key       = 'acl[admin][' . $sPermissionSlug . '][' . $permission . ']';
-                                $sCheckKey = 'admin:' . $sPermissionSlug . ':' . $permission;
-
-                                if (!empty($_POST)) {
-                                    $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$permission]);
-                                } elseif (!empty($item->acl)) {
-                                    $bIsChecked = in_array($sCheckKey, $item->acl);
-                                } else {
-                                    $bIsChecked = false;
-                                }
-
-                                $contextColor = $bIsChecked ? 'success' : 'error';
-
-                                ?>
-                                <tr>
-                                    <td class="enabled text-center <?=$contextColor?>">
-                                        <label>
-                                            <?=form_checkbox($key, true, $bIsChecked)?>
-                                        </label>
-                                    </td>
-                                    <td class="permission"><?=$label?></td>
-                                </tr>
-                                <?php
-
-                            }
-
-                            ?>
-                        <tbody>
-                    </table>
-                </fieldset>
-                <?php
-            }
-
-            ?>
         </div>
-    </fieldset>
+    </section>
     <p>
         <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
     </p>
