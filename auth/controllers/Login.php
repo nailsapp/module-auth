@@ -481,12 +481,12 @@ class Login extends Base
             if (empty($provider)) {
                 $oSession->set_flashdata(
                     'error',
-                    '<strong>Sorry,</strong> there was a problem communicating with the network.'
+                    'Sorry, there was a problem communicating with the network.'
                 );
             } else {
                 $oSession->set_flashdata(
                     'error',
-                    '<strong>Sorry,</strong> there was a problem communicating with ' . $provider['label'] . '.'
+                    'Sorry, there was a problem communicating with ' . $provider['label'] . '.'
                 );
             }
 
@@ -842,7 +842,7 @@ class Login extends Base
 
                     //  Oh dear, something went wrong
                     $status  = 'error';
-                    $message = '<strong>Sorry,</strong> something went wrong and your account could not be created.';
+                    $message = 'Sorry, something went wrong and your account could not be created.';
                     $oSession->set_flashdata($status, $message);
 
                     $redirectUrl = 'auth/login';

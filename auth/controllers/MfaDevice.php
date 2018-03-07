@@ -91,7 +91,7 @@ class MfaDevice extends BaseMfa
                     $this->loginUser();
 
                 } else {
-                    $this->data['error'] = '<strong>Sorry,</strong> those codes failed to validate. Please try again.';
+                    $this->data['error'] = 'Sorry, those codes failed to validate. Please try again.';
                 }
 
             } else {
@@ -153,7 +153,7 @@ class MfaDevice extends BaseMfa
                 if ($oAuthModel->mfaDeviceCodeValidate($this->mfaUser->id, $sCode)) {
                     $this->loginUser();
                 } else {
-                    $this->data['error'] = '<strong>Sorry,</strong> that code failed to validate. Please try again. ';
+                    $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
                     $this->data['error'] .= $oAuthModel->lastError();
                 }
 

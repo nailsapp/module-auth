@@ -90,7 +90,7 @@ class PasswordReset extends Base
 
                                 } else {
 
-                                    $this->data['error'] = '<strong>Sorry,</strong> the answer to your security ';
+                                    $this->data['error'] = 'Sorry, the answer to your security ';
                                     $this->data['error'] .= 'question was incorrect.';
                                 }
                             }
@@ -122,7 +122,7 @@ class PasswordReset extends Base
 
                                 } else {
 
-                                    $this->data['error'] = '<strong>Sorry,</strong> that code could not be validated. ';
+                                    $this->data['error'] = 'Sorry, that code could not be validated. ';
                                     $this->data['error'] .= $this->auth_model->lastError();
                                 }
                             }
