@@ -32,10 +32,10 @@ class Password extends Base
 
         //  Set defaults
         $this->aCharset                = [];
-        $this->aCharset['symbol']      = utf8_encode('!@$^&*(){}":?<>~-=[];\'\\/.,');
-        $this->aCharset['number']      = utf8_encode('0123456789');
-        $this->aCharset['lower_alpha'] = utf8_encode('abcdefghijklmnopqrstuvwxyz');
-        $this->aCharset['upper_alpha'] = utf8_encode('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        $this->aCharset['symbol']      = '!@$^&*(){}":?<>~-=[];\'\\/.,';
+        $this->aCharset['number']      = '0123456789';
+        $this->aCharset['lower_alpha'] = 'abcdefghijklmnopqrstuvwxyz';
+        $this->aCharset['upper_alpha'] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     }
 
     // --------------------------------------------------------------------------
