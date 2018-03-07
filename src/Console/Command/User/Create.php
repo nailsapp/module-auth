@@ -255,11 +255,6 @@ class Create extends Base
     protected function abort($iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
     {
         $aMessages[] = 'Aborting user creation';
-        if (!empty($this->oDb) && $this->oDb->isTransactionRunning()) {
-            $aMessages[] = 'Rolling back database';
-            $this->oDb->transactionRollback();
-        }
-
         return parent::abort($iExitCode, $aMessages);
     }
 }

@@ -116,18 +116,13 @@ class Settings extends BaseAdmin
                                         $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
 
                                         if (!empty($label1['required']) && empty($value)) {
-
                                             $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
                                             break 3;
-
                                         }
 
-                                        if (-empty($label1['encrypted'])) {
-
+                                        if (empty($label1['encrypted'])) {
                                             $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
-
                                         } else {
-
                                             $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
                                         }
                                     }
@@ -137,17 +132,13 @@ class Settings extends BaseAdmin
                                     $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
 
                                     if (!empty($label['required']) && empty($value)) {
-
                                         $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';
                                         break 2;
                                     }
 
                                     if (empty($label['encrypted'])) {
-
                                         $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
-
                                     } else {
-
                                         $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
                                     }
                                 }
@@ -172,12 +163,10 @@ class Settings extends BaseAdmin
                                 if (is_array($label) && !isset($label['label'])) {
 
                                     foreach ($label as $key1 => $label1) {
-
                                         $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = null;
                                     }
 
                                 } else {
-
                                     $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = null;
                                 }
                             }
@@ -198,18 +187,14 @@ class Settings extends BaseAdmin
                     $oAppSettingModel = Factory::model('AppSetting');
 
                     if (!empty($settings)) {
-
                         if (!$oAppSettingModel->set($settings, 'auth')) {
-
                             $error     = $oAppSettingModel->lastError();
                             $bRollback = true;
                         }
                     }
 
                     if (!empty($settingsEncrypted)) {
-
                         if (!$oAppSettingModel->set($settingsEncrypted, 'auth', null, true)) {
-
                             $error     = $oAppSettingModel->lastError();
                             $bRollback = true;
                         }
@@ -218,7 +203,7 @@ class Settings extends BaseAdmin
                     if ($bRollback) {
 
                         $oDb->trans_rollback();
-                        $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
+                        $this->data['error'] = 'There was a problem saving authentication settings.';
 
                     } else {
 
@@ -228,12 +213,10 @@ class Settings extends BaseAdmin
                     }
 
                 } else {
-
                     $this->data['error'] = 'There was a problem saving authentication settings. ' . $error;
                 }
 
             } else {
-
                 $this->data['message'] = 'No settings to save.';
             }
         }

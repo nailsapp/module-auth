@@ -232,6 +232,10 @@ class Login extends Base
                 case 'DEVICE':
                     $controller = 'mfa_device';
                     break;
+
+                default:
+                    throw new \Exception('"' . $oConfig->item('authTwoFactorMode') . '" is not a valid MFA Mode');
+                    break;
             }
 
             //  Compile the URL

@@ -12,8 +12,8 @@
 
 namespace Nails\Auth\Model\User;
 
-use Nails\Factory;
 use Nails\Common\Model\Base;
+use Nails\Factory;
 
 class AccessToken extends Base
 {
@@ -130,12 +130,12 @@ class AccessToken extends Base
         // --------------------------------------------------------------------------
 
         //  Generate a new token
+        $oDb = Factory::service('Database');
         do {
 
             $token = preg_replace_callback(
                 '/[X]/',
                 function ($matches) {
-
                     $start = rand(0, strlen($this->tokenCharacters) - 1);
                     return substr($this->tokenCharacters, $start, 1);
                 },
@@ -144,9 +144,9 @@ class AccessToken extends Base
 
             $data['token'] = hash('sha256', $token . APP_PRIVATE_KEY);
 
-            $this->db->where('token', $data['token']);
+            $oDb->where('token', $data['token']);
 
-        } while ($this->db->count_all_results($this->table));
+        } while ($oDb->count_all_results($this->table));
 
         // --------------------------------------------------------------------------
 

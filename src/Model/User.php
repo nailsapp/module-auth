@@ -2052,7 +2052,7 @@ class User extends Base
         //  Finally add the email address to the user_email table
         if (!empty($sEmail)) {
 
-            $sCode = $this->emailAdd($sEmail, $iId, true, $bEmailIsVerified, false);
+            $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false);
 
             if (!$sCode) {
                 //  Error will be set by emailAdd();
@@ -2099,7 +2099,7 @@ class User extends Base
                 }
 
                 //  If the email isn't verified we'll want to include a note asking them to do so
-                if (!$bEmailIsVerified) {
+                if (empty($bEmailIsVerified)) {
                     $oEmail->data->verifyUrl = site_url('email/verify/' . $iId . '/' . $sCode);
                 }
 
@@ -2110,7 +2110,7 @@ class User extends Base
 
                     if (!$oEmailer->send($oEmail, true)) {
 
-                        //  Email failed to send, musn't exist, oh well.
+                        //  Email failed to send, must not exist, oh well.
                         $sError = 'Failed to send welcome email.';
                         $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
                         $this->setError($sError);
@@ -2185,20 +2185,20 @@ class User extends Base
     protected function generateReferral()
     {
         Factory::helper('string');
-        $oDb = Factory::service('Database');
+        $oDb       = Factory::service('Database');
+        $sReferral = '';
 
         while (1 > 0) {
 
-            $referral = random_string('alnum', 8);
-            $q        = $oDb->get_where(NAILS_DB_PREFIX . 'user', ['referral' => $referral]);
+            $sReferral = random_string('alnum', 8);
+            $oQuery    = $oDb->get_where(NAILS_DB_PREFIX . 'user', ['referral' => $sReferral]);
 
-            if ($q->num_rows() == 0) {
-
+            if ($oQuery->num_rows() == 0) {
                 break;
             }
         }
 
-        return $referral;
+        return $sReferral;
     }
 
     // --------------------------------------------------------------------------
@@ -2213,7 +2213,7 @@ class User extends Base
      */
     public function rewardReferral($iUserId, $referrerId)
     {
-        // @todo Implement this emthod where appropriate
+        // @todo Implement this method where appropriate
     }
 
     // --------------------------------------------------------------------------
