@@ -20,12 +20,12 @@ class Migration7 extends Base
     {
         $this->query("DROP TABLE `{{NAILS_DB_PREFIX}}session`;");
         $this->query("
-            CREATE TABLE IF NOT EXISTS `{{NAILS_DB_PREFIX}}_session` (
+            CREATE TABLE IF NOT EXISTS `{{NAILS_DB_PREFIX}}session` (
                 `id` VARCHAR(128) NOT NULL,
                 `ip_address` VARCHAR(45) NOT NULL,
                 `timestamp` INT(10) UNSIGNED DEFAULT 0 NOT NULL,
                 `data` BLOB NOT NULL,
-                KEY `{{NAILS_DB_PREFIX}}_session_timestamp` (`timestamp`)
+                KEY `{{NAILS_DB_PREFIX}}session_timestamp` (`timestamp`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         ");
         $this->query("UPDATE `{{NAILS_DB_PREFIX}}user_group` SET `acl` = LCASE(`acl`);");
