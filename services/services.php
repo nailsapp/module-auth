@@ -3,17 +3,17 @@
 return [
     'services' => [
         'Session' => function () {
-            if (class_exists('\App\Auth\Library\Session')) {
-                return new \App\Auth\Library\Session();
+            if (class_exists('\App\Auth\Service\Session')) {
+                return new \App\Auth\Service\Session();
             } else {
-                return new \Nails\Auth\Library\Session();
+                return new \Nails\Auth\Service\Session();
             }
         },
         'SocialSignOn' => function () {
-            if (class_exists('\App\Auth\Library\SocialSignOn')) {
-                return new \App\Auth\Library\SocialSignOn();
+            if (class_exists('\App\Auth\Service\SocialSignOn')) {
+                return new \App\Auth\Service\SocialSignOn();
             } else {
-                return new \Nails\Auth\Library\SocialSignOn();
+                return new \Nails\Auth\Service\SocialSignOn();
             }
         },
     ],

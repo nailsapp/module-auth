@@ -10,7 +10,7 @@
  * @link
  */
 
-namespace Nails\Auth\Library;
+namespace Nails\Auth\Service;
 
 use Nails\Factory;
 use Nails\Environment;

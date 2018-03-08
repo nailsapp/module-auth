@@ -18,7 +18,7 @@ class Login extends Base
 {
     /**
      * The social sign on instance
-     * @var \Nails\Auth\Library\SocialSignOn
+     * @var \Nails\Auth\Service\SocialSignOn
      */
     private $oSocial;
 
