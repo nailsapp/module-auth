@@ -1,6 +1,6 @@
 <?php
 
-namespace Nails\Auth\Library;
+namespace Nails\Auth\Service;
 
 class SessionTest extends \PHPUnit_Framework_TestCase
 {
