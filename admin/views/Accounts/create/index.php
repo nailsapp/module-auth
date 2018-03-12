@@ -5,7 +5,7 @@
     </p>
     <?php
 
-    $this->load->view('accounts/create/inc-basic');
+    $this->load->view('Accounts/create/inc-basic');
 
     ?>
     <p>

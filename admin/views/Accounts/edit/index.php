@@ -7,28 +7,28 @@
     echo form_hidden('username_orig', $user_edit->username);
 
     if (!empty($isModal)) {
-        $this->load->view('accounts/edit/inc-actions');
+        $this->load->view('Accounts/edit/inc-actions');
     }
 
-    $this->load->view('accounts/edit/inc-basic');
-    $this->load->view('accounts/edit/inc-emails');
-    $this->load->view('accounts/edit/inc-password');
+    $this->load->view('Accounts/edit/inc-basic');
+    $this->load->view('Accounts/edit/inc-emails');
+    $this->load->view('Accounts/edit/inc-password');
 
     $oConfig = \Nails\Factory::service('Config');
 
     $oConfig->load('auth/auth');
 
     if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
-        $this->load->view('accounts/edit/inc-mfa-question');
+        $this->load->view('Accounts/edit/inc-mfa-question');
     }
 
     if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
-        $this->load->view('accounts/edit/inc-mfa-device');
+        $this->load->view('Accounts/edit/inc-mfa-device');
     }
 
-    $this->load->view('accounts/edit/inc-meta');
-    $this->load->view('accounts/edit/inc-profile-img');
-    $this->load->view('accounts/edit/inc-uploads');
+    $this->load->view('Accounts/edit/inc-meta');
+    $this->load->view('Accounts/edit/inc-profile-img');
+    $this->load->view('Accounts/edit/inc-uploads');
 
     ?>
     <p>
