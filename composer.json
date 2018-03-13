@@ -63,7 +63,7 @@
                 },
                 "nailsapp/module-cdn": {
                     "permitted-image-dimensions": [
-                        "35x35"
+                        "35x35",
                         "50x50",
                         "65x65",
                         "100x100",
