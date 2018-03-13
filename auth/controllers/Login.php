@@ -787,7 +787,7 @@ class Login extends Base
                                 $oCdn = Factory::service('Cdn', 'nailsapp/module-cdn');
 
                                 //  Save file to cache
-                                $cacheFile = DEPLOY_CACHE_DIR . 'new-user-profile-image-' . $newUser->id;
+                                $cacheFile = CACHE_PATH . 'new-user-profile-image-' . $newUser->id;
 
                                 if (@file_put_contents($cacheFile, (string) $oResponse->getBody)) {
 
