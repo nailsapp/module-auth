@@ -5,7 +5,8 @@
     </p>
     <?php
 
-    $this->load->view('Accounts/create/inc-basic');
+    $oView = \Nails\Factory::service('View');
+    $oView->load('Accounts/create/inc-basic');
 
     ?>
     <p>

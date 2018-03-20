@@ -1,34 +1,40 @@
 <div class="group-accounts edit">
     <?php
 
+    $oView = \Nails\Factory::service('View');
+
     echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $this->input->server('QUERY_STRING'));
     echo form_hidden('id', $user_edit->id);
     echo form_hidden('email_orig', $user_edit->email);
     echo form_hidden('username_orig', $user_edit->username);
 
     if (!empty($isModal)) {
-        $this->load->view('Accounts/edit/inc-actions');
+        $oView->load('Accounts/edit/inc-actions');
     }
 
-    $this->load->view('Accounts/edit/inc-basic');
-    $this->load->view('Accounts/edit/inc-emails');
-    $this->load->view('Accounts/edit/inc-password');
+    $oView->load([
+        'Accounts/edit/inc-basic',
+        'Accounts/edit/inc-emails',
+        'Accounts/edit/inc-password',
+    ]);
 
     $oConfig = \Nails\Factory::service('Config');
 
     $oConfig->load('auth/auth');
 
     if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
-        $this->load->view('Accounts/edit/inc-mfa-question');
+        $oView->load('Accounts/edit/inc-mfa-question');
     }
 
     if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
-        $this->load->view('Accounts/edit/inc-mfa-device');
+        $oView->load('Accounts/edit/inc-mfa-device');
     }
 
-    $this->load->view('Accounts/edit/inc-meta');
-    $this->load->view('Accounts/edit/inc-profile-img');
-    $this->load->view('Accounts/edit/inc-uploads');
+    $oView->load([
+        'Accounts/edit/inc-meta',
+        'Accounts/edit/inc-profile-img',
+        'Accounts/edit/inc-uploads',
+    ]);
 
     ?>
     <p>
