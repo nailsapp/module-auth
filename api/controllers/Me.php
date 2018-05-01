@@ -27,8 +27,8 @@ class Me extends \Nails\Api\Controller\Base
      */
     public function anyIndex()
     {
-        return array(
-            'user' => array(
+        return [
+            'user' => [
                 'id'         => activeUser('id'),
                 'first_name' => activeUser('first_name'),
                 'last_name'  => activeUser('last_name'),
@@ -36,25 +36,25 @@ class Me extends \Nails\Api\Controller\Base
                 'username'   => activeUser('username'),
                 'avatar'     => cdnAvatar(),
                 'gender'     => activeUser('gender')
-            )
-        );
+            ]
+        ];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Get the current user's avatar
-     * @param  int   $width  The width of the avatar
-     * @param  int   $height The height of the avatar
+     * @param  int   $iWidth  The width of the avatar
+     * @param  int   $iHeight The height of the avatar
      * @return array
      */
-    public function anyAvatar($width = null, $height = null)
+    public function anyAvatar($iWidth = null, $iHeight = null)
     {
-        $width  = $width ? $width : 100;
-        $height = $height ? $height : 100;
+        $iWidth  = $iWidth ? $iWidth : 100;
+        $iHeight = $iHeight ? $iHeight : 100;
 
-        return array(
-            'url' => cdnAvatar(null, $width, $height)
-        );
+        return [
+            'url' => cdnAvatar(null, $iWidth, $iHeight)
+        ];
     }
 }

@@ -2481,6 +2481,16 @@ class User extends Base
 
     // --------------------------------------------------------------------------
 
+    public function describeFields()
+    {
+        $aFields     = parent::describeFields();
+        $aMetaFields = parent::describeFields(NAILS_DB_PREFIX . 'user_meta_app');
+        unset($aMetaFields['user_id']);
+        return array_merge($aFields, $aMetaFields);
+    }
+
+    // --------------------------------------------------------------------------
+
     /**
      * Formats a single object
      *
