@@ -2481,9 +2481,16 @@ class User extends Base
 
     // --------------------------------------------------------------------------
 
-    public function describeFields()
+    /**
+     * Describes the fields for this model
+     *
+     * @param  string $sTable The database table to query
+     *
+     * @return array
+     */
+    public function describeFields($sTable = null)
     {
-        $aFields     = parent::describeFields();
+        $aFields     = parent::describeFields($sTable);
         $aMetaFields = parent::describeFields(NAILS_DB_PREFIX . 'user_meta_app');
         unset($aMetaFields['user_id']);
         return array_merge($aFields, $aMetaFields);
