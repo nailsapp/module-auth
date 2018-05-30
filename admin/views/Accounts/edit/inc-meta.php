@@ -48,6 +48,11 @@
                     echo form_field_date($field);
                     break;
 
+                case 'datetime':
+
+                    echo form_field_datetime($field);
+                    break;
+
                 case 'id':
 
                     //  Fetch items from the joining table
