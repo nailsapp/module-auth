@@ -71,7 +71,7 @@ class Groups extends DefaultController
             }
         }
 
-        array_sort_multi($this->data['aPermissions'], 'label');
+        arraySortMulti($this->data['aPermissions'], 'label');
         $this->data['aPermissions'] = array_values($this->data['aPermissions']);
     }
 
