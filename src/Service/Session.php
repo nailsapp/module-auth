@@ -14,6 +14,7 @@
 
 namespace Nails\Auth\Service;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Factory;
 
 class Session
@@ -24,6 +25,12 @@ class Session
      */
     protected $oSession;
 
+    /**
+     * Whether setup has been run or not; prevents looping failures
+     * @var bool
+     */
+    protected $bIsInitiated = false;
+
     // --------------------------------------------------------------------------
 
     /**
@@ -33,9 +40,11 @@ class Session
      */
     protected function setup($bForceSetup = false)
     {
-        if (!empty($this->oSession)) {
+        if ($this->bIsInitiated || !empty($this->oSession)) {
             return;
         }
+
+        $this->bIsInitiated = true;
 
         $oInput = Factory::service('Input');
         if (!$oInput::isCli()) {
@@ -50,6 +59,9 @@ class Session
                 //  @todo (Pablo - 2018-03-19) - Remove dependency on CI Sessions
                 $oCi = get_instance();
                 $oCi->load->library('session');
+                if (empty($oCi->session)) {
+                    throw new NailsException('Failed to load CodeIgniter session library.');
+                }
                 $this->oSession = $oCi->session;
             }
         }
