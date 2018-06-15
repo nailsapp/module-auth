@@ -66,13 +66,14 @@
 
                         if ($table && $selectId && $selectName) {
 
-                            $this->db->select($selectId . ',' . $selectName);
+                            $oDb = \Nails\Factory::service('Database');
+                            $oDb->select($selectId . ',' . $selectName);
 
                             if ($orderCol) {
-                                $this->db->order_by($orderCol, $orderDir);
+                                $oDb->order_by($orderCol, $orderDir);
                             }
 
-                            $results = $this->db->get($table)->result();
+                            $results = $oDb->get($table)->result();
 
                             foreach ($results as $row) {
                                 $field['options'][$row->{$selectId}] = $row->{$selectName};
