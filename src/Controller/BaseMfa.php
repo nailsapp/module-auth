@@ -191,13 +191,6 @@ class BaseMfa extends Base
             );
         }
 
-        if (function_exists('cdnAvatar')) {
-            $sAvatarUrl   = cdnAvatar($this->mfaUser->id, 100, 100);
-            $sLoginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
-        } else {
-            $sLoginAvatar = '';
-        }
-
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
         $oSession->setFlashData($status, $message);
 

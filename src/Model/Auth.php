@@ -42,13 +42,13 @@ class Auth extends Base
     /**
      * Log a user in
      *
-     * @param  string  $identifier The identifier to use for the user lookup
-     * @param  string  $password   The user's password
-     * @param  boolean $remember   Whether to 'remember' the user or not
+     * @param  string  $sIdentifier The identifier to use for the user lookup
+     * @param  string  $sPassword   The user's password
+     * @param  boolean $bRemember   Whether to 'remember' the user or not
      *
      * @return boolean|object
      */
-    public function login($identifier, $password, $remember = false)
+    public function login($sIdentifier, $sPassword, $bRemember = false)
     {
         //  Delay execution for a moment (reduces brute force efficiently)
         if (Environment::not('DEVELOPMENT')) {
@@ -57,7 +57,7 @@ class Auth extends Base
 
         // --------------------------------------------------------------------------
 
-        if (empty($identifier) || empty($password)) {
+        if (empty($sIdentifier) || empty($sPassword)) {
             $this->setError(lang('auth_login_fail_missing_field'));
             return false;
         }
@@ -69,18 +69,18 @@ class Auth extends Base
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-                $oUser = $oUserModel->getByEmail($identifier);
+                $oUser = $oUserModel->getByEmail($sIdentifier);
                 break;
 
             case 'USERNAME':
-                $oUser = $oUserModel->getByUsername($identifier);
+                $oUser = $oUserModel->getByUsername($sIdentifier);
                 break;
 
             default:
-                if (valid_email($identifier)) {
-                    $oUser = $oUserModel->getByEmail($identifier);
+                if (valid_email($sIdentifier)) {
+                    $oUser = $oUserModel->getByEmail($sIdentifier);
                 } else {
-                    $oUser = $oUserModel->getByUsername($identifier);
+                    $oUser = $oUserModel->getByUsername($sIdentifier);
                 }
                 break;
         }
@@ -91,7 +91,7 @@ class Auth extends Base
 
             //  User was recognised; validate credentials
             $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-            if ($oPasswordModel->isCorrect($oUser->id, $password)) {
+            if ($oPasswordModel->isCorrect($oUser->id, $sPassword)) {
 
                 //  Password accepted! Final checks...
 
@@ -99,8 +99,8 @@ class Auth extends Base
                 if ($oUser->failed_login_count >= $this->aBruteProtection['limit']) {
                     //  Check if the block has expired
                     if (time() < strtotime($oUser->failed_login_expires)) {
-                        $blockTime = ceil($this->aBruteProtection['expire'] / 60);
-                        $this->setError(lang('auth_login_fail_blocked', $blockTime));
+                        $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
+                        $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
                         return false;
                     }
                 }
@@ -121,7 +121,7 @@ class Auth extends Base
                     $oUserModel->setLoginData($oUser->id);
 
                     //  If we're remembering this user set a cookie
-                    if ($remember) {
+                    if ($bRemember) {
                         $oUserModel->setRememberCookie($oUser->id, $oUser->password, $oUser->email);
                     }
 
@@ -137,19 +137,19 @@ class Auth extends Base
                 switch (APP_NATIVE_LOGIN_USING) {
 
                     case 'EMAIL':
-                        $identifier = $oUser->email;
+                        $sIdentifier = $oUser->email;
                         break;
 
                     case 'USERNAME':
-                        $identifier = $oUser->username;
+                        $sIdentifier = $oUser->username;
                         break;
 
                     default:
-                        $identifier = $oUser->email;
+                        $sIdentifier = $oUser->email;
                         break;
                 }
 
-                $error = lang('auth_login_fail_social', site_url('auth/password/forgotten?identifier=' . $identifier));
+                $error = lang('auth_login_fail_social', site_url('auth/password/forgotten?identifier=' . $sIdentifier));
                 $this->setError($error);
 
                 return false;
@@ -165,8 +165,8 @@ class Auth extends Base
 
                     //  Check if the block has expired
                     if (time() < strtotime($oUser->failed_login_expires)) {
-                        $blockTime = ceil($this->aBruteProtection['expire'] / 60);
-                        $this->setError(lang('auth_login_fail_blocked', $blockTime));
+                        $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
+                        $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
                         return false;
                     }
 
@@ -177,21 +177,21 @@ class Auth extends Base
                 //  Check if the password was changed recently
                 if ($oUser->password_changed) {
 
-                    $changed = strtotime($oUser->password_changed);
-                    $recent  = strtotime('-2 WEEKS');
+                    $iChanged = strtotime($oUser->password_changed);
+                    $iRecent  = strtotime('-2 WEEKS');
 
-                    if ($changed > $recent) {
-                        $changedRecently = niceTime($changed);
+                    if ($iChanged > $iRecent) {
+                        $sChangedRecently = niceTime($iChanged);
                     }
                 }
             }
         }
 
         //  Login failed
-        if (empty($changedRecently)) {
+        if (empty($sChangedRecently)) {
             $this->setError(lang('auth_login_fail_general'));
         } else {
-            $this->setError(lang('auth_login_fail_general_recent', $changedRecently));
+            $this->setError(lang('auth_login_fail_general_recent', $sChangedRecently));
         }
 
         return false;

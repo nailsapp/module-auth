@@ -20,10 +20,10 @@ class User extends Base
 {
     protected $me;
     protected $activeUser;
-    protected $rememberCookie;
-    protected $isRemembered;
-    protected $isLoggedIn;
-    protected $adminRecoveryField;
+    protected $sRememberCookie;
+    protected $bIsRemembered;
+    protected $bIsLoggedIn;
+    protected $sAdminRecoveryField;
 
     // --------------------------------------------------------------------------
 
@@ -37,14 +37,14 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->table              = NAILS_DB_PREFIX . 'user';
-        $this->tableAlias         = 'u';
-        $this->tableSlugColumn    = 'username';
-        $this->rememberCookie     = 'nailsrememberme';
-        $this->adminRecoveryField = 'nailsAdminRecoveryData';
-        $this->isRemembered       = null;
-        $this->defaultSortColumn  = $this->tableIdColumn;
-        $this->defaultSortOrder   = 'DESC';
+        $this->table               = NAILS_DB_PREFIX . 'user';
+        $this->tableAlias          = 'u';
+        $this->tableSlugColumn     = 'username';
+        $this->defaultSortColumn   = $this->tableIdColumn;
+        $this->defaultSortOrder    = 'DESC';
+        $this->sRememberCookie     = 'nailsrememberme';
+        $this->sAdminRecoveryField = 'nailsAdminRecoveryData';
+        $this->bIsRemembered       = null;
 
         // --------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Get the credentials from the cookie set earlier
-        $remember = get_cookie($this->rememberCookie);
+        $remember = get_cookie($this->sRememberCookie);
 
         if ($remember) {
 
@@ -266,18 +266,16 @@ class User extends Base
         } else {
 
             //  Set the flag
-            $this->isLoggedIn = true;
+            $this->bIsLoggedIn = true;
 
             //  Set session variables
             if ($bSetSessionData) {
-
-                $sessionData = [
+                $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                $oSession->setUserData([
                     'id'       => $oUser->id,
                     'email'    => $oUser->email,
                     'group_id' => $oUser->group_id,
-                ];
-                $oSession    = Factory::service('Session', 'nailsapp/module-auth');
-                $oSession->set_userdata($sessionData);
+                ]);
             }
 
             //  Set the active user
@@ -297,12 +295,12 @@ class User extends Base
     {
         //  Clear the session
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->unset_userdata('id');
-        $oSession->unset_userdata('email');
-        $oSession->unset_userdata('group_id');
+        $oSession->unsetUserData('id');
+        $oSession->unsetUserData('email');
+        $oSession->unsetUserData('group_id');
 
         //  Set the flag
-        $this->isLoggedIn = false;
+        $this->bIsLoggedIn = false;
 
         //  Reset the activeUser
         $this->clearActiveUser();
@@ -319,7 +317,7 @@ class User extends Base
      */
     public function isLoggedIn()
     {
-        return $this->isLoggedIn;
+        return $this->bIsLoggedIn;
     }
 
     // --------------------------------------------------------------------------
@@ -328,11 +326,11 @@ class User extends Base
      * Determines whether the active user is to be remembered
      * @return  bool
      */
-    public function isRemembered()
+    public function bIsRemembered()
     {
         //  Deja vu?
-        if (!is_null($this->isRemembered)) {
-            return $this->isRemembered;
+        if (!is_null($this->bIsRemembered)) {
+            return $this->bIsRemembered;
         }
 
         // --------------------------------------------------------------------------
@@ -343,12 +341,12 @@ class User extends Base
          * is, obviously, not gonna detect a spoof.
          */
 
-        $cookie = get_cookie($this->rememberCookie);
+        $cookie = get_cookie($this->sRememberCookie);
         $cookie = explode('|', $cookie);
 
-        $this->isRemembered = count($cookie) == 2 ? true : false;
+        $this->bIsRemembered = count($cookie) == 2 ? true : false;
 
-        return $this->isRemembered;
+        return $this->bIsRemembered;
     }
 
     // --------------------------------------------------------------------------
@@ -376,7 +374,7 @@ class User extends Base
     public function wasAdmin()
     {
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        return (bool) $oSession->userdata($this->adminRecoveryField);
+        return (bool) $oSession->userdata($this->sAdminRecoveryField);
     }
 
     // --------------------------------------------------------------------------
@@ -392,7 +390,7 @@ class User extends Base
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
         $oInput   = Factory::service('Input');
         //  Look for existing Recovery Data
-        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
+        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
@@ -416,7 +414,7 @@ class User extends Base
         //  Put the new session onto the stack and save to the session
         $existingRecoveryData[] = $adminRecoveryData;
 
-        $oSession->set_userdata($this->adminRecoveryField, $existingRecoveryData);
+        $oSession->setUserData($this->sAdminRecoveryField, $existingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
@@ -428,7 +426,7 @@ class User extends Base
     public function getAdminRecoveryData()
     {
         $oSession             = Factory::service('Session', 'nailsapp/module-auth');
-        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
+        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
             return [];
@@ -446,7 +444,7 @@ class User extends Base
     public function unsetAdminRecoveryData()
     {
         $oSession             = Factory::service('Session', 'nailsapp/module-auth');
-        $existingRecoveryData = $oSession->userdata($this->adminRecoveryField);
+        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
@@ -457,7 +455,7 @@ class User extends Base
             array_pop($existingRecoveryData);
         }
 
-        $oSession->set_userdata($this->adminRecoveryField, $existingRecoveryData);
+        $oSession->setUserData($this->sAdminRecoveryField, $existingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
@@ -1152,7 +1150,7 @@ class User extends Base
             //  If there's a remember me cookie then update that too, but only if the password
             //  or email address has changed
 
-            if ((isset($data['email']) || !empty($bPasswordUpdated)) && $this->isRemembered()) {
+            if ((isset($data['email']) || !empty($bPasswordUpdated)) && $this->bIsRemembered()) {
                 $this->setRememberCookie();
             }
         }
@@ -1671,13 +1669,13 @@ class User extends Base
     /**
      * Set the user's 'rememberMe' cookie, nom nom nom
      *
-     * @param  integer $id       The User's ID
-     * @param  string  $password The user's password, hashed
-     * @param  string  $email    The user's email\
+     * @param  integer $iId       The User's ID
+     * @param  string  $sPassword The user's password, hashed
+     * @param  string  $sEmail    The user's email\
      *
      * @return boolean
      */
-    public function setRememberCookie($id = null, $password = null, $email = null)
+    public function setRememberCookie($iId = null, $sPassword = null, $sEmail = null)
     {
         //  Is remember me functionality enabled?
         $oConfig = Factory::service('Config');
@@ -1689,17 +1687,16 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        if (empty($id) || empty($password) || empty($email)) {
+        if (empty($iId) || empty($sPassword) || empty($sEmail)) {
 
             if (!activeUser('id') || !activeUser('password') || !activeUser('email')) {
 
                 return false;
 
             } else {
-
-                $id       = $this->activeUser('id');
-                $password = $this->activeUser('password');
-                $email    = $this->activeUser('email');
+                $iId       = $this->activeUser('id');
+                $sPassword = $this->activeUser('password');
+                $sEmail    = $this->activeUser('email');
             }
         }
 
@@ -1707,27 +1704,26 @@ class User extends Base
 
         //  Generate a code to remember the user by and save it to the DB
         $oEncrypt = Factory::service('Encrypt');
-        $sSalt    = $oEncrypt->encode(sha1($id . $password . $email . APP_PRIVATE_KEY . time()));
+        $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . APP_PRIVATE_KEY . time()));
 
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', $sSalt);
-        $oDb->where('id', $id);
+        $oDb->where('id', $iId);
         $oDb->update(NAILS_DB_PREFIX . 'user');
 
         // --------------------------------------------------------------------------
 
         //  Set the cookie
-        $aData           = [];
-        $aData['name']   = $this->rememberCookie;
-        $aData['value']  = $email . '|' . $sSalt;
-        $aData['expire'] = 1209600; //   2 weeks
-
-        set_cookie($aData);
+        set_cookie([
+            'name'   => $this->sRememberCookie,
+            'value'  => $sEmail . '|' . $sSalt,
+            'expire' => 1209600, //   2 weeks
+        ]);
 
         // --------------------------------------------------------------------------
 
         //  Update the flag
-        $this->isRemembered = true;
+        $this->bIsRemembered = true;
 
         return true;
     }
@@ -1740,10 +1736,10 @@ class User extends Base
      */
     public function clearRememberCookie()
     {
-        delete_cookie($this->rememberCookie);
+        delete_cookie($this->sRememberCookie);
 
         //  Update the flag
-        $this->isRemembered = false;
+        $this->bIsRemembered = false;
     }
 
     // --------------------------------------------------------------------------
@@ -1791,7 +1787,7 @@ class User extends Base
             $this->clearRememberCookie();
             $this->clearActiveUser();
             $this->clearLoginData();
-            $this->isLoggedIn = false;
+            $this->bIsLoggedIn = false;
             return false;
         }
 
@@ -1803,7 +1799,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set the user's logged in flag
-        $this->isLoggedIn = true;
+        $this->bIsLoggedIn = true;
 
         // --------------------------------------------------------------------------
 
