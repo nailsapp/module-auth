@@ -25,12 +25,6 @@ class Session
      */
     protected $oSession;
 
-    /**
-     * Whether setup has been run or not; prevents looping failures
-     * @var bool
-     */
-    protected $bIsInitiated = false;
-
     // --------------------------------------------------------------------------
 
     /**
@@ -40,11 +34,9 @@ class Session
      */
     protected function setup($bForceSetup = false)
     {
-        if ($this->bIsInitiated || !empty($this->oSession)) {
+        if (!empty($this->oSession)) {
             return;
         }
-
-        $this->bIsInitiated = true;
 
         $oInput = Factory::service('Input');
         if (!$oInput::isCli()) {
@@ -79,6 +71,7 @@ class Session
      */
     public function setFlashData($mKey, $mValue = null)
     {
+//        dd($mKey, $mValue, $this->oSession);
         $this->setup(true);
         if (empty($this->oSession)) {
             return $this;
@@ -121,42 +114,17 @@ class Session
             return $this;
         }
 
-        /**
-         * 'old' flashdata gets removed.  Here we mark all flashdata as 'new' to preserve
-         * it from _flashdata_sweep(). Note the function will NOT return FALSE if the $mKey
-         * provided cannot be found, it will retain ALL flashdata
-         */
-
         if (is_null($mKey)) {
-
-            foreach ($this->oSession->userdata as $k => $v) {
-
-                $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:';
-
-                if (strpos($k, $sOldFlashDataKey) !== false) {
-                    $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:';
-                    $sNewFlashDataKey = str_replace($sOldFlashDataKey, $sNewFlashDataKey, $k);
-                    $this->oSession->set_userdata($sNewFlashDataKey, $v);
-                }
-            }
-
-            return $this;
-
+            $aKeys = $this->oSession->get_flash_keys();
         } elseif (is_array($mKey)) {
-            foreach ($mKey as $k) {
-                $this->keepFlashData($k);
-            }
+            $aKeys = $mKey;
+        } else {
+            $aKeys = [$mKey];
         }
 
-        // --------------------------------------------------------------------------
-
-        $sOldFlashDataKey = $this->oSession->flashdata_key . ':old:' . $mKey;
-        $value            = $this->oSession->userdata($sOldFlashDataKey);
-
-        // --------------------------------------------------------------------------
-
-        $sNewFlashDataKey = $this->oSession->flashdata_key . ':new:' . $mKey;
-        $this->oSession->set_userdata($sNewFlashDataKey, $value);
+        foreach ($aKeys as $sKey) {
+            $this->oSession->mark_as_flash($sKey);
+        }
 
         return $this;
     }
