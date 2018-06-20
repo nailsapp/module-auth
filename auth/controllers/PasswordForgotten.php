@@ -262,9 +262,10 @@ class PasswordForgotten extends Base
      */
     public function _validate($code)
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oConfig  = Factory::service('Config');
-        $oView    = Factory::service('View');
+        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
+        $oConfig    = Factory::service('Config');
+        $oView      = Factory::service('View');
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
 
         /**
          * Attempt to verify code, if two factor auth is enabled then don't generate a
@@ -293,13 +294,13 @@ class PasswordForgotten extends Base
             if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
-                $this->data['question'] = $this->auth_model->mfaQuestionGet($newPw['user_id']);
+                $this->data['question'] = $oAuthModel->mfaQuestionGet($newPw['user_id']);
 
                 if ($this->data['question']) {
 
                     if ($this->input->post()) {
 
-                        $isValid = $this->auth_model->mfaQuestionValidate(
+                        $isValid = $oAuthModel->mfaQuestionValidate(
                             $this->data['question']->id,
                             $newPw['user_id'],
                             $this->input->post('answer')

@@ -19,13 +19,9 @@ class Base extends \App\Controller\Base
     public function __construct()
     {
         parent::__construct();
-
         $oConfig = Factory::service('Config');
         $oConfig->load('auth/auth');
-
         $this->lang->load('auth/auth');
-
-        $this->auth_model = Factory::model('Auth', 'nailsapp/module-auth');
     }
 
     // --------------------------------------------------------------------------

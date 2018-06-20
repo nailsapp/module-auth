@@ -45,6 +45,7 @@ class PasswordReset extends Base
         $oInput     = Factory::service('Input');
         $oConfig    = Factory::service('Config');
         $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
 
         //  Check auth credentials
         $oUser = $oUserModel->getById($id);
@@ -71,14 +72,14 @@ class PasswordReset extends Base
                 switch ($oConfig->item('authTwoFactorMode')) {
 
                     case 'QUESTION':
-                        $this->data['mfaQuestion'] = $this->auth_model->mfaQuestionGet($oUser->id);
+                        $this->data['mfaQuestion'] = $oAuthModel->mfaQuestionGet($oUser->id);
 
                         if ($this->data['mfaQuestion']) {
 
                             if ($oInput->post()) {
 
                                 //  Validate answer
-                                $isValid = $this->auth_model->mfaQuestionValidate(
+                                $isValid = $oAuthModel->mfaQuestionValidate(
                                     $this->data['mfaQuestion']->id,
                                     $oUser->id,
                                     $oInput->post('mfaAnswer')
@@ -104,14 +105,14 @@ class PasswordReset extends Base
                         break;
 
                     case 'DEVICE':
-                        $this->data['mfaDevice'] = $this->auth_model->mfaDeviceSecretGet($oUser->id);
+                        $this->data['mfaDevice'] = $oAuthModel->mfaDeviceSecretGet($oUser->id);
 
                         if ($this->data['mfaDevice']) {
 
                             if ($oInput->post()) {
 
                                 //  Validate answer
-                                $isValid = $this->auth_model->mfaDeviceCodeValidate(
+                                $isValid = $oAuthModel->mfaDeviceCodeValidate(
                                     $oUser->id,
                                     $oInput->post('mfaCode')
                                 );
@@ -123,7 +124,7 @@ class PasswordReset extends Base
                                 } else {
 
                                     $this->data['error'] = 'Sorry, that code could not be validated. ';
-                                    $this->data['error'] .= $this->auth_model->lastError();
+                                    $this->data['error'] .= $oAuthModel->lastError();
                                 }
                             }
 
@@ -183,7 +184,7 @@ class PasswordReset extends Base
                         switch (APP_NATIVE_LOGIN_USING) {
 
                             case 'EMAIL':
-                                $oLoginUser = $this->auth_model->login(
+                                $oLoginUser = $oAuthModel->login(
                                     $oUser->email,
                                     $oInput->post('new_password'),
                                     $bRemember
@@ -191,7 +192,7 @@ class PasswordReset extends Base
                                 break;
 
                             case 'USERNAME':
-                                $oLoginUser = $this->auth_model->login(
+                                $oLoginUser = $oAuthModel->login(
                                     $oUser->username,
                                     $oInput->post('new_password'),
                                     $bRemember
@@ -199,7 +200,7 @@ class PasswordReset extends Base
                                 break;
 
                             default:
-                                $oLoginUser = $this->auth_model->login(
+                                $oLoginUser = $oAuthModel->login(
                                     $oUser->email,
                                     $oInput->post('new_password'),
                                     $bRemember
@@ -251,13 +252,6 @@ class PasswordReset extends Base
                                         $oLoginUser->first_name,
                                     ]
                                 );
-                            }
-
-                            if (function_exists('cdnAvatar')) {
-                                $sAvatarUrl   = cdnAvatar($oLoginUser->id, 100, 100);
-                                $sLoginAvatar = '<img src="' . $sAvatarUrl . '" class="login-avatar">';
-                            } else {
-                                $sLoginAvatar = '';
                             }
 
                             $oSession = Factory::service('Session', 'nailsapp/module-auth');
