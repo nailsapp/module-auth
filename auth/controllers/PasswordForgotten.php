@@ -40,7 +40,7 @@ class PasswordForgotten extends Base
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 
@@ -318,7 +318,7 @@ class PasswordForgotten extends Base
                             $status  = 'notice';
                             $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $oSession->set_flashdata($status, $message);
+                            $oSession->setFlashData($status, $message);
 
                             // --------------------------------------------------------------------------
 
@@ -354,7 +354,7 @@ class PasswordForgotten extends Base
                     $status  = 'notice';
                     $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $oSession->set_flashdata($status, $message);
+                    $oSession->setFlashData($status, $message);
 
                     // --------------------------------------------------------------------------
 
@@ -367,7 +367,7 @@ class PasswordForgotten extends Base
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
-                $secret = $this->auth_model->mfaDeviceSecretGet($newPw['user_id']);
+                $secret = $oAuthModel->mfaDeviceSecretGet($newPw['user_id']);
 
                 if ($secret) {
 
@@ -376,7 +376,7 @@ class PasswordForgotten extends Base
                         $mfaCode = $this->input->post('mfaCode');
 
                         //  Verify the inout
-                        if ($this->auth_model->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
+                        if ($oAuthModel->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
 
                             //  Correct answer, reset password and render views
                             $newPw = $oUserPasswordModel->validateToken($code, true);
@@ -389,7 +389,7 @@ class PasswordForgotten extends Base
                             $status  = 'notice';
                             $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                            $oSession->set_flashdata($status, $message);
+                            $oSession->setFlashData($status, $message);
 
                             // --------------------------------------------------------------------------
 
@@ -403,7 +403,7 @@ class PasswordForgotten extends Base
                         } else {
 
                             $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
-                            $this->data['error'] .= $this->auth_model->lastError();
+                            $this->data['error'] .= $oAuthModel->lastError();
                         }
                     }
 
@@ -427,7 +427,7 @@ class PasswordForgotten extends Base
                     $status  = 'notice';
                     $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                    $oSession->set_flashdata($status, $message);
+                    $oSession->setFlashData($status, $message);
 
                     // --------------------------------------------------------------------------
 
@@ -449,7 +449,7 @@ class PasswordForgotten extends Base
                 $status  = 'notice';
                 $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
 
-                $oSession->set_flashdata($status, $message);
+                $oSession->setFlashData($status, $message);
 
                 // --------------------------------------------------------------------------
 
@@ -484,7 +484,7 @@ class PasswordForgotten extends Base
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 

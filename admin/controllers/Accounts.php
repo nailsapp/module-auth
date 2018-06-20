@@ -298,7 +298,7 @@ class Accounts extends BaseAdmin
                         $message .= 'following issues were encountered:';
                         $message .= '<ul><li>' . implode('</li><li>', $oUserModel->getErrors()) . '</li></ul>';
 
-                        $oSession->set_flashdata('message', $message);
+                        $oSession->setFlashData('message', $message);
                     }
 
                     // --------------------------------------------------------------------------
@@ -328,7 +328,7 @@ class Accounts extends BaseAdmin
                     $status  = 'success';
                     $message = 'A user account was created for <strong>';
                     $message .= $new_user->first_name . '</strong>, update their details now.';
-                    $oSession->set_flashdata($status, $message);
+                    $oSession->setFlashData($status, $message);
 
                     redirect('admin/auth/accounts/edit/' . $new_user->id);
 
@@ -395,20 +395,20 @@ class Accounts extends BaseAdmin
         $user       = $oUserModel->getById($oUri->segment(5));
 
         if (!$user) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_unknown_id'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
             redirect($oInput->get('return_to'));
         }
 
         //  Non-superusers editing superusers is not cool
         if (!$oUserModel->isSuperuser() && userHasPermission('superuser', $user)) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
             $returnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
             redirect($returnTo);
         }
 
         //  Is this user editing someone other than themselves? If so, do they have permission?
         if (activeUser('id') != $user->id && !userHasPermission('admin:auth:accounts:editOthers')) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
             $returnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
             redirect($returnTo);
         }
@@ -813,7 +813,7 @@ class Accounts extends BaseAdmin
             if ($oUserGroupModel->changeUserGroup($userIds, $oInput->post('newGroupId'))) {
 
                 $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                $oSession->set_flashdata('success', 'User group was updated successfully.');
+                $oSession->setFlashData('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts/index');
 
             } else {
@@ -854,7 +854,7 @@ class Accounts extends BaseAdmin
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
             redirect($oInput->get('return_to'));
         }
 
@@ -873,12 +873,12 @@ class Accounts extends BaseAdmin
 
         //  Define messages
         if (!$user->is_suspended) {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'error',
                 lang('accounts_suspend_error', title_case($user->first_name . ' ' . $user->last_name))
             );
         } else {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'success',
                 lang('accounts_suspend_success', title_case($user->first_name . ' ' . $user->last_name))
             );
@@ -932,7 +932,7 @@ class Accounts extends BaseAdmin
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
             redirect($oInput->get('return_to'));
         }
 
@@ -951,7 +951,7 @@ class Accounts extends BaseAdmin
 
         //  Define messages
         if ($user->is_suspended) {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'error',
                 lang(
                     'accounts_unsuspend_error',
@@ -959,7 +959,7 @@ class Accounts extends BaseAdmin
                 )
             );
         } else {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'success',
                 lang(
                     'accounts_unsuspend_success',
@@ -1015,7 +1015,7 @@ class Accounts extends BaseAdmin
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $user)) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
             redirect($oInput->get('return_to'));
         }
 
@@ -1025,10 +1025,10 @@ class Accounts extends BaseAdmin
         $user = $oUserModel->getById($uid);
 
         if (!$user) {
-            $oSession->set_flashdata('error', lang('accounts_edit_error_unknown_id'));
+            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
             redirect($oInput->get('return_to'));
         } elseif ($user->id == activeUser('id')) {
-            $oSession->set_flashdata('error', lang('accounts_delete_error_selfie'));
+            $oSession->setFlashData('error', lang('accounts_delete_error_selfie'));
             redirect($oInput->get('return_to'));
         }
 
@@ -1037,7 +1037,7 @@ class Accounts extends BaseAdmin
         //  Define messages
         if ($oUserModel->destroy($uid)) {
 
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'success',
                 lang('accounts_delete_success', title_case($user->first_name . ' ' . $user->last_name))
             );
@@ -1053,7 +1053,7 @@ class Accounts extends BaseAdmin
 
         } else {
 
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'error',
                 lang('accounts_delete_error', title_case($user->first_name . ' ' . $user->last_name))
             );
@@ -1090,14 +1090,14 @@ class Accounts extends BaseAdmin
 
         if (!$user) {
 
-            $oSession->set_flashdata('error', lang('accounts_delete_img_error_noid'));
+            $oSession->setFlashData('error', lang('accounts_delete_img_error_noid'));
             redirect('admin/auth/accounts');
 
         } else {
 
             //  Non-superusers editing superusers is not cool
             if (!isSuperuser() && userHasPermission('superuser', $user)) {
-                $oSession->set_flashdata('error', lang('accounts_edit_error_noteditable'));
+                $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
                 redirect($returnTo);
             }
 
@@ -1117,20 +1117,20 @@ class Accounts extends BaseAdmin
 
                     // --------------------------------------------------------------------------
 
-                    $oSession->set_flashdata(
+                    $oSession->setFlashData(
                         'success',
                         lang('accounts_delete_img_success')
                     );
 
                 } else {
-                    $oSession->set_flashdata(
+                    $oSession->setFlashData(
                         'error',
                         lang('accounts_delete_img_error', implode('", "', $oCdn->getErrors()))
                     );
                 }
 
             } else {
-                $oSession->set_flashdata(
+                $oSession->setFlashData(
                     'notice',
                     lang('accounts_delete_img_error_noimg')
                 );
@@ -1234,7 +1234,7 @@ class Accounts extends BaseAdmin
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata($status, $message);
+        $oSession->setFlashData($status, $message);
         redirect($oInput->post('return'));
     }
 }

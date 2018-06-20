@@ -25,7 +25,7 @@ class PasswordReset extends Base
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
     }
@@ -261,7 +261,7 @@ class PasswordReset extends Base
                             }
 
                             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                            $oSession->set_flashdata($sStatus, $sLoginAvatar . $sMessage);
+                            $oSession->setFlashData($sStatus, $sMessage);
 
                             //  If MFA is setup then we'll need to set the user's session data
                             if ($oConfig->item('authTwoFactorMode')) {

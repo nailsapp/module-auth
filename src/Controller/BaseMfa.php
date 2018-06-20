@@ -54,7 +54,7 @@ class BaseMfa extends Base
         $this->mfaUser  = $oUserModel->getById($iUserId);
 
         if (!$this->mfaUser) {
-            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);
             } else {
@@ -85,7 +85,7 @@ class BaseMfa extends Base
         $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
         if (!$oAuthModel->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
-            $oSession->set_flashdata('error', lang('auth_twofactor_token_unverified'));
+            $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
 
             $aQuery = [
                 'return_to' => $this->returnTo,
@@ -199,7 +199,7 @@ class BaseMfa extends Base
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata($status, $sLoginAvatar . $message);
+        $oSession->setFlashData($status, $message);
 
         // --------------------------------------------------------------------------
 

@@ -139,13 +139,13 @@ class Groups extends DefaultController
         if (empty($oItem)) {
             show_404();
         } elseif ($oItem->id === activeUser('group_id')) {
-            $oSession->set_flashdata('error', 'You cannot delete your own user group.');
+            $oSession->setFlashData('error', 'You cannot delete your own user group.');
             redirect('admin/auth/groups');
         } elseif (!isSuperuser() && groupHasPermission('admin:superuser', $oItem)) {
-            $oSession->set_flashdata('error', 'You cannot delete a group which has super user permissions.');
+            $oSession->setFlashData('error', 'You cannot delete a group which has super user permissions.');
             redirect('admin/auth/groups');
         } elseif ($oItem->id === $oItemModel->getDefaultGroupId()) {
-            $oSession->set_flashdata('error', 'You cannot delete the default user group.');
+            $oSession->setFlashData('error', 'You cannot delete the default user group.');
             redirect('admin/auth/groups');
         } else {
             parent::delete();
@@ -169,12 +169,12 @@ class Groups extends DefaultController
         $oSession        = Factory::service('Session', 'nailsapp/module-auth');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'success',
                 'Group set as default successfully.'
             );
         } else {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'error',
                 'Failed to set default user group. ' . $oUserGroupModel->lastError()
             );

@@ -201,7 +201,7 @@ class MfaQuestion extends BaseMfa
                                 $sMessage .= 'one of them every time you log in.';
 
                                 $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                                $oSession->set_flashdata($sStatus, $sMessage);
+                                $oSession->setFlashData($sStatus, $sMessage);
 
                                 $this->loginUser();
 

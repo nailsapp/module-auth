@@ -97,7 +97,7 @@ class Merge extends BaseAdmin
                         $status   = 'success';
                         $message  = 'Users were merged successfully.';
                         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                        $oSession->set_flashdata($status, $message);
+                        $oSession->setFlashData($status, $message);
                         redirect('admin/auth/merge');
                     }
 

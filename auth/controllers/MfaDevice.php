@@ -86,7 +86,7 @@ class MfaDevice extends BaseMfa
                     $sMessage .= 'associated an MFA device with your account. You will be required to use it ';
                     $sMessage .= 'the next time you log in.';
 
-                    $oSession->set_flashdata($sStatus, $sMessage);
+                    $oSession->setFlashData($sStatus, $sMessage);
 
                     $this->loginUser();
 
@@ -111,7 +111,7 @@ class MfaDevice extends BaseMfa
             $sMessage = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
             $sMessage .= $oAuthModel->lastError();
 
-            $oSession->set_flashdata($sStatus, $sMessage);
+            $oSession->setFlashData($sStatus, $sMessage);
 
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);

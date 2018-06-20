@@ -25,7 +25,7 @@ class Override extends Base
         //  If you're not a admin then you shouldn't be accessing this class
         if (!wasAdmin() && !isAdmin()) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', lang('auth_no_access'));
+            $oSession->setFlashData('error', lang('auth_no_access'));
             redirect('/');
         }
     }
@@ -70,7 +70,7 @@ class Override extends Base
 
             if (!$bHasPermission || $bIsCloning || $bIsSuperuser) {
                 if (!$bHasPermission) {
-                    $oSession->set_flashdata('error', lang('auth_override_fail_nopermission'));
+                    $oSession->setFlashData('error', lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
                 } elseif ($bIsCloning) {
                     show_404();
@@ -136,7 +136,7 @@ class Override extends Base
 
         //  Any feedback?
         if (!empty($sMessage)) {
-            $oSession->set_flashdata($sStatus, $sMessage);
+            $oSession->setFlashData($sStatus, $sMessage);
         }
 
         // --------------------------------------------------------------------------

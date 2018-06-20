@@ -47,7 +47,7 @@ class Register extends Base
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'error',
                 lang('auth_no_access_already_logged_in', activeUser('email'))
             );
@@ -160,7 +160,7 @@ class Register extends Base
                         //  Login failed for some reason, send them to the login page to try again
                         redirect('auth/login');
                     } else {
-                        $oSession->set_flashdata(
+                        $oSession->setFlashData(
                             'success',
                             lang('auth_register_flashdata_welcome', $oNewUser->first_name)
                         );
@@ -227,7 +227,7 @@ class Register extends Base
 
         //  We got details?
         if (empty($iId) || empty($sHash)) {
-            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->setFlashData('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
@@ -238,7 +238,7 @@ class Register extends Base
         $oUser      = $oUserModel->getById($iId);
 
         if (!$oUser) {
-            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->setFlashData('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
@@ -246,7 +246,7 @@ class Register extends Base
 
         //  Account active?
         if ($oUser->email_is_verified) {
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'message',
                 lang('auth_register_resend_already_active', site_url('auth/login'))
             );
@@ -257,7 +257,7 @@ class Register extends Base
 
         //  Hash match?
         if (md5($oUser->activation_code) != $sHash) {
-            $oSession->set_flashdata('error', lang('auth_register_resend_invalid'));
+            $oSession->setFlashData('error', lang('auth_register_resend_invalid'));
             redirect('/');
         }
 
