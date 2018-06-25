@@ -10,9 +10,10 @@
  * @link
  */
 
-namespace Nails\Api\Auth;
+namespace Nails\Auth\Api\Controller;
 
 use Nails\Api\Controller\DefaultController;
+use Nails\Api\Exception\ApiException;
 use Nails\Factory;
 
 class User extends DefaultController
@@ -60,19 +61,17 @@ class User extends DefaultController
      *
      * @return array
      */
-    public function getSearch()
+    public function getSearch($aData = [])
     {
         if (!userHasPermission('admin:auth:accounts:browse')) {
-
-            return [
-                'status' => 401,
-                'error'  => 'You are not authorised to search users.',
-            ];
-
-        } else {
-
-            return parent::getSearch();
+            $oHttpCodes = Factory::service('HttpCodes');
+            throw new ApiException(
+                'You are not authorised to search users',
+                $oHttpCodes::STATUS_UNAUTHORIZED
+            );
         }
+
+        return parent::getSearch($aData);
     }
 
     // --------------------------------------------------------------------------
@@ -84,46 +83,37 @@ class User extends DefaultController
      */
     public function getEmail()
     {
+        $oHttpCodes = Factory::service('HttpCodes');
+
         if (!userHasPermission('admin:auth:accounts:browse')) {
-
-            return [
-                'status' => 401,
-                'error'  => 'You are not authorised to search users.',
-            ];
-
-        } else {
-
-            $oInput = Factory::service('Input');
-            $sEmail = $oInput->get('email');
-
-            if (empty($sEmail)) {
-                return [
-                    'status' => 404,
-                ];
-            }
-
-            if (!valid_email($sEmail)) {
-                return [
-                    'status' => 400,
-                ];
-            }
-
-            $oUserModel = Factory::model(static::CONFIG_MODEL_NAME, static::CONFIG_MODEL_PROVIDER);
-            $oUser      = $oUserModel->getByEmail($sEmail);
-
-            if (empty($oUser)) {
-
-                return [
-                    'status' => 404,
-                ];
-
-            } else {
-
-                return [
-                    'data' => $this->formatObject($oUser),
-                ];
-            }
+            throw new ApiException(
+                'You are not authorised to browse users',
+                $oHttpCodes::STATUS_UNAUTHORIZED
+            );
         }
+
+        $oInput = Factory::service('Input');
+        $sEmail = $oInput->get('email');
+
+        if (!valid_email($sEmail)) {
+            throw new ApiException(
+                '"' . $sEmail . '" is not a valid email',
+                $oHttpCodes::STATUS_BAD_REQUEST
+            );
+        }
+
+        $oUserModel = Factory::model(static::CONFIG_MODEL_NAME, static::CONFIG_MODEL_PROVIDER);
+        $oUser      = $oUserModel->getByEmail($sEmail);
+
+        if (empty($oUser)) {
+            throw new ApiException(
+                'No user found for email "' . $sEmail . '"',
+                $oHttpCodes::STATUS_NOT_FOUND
+            );
+        }
+
+        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+                      ->setData($this->formatObject($oUser));
     }
 
     // --------------------------------------------------------------------------
