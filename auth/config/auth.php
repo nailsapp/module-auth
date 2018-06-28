@@ -49,7 +49,6 @@ $sNailsPath = NAILS_PATH . 'module-auth/auth/config/';
 $aFiles = [
     'auth.social.php',
     'auth.twofactor.php',
-    'auth.accesstoken.php',
 ];
 
 foreach ($aFiles as $sFile) {

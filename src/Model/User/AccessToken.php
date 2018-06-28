@@ -17,10 +17,35 @@ use Nails\Factory;
 
 class AccessToken extends Base
 {
-    protected $defaultExpiration;
-    protected $tokenTemplate;
-    protected $tokenCharacters;
-    protected $scopeHandler;
+    /**
+     * Define how long the default expiration should be for access tokens; this should
+     * be a value accepted by the DateInterval constructor.
+     * @var string
+     */
+    const TOKEN_EXPIRE = 'P6M';
+
+    /**
+     * Token template, defines the structure of the token, in a way acceptable to the
+     * generateToken() function
+     * @var string
+     */
+    const TOKEN_MASK = 'AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA/AAA-AAAA-AAA';
+
+    /**
+     * The characters which will make up the token; replace the X's in authAccessTokenTemplate.
+     * @var string
+     */
+    const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Define a key => value array of scope handlers for checking whether a specified
+     * user can request a certain scope. This should be an array of callables.
+     *
+     * @var array
+     */
+    protected $aScopeHandler = [];
 
     // --------------------------------------------------------------------------
 
@@ -30,25 +55,7 @@ class AccessToken extends Base
     public function __construct()
     {
         parent::__construct();
-
-        $this->table      = NAILS_DB_PREFIX . 'user_auth_access_token';
-        $this->tableAlias = 'uaat';
-
-        //  Load the config file and specify values
-        $oConfig = Factory::service('Config');
-
-        $oConfig->load('auth/auth');
-
-        $this->defaultExpiration = $oConfig->item('authAccessTokenDefaultExpiration');
-        $this->tokenTemplate     = $oConfig->item('authAccessTokenTemplate');
-        $this->tokenCharacters   = $oConfig->item('authAccessTokenCharacters');
-
-        /**
-         * Define an array of handlers for checking whether a specified user can
-         * request a certain scope. This should be an array of callables.
-         */
-
-        $this->scopeHandler = [];
+        $this->table = NAILS_DB_PREFIX . 'user_auth_access_token';
     }
 
     // --------------------------------------------------------------------------
@@ -56,16 +63,15 @@ class AccessToken extends Base
     /**
      * Creates a new access token
      *
-     * @param  array  $data          The data to create the access token with
+     * @param  array  $aData         The data to create the access token with
      * @param boolean $bReturnObject Whether to return the object, or the ID
      *
      * @return mixed false on failure, stdClass on success
      */
-    public function create($data = [], $bReturnObject = false)
+    public function create($aData = [], $bReturnObject = false)
     {
         //  User ID is a required field
-        if (empty($data['user_id'])) {
-
+        if (empty($aData['user_id'])) {
             $this->setError('A user ID must be supplied.');
             return false;
         }
@@ -73,59 +79,54 @@ class AccessToken extends Base
         // --------------------------------------------------------------------------
 
         //  Scope is a required field
-        if (empty($data['scope'])) {
-
+        if (!empty($this->aScopeHandler) && empty($aData['scope'])) {
             $this->setError('A scope must be supplied.');
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        //  If not specified, generate an expiration date 6 months from now
-        if (!isset($data['expires']) && !empty($this->defaultExpiration)) {
-
-            $expires = Factory::factory('DateTime');
-            $expires->add(new \DateInterval($this->defaultExpiration));
-
-            $data['expires'] = $expires->format('Y-m-d H:i:s');
+        //  If not specified, generate an expiration date based on the defaults
+        if (!isset($aData['expires']) && !empty(static::TOKEN_EXPIRE)) {
+            $oNow = Factory::factory('DateTime');
+            $oNow->add(new \DateInterval(static::TOKEN_EXPIRE));
+            $aData['expires'] = $oNow->format('Y-m-d H:i:s');
         }
 
         // --------------------------------------------------------------------------
 
-        /**
-         * For each scope requested, test the user is permitted to request it.
-         */
-        $data['scope'] = explode(',', $data['scope']);
-        $data['scope'] = array_map('trim', $data['scope']);
-        $data['scope'] = array_unique($data['scope']);
+        if (!empty($this->aScopeHandler)) {
 
-        asort($data['scope']);
+            /**
+             * For each scope requested, test the user is permitted to request it.
+             */
+            $aData['scope'] = explode(',', $aData['scope']);
+            $aData['scope'] = array_map('trim', $aData['scope']);
+            $aData['scope'] = array_unique($aData['scope']);
 
-        foreach ($data['scope'] as $sScope) {
+            asort($aData['scope']);
 
-            if (empty($this->scopeHandler[$sScope])) {
+            foreach ($aData['scope'] as $sScope) {
 
-                $this->setError('"' . $sScope . '" is not a valid token scope.');
-                return false;
+                if (empty($this->aScopeHandler[$sScope])) {
 
-            } else {
-
-                $sScopeHandler = 'scopeHandler' . $this->scopeHandler[$sScope];
-
-                if (!is_callable([$this, $sScopeHandler])) {
-
-                    $this->setError('"' . $this->scopeHandler[$sScope] . '" is not a valid token scope callback.');
+                    $this->setError('"' . $sScope . '" is not a valid token scope.');
                     return false;
 
-                } elseif (!$this->{$sScopeHandler}($data['user_id'], $sScope)) {
+                } elseif (!s_callable($this->aScopeHandler[$sScope])) {
+
+                    $this->setError('Handler for "' . $sScope . '" is not a valid token scope callback.');
+                    return false;
+
+                } elseif (!call_user_func($this->aScopeHandler[$sScope], $aData['user_id'], $sScope)) {
 
                     $this->setError('No permission to request a token with scope "' . $sScope . '".');
                     return false;
                 }
             }
-        }
 
-        $data['scope'] = implode(',', $data['scope']);
+            $aData['scope'] = implode(',', $aData['scope']);
+        }
 
         // --------------------------------------------------------------------------
 
@@ -133,33 +134,20 @@ class AccessToken extends Base
         $oDb = Factory::service('Database');
         do {
 
-            $token = preg_replace_callback(
-                '/[X]/',
-                function ($matches) {
-                    $start = rand(0, strlen($this->tokenCharacters) - 1);
-                    return substr($this->tokenCharacters, $start, 1);
-                },
-                $this->tokenTemplate
-            );
-
-            $data['token'] = hash('sha256', $token . APP_PRIVATE_KEY);
-
-            $oDb->where('token', $data['token']);
+            $sToken         = strtoupper(generateToken(static::TOKEN_MASK));
+            $aData['token'] = hash('sha256', $sToken . APP_PRIVATE_KEY);
+            $oDb->where('token', $aData['token']);
 
         } while ($oDb->count_all_results($this->table));
 
         // --------------------------------------------------------------------------
 
-        if (parent::create($data)) {
-
-            $out          = new \stdClass();
-            $out->token   = $token;
-            $out->expires = $data['expires'];
-
-            return $out;
-
+        if (parent::create($aData)) {
+            return (object) [
+                'token'   => $sToken,
+                'expires' => $aData['expires'],
+            ];
         } else {
-
             return false;
         }
     }
@@ -201,12 +189,12 @@ class AccessToken extends Base
     /**
      * Prevent update of access tokens
      *
-     * @param  int   $id   The accessToken's ID
-     * @param  array $data Data to update the access token with
+     * @param  int   $iId   The accessToken's ID
+     * @param  array $aData Data to update the access token with
      *
      * @return boolean
      */
-    public function update($id, $data = [])
+    public function update($iId, $aData = [])
     {
         $this->setError('Access tokens cannot be amended once created.');
         return false;
@@ -228,9 +216,9 @@ class AccessToken extends Base
             $aData['where'] = [];
         }
 
-        $aData['where'][] = [$this->tableAlias . '.token', hash('sha256', $sToken . APP_PRIVATE_KEY)];
+        $aData['where'][] = ['token', hash('sha256', $sToken . APP_PRIVATE_KEY)];
 
-        $aTokens = $this->getAll(null, null, $aData);
+        $aTokens = $this->getAll($aData);
 
         if ($aTokens) {
             return reset($aTokens);
@@ -244,19 +232,19 @@ class AccessToken extends Base
     /**
      * Returns a token by it's token, but only if valid (i.e not expired)
      *
-     * @param  string $token The token to return
+     * @param  string $sToken The token to return
      *
      * @return mixed         false on failure, stdClass on success
      */
-    public function getByValidToken($token)
+    public function getByValidToken($sToken)
     {
-        $data = [
+        $aData = [
             'where' => [
-                '(' . $this->tableAlias . '.expires IS NULL OR ' . $this->tableAlias . '.expires > NOW())',
+                '(expires IS NULL OR expires > NOW())',
             ],
         ];
 
-        return $this->getByToken($token, $data);
+        return $this->getByToken($sToken, $aData);
     }
 
     // --------------------------------------------------------------------------
