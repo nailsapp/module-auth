@@ -68,7 +68,7 @@ class AccessToken extends Base
      *
      * @return mixed false on failure, stdClass on success
      */
-    public function create($aData = [], $bReturnObject = false)
+    public function create(array $aData = [], $bReturnObject = false)
     {
         //  User ID is a required field
         if (empty($aData['user_id'])) {
@@ -194,7 +194,7 @@ class AccessToken extends Base
      *
      * @return boolean
      */
-    public function update($iId, $aData = [])
+    public function update($iId, array $aData = [])
     {
         $this->setError('Access tokens cannot be amended once created.');
         return false;
@@ -290,10 +290,10 @@ class AccessToken extends Base
      */
     protected function formatObject(
         &$oObj,
-        $aData = [],
-        $aIntegers = [],
-        $aBools = [],
-        $aFloats = []
+        array $aData = [],
+        array $aIntegers = [],
+        array $aBools = [],
+        array $aFloats = []
     ) {
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
         $oObj->scope = explode(',', $oObj->scope);

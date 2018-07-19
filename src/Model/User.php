@@ -554,7 +554,7 @@ class User extends Base
      *
      * @return void
      */
-    protected function getCountCommon($aData = [])
+    protected function getCountCommon(array $aData = [])
     {
         //  Define the selects
         $oDb = Factory::service('Database');
@@ -860,7 +860,7 @@ class User extends Base
      *
      * @return boolean
      */
-    public function update($iUserId = null, $data = null)
+    public function update($iUserId = null, array $data = null)
     {
         $oDate   = Factory::factory('DateTime');
         $data    = (array) $data;
@@ -1825,7 +1825,7 @@ class User extends Base
      *
      * @return mixed                StdClass on success, false on failure
      */
-    public function create($data = [], $sendWelcome = true)
+    public function create(array $data = [], $sendWelcome = true)
     {
         $oDate              = Factory::factory('DateTime');
         $oDb                = Factory::service('Database');
@@ -2510,10 +2510,10 @@ class User extends Base
      */
     protected function formatObject(
         &$oObj,
-        $aData = [],
-        $aIntegers = [],
-        $aBools = [],
-        $aFloats = []
+        array $aData = [],
+        array $aIntegers = [],
+        array $aBools = [],
+        array $aFloats = []
     ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
