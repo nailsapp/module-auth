@@ -210,21 +210,9 @@ class AccessToken extends Base
      *
      * @return mixed         false on failure, stdClass on success
      */
-    public function getByToken($sToken, $aData = [])
+    public function getByToken($sToken, array $aData = [])
     {
-        if (empty($aData['where'])) {
-            $aData['where'] = [];
-        }
-
-        $aData['where'][] = ['token', hash('sha256', $sToken . APP_PRIVATE_KEY)];
-
-        $aTokens = $this->getAll($aData);
-
-        if ($aTokens) {
-            return reset($aTokens);
-        } else {
-            return false;
-        }
+        return $this->getByToken(hash('sha256', $sToken . APP_PRIVATE_KEY), $aData);
     }
 
     // --------------------------------------------------------------------------
@@ -236,13 +224,13 @@ class AccessToken extends Base
      *
      * @return mixed         false on failure, stdClass on success
      */
-    public function getByValidToken($sToken)
+    public function getByValidToken($sToken, array $aData = [])
     {
-        $aData = [
-            'where' => [
-                '(expires IS NULL OR expires > NOW())',
-            ],
-        ];
+        if (!isset($aData['where'])) {
+            $aData['where'] = [];
+        }
+
+        $aData['where'][] = '(expires IS NULL OR expires > NOW())';
 
         return $this->getByToken($sToken, $aData);
     }
