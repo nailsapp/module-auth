@@ -212,7 +212,7 @@ class AccessToken extends Base
      */
     public function getByToken($sToken, array $aData = [])
     {
-        return $this->getByToken(hash('sha256', $sToken . APP_PRIVATE_KEY), $aData);
+        return parent::getByToken(hash('sha256', $sToken . APP_PRIVATE_KEY), $aData);
     }
 
     // --------------------------------------------------------------------------
