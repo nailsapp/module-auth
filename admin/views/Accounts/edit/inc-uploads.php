@@ -1,6 +1,6 @@
 <?php
 
-if (isModuleEnabled('nailsapp/module-cdn')) {
+if (isModuleEnabled('nails/module-cdn')) {
 
     ?>
     <fieldset id="edit-user-uploads" class="uploads">

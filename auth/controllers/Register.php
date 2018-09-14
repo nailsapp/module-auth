@@ -43,7 +43,7 @@ class Register extends Base
      */
     public function index()
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -56,7 +56,7 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $iDefaultGroupId = $oUserGroupModel->getDefaultGroupId();
 
         // --------------------------------------------------------------------------
@@ -147,7 +147,7 @@ class Register extends Base
                 // --------------------------------------------------------------------------
 
                 //  Create new user
-                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+                $oUserModel = Factory::model('User', 'nails/module-auth');
                 $oNewUser   = $oUserModel->create($aInsertData);
 
                 if ($oNewUser) {
@@ -193,8 +193,8 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        $oSocial            = Factory::service('SocialSignOn', 'nailsapp/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oSocial            = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         $this->data['social_signon_enabled']   = $oSocial->isEnabled();
         $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');
@@ -218,7 +218,7 @@ class Register extends Base
     public function resend()
     {
         $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
 
         $iId   = (int) $oUri->segment(4);
         $sHash = $oUri->segment(5);
@@ -234,7 +234,7 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Valid user?
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUser      = $oUserModel->getById($iId);
 
         if (!$oUser) {
@@ -277,7 +277,7 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         //  Send it off now
-        $oEmailer = Factory::service('Emailer', 'nailsapp/module-email');
+        $oEmailer = Factory::service('Emailer', 'nails/module-email');
         $oEmailer->send_now($oEmail);
 
         // --------------------------------------------------------------------------

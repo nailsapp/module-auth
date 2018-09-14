@@ -41,7 +41,7 @@ class MfaQuestion extends BaseMfa
         // --------------------------------------------------------------------------
 
         $oInput     = Factory::service('Input');
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
 
         if ($oInput->post('answer')) {
 
@@ -200,14 +200,14 @@ class MfaQuestion extends BaseMfa
                                 $sMessage .= 'successfully set your security questions. You will be asked to answer ';
                                 $sMessage .= 'one of them every time you log in.';
 
-                                $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                                $oSession = Factory::service('Session', 'nails/module-auth');
                                 $oSession->setFlashData($sStatus, $sMessage);
 
                                 $this->loginUser();
 
                             } else {
 
-                                $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
+                                $oUserModel          = Factory::model('User', 'nails/module-auth');
                                 $this->data['error'] = lang('auth_twofactor_question_set_fail');
                                 $this->data['error'] .= ' ' . $oUserModel->lastError();
                             }

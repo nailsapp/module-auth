@@ -43,8 +43,8 @@ class BaseMfa extends Base
 
     protected function validateToken()
     {
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oInput     = Factory::service('Input');
         $oUri       = Factory::service('Uri');
 
@@ -82,7 +82,7 @@ class BaseMfa extends Base
                 break;
         }
 
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         if (!$oAuthModel->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
             $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
@@ -123,7 +123,7 @@ class BaseMfa extends Base
     protected function loginUser()
     {
         //  Set login data for this user
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUserModel->setLoginData($this->mfaUser->id);
 
         //  If we're remembering this user set a cookie
@@ -191,13 +191,13 @@ class BaseMfa extends Base
             );
         }
 
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->setFlashData($status, $message);
 
         // --------------------------------------------------------------------------
 
         //  Delete the token we generated, it's no needed, eh!
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         $oAuthModel->mfaTokenDelete($this->data['token']['id']);
 
         // --------------------------------------------------------------------------

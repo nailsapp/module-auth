@@ -76,8 +76,8 @@ class UsersEmail implements Source
     public function execute($aData = [])
     {
         $oDb        = Factory::service('Database');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $oResponse  = Factory::factory('DataExportSourceResponse', 'nailsapp/module-admin');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oResponse  = Factory::factory('DataExportSourceResponse', 'nails/module-admin');
 
         $oSource = $oDb
             ->select('u.id, u.first_name, u.last_name, ue.email')

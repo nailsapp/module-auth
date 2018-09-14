@@ -6,7 +6,7 @@
  * Finalised:   24/03/2015
  */
 
-namespace Nails\Database\Migration\Nailsapp\ModuleAuth;
+namespace Nails\Database\Migration\Nails\ModuleAuth;
 
 use Nails\Common\Console\Migrate\Base;
 

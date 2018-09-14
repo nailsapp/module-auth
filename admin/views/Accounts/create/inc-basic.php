@@ -2,7 +2,7 @@
 
 use Nails\Factory;
 
-$oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+$oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
 
 ?>
 <fieldset>

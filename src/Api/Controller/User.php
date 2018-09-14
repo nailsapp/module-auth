@@ -19,7 +19,7 @@ use Nails\Factory;
 class User extends DefaultController
 {
     const CONFIG_MODEL_NAME         = 'User';
-    const CONFIG_MODEL_PROVIDER     = 'nailsapp/module-auth';
+    const CONFIG_MODEL_PROVIDER     = 'nails/module-auth';
     const CONFIG_MIN_SEARCH_LENGTH  = 3;
     const CONFIG_POST_IGNORE_FIELDS = [
         'id',
@@ -112,7 +112,7 @@ class User extends DefaultController
             );
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData($this->formatObject($oUser));
     }
 

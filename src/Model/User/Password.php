@@ -547,7 +547,7 @@ class Password extends Base
         // --------------------------------------------------------------------------
 
         //  Update the user
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUser      = $oUserModel->getByIdentifier($sIdentifier);
 
         if ($oUser) {

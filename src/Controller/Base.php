@@ -37,8 +37,8 @@ class Base extends \App\Controller\Base
         if (!is_file($sView)) {
             $oAsset = Factory::service('Asset');
             $oAsset->clear();
-            $oAsset->load('nails.min.css', 'nailsapp/common');
-            $oAsset->load('styles.css', 'nailsapp/module-auth');
+            $oAsset->load('nails.min.css', 'nails/common');
+            $oAsset->load('styles.css', 'nails/module-auth');
         }
     }
 }

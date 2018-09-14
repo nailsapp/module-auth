@@ -76,8 +76,8 @@ class UsersAll implements Source
     public function execute($aData = [])
     {
         $oDb             = Factory::service('Database');
-        $oUserModel      = Factory::model('User', 'nailsapp/module-auth');
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserModel      = Factory::model('User', 'nails/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
 
         $aTables = [
             $oUserModel->getTableName(),
@@ -99,7 +99,7 @@ class UsersAll implements Source
 
         $aOut = [];
         foreach ($aTables as $sTable) {
-            $oResponse = Factory::factory('DataExportSourceResponse', 'nailsapp/module-admin');
+            $oResponse = Factory::factory('DataExportSourceResponse', 'nails/module-admin');
             $oSource   = $oDb->get($sTable);
             $aFields   = arrayExtractProperty($oDb->query('DESCRIBE ' . $sTable)->result(), 'Field');
             $aOut[]    = $oResponse

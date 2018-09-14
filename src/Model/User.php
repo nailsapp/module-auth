@@ -270,7 +270,7 @@ class User extends Base
 
             //  Set session variables
             if ($bSetSessionData) {
-                $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                $oSession = Factory::service('Session', 'nails/module-auth');
                 $oSession->setUserData([
                     'id'       => $oUser->id,
                     'email'    => $oUser->email,
@@ -294,7 +294,7 @@ class User extends Base
     public function clearLoginData()
     {
         //  Clear the session
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->unsetUserData('id');
         $oSession->unsetUserData('email');
         $oSession->unsetUserData('group_id');
@@ -373,7 +373,7 @@ class User extends Base
      */
     public function wasAdmin()
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         return (bool) $oSession->userdata($this->sAdminRecoveryField);
     }
 
@@ -387,7 +387,7 @@ class User extends Base
      */
     public function setAdminRecoveryData($loggingInAs, $returnTo = '')
     {
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oInput   = Factory::service('Input');
         //  Look for existing Recovery Data
         $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
@@ -425,7 +425,7 @@ class User extends Base
      */
     public function getAdminRecoveryData()
     {
-        $oSession             = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession             = Factory::service('Session', 'nails/module-auth');
         $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -443,7 +443,7 @@ class User extends Base
      */
     public function unsetAdminRecoveryData()
     {
-        $oSession             = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession             = Factory::service('Session', 'nails/module-auth');
         $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -884,7 +884,7 @@ class User extends Base
 
         $oDb                = Factory::service('Database');
         $oInput             = Factory::service('Input');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         if ($data) {
 
@@ -1081,7 +1081,7 @@ class User extends Base
                 //  If the user's password was updated send them a notification
                 if ($bPasswordUpdated) {
 
-                    $oEmailer = Factory::service('Emailer', 'nailsapp/module-email');
+                    $oEmailer = Factory::service('Emailer', 'nails/module-email');
 
                     $oEmail                  = new \stdClass();
                     $oEmail->type            = 'password_updated';
@@ -1159,7 +1159,7 @@ class User extends Base
         $this->unsetCacheUser($iUserId);
 
         $oEventService = Factory::service('Event');
-        $oEventService->trigger(Events::USER_MODIFIED, 'nailsapp/module-auth', [$iUserId]);
+        $oEventService->trigger(Events::USER_MODIFIED, 'nails/module-auth', [$iUserId]);
 
         return true;
     }
@@ -1305,7 +1305,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $sCode          = $oPasswordModel->salt();
 
         $oDb->set('user_id', $oUser->id);
@@ -1410,7 +1410,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oEmailer                = Factory::service('Emailer', 'nailsapp/module-email');
+        $oEmailer                = Factory::service('Emailer', 'nails/module-email');
         $oEmail                  = new \stdClass();
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
@@ -1751,7 +1751,7 @@ class User extends Base
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         if ($this->wasAdmin()) {
 
             $recoveryData = $this->getAdminRecoveryData();
@@ -1830,8 +1830,8 @@ class User extends Base
         $oDate              = Factory::factory('DateTime');
         $oDb                = Factory::service('Database');
         $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', 'nailsapp/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserGroupModel    = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         //  Has an email or a username been submitted?
         if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
@@ -2059,7 +2059,7 @@ class User extends Base
             //  Send the user the welcome email
             if ($sendWelcome) {
 
-                $oEmailer      = Factory::service('Emailer', 'nailsapp/module-email');
+                $oEmailer      = Factory::service('Emailer', 'nails/module-email');
                 $oEmail        = new \stdClass();
                 $oEmail->type  = 'new_user_' . $oGroup->id;
                 $oEmail->to_id = $iId;
@@ -2116,7 +2116,7 @@ class User extends Base
             $oDb->trans_commit();
 
             $oEventService = Factory::service('Event');
-            $oEventService->trigger(Events::USER_CREATED, 'nailsapp/module-auth', [$iId]);
+            $oEventService->trigger(Events::USER_CREATED, 'nails/module-auth', [$iId]);
 
             return $this->getById($iId);
 

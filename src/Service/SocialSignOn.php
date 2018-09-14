@@ -38,7 +38,7 @@ class SocialSignOn
     {
         $oCi              = get_instance();
         $this->oDb        = Factory::service('Database');
-        $this->oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $this->oUserModel = Factory::model('User', 'nails/module-auth');
 
         $this->aProviders = ['all' => [], 'enabled' => [], 'disabled' => []];
 

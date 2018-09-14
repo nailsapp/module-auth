@@ -1,10 +1,10 @@
 {
-  "name": "nailsapp-module-asset",
+  "name": "nails-module-asset",
   "description": "This is the \"Auth\" module for Nails.",
   "author": "Nails Dev Team <hello@nailsapp.co.uk>",
   "analyze": true,
   "license": "MIT",
-  "repository": "https://github.com/nailsapp/module-auth",
+  "repository": "https://github.com/nails/module-auth",
   "devDependencies": {
     "gulp": "^3.9",
     "gulp-autoprefixer": "^3.1",

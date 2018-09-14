@@ -24,7 +24,7 @@ class PasswordReset extends Base
 
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
@@ -44,8 +44,8 @@ class PasswordReset extends Base
     {
         $oInput     = Factory::service('Input');
         $oConfig    = Factory::service('Config');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
 
         //  Check auth credentials
         $oUser = $oUserModel->getById($id);
@@ -254,7 +254,7 @@ class PasswordReset extends Base
                                 );
                             }
 
-                            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                            $oSession = Factory::service('Session', 'nails/module-auth');
                             $oSession->setFlashData($sStatus, $sMessage);
 
                             //  If MFA is setup then we'll need to set the user's session data
@@ -293,7 +293,7 @@ class PasswordReset extends Base
             $this->data['auth']->id   = $id;
             $this->data['auth']->hash = $hash;
 
-            $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+            $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
             $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
 

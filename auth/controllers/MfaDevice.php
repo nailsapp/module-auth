@@ -40,7 +40,7 @@ class MfaDevice extends BaseMfa
         // --------------------------------------------------------------------------
 
         //  Has this user already set up an MFA?
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         $oMfaDevice = $oAuthModel->mfaDeviceSecretGet($this->mfaUser->id);
 
         if ($oMfaDevice) {
@@ -57,8 +57,8 @@ class MfaDevice extends BaseMfa
      */
     protected function setupDevice()
     {
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         $oInput     = Factory::service('Input');
 
         if ($oInput->post()) {
@@ -146,7 +146,7 @@ class MfaDevice extends BaseMfa
 
             if ($oFormValidation->run()) {
 
-                $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+                $oAuthModel = Factory::model('Auth', 'nails/module-auth');
                 $sCode      = $oInput->post('mfaCode');
 
                 //  Verify the inout

@@ -1,4 +1,4 @@
-<div class="nailsapp-auth reset-password u-center-screen">
+<div class="nails-auth reset-password u-center-screen">
     <div class="panel">
         <h1 class="panel__header text-center">
             Reset Password

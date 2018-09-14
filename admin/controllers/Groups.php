@@ -18,7 +18,7 @@ use Nails\Factory;
 class Groups extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'UserGroup';
-    const CONFIG_MODEL_PROVIDER = 'nailsapp/module-auth';
+    const CONFIG_MODEL_PROVIDER = 'nails/module-auth';
     const CONFIG_SIDEBAR_GROUP  = 'Users';
     const CONFIG_PERMISSION     = 'groups';
     const CONFIG_SORT_OPTIONS   = [
@@ -43,7 +43,7 @@ class Groups extends DefaultController
 
         //  Assets
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.groups.min.js', 'nailsapp/module-auth');
+        $oAsset->load('admin.groups.min.js', 'nails/module-auth');
         $oAsset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
 
         //  Get all available permissions
@@ -105,8 +105,8 @@ class Groups extends DefaultController
     protected function getPostObject()
     {
         $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', 'nailsapp/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserGroupModel    = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         return [
             'slug'                  => $oInput->post('slug'),
@@ -128,7 +128,7 @@ class Groups extends DefaultController
     public function delete()
     {
         $oUri       = Factory::service('Uri');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
         $oItemModel = Factory::model(
             $this->aConfig['MODEL_NAME'],
             $this->aConfig['MODEL_PROVIDER']
@@ -165,8 +165,8 @@ class Groups extends DefaultController
         }
 
         $oUri            = Factory::service('Uri');
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
-        $oSession        = Factory::service('Session', 'nailsapp/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oSession        = Factory::service('Session', 'nails/module-auth');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
             $oSession->setFlashData(

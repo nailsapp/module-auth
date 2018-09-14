@@ -3,7 +3,7 @@
 $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
 
 ?>
-<div class="nailsapp-auth login u-center-screen">
+<div class="nails-auth login u-center-screen">
     <div class="panel">
         <h1 class="panel__header text-center">
             Welcome

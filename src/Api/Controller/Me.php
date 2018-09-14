@@ -30,7 +30,7 @@ class Me extends Base
      */
     public function anyIndex()
     {
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData([
                           'id'         => (int) activeUser('id'),
                           'first_name' => activeUser('first_name') ?: null,

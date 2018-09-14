@@ -1,5 +1,5 @@
 {
-    "name": "nailsapp/module-auth",
+    "name": "nails/module-auth",
     "keywords": ["Nails", "Shed Collective", "CodeIgniter", "Auth Module"],
     "homepage": "http://nailsapp.co.uk/modules/auth",
     "description": "This is the \"Auth\" module for Nails.",
@@ -27,8 +27,8 @@
     "prefer-stable": true,
     "require":
     {
-        "nailsapp/common": "dev-develop",
-        "nailsapp/module-cdn": "dev-develop",
+        "nails/common": "dev-develop",
+        "nails/module-cdn": "dev-develop",
         "hybridauth/hybridauth": "~2.10",
         "sonata-project/google-authenticator": "~1.0.2"
     },
@@ -52,19 +52,19 @@
                 "helpers": ["user"]
             },
             "data": {
-                "nailsapp/module-admin": {
+                "nails/module-admin": {
                     "autoload": {
                         "assets": {
                             "js": [
-                                ["admin.usersearch.min.js", "nailsapp/module-auth"]
+                                ["admin.usersearch.min.js", "nails/module-auth"]
                             ]
                         }
                     }
                 },
-                "nailsapp/module-api": {
+                "nails/module-api": {
                     "namespace": "auth"
                 },
-                "nailsapp/module-cdn": {
+                "nails/module-cdn": {
                     "permitted-image-dimensions": [
                         "35x35",
                         "50x50",

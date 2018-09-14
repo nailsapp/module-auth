@@ -24,7 +24,7 @@ class Settings extends BaseAdmin
      */
     public static function announce()
     {
-        $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
         $oNavGroup->setLabel('Settings');
         $oNavGroup->setIcon('fa-wrench');
 
@@ -67,7 +67,7 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oSocial                 = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+        $oSocial                 = Factory::service('SocialSignOn', 'nails/module-auth');
         $providers               = $oSocial->getProviders();
         $this->data['providers'] = $providers;
 

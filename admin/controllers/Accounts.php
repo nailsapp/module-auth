@@ -28,7 +28,7 @@ class Accounts extends BaseAdmin
      */
     public static function announce()
     {
-        $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
         $oNavGroup->setLabel('Users');
         $oNavGroup->setIcon('fa-users');
 
@@ -37,13 +37,13 @@ class Accounts extends BaseAdmin
             $oDb = Factory::service('Database');
             $oDb->where('is_suspended', false);
             $numTotal    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
-            $oAlertTotal = Factory::factory('NavAlert', 'nailsapp/module-admin');
+            $oAlertTotal = Factory::factory('NavAlert', 'nails/module-admin');
             $oAlertTotal->setValue($numTotal);
             $oAlertTotal->setLabel('Number of Users');
 
             $oDb->where('is_suspended', true);
             $numSuspended    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
-            $oAlertSuspended = Factory::factory('NavAlert', 'nailsapp/module-admin');
+            $oAlertSuspended = Factory::factory('NavAlert', 'nails/module-admin');
             $oAlertSuspended->setValue($numSuspended);
             $oAlertSuspended->setSeverity('danger');
             $oAlertSuspended->setLabel('Number of Suspended Users');
@@ -85,7 +85,7 @@ class Accounts extends BaseAdmin
     {
         parent::__construct();
         $this->lang->load('admin_accounts');
-        $this->oChangeLogModel = Factory::model('ChangeLog', 'nailsapp/module-admin');
+        $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
     }
 
     // --------------------------------------------------------------------------
@@ -107,7 +107,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $tableAlias = $oUserModel->getTableAlias();
 
         // --------------------------------------------------------------------------
@@ -135,7 +135,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $groupsFlat      = $oUserGroupModel->getAllFlat();
         $groupsFilter    = [];
 
@@ -175,7 +175,7 @@ class Accounts extends BaseAdmin
         ];
 
         //  Get the items for the page
-        $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel          = Factory::model('User', 'nails/module-auth');
         $totalRows           = $oUserModel->countAll($data);
         $this->data['users'] = $oUserModel->getAll($page, $perPage, $data);
 
@@ -263,7 +263,7 @@ class Accounts extends BaseAdmin
 
                 if (!$data['password']) {
                     //  Password isn't set, generate one
-                    $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+                    $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
                     $data['password']   = $oUserPasswordModel->generate($data['group_id']);
                 }
 
@@ -280,7 +280,7 @@ class Accounts extends BaseAdmin
                 $data['temp_pw']        = stringToBoolean($oInput->post('temp_pw', true));
                 $data['inform_user_pw'] = true;
 
-                $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+                $oUserModel = Factory::model('User', 'nails/module-auth');
                 $new_user   = $oUserModel->create($data, stringToBoolean($oInput->post('send_activation', true)));
 
                 if ($new_user) {
@@ -290,7 +290,7 @@ class Accounts extends BaseAdmin
                      * might happen along the way
                      */
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
 
                     if ($oUserModel->getErrors()) {
 
@@ -346,8 +346,8 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data for the view
-        $oUserGroupModel             = Factory::model('UserGroup', 'nailsapp/module-auth');
-        $oUserPasswordModel          = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserGroupModel             = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserPasswordModel          = Factory::model('UserPassword', 'nails/module-auth');
         $this->data['groups']        = $oUserGroupModel->getAll();
         $this->data['passwordRules'] = [];
 
@@ -359,7 +359,7 @@ class Accounts extends BaseAdmin
 
         //  Assets
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.create.min.js', 'nailsapp/module-auth');
+        $oAsset->load('admin.accounts.create.min.js', 'nails/module-auth');
         $oAsset->inline('_nailsAdminAccountsCreate = new NAILS_Admin_Accounts_Create();', 'JS');
 
         // --------------------------------------------------------------------------
@@ -390,8 +390,8 @@ class Accounts extends BaseAdmin
          * (we need to know the group of the user so we can pull up the correct cols/rules)
          */
 
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $user       = $oUserModel->getById($oUri->segment(5));
 
         if (!$user) {
@@ -561,7 +561,7 @@ class Accounts extends BaseAdmin
                 //  If we have a profile image, attempt to upload it
                 if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
-                    $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+                    $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
                     $object = $oCdn->objectReplace($user->profile_img, 'profile-images', 'profile_img');
 
                     if ($object) {
@@ -718,7 +718,7 @@ class Accounts extends BaseAdmin
         );
 
         //  Get the groups, timezones and languages
-        $oUserGroupModel      = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserGroupModel      = Factory::model('UserGroup', 'nails/module-auth');
         $this->data['groups'] = $oUserGroupModel->getAll();
 
         $oLanguageModel          = Factory::model('Language');
@@ -731,8 +731,8 @@ class Accounts extends BaseAdmin
         $this->data['default_timezone'] = $oDateTimeModel->getTimezoneDefault();
 
         //  Fetch any user uploads
-        if (isModuleEnabled('nailsapp/module-cdn')) {
-            $oCdn                       = Factory::service('Cdn', 'nailsapp/module-cdn');
+        if (isModuleEnabled('nails/module-cdn')) {
+            $oCdn                       = Factory::service('Cdn', 'nails/module-cdn');
             $this->data['user_uploads'] = $oCdn->getObjectsForUser($user->id);
         }
 
@@ -756,14 +756,14 @@ class Accounts extends BaseAdmin
             }
         }
 
-        $oUserPasswordModel          = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserPasswordModel          = Factory::model('UserPassword', 'nails/module-auth');
         $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($user->group_id);
 
         // --------------------------------------------------------------------------
 
         //  Assets
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.edit.min.js', 'nailsapp/module-auth');
+        $oAsset->load('admin.accounts.edit.min.js', 'nails/module-auth');
         $oAsset->inline('_nailsAdminAccountsEdit = new NAILS_Admin_Accounts_Edit();', 'JS');
 
         // --------------------------------------------------------------------------
@@ -787,7 +787,7 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oInput              = Factory::service('Input');
-        $oUserModel          = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel          = Factory::model('User', 'nails/module-auth');
         $userIds             = explode(',', $oInput->get('users'));
         $this->data['users'] = $oUserModel->getByIds($userIds);
 
@@ -803,7 +803,7 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUserGroupModel          = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserGroupModel          = Factory::model('UserGroup', 'nails/module-auth');
         $this->data['userGroups'] = $oUserGroupModel->getAllFlat();
 
         // --------------------------------------------------------------------------
@@ -812,7 +812,7 @@ class Accounts extends BaseAdmin
 
             if ($oUserGroupModel->changeUserGroup($userIds, $oInput->post('newGroupId'))) {
 
-                $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                $oSession = Factory::service('Session', 'nails/module-auth');
                 $oSession->setFlashData('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts/index');
 
@@ -844,8 +844,8 @@ class Accounts extends BaseAdmin
         //  Get the user's details
         $oUri       = Factory::service('Uri');
         $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
         $oldValue   = $user->is_suspended;
@@ -922,8 +922,8 @@ class Accounts extends BaseAdmin
         //  Get the user's details
         $oUri       = Factory::service('Uri');
         $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
         $oldValue   = $user->is_suspended;
@@ -1006,8 +1006,8 @@ class Accounts extends BaseAdmin
         //  Get the user's details
         $oUri       = Factory::service('Uri');
         $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
 
@@ -1080,8 +1080,8 @@ class Accounts extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $uid        = $oUri->segment(5);
         $user       = $oUserModel->getById($uid);
         $returnTo   = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/auth/accounts/edit/' . $uid;
@@ -1105,7 +1105,7 @@ class Accounts extends BaseAdmin
 
             if ($user->profile_img) {
 
-                $oCdn = Factory::service('Cdn', 'nailsapp/module-cdn');
+                $oCdn = Factory::service('Cdn', 'nails/module-cdn');
 
                 if ($oCdn->objectDelete($user->profile_img, 'profile-images')) {
 
@@ -1151,7 +1151,7 @@ class Accounts extends BaseAdmin
     public function email()
     {
         $oInput     = Factory::service('Input');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $action     = $oInput->post('action');
         $email      = $oInput->post('email');
         $id         = $oInput->post('id');
@@ -1233,7 +1233,7 @@ class Accounts extends BaseAdmin
                 break;
         }
 
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->setFlashData($status, $message);
         redirect($oInput->post('return'));
     }

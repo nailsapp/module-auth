@@ -33,13 +33,13 @@ class Logout extends Base
         // --------------------------------------------------------------------------
 
         //  Log social media out
-        $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+        $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
         $oSocial->logout();
 
         // --------------------------------------------------------------------------
 
         //  Log user out
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         $oAuthModel->logout();
 
         // --------------------------------------------------------------------------

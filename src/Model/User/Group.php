@@ -143,7 +143,7 @@ class Group extends Base
         }
 
         $oDb        = Factory::service('Database');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $users      = $oUserModel->getByIds((array) $userIds);
 
         $oDb->trans_begin();

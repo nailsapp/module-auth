@@ -24,7 +24,7 @@ class Override extends Base
 
         //  If you're not a admin then you shouldn't be accessing this class
         if (!wasAdmin() && !isAdmin()) {
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', lang('auth_no_access'));
             redirect('/');
         }
@@ -40,7 +40,7 @@ class Override extends Base
     public function login_as()
     {
         //  Perform lookup of user
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUri       = Factory::service('Uri');
 
         $sHashId = $oUri->segment(4);
@@ -60,7 +60,7 @@ class Override extends Base
          * - Sign in as superusers (unless they are a superuser)
          */
 
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
 
         if (!wasAdmin()) {
 

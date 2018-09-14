@@ -115,7 +115,7 @@ class Login extends Base
                 $sIdentifier = $oInput->post('identifier');
                 $sPassword   = $oInput->post('password');
                 $bRememberMe = (bool) $oInput->post('remember');
-                $oAuthModel  = Factory::model('Auth', 'nailsapp/module-auth');
+                $oAuthModel  = Factory::model('Auth', 'nails/module-auth');
 
                 $oUser = $oAuthModel->login($sIdentifier, $sPassword, $bRememberMe);
 
@@ -133,7 +133,7 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        $oSocial                               = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+        $oSocial                               = Factory::service('SocialSignOn', 'nails/module-auth');
         $this->data['social_signon_enabled']   = $oSocial->isEnabled();
         $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');
 
@@ -160,8 +160,8 @@ class Login extends Base
     protected function _login($oUser, $remember = false, $provider = 'native')
     {
         $oConfig            = Factory::service('Config');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
-        $oAuthModel         = Factory::model('Auth', 'nailsapp/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oAuthModel         = Factory::model('Auth', 'nails/module-auth');
 
         if ($oUser->is_suspended) {
 
@@ -264,7 +264,7 @@ class Login extends Base
                 $sMessage = lang('auth_login_ok_welcome_notime', [$oUser->first_name]);
             }
 
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData($sStatus, $sMessage);
 
             $sRedirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $oUser->group_homepage;
@@ -306,7 +306,7 @@ class Login extends Base
          * (i.e error).
          */
 
-        $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
         $oAuthModel->logout();
 
         redirect('auth/password/reset/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
@@ -365,7 +365,7 @@ class Login extends Base
             } else {
 
                 //  We are logging in as someone else, log the current user out and try again
-                $oAuthModel = Factory::model('Auth', 'nailsapp/module-auth');
+                $oAuthModel = Factory::model('Auth', 'nails/module-auth');
                 $oAuthModel->logout();
 
                 redirect(preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
@@ -379,8 +379,8 @@ class Login extends Base
          * if all is ok otherwise we report an error.
          */
 
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUser      = $oUserModel->getByHashes($hash['id'], $hash['pw']);
 
         // --------------------------------------------------------------------------
@@ -455,9 +455,9 @@ class Login extends Base
     protected function socialSignon($provider)
     {
         $oUri       = Factory::service('Uri');
-        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
-        $oSocial    = Factory::service('SocialSignOn', 'nailsapp/module-auth');
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oSocial    = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
 
         //  Get the adapter, HybridAuth will handle the redirect
         $adapter  = $oSocial->authenticate($provider);
@@ -783,7 +783,7 @@ class Login extends Base
                             if ($oResponse->getStatusCode() === 200) {
 
                                 //  Attempt upload
-                                $oCdn = Factory::service('Cdn', 'nailsapp/module-cdn');
+                                $oCdn = Factory::service('Cdn', 'nails/module-cdn');
 
                                 //  Save file to cache
                                 $cacheFile = CACHE_PATH . 'new-user-profile-image-' . $newUser->id;
@@ -828,7 +828,7 @@ class Login extends Base
                     $oSession->setFlashData('success', lang('auth_social_register_ok', $newUser->first_name));
 
                     if (empty($this->data['return_to'])) {
-                        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+                        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
                         $group           = $oUserGroupModel->getById($newUser->group_id);
                         $sRedirectUrl    = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
                     } else {
@@ -1003,7 +1003,7 @@ class Login extends Base
         } else {
 
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
-            $oSocial = Factory::service('SocialSignOn', 'nailsapp/module-auth');
+            $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
             if ($oSocial->isValidProvider($method)) {
                 $this->socialSignon($method);
             } else {

@@ -26,8 +26,8 @@ class AccessToken extends Base
     {
         $oInput            = Factory::service('Input');
         $oHttpCodes        = Factory::service('HttpCodes');
-        $oAuthModel        = Factory::model('Auth', 'nailsapp/module-auth');
-        $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
+        $oAuthModel        = Factory::model('Auth', 'nails/module-auth');
+        $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
         $sIdentifier       = $oInput->post('identifier');
         $sPassword         = $oInput->post('password');
         $sScope            = $oInput->post('scope');
@@ -49,8 +49,8 @@ class AccessToken extends Base
          * - @todo: handle 2FA, perhaps?
          */
 
-        $oUserModel         = Factory::model('User', 'nailsapp/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserModel         = Factory::model('User', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oUser              = $oUserModel->getByIdentifier($sIdentifier);
         $bIsSuspended       = $oUser->is_suspended;
         $bPwIsTemp          = $oUser->temp_pw;
@@ -86,7 +86,7 @@ class AccessToken extends Base
             );
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData([
                           'token'   => $oToken->token,
                           'expires' => $oToken->expires,
@@ -102,7 +102,7 @@ class AccessToken extends Base
     public function postRevoke()
     {
         $oHttpCodes        = Factory::service('HttpCodes');
-        $oAccessTokenModel = Factory::model('UserAccessToken', 'nailsapp/module-auth');
+        $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
 
         if (!isLoggedIn()) {
             throw new ApiException(
@@ -128,6 +128,6 @@ class AccessToken extends Base
             );
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api');
+        return Factory::factory('ApiResponse', 'nails/module-api');
     }
 }

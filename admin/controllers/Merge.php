@@ -26,7 +26,7 @@ class Merge extends BaseAdmin
     {
         if (userHasPermission('admin:auth:merge:users')) {
 
-            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('Users');
             $oNavGroup->setIcon('fa-users');
             $oNavGroup->addAction('Merge Users');
@@ -81,7 +81,7 @@ class Merge extends BaseAdmin
 
             if (!in_array(activeUser('id'), $mergeIds)) {
 
-                $oUserModel  = Factory::model('User', 'nailsapp/module-auth');
+                $oUserModel  = Factory::model('User', 'nails/module-auth');
                 $mergeResult = $oUserModel->merge($userId, $mergeIds, $preview);
 
                 if ($mergeResult) {
@@ -96,7 +96,7 @@ class Merge extends BaseAdmin
 
                         $status   = 'success';
                         $message  = 'Users were merged successfully.';
-                        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                        $oSession = Factory::service('Session', 'nails/module-auth');
                         $oSession->setFlashData($status, $message);
                         redirect('admin/auth/merge');
                     }
@@ -113,7 +113,7 @@ class Merge extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.merge.min.js', 'nailsapp/module-auth');
+        $oAsset->load('admin.accounts.merge.min.js', 'nails/module-auth');
         $oAsset->inline('var _accountsMerge = new NAILS_Admin_Accounts_Merge()', 'JS');
 
         // --------------------------------------------------------------------------

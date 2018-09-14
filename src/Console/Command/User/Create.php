@@ -201,8 +201,8 @@ class Create extends Base
         if (file_exists($sConfigFile)) {
             $sJson = file_get_contents($sConfigFile);
             $oJson = json_decode($sJson);
-            if (!empty($oJson->{'nailsapp/module-auth'}->default_user)) {
-                $oDefault = $oJson->{'nailsapp/module-auth'}->default_user;
+            if (!empty($oJson->{'nails/module-auth'}->default_user)) {
+                $oDefault = $oJson->{'nails/module-auth'}->default_user;
             }
         }
 
@@ -227,7 +227,7 @@ class Create extends Base
      */
     private function createUser($aUser, $iGroupId)
     {
-        $oUserModel        = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel        = Factory::model('User', 'nails/module-auth');
         $aUser['group_id'] = $iGroupId;
         try {
             $oUser = $oUserModel->create($aUser, false);

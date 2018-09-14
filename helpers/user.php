@@ -24,7 +24,7 @@ if (!function_exists('activeUser')) {
      */
     function activeUser($mKeys = false, $sDelimiter = ' ')
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel ? $oUserModel->activeUser($mKeys, $sDelimiter) : false;
     }
 }
@@ -43,7 +43,7 @@ if (!function_exists('userHasPermission')) {
      */
     function userHasPermission($sPermission, $mUser = null)
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel ? $oUserModel->hasPermission($sPermission, $mUser) : false;
     }
 }
@@ -62,7 +62,7 @@ if (!function_exists('groupHasPermission')) {
      */
     function groupHasPermission($sPermission, $mGroup)
     {
-        $oUserGroupModel = Factory::model('UserGroup', 'nailsapp/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         return $oUserGroupModel ? $oUserGroupModel->hasPermission($sPermission, $mGroup) : false;
     }
 }
@@ -77,7 +77,7 @@ if (!function_exists('isLoggedIn')) {
      */
     function isLoggedIn()
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel->isLoggedIn();
     }
 }
@@ -95,7 +95,7 @@ if (!function_exists('isAdmin')) {
      */
     function isAdmin($mUser = null)
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel ? $oUserModel->isAdmin($mUser) : false;
     }
 }
@@ -110,7 +110,7 @@ if (!function_exists('wasAdmin')) {
      */
     function wasAdmin()
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel->wasAdmin();
     }
 }
@@ -128,7 +128,7 @@ if (!function_exists('isSuperuser')) {
      */
     function isSuperuser($mUser = null)
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel ? $oUserModel->isSuperuser($mUser) : false;
     }
 }
@@ -144,7 +144,7 @@ if (!function_exists('getAdminRecoveryData')) {
      */
     function getAdminRecoveryData()
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel->getAdminRecoveryData();
     }
 }
@@ -160,7 +160,7 @@ if (!function_exists('unsetAdminRecoveryData')) {
      */
     function unsetAdminRecoveryData()
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         return $oUserModel ? $oUserModel->unsetAdminRecoveryData() : false;
     }
 }

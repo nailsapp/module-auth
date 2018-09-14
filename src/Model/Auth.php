@@ -65,7 +65,7 @@ class Auth extends Base
         // --------------------------------------------------------------------------
 
         //  Look up the user, how we do so depends on the login mode that the app is using
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
@@ -90,7 +90,7 @@ class Auth extends Base
         if ($oUser) {
 
             //  User was recognised; validate credentials
-            $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+            $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
             if ($oPasswordModel->isCorrect($oUser->id, $sPassword)) {
 
                 //  Password accepted! Final checks...
@@ -210,8 +210,8 @@ class Auth extends Base
     public function verifyCredentials($sIdentifier, $sPassword)
     {
         //  Look up the user, how we do so depends on the login mode that the app is using
-        $oUserModel     = Factory::model('User', 'nailsapp/module-auth');
-        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oUserModel     = Factory::model('User', 'nails/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oUser          = $oUserModel->getByIdentifier($sIdentifier);
 
         return !empty($oUser) ? $oPasswordModel->isCorrect($oUser->id, $sPassword) : false;
@@ -225,7 +225,7 @@ class Auth extends Base
      */
     public function logout()
     {
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUserModel->clearRememberCookie();
 
         // --------------------------------------------------------------------------
@@ -244,7 +244,7 @@ class Auth extends Base
         // --------------------------------------------------------------------------
 
         //  Destroy CI session
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->sess_destroy();
 
         // --------------------------------------------------------------------------
@@ -270,7 +270,7 @@ class Auth extends Base
      */
     public function mfaTokenGenerate($iUserId)
     {
-        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oNow           = Factory::factory('DateTime');
         $oInput         = Factory::service('Input');
         $oDb            = Factory::service('Database');
@@ -484,7 +484,7 @@ class Auth extends Base
             $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
 
-        $oPasswordModel = Factory::model('UserPassword', 'nailsapp/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oEncrypt       = Factory::service('Encrypt');
 
         $questionData = [];
@@ -565,7 +565,7 @@ class Auth extends Base
     public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
         //  Get an identifier for the user
-        $oUserModel = Factory::model('User', 'nailsapp/module-auth');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
         $oUser      = $oUserModel->getById($iUserId);
 
         if (!$oUser) {
