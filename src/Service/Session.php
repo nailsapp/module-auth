@@ -243,7 +243,7 @@ class Session
      */
     public function set_flashdata($mKey, $mValue)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::setFlashData');
         return $this->setFlashData($mKey, $mValue);
     }
 
@@ -256,7 +256,7 @@ class Session
      */
     public function flashdata($sKey)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::getFlashData');
         return $this->getFlashData($sKey);
     }
 
@@ -269,7 +269,7 @@ class Session
      */
     public function get_flashdata($sKey)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::getFlashData');
         return $this->getFlashData($sKey);
     }
 
@@ -282,7 +282,7 @@ class Session
      */
     public function keep_flashdata($mKey = null)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::keepFlashData');
         $this->keepFlashData($mKey);
     }
 
@@ -295,7 +295,7 @@ class Session
      */
     public function set_userdata($mKey, $mValue = null)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::setUserData');
         return $this->setUserData($mKey, $mValue);
     }
 
@@ -308,7 +308,7 @@ class Session
      */
     public function userdata($sKey)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::getUserData');
         return $this->getUserData($sKey);
     }
 
@@ -321,7 +321,7 @@ class Session
      */
     public function unset_userdata($mKey)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::unsetUserData');
         return $this->unsetUserData($mKey);
     }
 
@@ -334,7 +334,7 @@ class Session
      */
     public function sess_destroy()
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::destroy');
         return $this->destroy();
     }
 
@@ -347,7 +347,7 @@ class Session
      */
     public function sess_regenerate($bDestroy = false)
     {
-        trigger_error('Function ' . __METHOD__ . ' is deprecated', E_USER_DEPRECATED);
+        deprecatedError(__METHOD__, 'Session::regenerate');
         return $this->destroy($bDestroy);
     }
 }
