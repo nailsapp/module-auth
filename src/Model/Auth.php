@@ -245,7 +245,7 @@ class Auth extends Base
 
         //  Destroy CI session
         $oSession = Factory::service('Session', 'nails/module-auth');
-        $oSession->sess_destroy();
+        $oSession->destroy();
 
         // --------------------------------------------------------------------------
 
