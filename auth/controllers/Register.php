@@ -140,8 +140,8 @@ class Register extends Base
                 // --------------------------------------------------------------------------
 
                 //  Handle referrals
-                if ($oSession->userdata('referred_by')) {
-                    $aInsertData['referred_by'] = $oSession->userdata('referred_by');
+                if ($oSession->getUserData('referred_by')) {
+                    $aInsertData['referred_by'] = $oSession->getUserData('referred_by');
                 }
 
                 // --------------------------------------------------------------------------

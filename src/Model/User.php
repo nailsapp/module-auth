@@ -374,7 +374,7 @@ class User extends Base
     public function wasAdmin()
     {
         $oSession = Factory::service('Session', 'nails/module-auth');
-        return (bool) $oSession->userdata($this->sAdminRecoveryField);
+        return (bool) $oSession->getUserData($this->sAdminRecoveryField);
     }
 
     // --------------------------------------------------------------------------
@@ -390,7 +390,7 @@ class User extends Base
         $oSession = Factory::service('Session', 'nails/module-auth');
         $oInput   = Factory::service('Input');
         //  Look for existing Recovery Data
-        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
+        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
@@ -426,7 +426,7 @@ class User extends Base
     public function getAdminRecoveryData()
     {
         $oSession             = Factory::service('Session', 'nails/module-auth');
-        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
+        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
             return [];
@@ -444,7 +444,7 @@ class User extends Base
     public function unsetAdminRecoveryData()
     {
         $oSession             = Factory::service('Session', 'nails/module-auth');
-        $existingRecoveryData = $oSession->userdata($this->sAdminRecoveryField);
+        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
 
@@ -1759,11 +1759,11 @@ class User extends Base
             if (!empty($recoveryData->newUserId)) {
                 $me = $recoveryData->newUserId;
             } else {
-                $me = $oSession->userdata('id');
+                $me = $oSession->getUserData('id');
             }
 
         } else {
-            $me = $oSession->userdata('id');
+            $me = $oSession->getUserData('id');
         }
 
         //  Is anybody home? Hello...?
