@@ -92,7 +92,7 @@ $config['auth_social_signon_providers'] = [
         ],
         'wrapper' => [
             'class' => 'Hybrid_Providers_Instagram',
-            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-instagram/Providers/Instagram.php',
+            'path'  => NAILS_APP_PATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-instagram/Providers/Instagram.php',
         ],
     ],
     [
@@ -107,7 +107,7 @@ $config['auth_social_signon_providers'] = [
         ],
         'wrapper' => [
             'class' => 'Hybrid_Providers_GitHub',
-            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-github/Providers/GitHub.php',
+            'path'  => NAILS_APP_PATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-github/Providers/GitHub.php',
         ],
     ],
     [
@@ -122,7 +122,7 @@ $config['auth_social_signon_providers'] = [
         ],
         'wrapper' => [
             'class' => 'Hybrid_Providers_px500',
-            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-500px/Providers/px500.php',
+            'path'  => NAILS_APP_PATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-500px/Providers/px500.php',
         ],
     ],
     [
@@ -137,7 +137,7 @@ $config['auth_social_signon_providers'] = [
         ],
         'wrapper' => [
             'class' => 'Hybrid_Providers_Tumblr',
-            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-tumblr/Providers/Tumblr.php',
+            'path'  => NAILS_APP_PATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-tumblr/Providers/Tumblr.php',
         ],
     ],
     [
@@ -152,7 +152,7 @@ $config['auth_social_signon_providers'] = [
         ],
         'wrapper' => [
             'class' => 'Hybrid_Providers_Vimeo',
-            'path'  => FCPATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-vimeo/Providers/Vimeo.php',
+            'path'  => NAILS_APP_PATH . 'vendor/hybridauth/hybridauth/additional-providers/hybridauth-vimeo/Providers/Vimeo.php',
         ],
     ],
 ];
