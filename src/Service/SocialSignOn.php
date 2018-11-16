@@ -14,6 +14,7 @@ namespace Nails\Auth\Service;
 
 use Nails\Factory;
 use Nails\Environment;
+use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Traits\ErrorHandling;
 use Nails\Common\Traits\Caching;
 
@@ -132,7 +133,7 @@ class SocialSignOn
 
                 case 'error':
                 default:
-                    _NAILS_ERROR($e->getMessage());
+                    ErrorHandler::die($e->getMessage());
                     break;
             }
         }
