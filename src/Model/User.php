@@ -69,6 +69,7 @@ class User extends Base
 
     /**
      * Initialise the generic user model
+     *
      * @return void
      */
     public function init()
@@ -86,6 +87,7 @@ class User extends Base
 
     /**
      * Log in a previously logged in user
+     *
      * @return boolean
      */
     protected function loginRememberedUser()
@@ -208,6 +210,7 @@ class User extends Base
 
     /**
      * Clear the active user
+     *
      * @return void
      */
     public function clearActiveUser()
@@ -289,6 +292,7 @@ class User extends Base
 
     /**
      * Clears the login data for a user
+     *
      * @return  void
      */
     public function clearLoginData()
@@ -313,6 +317,7 @@ class User extends Base
 
     /**
      * Determines whether the active user is logged in or not.
+     *
      * @return  bool
      */
     public function isLoggedIn()
@@ -324,6 +329,7 @@ class User extends Base
 
     /**
      * Determines whether the active user is to be remembered
+     *
      * @return  bool
      */
     public function bIsRemembered()
@@ -369,6 +375,7 @@ class User extends Base
      * When an admin 'logs in as' another user a hash is added to the session so
      * the system can log them back in. This method is simply a quick and logical
      * way of checking if the session variable exists.
+     *
      * @return boolean
      */
     public function wasAdmin()
@@ -421,6 +428,7 @@ class User extends Base
 
     /**
      * Returns the recovery data at the bottom of the stack, i.e the most recently added
+     *
      * @return array|\stdClass
      */
     public function getAdminRecoveryData()
@@ -439,6 +447,7 @@ class User extends Base
 
     /**
      * Removes the most recently added recovery data from the stack
+     *
      * @return void
      */
     public function unsetAdminRecoveryData()
@@ -1072,7 +1081,7 @@ class User extends Base
             // --------------------------------------------------------------------------
 
             //  How'd we get on?
-            if (!$bRollback && $oDb->trans_status() !== false) {
+            if (!$bRollback) {
 
                 $oDb->trans_commit();
 
@@ -1574,25 +1583,15 @@ class User extends Base
 
         //  Update
         $oDb->trans_begin();
+        try {
+            $oDb->set('is_primary', false);
+            $oDb->where('user_id', $oEmail->user_id);
+            $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
-        $oDb->set('is_primary', false);
-        $oDb->where('user_id', $oEmail->user_id);
-        $oDb->update(NAILS_DB_PREFIX . 'user_email');
+            $oDb->set('is_primary', true);
+            $oDb->where('id', $oEmail->id);
+            $oDb->update(NAILS_DB_PREFIX . 'user_email');
 
-        $oDb->set('is_primary', true);
-        $oDb->where('id', $oEmail->id);
-        $oDb->update(NAILS_DB_PREFIX . 'user_email');
-
-        $oDb->trans_complete();
-
-        if ($oDb->trans_status() === false) {
-
-            $oDb->trans_rollback();
-            return false;
-
-        } else {
-
-            $oDb->trans_commit();
             $this->unsetCacheUser($oEmail->user_id);
 
             //  Update the activeUser
@@ -1604,9 +1603,15 @@ class User extends Base
                 //  @todo: update the rest of the activeUser
             }
 
+            $oDb->trans_commit();
             return true;
 
+        } catch (\Exception $e) {
+            $this->setError('Failed to set primary email. ' . $e->getMessage());
+            $oDb->trans_rollback();
+            return false;
         }
+
     }
 
     // --------------------------------------------------------------------------
@@ -1732,6 +1737,7 @@ class User extends Base
 
     /**
      * Clear the active user's 'rememberMe' cookie
+     *
      * @return void
      */
     public function clearRememberCookie()
@@ -1746,6 +1752,7 @@ class User extends Base
 
     /**
      * Refresh the user's session from the database
+     *
      * @return boolean
      */
     protected function refreshSession()
@@ -2169,6 +2176,7 @@ class User extends Base
 
     /**
      * Generates a valid referral code
+     *
      * @return string
      */
     protected function generateReferral()
