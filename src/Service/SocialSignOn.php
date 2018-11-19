@@ -73,7 +73,7 @@ class SocialSignOn
         $aConfig = [
             'base_url'   => site_url('vendor/hybridauth/hybridauth/hybridauth/index.php'),
             'providers'  => [],
-            'debug_mode' => Environment::not('PRODUCTION'),
+            'debug_mode' => Environment::not(Environment::ENV_PROD),
             'debug_file' => DEPLOY_LOG_DIR . 'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php',
         ];
 

@@ -51,7 +51,7 @@ class Auth extends Base
     public function login($sIdentifier, $sPassword, $bRemember = false)
     {
         //  Delay execution for a moment (reduces brute force efficiently)
-        if (Environment::not('DEVELOPMENT')) {
+        if (Environment::not(Environment::ENV_DEV)) {
             usleep($this->aBruteProtection['delay']);
         }
 
