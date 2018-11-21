@@ -267,7 +267,7 @@ class Group extends Base
 
         // Super users or CLI users can do anything their heart's desire
         $oInput = Factory::service('Input');
-        if (in_array('admin:superuser', $aAcl) || $oInput->isCli()) {
+        if (in_array('admin:superuser', $aAcl) || $oInput::isCli()) {
             return true;
         }
 

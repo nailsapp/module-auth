@@ -23,7 +23,7 @@ class MfaQuestion extends BaseMfa
         if ($this->authMfaMode == 'QUESTION') {
             $this->index();
         } else {
-            show_404();
+            show404();
         }
     }
 

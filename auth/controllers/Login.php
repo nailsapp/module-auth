@@ -327,7 +327,7 @@ class Login extends Base
         $oConfig = Factory::service('Config');
 
         if (!$oConfig->item('authEnableHashedLogin')) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------
@@ -1007,7 +1007,7 @@ class Login extends Base
             if ($oSocial->isValidProvider($method)) {
                 $this->socialSignon($method);
             } else {
-                show_404();
+                show404();
             }
         }
     }

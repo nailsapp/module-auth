@@ -23,7 +23,7 @@ class MfaDevice extends BaseMfa
         if ($this->authMfaMode == 'DEVICE') {
             $this->index();
         } else {
-            show_404();
+            show404();
         }
     }
 

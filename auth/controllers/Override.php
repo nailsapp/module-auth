@@ -48,7 +48,7 @@ class Override extends Base
         $oUser   = $oUserModel->getByHashes($sHashId, $sHashPw);
 
         if (!$oUser) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------
@@ -73,9 +73,9 @@ class Override extends Base
                     $oSession->setFlashData('error', lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
                 } elseif ($bIsCloning) {
-                    show_404();
+                    show404();
                 } elseif ($bIsSuperuser) {
-                    show_404();
+                    show404();
                 }
             }
         }

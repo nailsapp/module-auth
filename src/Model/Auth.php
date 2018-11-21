@@ -16,6 +16,7 @@ use Google\Authenticator\GoogleAuthenticator;
 use Nails\Common\Model\Base;
 use Nails\Environment;
 use Nails\Factory;
+use Nails\Functions;
 
 class Auth extends Base
 {
@@ -583,7 +584,7 @@ class Auth extends Base
         }
 
         //  Get the hostname
-        $sHostname = getDomainFromUrl(BASE_URL);
+        $sHostname = Functions::getDomainFromUrl(BASE_URL);
 
         //  User identifier
         $sUsername = $oUser->username;

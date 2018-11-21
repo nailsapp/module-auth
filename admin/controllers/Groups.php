@@ -137,7 +137,7 @@ class Groups extends DefaultController
         $oItem      = $oItemModel->getById($iItemId);
 
         if (empty($oItem)) {
-            show_404();
+            show404();
         } elseif ($oItem->id === activeUser('group_id')) {
             $oSession->setFlashData('error', 'You cannot delete your own user group.');
             redirect('admin/auth/groups');
@@ -161,7 +161,7 @@ class Groups extends DefaultController
     public function set_default()
     {
         if (!userHasPermission('admin:auth:groups:setDefault')) {
-            show_404();
+            show404();
         }
 
         $oUri            = Factory::service('Uri');

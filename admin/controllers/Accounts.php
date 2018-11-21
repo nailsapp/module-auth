@@ -14,6 +14,7 @@ namespace Nails\Admin\Auth;
 
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Components;
 use Nails\Factory;
 
 class Accounts extends BaseAdmin
@@ -731,7 +732,7 @@ class Accounts extends BaseAdmin
         $this->data['default_timezone'] = $oDateTimeModel->getTimezoneDefault();
 
         //  Fetch any user uploads
-        if (isModuleEnabled('nails/module-cdn')) {
+        if (Components::exists('nails/module-cdn')) {
             $oCdn                       = Factory::service('Cdn', 'nails/module-cdn');
             $this->data['user_uploads'] = $oCdn->getObjectsForUser($user->id);
         }
@@ -781,7 +782,7 @@ class Accounts extends BaseAdmin
     public function change_group()
     {
         if (!userHasPermission('admin:auth:accounts:changeUserGroup')) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------
@@ -792,12 +793,12 @@ class Accounts extends BaseAdmin
         $this->data['users'] = $oUserModel->getByIds($userIds);
 
         if (!$this->data['users']) {
-            show_404();
+            show404();
         }
 
         foreach ($this->data['users'] as $user) {
             if ($oUserModel->isSuperuser($user->id) && !$oUserModel->isSuperuser()) {
-                show_404();
+                show404();
             }
         }
 
