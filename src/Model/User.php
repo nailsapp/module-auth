@@ -13,6 +13,7 @@
 namespace Nails\Auth\Model;
 
 use Nails\Auth\Events;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
@@ -968,9 +969,9 @@ class User extends Base
 
             //  If a username has been passed then check if it's available
             if (!empty($sDataUsername)) {
-
                 //  Check username is valid
                 if (!$this->isValidUsername($sDataUsername, true, $iUserId)) {
+                    //  isValidUsername will set the error message
                     return false;
                 } else {
                     $aDataUser['username'] = $sDataUsername;
@@ -979,67 +980,79 @@ class User extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Begin transaction
-            $bRollback = false;
-            $oDb->trans_begin();
-
-            // --------------------------------------------------------------------------
-
-            //  Resetting 2FA?
-            if ($dataResetMfaQuestion || $dataResetMfaDevice) {
-
-                $oConfig = Factory::service('Config');
-                $oConfig->load('auth/auth');
-                $sTwoFactorMode = $oConfig->item('authTwoFactorMode');
-
-                if ($sTwoFactorMode == 'QUESTION' && $dataResetMfaQuestion) {
-
-                    $oDb->where('user_id', $iUserId);
-                    if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
-                        $oDb->trans_rollback();
-                        $this->setError('Could not reset user\'s Multi Factor Authentication questions.');
-                        return false;
-                    }
-
-                } elseif ($sTwoFactorMode == 'DEVICE' && $dataResetMfaDevice) {
-
-                    $oDb->where('user_id', $iUserId);
-                    if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
-                        $oDb->trans_rollback();
-                        $this->setError('Could not reset user\'s Multi Factor Authentication device.');
-                        return false;
-                    }
+            if (!empty($sDataEmail)) {
+                Factory::helper('email');
+                if (!valid_email($sDataEmail)) {
+                    $this->setError('"' . $sDataEmail . '" is not a valid email address.');
+                    return false;
                 }
             }
 
             // --------------------------------------------------------------------------
 
-            //  Update the user table
-            $oDb->where('id', $iUserId);
-            $oDb->set('last_update', 'NOW()', false);
+            //  Begin transaction
+            try {
 
-            if ($aDataUser) {
-                $oDb->set($aDataUser);
-            }
+                $oDb->trans_begin();
 
-            $oDb->update(NAILS_DB_PREFIX . 'user');
+                // --------------------------------------------------------------------------
 
-            // --------------------------------------------------------------------------
+                //  Resetting 2FA?
+                if ($dataResetMfaQuestion || $dataResetMfaDevice) {
 
-            //  Update the meta table
-            if ($aDataMeta) {
-                $oDb->where('user_id', $iUserId);
-                $oDb->set($aDataMeta);
-                $oDb->update(NAILS_DB_PREFIX . 'user_meta_app');
-            }
+                    $oConfig = Factory::service('Config');
+                    $oConfig->load('auth/auth');
+                    $sTwoFactorMode = $oConfig->item('authTwoFactorMode');
 
-            // --------------------------------------------------------------------------
+                    if ($sTwoFactorMode == 'QUESTION' && $dataResetMfaQuestion) {
 
-            //  If an email has been passed then attempt to update the user's email too
-            if ($sDataEmail) {
+                        $oDb->where('user_id', $iUserId);
+                        if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
+                            $oDb->trans_rollback();
+                            $this->setError('Could not reset user\'s Multi Factor Authentication questions.');
+                            return false;
+                        }
 
-                Factory::helper('email');
-                if (valid_email($sDataEmail)) {
+                    } elseif ($sTwoFactorMode == 'DEVICE' && $dataResetMfaDevice) {
+
+                        $oDb->where('user_id', $iUserId);
+                        if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+                            $oDb->trans_rollback();
+                            $this->setError('Could not reset user\'s Multi Factor Authentication device.');
+                            return false;
+                        }
+                    }
+                }
+
+                // --------------------------------------------------------------------------
+
+                //  Update the user table
+                $oDb->where('id', $iUserId);
+                $oDb->set('last_update', 'NOW()', false);
+
+                if ($aDataUser) {
+                    $oDb->set($aDataUser);
+                }
+
+                if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
+                    throw new NailsException('Failed to update user table.');
+                }
+
+                // --------------------------------------------------------------------------
+
+                //  Update the meta table
+                if ($aDataMeta) {
+                    $oDb->where('user_id', $iUserId);
+                    $oDb->set($aDataMeta);
+                    if (!$oDb->update(NAILS_DB_PREFIX . 'user_meta_app')) {
+                        throw new NailsException('Failed to update user meta table.');
+                    }
+                }
+
+                // --------------------------------------------------------------------------
+
+                //  If an email has been passed then attempt to update the user's email too
+                if ($sDataEmail) {
 
                     //  Check if the email is already being used
                     $oDb->where('email', $sDataEmail);
@@ -1056,8 +1069,7 @@ class User extends Base
                         if ($oEmail->user_id == $iUserId) {
                             $this->emailMakePrimary($oEmail->email);
                         } else {
-                            $this->setError('Email is already in use.');
-                            $bRollback = true;
+                            throw new NailsException('Email is already in use.');
                         }
 
                     } else {
@@ -1066,26 +1078,11 @@ class User extends Base
                          * Doesn't appear to be in use, add as a new email address and
                          * make it the primary one
                          */
-
                         $this->emailAdd($sDataEmail, $iUserId, true);
                     }
-
-                } else {
-
-                    //  Error, not a valid email; roll back transaction
-                    $this->setError('"' . $sDataEmail . '" is not a valid email address.');
-                    $bRollback = true;
                 }
-            }
-
-            // --------------------------------------------------------------------------
-
-            //  How'd we get on?
-            if (!$bRollback) {
 
                 $oDb->trans_commit();
-
-                // --------------------------------------------------------------------------
 
                 //  If the user's password was updated send them a notification
                 if ($bPasswordUpdated) {
@@ -1106,9 +1103,9 @@ class User extends Base
                     $oEmailer->send($oEmail, true);
                 }
 
-            } else {
-
+            } catch (\Exception $e) {
                 $oDb->trans_rollback();
+                $this->setError($e->getMessage());
                 return false;
             }
 
@@ -2007,118 +2004,110 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oDb->trans_begin();
+        try {
 
-        $oDb->set($aUserData);
+            $oDb->trans_begin();
 
-        if (!$oDb->insert(NAILS_DB_PREFIX . 'user')) {
-            $this->setError('Failed to create base user object.');
-            $oDb->trans_rollback();
-            return false;
-        }
+            $oDb->set($aUserData);
 
-        $iId = $oDb->insert_id();
-
-        // --------------------------------------------------------------------------
-
-        /**
-         * Update the user table with an MD5 hash of the user ID; a number of functions
-         * make use of looking up this hashed information; this should be quicker.
-         */
-
-        $oDb->set('id_md5', md5($iId));
-        $oDb->where('id', $iId);
-
-        if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
-            $this->setError('Failed to update base user object.');
-            $oDb->trans_rollback();
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Create the user_meta_app record, add any extra data if needed
-        $oDb->set('user_id', $iId);
-
-        if ($aMetaData) {
-            $oDb->set($aMetaData);
-        }
-
-        if (!$oDb->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
-            $this->setError('Failed to create user meta data object.');
-            $oDb->trans_rollback();
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Finally add the email address to the user_email table
-        if (!empty($sEmail)) {
-
-            $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false);
-
-            if (!$sCode) {
-                //  Error will be set by emailAdd();
-                $oDb->trans_rollback();
-                return false;
+            if (!$oDb->insert(NAILS_DB_PREFIX . 'user')) {
+                throw new NailsException('Failed to create base user object.');
             }
 
-            //  Send the user the welcome email
-            if ($sendWelcome) {
+            $iId = $oDb->insert_id();
 
-                $oEmailer      = Factory::service('Emailer', 'nails/module-email');
-                $oEmail        = new \stdClass();
-                $oEmail->type  = 'new_user_' . $oGroup->id;
-                $oEmail->to_id = $iId;
-                $oEmail->data  = new \stdClass();
+            // --------------------------------------------------------------------------
 
-                //  If this user is created by an admin then take note of that.
-                if ($this->isAdmin() && $this->activeUser('id') != $iId) {
+            /**
+             * Update the user table with an MD5 hash of the user ID; a number of functions
+             * make use of looking up this hashed information; this should be quicker.
+             */
 
-                    $oEmail->data->admin              = new \stdClass();
-                    $oEmail->data->admin->id          = $this->activeUser('id');
-                    $oEmail->data->admin->first_name  = $this->activeUser('first_name');
-                    $oEmail->data->admin->last_name   = $this->activeUser('last_name');
-                    $oEmail->data->admin->group       = new \stdClass();
-                    $oEmail->data->admin->group->id   = $oGroup->id;
-                    $oEmail->data->admin->group->name = $oGroup->label;
+            $oDb->set('id_md5', md5($iId));
+            $oDb->where('id', $iId);
+
+            if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
+                throw new NailsException('Failed to update base user object.');
+            }
+
+            // --------------------------------------------------------------------------
+
+            //  Create the user_meta_app record, add any extra data if needed
+            $oDb->set('user_id', $iId);
+
+            if ($aMetaData) {
+                $oDb->set($aMetaData);
+            }
+
+            if (!$oDb->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
+                throw new NailsException('Failed to create user meta data object.');
+            }
+
+            // --------------------------------------------------------------------------
+
+            //  Finally add the email address to the user_email table
+            if (!empty($sEmail)) {
+
+                $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false);
+
+                if (!$sCode) {
+                    //  Error will be set by emailAdd();
+                    throw new NailsException($this->lastError());
                 }
 
-                if (!empty($data['password']) && $bInformUserPw) {
+                //  Send the user the welcome email
+                if ($sendWelcome) {
 
-                    $oEmail->data->password = $data['password'];
+                    $oEmailer      = Factory::service('Emailer', 'nails/module-email');
+                    $oEmail        = new \stdClass();
+                    $oEmail->type  = 'new_user_' . $oGroup->id;
+                    $oEmail->to_id = $iId;
+                    $oEmail->data  = new \stdClass();
 
-                    //  Is this a temp password? We should let them know that too
-                    if ($aUserData['temp_pw']) {
-                        $oEmail->data->isTemp = !empty($aUserData['temp_pw']);
+                    //  If this user is created by an admin then take note of that.
+                    if ($this->isAdmin() && $this->activeUser('id') != $iId) {
+
+                        $oEmail->data->admin              = new \stdClass();
+                        $oEmail->data->admin->id          = $this->activeUser('id');
+                        $oEmail->data->admin->first_name  = $this->activeUser('first_name');
+                        $oEmail->data->admin->last_name   = $this->activeUser('last_name');
+                        $oEmail->data->admin->group       = new \stdClass();
+                        $oEmail->data->admin->group->id   = $oGroup->id;
+                        $oEmail->data->admin->group->name = $oGroup->label;
                     }
-                }
 
-                //  If the email isn't verified we'll want to include a note asking them to do so
-                if (empty($bEmailIsVerified)) {
-                    $oEmail->data->verifyUrl = site_url('email/verify/' . $iId . '/' . $sCode);
-                }
+                    if (!empty($data['password']) && $bInformUserPw) {
 
-                if (!$oEmailer->send($oEmail, true)) {
+                        $oEmail->data->password = $data['password'];
 
-                    //  Failed to send using the group email, try using the generic email template
-                    $oEmail->type = 'new_user';
+                        //  Is this a temp password? We should let them know that too
+                        if ($aUserData['temp_pw']) {
+                            $oEmail->data->isTemp = !empty($aUserData['temp_pw']);
+                        }
+                    }
+
+                    //  If the email isn't verified we'll want to include a note asking them to do so
+                    if (empty($bEmailIsVerified)) {
+                        $oEmail->data->verifyUrl = site_url('email/verify/' . $iId . '/' . $sCode);
+                    }
 
                     if (!$oEmailer->send($oEmail, true)) {
 
-                        //  Email failed to send, must not exist, oh well.
-                        $sError = 'Failed to send welcome email.';
-                        $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
-                        $this->setError($sError);
+                        //  Failed to send using the group email, try using the generic email template
+                        $oEmail->type = 'new_user';
+
+                        if (!$oEmailer->send($oEmail, true)) {
+
+                            //  Email failed to send, must not exist, oh well.
+                            $sError = 'Failed to send welcome email.';
+                            $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
+                            throw new NailsException($sError);
+                        }
                     }
                 }
             }
-        }
 
-        // --------------------------------------------------------------------------
-
-        //  commit the transaction and return new user object
-        if ($oDb->trans_status() !== false) {
+            // --------------------------------------------------------------------------
 
             $oDb->trans_commit();
 
@@ -2127,8 +2116,9 @@ class User extends Base
 
             return $this->getById($iId);
 
-        } else {
-
+        } catch (\Exception $e) {
+            $oDb->trans_rollback();
+            $this->setError($e->getMessage());
             return false;
         }
     }
