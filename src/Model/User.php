@@ -25,6 +25,8 @@ class User extends Base
     protected $bIsRemembered;
     protected $bIsLoggedIn;
     protected $sAdminRecoveryField;
+    protected $aUserColumns;
+    protected $aMetaColumns;
 
     // --------------------------------------------------------------------------
 
@@ -611,38 +613,18 @@ class User extends Base
      */
     protected function getUserColumns($sPrefix = '', $aCols = [])
     {
-        $aCols[] = 'group_id';
-        $aCols[] = 'ip_address';
-        $aCols[] = 'last_ip';
-        $aCols[] = 'password';
-        $aCols[] = 'password_md5';
-        $aCols[] = 'password_engine';
-        $aCols[] = 'password_changed';
-        $aCols[] = 'salt';
-        $aCols[] = 'forgotten_password_code';
-        $aCols[] = 'remember_code';
-        $aCols[] = 'created';
-        $aCols[] = 'last_login';
-        $aCols[] = 'last_seen';
-        $aCols[] = 'is_suspended';
-        $aCols[] = 'temp_pw';
-        $aCols[] = 'failed_login_count';
-        $aCols[] = 'failed_login_expires';
-        $aCols[] = 'last_update';
-        $aCols[] = 'user_acl';
-        $aCols[] = 'login_count';
-        $aCols[] = 'referral';
-        $aCols[] = 'referred_by';
-        $aCols[] = 'salutation';
-        $aCols[] = 'first_name';
-        $aCols[] = 'last_name';
-        $aCols[] = 'gender';
-        $aCols[] = 'dob';
-        $aCols[] = 'profile_img';
-        $aCols[] = 'timezone';
-        $aCols[] = 'datetime_format_date';
-        $aCols[] = 'datetime_format_time';
-        $aCols[] = 'language';
+        if ($this->aUserColumns === null) {
+
+            $oDb                = Factory::service('Database');
+            $aResult            = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user`')->result();
+            $this->aUserColumns = [];
+
+            foreach ($aResult as $oResult) {
+                $this->aUserColumns[] = $oResult->Field;
+            }
+        }
+
+        $aCols = array_merge($aCols, $this->aUserColumns);
 
         return $this->prepareDbColumns($sPrefix, $aCols);
     }
@@ -659,6 +641,21 @@ class User extends Base
      */
     protected function getMetaColumns($sPrefix = '', $aCols = [])
     {
+        if ($this->aMetaColumns === null) {
+
+            $oDb                = Factory::service('Database');
+            $aResult            = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
+            $this->aMetaColumns = [];
+
+            foreach ($aResult as $oResult) {
+                if ($oResult->Field !== 'user_id') {
+                    $this->aMetaColumns[] = $oResult->Field;
+                }
+            }
+        }
+
+        $aCols = array_merge($aCols, $this->aMetaColumns);
+
         return $this->prepareDbColumns($sPrefix, $aCols);
     }
 
