@@ -133,7 +133,7 @@ class SocialSignOn
 
                 case 'error':
                 default:
-                    ErrorHandler::die($e->getMessage());
+                    ErrorHandler::halt($e->getMessage());
                     break;
             }
         }
