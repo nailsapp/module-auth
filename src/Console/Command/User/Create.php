@@ -252,7 +252,7 @@ class Create extends Base
      *
      * @return int
      */
-    protected function abort($iExitCode = self::EXIT_CODE_FAILURE, $aMessages = [])
+    protected function abort($iExitCode = self::EXIT_CODE_FAILURE, array $aMessages = [])
     {
         $aMessages[] = 'Aborting user creation';
         return parent::abort($iExitCode, $aMessages);
