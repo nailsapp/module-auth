@@ -22,7 +22,7 @@ if (!isset($login_method) || !isset($user_id) || !isset($token)) {
 } else {
 
     $login_method = $login_method && $login_method != 'native' ? '/' . $login_method : '';
-    $formUrl      = 'auth/mfa_question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
+    $formUrl      = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
     $formUrl      = site_url($formUrl);
 }
 

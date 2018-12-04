@@ -214,11 +214,11 @@ class Login extends Base
             switch ($oConfig->item('authTwoFactorMode')) {
 
                 case 'QUESTION':
-                    $controller = 'mfa_question';
+                    $controller = 'mfa/question';
                     break;
 
                 case 'DEVICE':
-                    $controller = 'mfa_device';
+                    $controller = 'mfa/device';
                     break;
 
                 default:

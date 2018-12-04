@@ -22,7 +22,7 @@ if (!empty($query)) {
             <div class="well well-lg">
                 <?php
 
-                echo form_open('auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
+                echo form_open('auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query);
 
                 echo form_hidden('mfaSecret', $secret['secret']);
 

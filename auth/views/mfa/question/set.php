@@ -27,7 +27,7 @@ if ($query) {
 
                 echo form_open(
                     site_url(
-                        'auth/mfa_question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query
+                        'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query
                     )
                 );
 

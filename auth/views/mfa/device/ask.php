@@ -21,7 +21,7 @@ if (!isset($user_id) || !isset($token)) {
 
 } else {
 
-    $formUrl = 'auth/mfa_device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
+    $formUrl = 'auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query;
     $formUrl = site_url($formUrl);
 }
 
