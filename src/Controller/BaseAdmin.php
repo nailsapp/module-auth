@@ -15,12 +15,6 @@ namespace Nails\Auth\Controller;
 use Nails\Admin\Controller\Base;
 use Nails\Factory;
 
-class BaseAdmin extends Base
+abstract class BaseAdmin extends Base
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.styles.css', 'nails/module-auth');
-    }
 }

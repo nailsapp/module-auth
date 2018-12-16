@@ -41,11 +41,6 @@ class Groups extends DefaultController
     {
         parent::loadEditViewData($oItem);
 
-        //  Assets
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.groups.min.js', 'nails/module-auth');
-        $oAsset->inline('var _edit = new NAILS_Admin_Auth_Groups_Edit();', 'JS');
-
         //  Get all available permissions
         $this->data['aPermissions'] = [];
         foreach ($this->data['adminControllers'] as $module => $oModuleDetails) {
@@ -100,6 +95,7 @@ class Groups extends DefaultController
 
     /**
      * Extract data from post variable
+     *
      * @return array
      */
     protected function getPostObject()
@@ -123,6 +119,7 @@ class Groups extends DefaultController
 
     /**
      * Delete an item
+     *
      * @return void
      */
     public function delete()
@@ -156,6 +153,7 @@ class Groups extends DefaultController
 
     /**
      * Set the default user group
+     *
      * @return void
      */
     public function set_default()

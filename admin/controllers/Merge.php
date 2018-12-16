@@ -112,12 +112,6 @@ class Merge extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.merge.min.js', 'nails/module-auth');
-        $oAsset->inline('var _accountsMerge = new NAILS_Admin_Accounts_Merge()', 'JS');
-
-        // --------------------------------------------------------------------------
-
         //  Load views
         Helper::loadView('index');
     }

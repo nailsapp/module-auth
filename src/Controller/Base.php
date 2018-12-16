@@ -14,7 +14,7 @@ namespace Nails\Auth\Controller;
 
 use Nails\Factory;
 
-class Base extends \App\Controller\Base
+abstract class Base extends \App\Controller\Base
 {
     public function __construct()
     {
@@ -38,7 +38,7 @@ class Base extends \App\Controller\Base
             $oAsset = Factory::service('Asset');
             $oAsset->clear();
             $oAsset->load('nails.min.css', 'nails/common');
-            $oAsset->load('styles.css', 'nails/module-auth');
+            $oAsset->load('styles.min.css', 'nails/module-auth');
         }
     }
 }

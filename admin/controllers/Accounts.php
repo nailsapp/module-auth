@@ -25,6 +25,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
+     *
      * @return \stdClass
      */
     public static function announce()
@@ -59,6 +60,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Returns an array of extra permissions for this controller
+     *
      * @return array
      */
     public static function permissions()
@@ -93,6 +95,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Browse user accounts
+     *
      * @return void
      */
     public function index()
@@ -160,7 +163,7 @@ class Accounts extends BaseAdmin
             'Suspended',
             [
                 ['Yes', true, false],
-                ['No', false, true]
+                ['No', false, true],
             ]
         );
 
@@ -198,6 +201,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Create a new user account
+     *
      * @return void
      */
     public function create()
@@ -358,13 +362,6 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Assets
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.create.min.js', 'nails/module-auth');
-        $oAsset->inline('_nailsAdminAccountsCreate = new NAILS_Admin_Accounts_Create();', 'JS');
-
-        // --------------------------------------------------------------------------
-
         //  Load views
         Helper::loadView('create/index');
     }
@@ -373,6 +370,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Edit a user account
+     *
      * @return void
      */
     public function edit()
@@ -762,13 +760,6 @@ class Accounts extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Assets
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.accounts.edit.min.js', 'nails/module-auth');
-        $oAsset->inline('_nailsAdminAccountsEdit = new NAILS_Admin_Accounts_Edit();', 'JS');
-
-        // --------------------------------------------------------------------------
-
         //  Load views
         Helper::loadView('edit/index');
     }
@@ -777,6 +768,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Change a user's group
+     *
      * @return void
      */
     public function change_group()
@@ -832,6 +824,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Suspend a user
+     *
      * @return void
      */
     public function suspend()
@@ -910,6 +903,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Unsuspend a user
+     *
      * @return void
      */
     public function unsuspend()
@@ -994,6 +988,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Delete a user
+     *
      * @return void
      */
     public function delete()
@@ -1069,6 +1064,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Delete a user's profile image
+     *
      * @return void
      */
     public function delete_profile_img()
@@ -1147,6 +1143,7 @@ class Accounts extends BaseAdmin
 
     /**
      * Manage a user's email address
+     *
      * @return void
      */
     public function email()
