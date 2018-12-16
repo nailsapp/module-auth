@@ -5,27 +5,14 @@ class AccountEdit {
      */
     constructor() {
         if ($('.group-accounts.edit').length) {
-            this.initGroupSwitcher();
             this.initEmailManagement();
         }
     }
 
     // --------------------------------------------------------------------------
 
-    initGroupSwitcher() {
-        $('select[name=group_id]')
-            .Event('change', (e, element) => {
-                let $element = $(element);
-                $('#user-group-descriptions li').hide();
-                $('#user-group-' + $element.val()).show();
-            });
-    }
-
-    // --------------------------------------------------------------------------
-
     initEmailManagement() {
         //  Bind all the things
-        var _this = this;
         $('#addEmailForm a.submit')
             .Event('click', () => {
                 this.addEmail();
