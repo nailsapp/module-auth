@@ -6,7 +6,7 @@ class AccountCreate {
     constructor() {
         if ($('.group-accounts.create').length) {
             $('select[name=group_id]')
-                .Event('change', function() {
+                .on('change', function() {
                     $('#user-group-descriptions li').hide();
                     $('#user-group-pwrules li').hide();
                     $('#user-group-' + $(this).val()).show();

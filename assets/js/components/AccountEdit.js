@@ -14,13 +14,13 @@ class AccountEdit {
     initEmailManagement() {
         //  Bind all the things
         $('#addEmailForm a.submit')
-            .Event('click', () => {
+            .on('click', () => {
                 this.addEmail();
                 return false;
             });
 
         $('#addEmailForm input[name=email]')
-            .Event('keydown', (e) => {
+            .on('keydown', (e) => {
                 if (e.which === 13) {
                     this.addEmail();
                     return false;
@@ -30,7 +30,7 @@ class AccountEdit {
             });
 
         $('tr.existingEmail td.actions a')
-            .Event('click', (e, element) => {
+            .on('click', (e, element) => {
 
                 let $element = $(element);
                 let email = $element.closest('tr').data('email');

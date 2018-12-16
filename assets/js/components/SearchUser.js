@@ -29,7 +29,7 @@ class SearchUser {
     /**
      * Set up a searcher
      * @param  {Object} config The searcher's config
-     * @return {Void}
+     * @return {void}
      */
     setupSearcher(config) {
 

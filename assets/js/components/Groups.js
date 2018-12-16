@@ -28,11 +28,11 @@ class Groups {
 
     /**
      * Toggles the permission tables, hidden for super users
-     * @return {Void}
+     * @return {void}
      */
     toggleSuperuser() {
         $('.field.boolean .toggle')
-            .Event('toggle', function(e, active) {
+            .on('toggle', function(e, active) {
                 if (active) {
                     $('#adminPermissions').hide();
                 } else {
@@ -45,11 +45,11 @@ class Groups {
 
     /**
      * Toggles all the permissions within a particular group on or off
-     * @return {Void}
+     * @return {void}
      */
     togglePermissions() {
         $('.permission-group tbody td.permission')
-            .Event('click', (e, element) => {
+            .on('click', (e, element) => {
                 $(element)
                     .closest('tr')
                     .find('input[type=checkbox]')
@@ -57,7 +57,7 @@ class Groups {
             });
 
         $('.permission-group tbody td.enabled input')
-            .Event('change', (e, element) => {
+            .on('change', (e, element) => {
                 let $element = $(element);
                 let td = $element.closest('td');
                 if ($element.is(':checked')) {
@@ -70,7 +70,7 @@ class Groups {
             });
 
         $('.permission-group .toggleAll')
-            .Event('click', (e, element) => {
+            .on('click', (e, element) => {
                 let $element = $(element);
                 let $inputs = $element.closest('table').find('tbody td.enabled input');
                 let checked = $element.is(':checked');
@@ -98,11 +98,11 @@ class Groups {
 
     /**
      * Binds to the permission search input and triggers a search after a delay
-     * @return {Void}
+     * @return {void}
      */
     permissionSearch() {
         $('#permissionSearch input')
-            .Event('keyup', (e, element) => {
+            .on('keyup', (e, element) => {
 
                 let $element = $(element);
                 let keywords = $.trim($element.val());
