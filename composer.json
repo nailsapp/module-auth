@@ -62,7 +62,7 @@
                     "autoload": {
                         "assets": {
                             "js": [
-                                "admin..min.js"
+                                "admin.min.js"
                             ]
                         }
                     }
