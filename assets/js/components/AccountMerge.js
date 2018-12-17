@@ -5,76 +5,7 @@ class AccountMerge {
      */
     constructor() {
         if ($('.group-accounts.merge').length) {
-
-            //  Construct searchers
-            $('#userId')
-                .select2({
-                    placeholder: 'Search for a user',
-                    minimumInputLength: 1,
-                    ajax: {
-                        url: window.SITE_URL + 'api/admin/users/search',
-                        dataType: 'json',
-                        quietMillis: 250,
-                        data: function(term) {
-                            return {
-                                term: term
-                            };
-                        },
-                        results: function(data) {
-
-                            let returnData = {results: []};
-                            let userId = '';
-                            let userName = '';
-
-                            for (let key in data.users) {
-                                if (data.users.hasOwnProperty(key)) {
-                                    userId = data.users[key].id;
-                                    userName = '#' + userId + ' - ' + data.users[key].first_name + ' ' + data.users[key].last_name;
-                                    returnData.results.push({'text': userName, 'id': userId});
-                                }
-                            }
-
-                            return returnData;
-                        },
-                        cache: true
-                    }
-                });
-
-            $('#mergeIds')
-                .select2({
-                    placeholder: 'Search for users',
-                    minimumInputLength: 1,
-                    multiple: true,
-                    ajax: {
-                        url: window.SITE_URL + 'api/admin/users/search',
-                        dataType: 'json',
-                        quietMillis: 250,
-                        data: function(term) {
-                            return {
-                                term: term
-                            };
-                        },
-                        results: function(data) {
-
-                            let returnData = {results: []};
-                            let userId = '';
-                            let userName = '';
-
-                            for (let key in data.users) {
-                                if (data.users.hasOwnProperty(key)) {
-                                    userId = data.users[key].id;
-                                    userName = '#' + userId + ' - ' + data.users[key].first_name + ' ' + data.users[key].last_name;
-                                    returnData.results.push({'text': userName, 'id': userId});
-                                }
-                            }
-
-                            return returnData;
-                        },
-                        cache: true
-                    }
-                });
-
-            $('#theForm')
+            $('#merge-form')
                 .on('submit', () => {
                     return this.validate();
                 });
@@ -91,8 +22,8 @@ class AccountMerge {
 
         let errors = false;
         let errorMsg = [];
-        let userId = parseInt($('#userId').val(), 10);
-        let mergeIdsSrc = $('#mergeIds').val().split(',');
+        let userId = parseInt($('#user-id').val(), 10);
+        let mergeIdsSrc = $('#merge-ids').val().split(',');
         let mergeIds = [];
         let i;
 

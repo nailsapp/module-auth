@@ -57,8 +57,8 @@ class Groups {
             });
 
         $('.permission-group tbody td.enabled input')
-            .on('change', (e, element) => {
-                let $element = $(element);
+            .on('change', (e) => {
+                let $element = $(e.currentTarget);
                 let td = $element.closest('td');
                 if ($element.is(':checked')) {
                     td.removeClass('error');
@@ -70,8 +70,8 @@ class Groups {
             });
 
         $('.permission-group .toggleAll')
-            .on('click', (e, element) => {
-                let $element = $(element);
+            .on('click', (e) => {
+                let $element = $(e.currentTarget);
                 let $inputs = $element.closest('table').find('tbody td.enabled input');
                 let checked = $element.is(':checked');
 
@@ -102,13 +102,14 @@ class Groups {
      */
     permissionSearch() {
         $('#permissionSearch input')
-            .on('keyup', (e, element) => {
-
-                let $element = $(element);
+            .on('keyup', (e) => {
+                
+                let $element = $(e.currentTarget);
                 let keywords = $.trim($element.val());
 
                 clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(function() {
+                this.searchTimeout = setTimeout(() => {
+                    console.log('search');
                     this.doPermissionSearch(keywords);
                 }, this.searchDelay);
             });

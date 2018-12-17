@@ -14,18 +14,19 @@ namespace Nails\Admin\Auth;
 
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Common\Exception\ValidationException;
 use Nails\Factory;
 
 class Merge extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
+     *
      * @return \stdClass
      */
     public static function announce()
     {
         if (userHasPermission('admin:auth:merge:users')) {
-
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('Users');
             $oNavGroup->setIcon('fa-users');
@@ -38,32 +39,28 @@ class Merge extends BaseAdmin
 
     /**
      * Returns an array of extra permissions for this controller
+     *
      * @return array
      */
     public static function permissions()
     {
-        $permissions = parent::permissions();
+        $aPermissions = parent::permissions();
 
-        // --------------------------------------------------------------------------
+        $aPermissions['users'] = 'Can merge users';
 
-        //  Define some basic extra permissions
-        $permissions['users'] = 'Can merge users';
-
-        // --------------------------------------------------------------------------
-
-        return $permissions;
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Merge users
+     *
      * @return void
      */
     public function index()
     {
         if (!userHasPermission('admin:auth:merge:users')) {
-
             unauthorised();
         }
 
@@ -73,40 +70,50 @@ class Merge extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
+            try {
 
-            $userId   = $this->input->post('userId');
-            $mergeIds = explode(',', $this->input->post('mergeIds'));
-            $preview  = !$this->input->post('doMerge') ? true : false;
+                $oFormValidation = Factory::service('FormValidation');
 
-            if (!in_array(activeUser('id'), $mergeIds)) {
+                $oFormValidation->set_rules('user_id', '', 'required');
+                $oFormValidation->set_rules('merge_ids', '', 'required');
 
-                $oUserModel  = Factory::model('User', 'nails/module-auth');
-                $mergeResult = $oUserModel->merge($userId, $mergeIds, $preview);
+                $oFormValidation->set_message('required', lang('fv_required'));
 
-                if ($mergeResult) {
-
-                    if ($preview) {
-
-                        $this->data['mergeResult'] = $mergeResult;
-                        Helper::loadView('preview');
-                        return;
-
-                    } else {
-
-                        $status   = 'success';
-                        $message  = 'Users were merged successfully.';
-                        $oSession = Factory::service('Session', 'nails/module-auth');
-                        $oSession->setFlashData($status, $message);
-                        redirect('admin/auth/merge');
-                    }
-
-                } else {
-                    $this->data['error'] = 'Failed to merge users. ' . $oUserModel->lastError();
+                if (!$oFormValidation->run()) {
+                    throw new ValidationException(lang('fv_there_were_errors'));
                 }
 
-            } else {
-                $this->data['error'] = 'You cannot list yourself as a user to merge.';
+                $iUserId   = (int) $oInput->post('user_id') ?: null;
+                $aMergeIds = explode(',', $oInput->post('merge_ids'));
+                $bPreview  = !((bool) $oInput->post('do_merge'));
+
+                if (in_array(activeUser('id'), $aMergeIds)) {
+                    throw new ValidationException('You cannot list yourself as a user to merge.');
+                }
+
+                $oUserModel   = Factory::model('User', 'nails/module-auth');
+                $oMergeResult = $oUserModel->merge($iUserId, $aMergeIds, $bPreview);
+
+                if (empty($oMergeResult)) {
+                    throw new \RuntimeException('Failed to merge users. ' . $oUserModel->lastError());
+                }
+
+                if ($bPreview) {
+
+                    $this->data['mergeResult'] = $oMergeResult;
+                    Helper::loadView('preview');
+                    return;
+
+                } else {
+                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession->setFlashData('success', 'Users were merged successfully.');
+                    redirect('admin/auth/merge');
+                }
+
+            } catch (\Exception $e) {
+                $this->data['error'] = $e->getMessage();
             }
         }
 

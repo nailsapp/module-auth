@@ -1,2 +1,9 @@
-.nails-auth{max-width:500px}.nails-auth.forgotten-password .new-password{font-family:courier, monospace;font-size:1.5rem}
+/* --------------------------------------------------------------
+   Nails Auth Module: Login Styles
+-------------------------------------------------------------- */
+.nails-auth {
+  max-width: 500px; }
+  .nails-auth.forgotten-password .new-password {
+    font-family: courier, monospace;
+    font-size: 1.5rem; }
 

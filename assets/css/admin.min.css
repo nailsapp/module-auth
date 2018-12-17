@@ -1,2 +1,185 @@
-.group-accounts.all table{margin-bottom:1em}.group-accounts.all table th.id,.group-accounts.all table th.group,.group-accounts.all table td.id,.group-accounts.all table td.group{text-align:center}.group-accounts.all table th.id,.group-accounts.all table td.id{width:50px;min-width:50px}.group-accounts.all table th.group,.group-accounts.all table td.group{width:150px;min-width:150px}.group-accounts.all table th.actions,.group-accounts.all table td.actions{width:225px;min-width:225px;text-align:center}.group-accounts.all table td.details img.profile-img{float:left;margin-right:10px;width:65px;height:65px;background:#CCCCCC;border:1px solid #CCCCCC;border-radius:2px}.group-accounts.all table td.details img.verified{margin-left:5px;width:10px;height:10px;position:relative;top:2px}.group-accounts.all table td.id,.group-accounts.all table td.group{vertical-align:middle;color:#666666}.group-accounts.all table td.profile.zero{color:#CCCCCC}.group-accounts.all table td.actions .not-editable{color:#AAAAAA}.group-accounts.all table td .awesome{margin-right:5px;margin-bottom:5px;padding:8px 5px 6px 5px}.group-accounts.all table td div{float:left}.group-accounts.all table td div small{display:block}.group-accounts.create #user-group-descriptions li,.group-accounts.create #user-group-pwrules li{margin:0}.group-accounts.edit .social .icon{float:left;border:1px solid #999999;border-radius:3px;background:#F3F3F3;padding:5px;margin-right:15px;padding-left:42px;line-height:16px;background-position:5px center;background-repeat:no-repeat;word-wrap:break-word}.group-accounts.edit .social p{margin-top:5px}.group-accounts.edit .uploads ul{max-height:500px;overflow:auto}.group-accounts.edit .uploads ul li{vertical-align:middle;display:block;margin-bottom:0}.group-accounts.edit .uploads ul li a{padding:1em;display:block;position:relative;min-height:51px;background:#EFEFEF;background-clip:padding-box;text-decoration:none}.group-accounts.edit .uploads ul li a small{display:block}.group-accounts.edit .uploads ul li a.image{padding-left:55px}.group-accounts.edit .uploads ul li a.image img{position:absolute;left:5px;top:5px;width:35px;height:35px;border:1px solid #CCCCCC;margin:0;margin-right:10px;vertical-align:middle;padding:2px;background:#FFFFFF;border-radius:2px}.group-accounts.edit .uploads ul li.no-data{color:#777777}.group-accounts.edit .emails table th.email input,.group-accounts.edit .emails table td.email input{width:100%;box-sizing:border-box}.group-accounts.edit .emails table th.isPrimary,.group-accounts.edit .emails table th.isVerified,.group-accounts.edit .emails table td.isPrimary,.group-accounts.edit .emails table td.isVerified{width:50px;text-align:center}.group-accounts.edit .emails table th.dateAdded,.group-accounts.edit .emails table th.dateVerified,.group-accounts.edit .emails table td.dateAdded,.group-accounts.edit .emails table td.dateVerified{width:120px;text-align:center}.group-accounts.edit .emails table th.actions,.group-accounts.edit .emails table td.actions{width:220px;text-align:center}.group-accounts.groups table th,.group-accounts.groups table td{vertical-align:middle}.group-accounts.groups table th.actions,.group-accounts.groups table th.actions,.group-accounts.groups table td.actions,.group-accounts.groups table td.actions{min-width:220px;text-align:center}.group-accounts.groups table th.default,.group-accounts.groups table th.default,.group-accounts.groups table td.default,.group-accounts.groups table td.default{width:50px;text-align:center}.group-accounts.groups table th.default span,.group-accounts.groups table th.default span,.group-accounts.groups table td.default span,.group-accounts.groups table td.default span{font-size:1.5em}.group-accounts.groups.edit .permission-groups .permission-group th.enabled{width:50px}.group-accounts.groups.edit .permission-groups .permission-group td{cursor:pointer}.group-accounts.groups.edit .permission-groups .permission-group td.enabled{padding:0}.group-accounts.groups.edit .permission-groups .permission-group td.enabled label{width:100%;height:100%;cursor:pointer;line-height:40px}.group-accounts.groups.edit .search{border:none;border-bottom:1px solid #EFEFEF}.group-accounts.groups.edit .search .search-text{margin:0}.group-accounts.merge.merge-preview table{margin-bottom:1.5em}.group-accounts.merge.merge-preview table th.userId,.group-accounts.merge.merge-preview table td.userId{text-align:center;width:50px}.group-accounts.merge.merge-preview table th.user-cell,.group-accounts.merge.merge-preview table td.user-cell{width:auto}.group-accounts.merge.merge-preview table th.tableRows,.group-accounts.merge.merge-preview table td.tableRows{text-align:center;width:100px}.group-accounts.change-group table th.userId,.group-accounts.change-group table td.userId{text-align:center;width:50px}
+/* --------------------------------------------------------------
+   Nails Auth Module Admin Styles
+-------------------------------------------------------------- */
+.group-accounts.all table {
+  margin-bottom: 1em; }
+  .group-accounts.all table th.id, .group-accounts.all table th.group,
+  .group-accounts.all table td.id,
+  .group-accounts.all table td.group {
+    text-align: center; }
+  .group-accounts.all table th.id,
+  .group-accounts.all table td.id {
+    width: 50px;
+    min-width: 50px; }
+  .group-accounts.all table th.group,
+  .group-accounts.all table td.group {
+    width: 150px;
+    min-width: 150px; }
+  .group-accounts.all table th.actions,
+  .group-accounts.all table td.actions {
+    width: 225px;
+    min-width: 225px;
+    text-align: center; }
+  .group-accounts.all table td.details img.profile-img {
+    float: left;
+    margin-right: 10px;
+    width: 65px;
+    height: 65px;
+    background: #CCCCCC;
+    border: 1px solid #CCCCCC;
+    border-radius: 2px; }
+  .group-accounts.all table td.details img.verified {
+    margin-left: 5px;
+    width: 10px;
+    height: 10px;
+    position: relative;
+    top: 2px; }
+  .group-accounts.all table td.id, .group-accounts.all table td.group {
+    vertical-align: middle;
+    color: #666666; }
+  .group-accounts.all table td.profile.zero {
+    color: #CCCCCC; }
+  .group-accounts.all table td.actions .not-editable {
+    color: #AAAAAA; }
+  .group-accounts.all table td .awesome {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding: 8px 5px 6px 5px; }
+  .group-accounts.all table td div {
+    float: left; }
+    .group-accounts.all table td div small {
+      display: block; }
+
+.group-accounts.create #user-group-descriptions li,
+.group-accounts.create #user-group-pwrules li {
+  margin: 0; }
+
+.group-accounts.edit .social .icon {
+  float: left;
+  border: 1px solid #999999;
+  border-radius: 3px;
+  background: #F3F3F3;
+  padding: 5px;
+  margin-right: 15px;
+  padding-left: 42px;
+  line-height: 16px;
+  background-position: 5px center;
+  background-repeat: no-repeat;
+  word-wrap: break-word; }
+
+.group-accounts.edit .social p {
+  margin-top: 5px; }
+
+.group-accounts.edit .uploads ul {
+  max-height: 500px;
+  overflow: auto; }
+  .group-accounts.edit .uploads ul li {
+    vertical-align: middle;
+    display: block;
+    margin-bottom: 0; }
+    .group-accounts.edit .uploads ul li a {
+      padding: 1em;
+      display: block;
+      position: relative;
+      min-height: 51px;
+      background: #EFEFEF;
+      background-clip: padding-box;
+      text-decoration: none; }
+      .group-accounts.edit .uploads ul li a small {
+        display: block; }
+      .group-accounts.edit .uploads ul li a.image {
+        padding-left: 55px; }
+        .group-accounts.edit .uploads ul li a.image img {
+          position: absolute;
+          left: 5px;
+          top: 5px;
+          width: 35px;
+          height: 35px;
+          border: 1px solid #CCCCCC;
+          margin: 0;
+          margin-right: 10px;
+          vertical-align: middle;
+          padding: 2px;
+          background: #FFFFFF;
+          border-radius: 2px; }
+    .group-accounts.edit .uploads ul li.no-data {
+      color: #777777; }
+
+.group-accounts.edit .emails table th.email input,
+.group-accounts.edit .emails table td.email input {
+  width: 100%;
+  box-sizing: border-box; }
+
+.group-accounts.edit .emails table th.isPrimary, .group-accounts.edit .emails table th.isVerified,
+.group-accounts.edit .emails table td.isPrimary,
+.group-accounts.edit .emails table td.isVerified {
+  width: 50px;
+  text-align: center; }
+
+.group-accounts.edit .emails table th.dateAdded, .group-accounts.edit .emails table th.dateVerified,
+.group-accounts.edit .emails table td.dateAdded,
+.group-accounts.edit .emails table td.dateVerified {
+  width: 120px;
+  text-align: center; }
+
+.group-accounts.edit .emails table th.actions,
+.group-accounts.edit .emails table td.actions {
+  width: 220px;
+  text-align: center; }
+
+.group-accounts.groups table th,
+.group-accounts.groups table td {
+  vertical-align: middle; }
+  .group-accounts.groups table th.actions, .group-accounts.groups table th.actions,
+  .group-accounts.groups table td.actions,
+  .group-accounts.groups table td.actions {
+    min-width: 220px;
+    text-align: center; }
+  .group-accounts.groups table th.default, .group-accounts.groups table th.default,
+  .group-accounts.groups table td.default,
+  .group-accounts.groups table td.default {
+    width: 50px;
+    text-align: center; }
+    .group-accounts.groups table th.default span, .group-accounts.groups table th.default span,
+    .group-accounts.groups table td.default span,
+    .group-accounts.groups table td.default span {
+      font-size: 1.5em; }
+
+.group-accounts.groups.edit .permission-groups .permission-group th.enabled {
+  width: 50px; }
+
+.group-accounts.groups.edit .permission-groups .permission-group td {
+  cursor: pointer; }
+  .group-accounts.groups.edit .permission-groups .permission-group td.enabled {
+    padding: 0; }
+    .group-accounts.groups.edit .permission-groups .permission-group td.enabled label {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      line-height: 40px; }
+
+.group-accounts.groups.edit .search {
+  border: none;
+  border-bottom: 1px solid #EFEFEF; }
+  .group-accounts.groups.edit .search .search-text {
+    margin: 0; }
+
+.group-accounts.merge.merge-preview table {
+  margin-bottom: 1.5em; }
+  .group-accounts.merge.merge-preview table th.userId,
+  .group-accounts.merge.merge-preview table td.userId {
+    text-align: center;
+    width: 50px; }
+  .group-accounts.merge.merge-preview table th.user-cell,
+  .group-accounts.merge.merge-preview table td.user-cell {
+    width: auto; }
+  .group-accounts.merge.merge-preview table th.tableRows,
+  .group-accounts.merge.merge-preview table td.tableRows {
+    text-align: center;
+    width: 100px; }
+
+.group-accounts.change-group table th.userId,
+.group-accounts.change-group table td.userId {
+  text-align: center;
+  width: 50px; }
 
