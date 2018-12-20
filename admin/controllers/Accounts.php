@@ -12,13 +12,48 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Controller\DefaultController;
 use Nails\Admin\Helper;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Components;
 use Nails\Factory;
 
-class Accounts extends BaseAdmin
+class Accounts extends DefaultController
 {
+    //  @todo (Pablo - 2018-12-20) - Rework as much of this as possible to leverage the DefaultController
+    const CONFIG_MODEL_NAME     = 'User';
+    const CONFIG_MODEL_PROVIDER = 'nails/module-auth';
+    const CONFIG_PERMISSION     = 'auth:accounts';
+    const CONFIG_SORT_DIRECTION = 'desc';
+    const CONFIG_INDEX_DATA     = [
+        'expand' => ['group'],
+    ];
+    const CONFIG_INDEX_FIELDS   = [
+        'id'          => 'ID',
+        'username'    => 'Username',
+        'first_name'  => 'First Name',
+        'last_name'   => 'Surname',
+        'email'       => 'Primary Email',
+        'group_name'  => 'Group',
+        'login_count' => 'Login Count',
+        'created'     => 'Registered',
+        'last_login'  => 'Last Login',
+        'last_seen'   => 'Last Seen',
+    ];
+    const CONFIG_SORT_OPTIONS   = [
+        'id'          => 'ID',
+        'first_name'  => 'First name',
+        'last_name'   => 'Surname',
+        'username'    => 'Username',
+        'email'       => 'Primary Email',
+        'login_count' => 'Login Count',
+        'created'     => 'Registered',
+        'last_seen'   => 'Last Seen',
+        'last_login'  => 'Last Login',
+    ];
+
+    // --------------------------------------------------------------------------
+
     protected $oChangeLogModel;
 
     // --------------------------------------------------------------------------
@@ -65,18 +100,18 @@ class Accounts extends BaseAdmin
      */
     public static function permissions()
     {
-        $permissions = parent::permissions();
+        $aPermissions = parent::permissions();
 
-        $permissions['browse']          = 'Can browse users';
-        $permissions['create']          = 'Can create users';
-        $permissions['delete']          = 'Can delete users';
-        $permissions['suspend']         = 'Can suspend users';
-        $permissions['unsuspend']       = 'Can unsuspend users';
-        $permissions['loginAs']         = 'Can log in as another user';
-        $permissions['editOthers']      = 'Can edit other users';
-        $permissions['changeUserGroup'] = 'Can change a user\'s group';
+        $aPermissions['browse']          = 'Can browse users';
+        $aPermissions['create']          = 'Can create users';
+        $aPermissions['delete']          = 'Can delete users';
+        $aPermissions['suspend']         = 'Can suspend users';
+        $aPermissions['unsuspend']       = 'Can unsuspend users';
+        $aPermissions['loginAs']         = 'Can log in as another user';
+        $aPermissions['editOthers']      = 'Can edit other users';
+        $aPermissions['changeUserGroup'] = 'Can change a user\'s group';
 
-        return $permissions;
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -86,6 +121,51 @@ class Accounts extends BaseAdmin
      */
     public function __construct()
     {
+        //  @todo (Pablo - 2018-12-20) - Support absolute URLS
+        //  @todo (Pablo - 2018-12-20) - Support hiding all actions for non-superusers editing superusers
+        //  @todo (Pablo - 2018-12-20) - Handle editing of other users
+
+        $oInput  = Factory::service('Input');
+        $sReturn = $oInput->server('request_uri');
+        //  @todo (Pablo - 2018-12-20) - Remove isModal parameter
+        $sReturn = urlencode($sReturn);
+
+
+        static::$aConfigIndexRowButtons[] = [
+            'url'     => site_url('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
+            'label'   => 'Login As',
+            'class'   => 'btn-warning',
+            'enabled' => function ($oItem) {
+                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:loginAs');
+            },
+        ];
+        static::$aConfigIndexRowButtons[] = [
+            'url'     => 'suspend/{{id}}?return_to=' . $sReturn,
+            'label'   => 'Suspend',
+            'class'   => 'btn-danger',
+            'enabled' => function ($oItem) {
+                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:suspend') && !$oItem->is_suspended;
+            },
+        ];
+        static::$aConfigIndexRowButtons[] = [
+            'url'     => 'unsuspend/{{id}}?return_to=' . $sReturn,
+            'label'   => 'Unsuspend',
+            'class'   => 'btn-success',
+            'enabled' => function ($oItem) {
+                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:unsuspend') && $oItem->is_suspended;
+            },
+        ];
+        static::$aConfigIndexRowButtons[] = [
+            'url'     => site_url('admin/auth/accounts/change_group?users={{id}}'),
+            'label'   => 'Change Group',
+            'class'   => 'btn-default',
+            'enabled' => function ($oItem) {
+                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:changeUserGroup');
+            },
+        ];
+
+        // --------------------------------------------------------------------------
+
         parent::__construct();
         $this->lang->load('admin_accounts');
         $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
@@ -98,7 +178,7 @@ class Accounts extends BaseAdmin
      *
      * @return void
      */
-    public function index()
+    public function indexxx()
     {
         if (!userHasPermission('admin:auth:accounts:browse')) {
             unauthorised();
