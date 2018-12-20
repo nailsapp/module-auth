@@ -14,7 +14,7 @@ namespace Nails\Auth\Controller;
 
 use Nails\Factory;
 
-class BaseMfa extends Base
+abstract class BaseMfa extends Base
 {
     protected $authMfaMode;
     protected $authMfaConfig;

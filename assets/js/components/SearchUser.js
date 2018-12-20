@@ -1,18 +1,11 @@
-var _AUTH_USERSEARCH;
-_AUTH_USERSEARCH = function()
-{
-    var base = this;
-
-    // --------------------------------------------------------------------------
+class SearchUser {
 
     /**
-     * Construct _AUTH_USERSEARCH
-     * @return {this}
+     * Construct SearchUser
      */
-    base.__construct = function() {
-
+    constructor() {
         //  Set up the searchers
-        var searchers = [
+        let searchers = [
             {
                 'class': 'user-search',
                 'placeholder': 'Search for a user',
@@ -24,28 +17,28 @@ _AUTH_USERSEARCH = function()
             }
         ];
 
-        for (var key in searchers) {
+        for (let key in searchers) {
             if (searchers.hasOwnProperty(key)) {
-                base.setupSearcher(searchers[key]);
+                this.setupSearcher(searchers[key]);
             }
         }
-
-        return base;
-
-    };
+    }
 
     // --------------------------------------------------------------------------
 
     /**
      * Set up a searcher
      * @param  {Object} config The searcher's config
-     * @return {Void}
+     * @return {void}
      */
-    base.setupSearcher = function(config) {
+    setupSearcher(config) {
+
         $('input.' + config.class)
-            .each(function() {
-                var isMultiple = $(this).data('multiple') || false;
-                $(this)
+            .each((index, element) => {
+
+                let $element = $(element);
+                let isMultiple = $element.data('multiple') || false;
+                $element
                     .select2({
                         placeholder: config.placeholder,
                         minimumInputLength: config.minimumInputLength,
@@ -54,17 +47,17 @@ _AUTH_USERSEARCH = function()
                             url: config.apiUrl + '/search',
                             dataType: 'json',
                             quietMillis: 250,
-                            data: function (term) {
+                            data: function(term) {
                                 return {
                                     keywords: term
                                 };
                             },
-                            results: function (data) {
-                                var text;
-                                var out = {
+                            results: function(data) {
+                                let text;
+                                let out = {
                                     'results': []
                                 };
-                                for (var key in data.data) {
+                                for (let key in data.data) {
                                     if (data.data.hasOwnProperty(key)) {
                                         if (typeof config.format === 'function') {
                                             text = config.format(data.data[key]);
@@ -83,7 +76,7 @@ _AUTH_USERSEARCH = function()
                             cache: true
                         },
                         initSelection: function(element, callback) {
-                            var id = $(element).val();
+                            let id = $(element).val();
                             if (id !== '') {
 
                                 if (isMultiple) {
@@ -91,53 +84,53 @@ _AUTH_USERSEARCH = function()
                                     $.ajax({
                                         url: config.apiUrl + '/id?ids=' + id,
                                         dataType: 'json'
-                                    }).done(function(data) {
-                                        var out = [];
-                                        var text = '';
-                                        for (var i = 0; i < data.data.length; i++) {
+                                    })
+                                        .done(function(data) {
+                                            let out = [];
+                                            let text = '';
+                                            for (let i = 0; i < data.data.length; i++) {
 
-                                            if (typeof config.format === 'function') {
-                                                text = config.format(data.data[i]);
-                                            } else {
-                                                text = data.data[i].label;
+                                                if (typeof config.format === 'function') {
+                                                    text = config.format(data.data[i]);
+                                                } else {
+                                                    text = data.data[i].label;
+                                                }
+
+                                                out.push({
+                                                    'id': data.data[i].id,
+                                                    'text': text
+                                                });
                                             }
-
-                                            out.push({
-                                                'id': data.data[i].id,
-                                                'text': text
-                                            });
-                                        }
-                                        callback(out);
-                                    });
+                                            callback(out);
+                                        });
 
                                 } else {
 
                                     $.ajax({
                                         url: config.apiUrl + '/id?id=' + id,
                                         dataType: 'json'
-                                    }).done(function(data) {
+                                    })
+                                        .done(function(data) {
 
-                                        var text;
+                                            let text;
 
-                                        if (typeof config.format === 'function') {
-                                            text = config.format(data.data);
-                                        } else {
-                                            text = data.data.label;
-                                        }
+                                            if (typeof config.format === 'function') {
+                                                text = config.format(data.data);
+                                            } else {
+                                                text = data.data.label;
+                                            }
 
-                                        callback({
-                                            'id': data.data.id,
-                                            'text': text
+                                            callback({
+                                                'id': data.data.id,
+                                                'text': text
+                                            });
                                         });
-                                    });
                                 }
                             }
                         }
                     });
             });
-    };
+    }
+}
 
-    // --------------------------------------------------------------------------
-
-    return base.__construct();
-}();
+export default SearchUser;

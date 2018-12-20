@@ -10,8 +10,9 @@
             This user account is the one you wish to merge other user's data into.
         </p>
         <p>
-            <input type="text" id="userId" name="userId"/>
+            <input type="text" name="user_id" class="user-search" value="<?=set_value('user_id')?>"/>
         </p>
+        <?=form_error('user_id', '<p class="alert alert-danger">', '</p>')?>
     </fieldset>
     <fieldset>
         <legend>Users to merge</legend>
@@ -19,8 +20,9 @@
             These accounts will have their data merged into the above user and then be deleted.
         </p>
         <p>
-            <input type="text" id="mergeIds" name="mergeIds"/>
+            <input type="text" id="merge-ids" name="merge_ids" class="user-search" data-multiple="true" value="<?=set_value('merge_ids')?>"/>
         </p>
+        <?=form_error('merge_ids', '<p class="alert alert-danger">', '</p>')?>
     </fieldset>
     <?=form_submit('submit', 'Preview Merge', 'class="btn btn-success"')?>
     <?=form_close()?>

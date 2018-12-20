@@ -4,16 +4,16 @@
     </p>
     <table>
         <thead>
-            <tr>
-                <th class="userId">ID</th>
-                <th>Name</th>
-            </tr>
+        <tr>
+            <th class="userId">ID</th>
+            <th>Name</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td class="userId"><?=number_format($mergeResult->user->id)?></td>
-                <?php echo adminHelper('loadUserCell', $mergeResult->user); ?>
-            </tr>
+        <tr>
+            <td class="userId"><?=number_format($mergeResult->user->id)?></td>
+            <?php echo adminHelper('loadUserCell', $mergeResult->user); ?>
+        </tr>
         </tbody>
     </table>
     <p class="alert alert-warning">
@@ -34,23 +34,23 @@
     </p>
     <table>
         <thead>
-            <tr>
-                <th>Table</th>
-                <th>Rows to merge</th>
-            </tr>
+        <tr>
+            <th>Table</th>
+            <th>Rows to merge</th>
+        </tr>
         </thead>
         <tbody>
-            <?php
-
-            foreach ($mergeResult->tables as $table) {
-
-                echo '<tr>';
-                echo '<td class="tableName">' . $table->name . '</td>';
-                echo '<td class="tableRows">' . $table->numRows . '</td>';
-                echo '</tr>';
-            }
-
+        <?php
+        foreach ($mergeResult->tables as $table) {
             ?>
+            <tr>
+                <td class="tableName"><?=$table->name?></td>
+                <td class="tableRows"><?=$table->numRows?></td>
+            </tr>
+            <?php
+        }
+
+        ?>
         </tbody>
     </table>
     <p class="alert alert-warning">
@@ -58,31 +58,32 @@
     </p>
     <table>
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+        </tr>
         </thead>
         <tbody>
-            <?php
-
-            foreach ($mergeResult->merge as $mergeUser) {
-
-                echo '<tr>';
-                echo '<td class="userId">' . number_format($mergeUser->id) . '</td>';
-                echo adminHelper('loadUserCell', $mergeUser);
-                echo '</tr>';
-            }
-
+        <?php
+        foreach ($mergeResult->merge as $mergeUser) {
             ?>
+            <tr>
+                <td class="userId"><?=number_format($mergeUser->id)?></td>
+                <?=adminHelper('loadUserCell', $mergeUser)?>
+            </tr>
+            <?php
+        }
+        ?>
         </tbody>
     </table>
 </div>
 <?php
 
+$oInput = \Nails\Factory::service('Input');
+
 echo form_open();
-echo form_hidden('userId', $this->input->post('userId'));
-echo form_hidden('mergeIds', $this->input->post('mergeIds'));
-echo form_hidden('doMerge', true);
+echo form_hidden('user_id', $oInput->post('user_id'));
+echo form_hidden('merge_ids', $oInput->post('merge_ids'));
+echo form_hidden('do_merge', true);
 echo form_submit('submit', 'Perform Merge', 'class="btn btn-success"');
 echo form_close();
