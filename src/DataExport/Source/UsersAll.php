@@ -104,7 +104,7 @@ class UsersAll implements Source
             $aFields   = arrayExtractProperty($oDb->query('DESCRIBE ' . $sTable)->result(), 'Field');
             $aOut[]    = $oResponse
                 ->setLabel('Table: ' . $sTable)
-                ->setFilename($sTable)
+                ->setFileName($sTable)
                 ->setFields($aFields)
                 ->setSource($oSource);
         }
