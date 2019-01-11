@@ -13,13 +13,13 @@ class AccountEdit {
 
     initEmailManagement() {
         //  Bind all the things
-        $('#addEmailForm a.submit')
+        $('#add-email-form a.submit')
             .on('click', () => {
                 this.addEmail();
                 return false;
             });
 
-        $('#addEmailForm input[name=email]')
+        $('#add-email-form input[name=email]')
             .on('keydown', (e) => {
                 if (e.which === 13) {
                     this.addEmail();
@@ -29,10 +29,10 @@ class AccountEdit {
                 return true;
             });
 
-        $('tr.existingEmail td.actions a')
-            .on('click', (e, element) => {
+        $('tr.existing-email td.actions a')
+            .on('click', (e) => {
 
-                let $element = $(element);
+                let $element = $(e.currentTarget);
                 let email = $element.closest('tr').data('email');
 
                 switch ($element.data('action')) {
@@ -44,8 +44,12 @@ class AccountEdit {
                         this.verifyEmail(email);
                         break;
 
-                    case 'makePrimary':
+                    case 'make-primary':
                         this.makePrimaryEmail(email);
+                        break;
+
+                    default:
+                        console.log('no action');
                         break;
                 }
 
@@ -56,15 +60,15 @@ class AccountEdit {
     // --------------------------------------------------------------------------
 
     addEmail() {
-        let email = $('#addEmailForm input[name=email]').val();
-        let isPrimary = $('#addEmailForm input[name=isPrimary]').is(':checked') ? 1 : 0;
-        let isVerified = $('#addEmailForm input[name=isVerified]').is(':checked') ? 1 : 0;
+        let email = $('#add-email-form input[name=email]').val();
+        let isPrimary = $('#add-email-form input[name=isPrimary]').is(':checked') ? 1 : 0;
+        let isVerified = $('#add-email-form input[name=isVerified]').is(':checked') ? 1 : 0;
 
-        $('#emailForm input[name=action]').val('add');
-        $('#emailForm input[name=email]').val(email);
-        $('#emailForm input[name=isPrimary]').val(isPrimary);
-        $('#emailForm input[name=isVerified]').val(isVerified);
-        $('#emailForm').submit();
+        $('#email-form input[name=action]').val('add');
+        $('#email-form input[name=email]').val(email);
+        $('#email-form input[name=isPrimary]').val(isPrimary);
+        $('#email-form input[name=isVerified]').val(isVerified);
+        $('#email-form').submit();
     }
 
     // --------------------------------------------------------------------------
@@ -77,34 +81,33 @@ class AccountEdit {
                 resizable: false,
                 draggable: false,
                 modal: true,
-                buttons:
-                    {
-                        'OK': function() {
-                            $('#emailForm input[name=action]').val('delete');
-                            $('#emailForm input[name=email]').val(email);
-                            $('#emailForm').submit();
-                        },
-                        'Cancel': function() {
-                            modal.dialog('close');
-                        },
-                    }
+                buttons: {
+                    'OK': function() {
+                        $('#email-form input[name=action]').val('delete');
+                        $('#email-form input[name=email]').val(email);
+                        $('#email-form').submit();
+                    },
+                    'Cancel': function() {
+                        modal.dialog('close');
+                    },
+                }
             });
     }
 
     // --------------------------------------------------------------------------
 
     verifyEmail(email) {
-        $('#emailForm input[name=action]').val('verify');
-        $('#emailForm input[name=email]').val(email);
-        $('#emailForm').submit();
+        $('#email-form input[name=action]').val('verify');
+        $('#email-form input[name=email]').val(email);
+        $('#email-form').submit();
     }
 
     // --------------------------------------------------------------------------
 
     makePrimaryEmail(email) {
-        $('#emailForm input[name=action]').val('makePrimary');
-        $('#emailForm input[name=email]').val(email);
-        $('#emailForm').submit();
+        $('#email-form input[name=action]').val('makePrimary');
+        $('#email-form input[name=email]').val(email);
+        $('#email-form').submit();
     }
 }
 

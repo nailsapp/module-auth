@@ -7,130 +7,109 @@
             <thead>
                 <tr>
                     <th class="email"><?=lang('accounts_edit_emails_th_email')?></th>
-                    <th class="isPrimary"><?=lang('accounts_edit_emails_th_primary')?></th>
-                    <th class="isVerified"><?=lang('accounts_edit_emails_th_verified')?></th>
-                    <th class="dateAdded"><?=lang('accounts_edit_emails_th_date_added')?></th>
-                    <th class="dateVerified"><?=lang('accounts_edit_emails_th_date_verified')?></th>
+                    <th class="is-primary"><?=lang('accounts_edit_emails_th_primary')?></th>
+                    <th class="is-verified"><?=lang('accounts_edit_emails_th_verified')?></th>
+                    <th class="date-added"><?=lang('accounts_edit_emails_th_date_added')?></th>
+                    <th class="date-verified"><?=lang('accounts_edit_emails_th_date_verified')?></th>
                     <th class="actions"><?=lang('accounts_edit_emails_th_actions')?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-
                 foreach ($user_emails as $email) {
-
                     ?>
-                    <tr data-email="<?=$email->email?>" class="existingEmail">
+                    <tr data-email="<?=$email->email?>" class="existing-email">
                         <td class="email">
                             <?=mailto($email->email)?>
                         </td>
                         <?php
 
                         if ($email->is_primary) {
-
                             ?>
-                            <td class="isPrimary success">
+                            <td class="is-primary success">
                                 <b class="fa fa-check-circle fa-lg"></b>
                             </td>
                             <?php
-
                         } else {
-
                             ?>
-                            <td class="isPrimary error">
+                            <td class="is-primary error">
                                 <b class="fa fa-times-circle fa-lg"></b>
                             </td>
                             <?php
-
                         }
+
                         if ($email->is_verified) {
-
                             ?>
-                            <td class="isVerified success">
+                            <td class="is-verified success">
                                 <b class="fa fa-check-circle fa-lg"></b>
                             </td>
                             <?php
-
                         } else {
-
                             ?>
-                            <td class="isVerified error">
+                            <td class="is-verified error">
                                 <b class="fa fa-times-circle fa-lg"></b>
                             </td>
                             <?php
-
                         }
-
                         ?>
-                        <td class="dateAdded">
+                        <td class="date-added">
                             <?=toUserDatetime($email->date_added)?>
                         </td>
-                        <td class="dateVerified">
+                        <td class="date-verified">
                             <?php
-
                             if ($email->is_verified) {
-
                                 echo toUserDatetime($email->date_added);
-
                             } else {
-
                                 ?>
                                 <span class="text-muted">
                                     <?=lang('accounts_edit_emails_td_not_verified')?>
                                 </span>
                                 <?php
                             }
-
                             ?>
                         </td>
                         <td class="actions">
                             <?php
-
                             if (!$email->is_primary) {
-
                                 echo anchor(
                                     '',
                                     'Make Primary',
-                                    'data-action="makePrimary" class="btn btn-xs btn-primary"'
+                                    'data-action="make-primary" class="btn btn-xs btn-primary"'
                                 );
                                 echo anchor(
                                     '',
                                     'Delete',
                                     'data-action="delete" class="btn btn-xs btn-danger"'
                                 );
-
                             }
 
                             if (!$email->is_verified) {
-
                                 echo anchor(
                                     '',
                                     'Verify',
                                     'data-action="verify" class="btn btn-xs btn-success"'
                                 );
                             }
-
                             ?>
                         </td>
                     </tr>
                     <?php
                 }
-
                 ?>
-                <tr id="addEmailForm">
+                <tr id="add-email-form">
                     <td class="email">
                         <input type="email" name="email" placeholder="Type an email address to add to the user here"/>
                     </td>
-                    <td class="isPrimary">
+                    <td class="is-primary">
                         <input type="checkbox" name="isPrimary" value="1"/>
                     </td>
-                    <td class="isVerified">
+                    <td class="is-verified">
                         <input type="checkbox" name="isVerified" value="1"/>
                     </td>
-                    <td class="dateAdded">
+                    <td class="date-added">
                         <span class="text-muted">&mdash;</span>
                     </td>
-                    <td class="dateVerified">
+                    <td class="date-verified">
                         <span class="text-muted">&mdash;</span>
                     </td>
                     <td class="actions">

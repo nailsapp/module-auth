@@ -44,7 +44,7 @@
 </div>
 <?php
 
-echo form_open('admin/auth/accounts/email', 'id="emailForm"');
+echo form_open('admin/auth/accounts/email', 'id="email-form"');
 echo form_hidden('id', $user_edit->id);
 echo form_hidden('return', uri_string() . '?' . $this->input->server('QUERY_STRING'));
 echo form_hidden('email');
