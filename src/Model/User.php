@@ -15,7 +15,10 @@ namespace Nails\Auth\Model;
 use Nails\Auth\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\ErrorHandler;
+use Nails\Environment;
 use Nails\Factory;
+use Nails\Testing;
 
 class User extends Base
 {
@@ -77,12 +80,27 @@ class User extends Base
      */
     public function init()
     {
-        //  Refresh user's session
-        $this->refreshSession();
+        $oInput         = Factory::service('Input');
+        $iTestingAsUser = $oInput->header(Testing::TEST_HEADER_USER_NAME);
 
-        //  If no user is logged in, see if there's a remembered user to be logged in
-        if (!$this->isLoggedIn()) {
-            $this->loginRememberedUser();
+        if (Environment::not(Environment::ENV_PROD) && $iTestingAsUser) {
+
+            $oUser = $this->getById($iTestingAsUser);
+            if (empty($oUser)) {
+                set_status_header(500);
+                ErrorHandler::halt('Not a valid User Id');
+            }
+            $this->setLoginData($oUser->id);
+
+        } else {
+
+            //  Refresh user's session
+            $this->refreshSession();
+
+            //  If no user is logged in, see if there's a remembered user to be logged in
+            if (!$this->isLoggedIn()) {
+                $this->loginRememberedUser();
+            }
         }
     }
 
