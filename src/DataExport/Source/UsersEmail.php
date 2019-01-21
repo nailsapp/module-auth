@@ -86,7 +86,7 @@ class UsersEmail implements Source
 
         return $oResponse
             ->setLabel($this->getLabel())
-            ->setFilename($this->getFileName())
+            ->setFileName($this->getFileName())
             ->setFields(['id', 'first_name', 'last_name', 'email'])
             ->setSource($oSource);
     }

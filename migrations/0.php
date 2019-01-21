@@ -4,6 +4,12 @@
  * Migration:   0
  * Started:     09/01/2015
  * Finalised:   09/01/2015
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Database Migration
+ * @author      Nails Dev Team
+ * @link
  */
 
 namespace Nails\Database\Migration\Nails\ModuleAuth;

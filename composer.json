@@ -61,6 +61,9 @@
                 "nails/module-admin": {
                     "autoload": {
                         "assets": {
+                            "css": [
+                                "admin.min.css"
+                            ],
                             "js": [
                                 "admin.min.js"
                             ]

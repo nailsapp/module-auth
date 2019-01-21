@@ -178,14 +178,14 @@
                         }
                     }
 
-                    &.isPrimary,
-                    &.isVerified {
+                    &.is-primary,
+                    &.is-verified {
                         width: 50px;
                         text-align: center;
                     }
 
-                    &.dateAdded,
-                    &.dateVerified {
+                    &.date-added,
+                    &.date-verified {
                         width: 120px;
                         text-align: center;
                     }

@@ -15,7 +15,10 @@ namespace Nails\Auth\Model;
 use Nails\Auth\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\ErrorHandler;
+use Nails\Environment;
 use Nails\Factory;
+use Nails\Testing;
 
 class User extends Base
 {
@@ -77,12 +80,27 @@ class User extends Base
      */
     public function init()
     {
-        //  Refresh user's session
-        $this->refreshSession();
+        $oInput         = Factory::service('Input');
+        $iTestingAsUser = $oInput->header(Testing::TEST_HEADER_USER_NAME);
 
-        //  If no user is logged in, see if there's a remembered user to be logged in
-        if (!$this->isLoggedIn()) {
-            $this->loginRememberedUser();
+        if (Environment::not(Environment::ENV_PROD) && $iTestingAsUser) {
+
+            $oUser = $this->getById($iTestingAsUser);
+            if (empty($oUser)) {
+                set_status_header(500);
+                ErrorHandler::halt('Not a valid User Id');
+            }
+            $this->setLoginData($oUser->id);
+
+        } else {
+
+            //  Refresh user's session
+            $this->refreshSession();
+
+            //  If no user is logged in, see if there's a remembered user to be logged in
+            if (!$this->isLoggedIn()) {
+                $this->loginRememberedUser();
+            }
         }
     }
 
@@ -2299,12 +2317,13 @@ class User extends Base
     /**
      * Merges users with ID in $mergeIds into $iUserId
      *
-     * @param  integer $iUserId  The user ID to keep
-     * @param  array   $mergeIds An array of user ID's to merge into $iUserId
+     * @param integer $iUserId    The user ID to keep
+     * @param array   $aMergeIds  An array of user ID's to merge into $iUserId
+     * @param boolean $bIsPreview Whether we're generating a preview or not
      *
      * @return boolean
      */
-    public function merge($iUserId, $mergeIds, $preview = false)
+    public function merge($iUserId, $aMergeIds, $bIsPreview = false)
     {
         $oDb = Factory::service('Database');
 
@@ -2313,20 +2332,20 @@ class User extends Base
             return false;
         }
 
-        if (!is_array($mergeIds)) {
+        if (!is_array($aMergeIds)) {
             $this->setError('"mergeIDs" must be an array.');
             return false;
         }
 
-        for ($i = 0; $i < count($mergeIds); $i++) {
-            if (!is_numeric($mergeIds[$i])) {
+        for ($i = 0; $i < count($aMergeIds); $i++) {
+            if (!is_numeric($aMergeIds[$i])) {
                 $this->setError('"mergeIDs" must contain only numerical values.');
                 return false;
             }
-            $mergeIds[$i] = $oDb->escape((int) $mergeIds[$i]);
+            $aMergeIds[$i] = $oDb->escape((int) $aMergeIds[$i]);
         }
 
-        if (in_array($iUserId, $mergeIds)) {
+        if (in_array($iUserId, $aMergeIds)) {
             $this->setError('"userId" cannot be listed as a merge user.');
             return false;
         }
@@ -2334,111 +2353,111 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Look for tables which contain a user ID column in them.
-        $userCols   = [];
-        $userCols[] = 'user_id';
-        $userCols[] = 'created_by';
-        $userCols[] = 'modified_by';
-        $userCols[] = 'author_id';
-        $userCols[] = 'authorId';
+        $aUserCols = [
+            'user_id',
+            'created_by',
+            'modified_by',
+            'author_id',
+            'authorId',
+        ];
 
-        $userColsStr = "'" . implode("','", $userCols) . "'";
+        $sUserColsStr = "'" . implode("','", $aUserCols) . "'";
 
-        $ignoreTables   = [];
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_meta_app';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_code';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_question';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_auth_two_factor_token';
-        $ignoreTables[] = NAILS_DB_PREFIX . 'user_social';
+        $aIgnoreTables = [
+            NAILS_DB_PREFIX . 'user',
+            NAILS_DB_PREFIX . 'user_meta_app',
+            NAILS_DB_PREFIX . 'user_auth_two_factor_device_code',
+            NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret',
+            NAILS_DB_PREFIX . 'user_auth_two_factor_question',
+            NAILS_DB_PREFIX . 'user_auth_two_factor_token',
+            NAILS_DB_PREFIX . 'user_social',
+        ];
 
-        $ignoreTablesStr = "'" . implode("','", $ignoreTables) . "'";
+        $sIgnoreTablesStr = "'" . implode("','", $aIgnoreTables) . "'";
 
-        $tables = [];
-        $query  = " SELECT COLUMN_NAME,TABLE_NAME
+        $aTables = [];
+        $sQuery  = " SELECT COLUMN_NAME,TABLE_NAME
                     FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE COLUMN_NAME IN (" . $userColsStr . ")
-                    AND TABLE_NAME NOT IN (" . $ignoreTablesStr . ")
+                    WHERE COLUMN_NAME IN (" . $sUserColsStr . ")
+                    AND (TABLE_NAME LIKE '" . NAILS_DB_PREFIX . "%' OR TABLE_NAME LIKE '" . APP_DB_PREFIX . "%')
+                    AND TABLE_NAME NOT IN (" . $sIgnoreTablesStr . ")
                     AND TABLE_SCHEMA='" . DEPLOY_DB_DATABASE . "';";
 
         /** @var CI_DB_result $result */
-        $result = $oDb->query($query);
+        $result = $oDb->query($sQuery);
 
-        while ($table = $result->unbuffered_row()) {
+        while ($oTable = $result->unbuffered_row()) {
 
-            if (!isset($tables[$table->TABLE_NAME])) {
-
-                $tables[$table->TABLE_NAME]          = new \stdClass();
-                $tables[$table->TABLE_NAME]->name    = $table->TABLE_NAME;
-                $tables[$table->TABLE_NAME]->columns = [];
+            if (!isset($aTables[$oTable->TABLE_NAME])) {
+                $aTables[$oTable->TABLE_NAME] = (object) [
+                    'name'    => $oTable->TABLE_NAME,
+                    'columns' => [],
+                ];
             }
 
-            $tables[$table->TABLE_NAME]->columns[] = $table->COLUMN_NAME;
+            $aTables[$oTable->TABLE_NAME]->columns[] = $oTable->COLUMN_NAME;
         }
 
-        $tables = array_values($tables);
+        $aTables = array_values($aTables);
 
         //  Grab a count of the number of rows which will be affected
-        for ($i = 0; $i < count($tables); $i++) {
+        for ($i = 0; $i < count($aTables); $i++) {
 
-            $columnConditional = [];
-            foreach ($tables[$i]->columns as $column) {
-
-                $columnConditional[] = $column . ' IN (' . implode(',', $mergeIds) . ')';
+            $aColumnConditional = [];
+            foreach ($aTables[$i]->columns as $column) {
+                $aColumnConditional[] = $column . ' IN (' . implode(',', $aMergeIds) . ')';
             }
 
-            $query  = 'SELECT COUNT(*) AS numrows FROM  ' . $tables[$i]->name . ' WHERE ' . implode(' OR ', $columnConditional);
-            $result = $oDb->query($query)->row();
+            $sQuery  = 'SELECT COUNT(*) AS numrows FROM  ' . $aTables[$i]->name . ' WHERE ' . implode(' OR ', $aColumnConditional);
+            $oResult = $oDb->query($sQuery)->row();
 
-            if (empty($result->numrows)) {
-
-                $tables[$i] = null;
-
+            if (empty($oResult->numrows)) {
+                $aTables[$i] = null;
             } else {
-
-                $tables[$i]->numRows = $result->numrows;
+                $aTables[$i]->numRows = $oResult->numrows;
             }
         }
 
-        $tables = array_values(array_filter($tables));
+        $aTables = array_values(array_filter($aTables));
 
         // --------------------------------------------------------------------------
 
-        if ($preview) {
+        if ($bIsPreview) {
 
-            $out        = new \stdClass();
-            $out->user  = $this->getById($iUserId);
-            $out->merge = [];
+            $out = (object) [
+                'user'  => $this->getById($iUserId),
+                'merge' => [],
+            ];
 
-            foreach ($mergeIds as $mergeUserId) {
-                $out->merge[] = $this->getById($mergeUserId);
+            foreach ($aMergeIds as $iMergeUserId) {
+                $out->merge[] = $this->getById($iMergeUserId);
             }
 
-            $out->tables       = $tables;
-            $out->ignoreTables = $ignoreTables;
+            $out->tables       = $aTables;
+            $out->ignoreTables = $aIgnoreTables;
 
         } else {
 
             $oDb->trans_begin();
 
             //  For each table update the user columns
-            for ($i = 0; $i < count($tables); $i++) {
+            for ($i = 0; $i < count($aTables); $i++) {
 
-                foreach ($tables[$i]->columns as $column) {
+                foreach ($aTables[$i]->columns as $column) {
 
                     //  Additional updates for certain tables
-                    switch ($tables[$i]->name) {
+                    switch ($aTables[$i]->name) {
                         case NAILS_DB_PREFIX . 'user_email':
                             $oDb->set('is_primary', false);
                             break;
                     }
 
                     $oDb->set($column, $iUserId);
-                    $oDb->where_in($column, $mergeIds);
-                    if (!$oDb->update($tables[$i]->name)) {
-
-                        $errMsg = 'Failed to migrate column "' . $column . '" in table "' . $tables[$i]->name . '"';
-                        $this->setError($errMsg);
+                    $oDb->where_in($column, $aMergeIds);
+                    if (!$oDb->update($aTables[$i]->name)) {
+                        $this->setError(
+                            'Failed to migrate column "' . $column . '" in table "' . $aTables[$i]->name . '"'
+                        );
                         $oDb->trans_rollback();
                         return false;
                     }
@@ -2446,22 +2465,18 @@ class User extends Base
             }
 
             //  Now delete each user
-            for ($i = 0; $i < count($mergeIds); $i++) {
-                if (!$this->destroy($mergeIds[$i])) {
-                    $errMsg = 'Failed to delete user "' . $mergeIds[$i] . '" ';
-                    $this->setError($errMsg);
+            for ($i = 0; $i < count($aMergeIds); $i++) {
+                if (!$this->destroy($aMergeIds[$i])) {
+                    $this->setError('Failed to delete user "' . $aMergeIds[$i] . '" ');
                     $oDb->trans_rollback();
                     return false;
                 }
             }
 
             if ($oDb->trans_status() === false) {
-
                 $oDb->trans_rollback();
                 $out = false;
-
             } else {
-
                 $oDb->trans_commit();
                 $out = true;
             }
