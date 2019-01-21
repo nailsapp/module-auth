@@ -14,6 +14,7 @@ namespace Nails\Admin\Auth;
 
 use Nails\Admin\Controller\DefaultController;
 use Nails\Admin\Helper;
+use Nails\Admin\Model\ChangeLog;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Components;
 use Nails\Factory;
@@ -29,23 +30,24 @@ class Accounts extends DefaultController
         'expand' => ['group'],
     ];
     const CONFIG_INDEX_FIELDS   = [
-        'id'          => 'ID',
-        'username'    => 'Username',
-        'first_name'  => 'First Name',
-        'last_name'   => 'Surname',
-        'email'       => 'Primary Email',
-        'group_name'  => 'Group',
-        'login_count' => 'Login Count',
-        'created'     => 'Registered',
-        'last_login'  => 'Last Login',
-        'last_seen'   => 'Last Seen',
+        'id'                 => 'ID',
+        'first_name'         => 'First Name',
+        'last_name'          => 'Surname',
+        'email'              => 'Primary Email',
+        'username'           => 'Username',
+        'group_name'         => 'Group',
+        'login_count'        => 'Login Count',
+        'created'            => 'Registered',
+        'last_login'         => 'Last Login',
+        'last_seen'          => 'Last Seen',
+        '{{DYNAMIC_FIELDS}}' => '',
     ];
     const CONFIG_SORT_OPTIONS   = [
         'id'          => 'ID',
         'first_name'  => 'First name',
         'last_name'   => 'Surname',
-        'username'    => 'Username',
         'email'       => 'Primary Email',
+        'username'    => 'Username',
         'login_count' => 'Login Count',
         'created'     => 'Registered',
         'last_seen'   => 'Last Seen',
@@ -54,6 +56,11 @@ class Accounts extends DefaultController
 
     // --------------------------------------------------------------------------
 
+    /**
+     * The ChangeLog model
+     *
+     * @var ChangeLog
+     */
     protected $oChangeLogModel;
 
     // --------------------------------------------------------------------------
@@ -121,46 +128,67 @@ class Accounts extends DefaultController
      */
     public function __construct()
     {
-        //  @todo (Pablo - 2018-12-20) - Support absolute URLS
         //  @todo (Pablo - 2018-12-20) - Support hiding all actions for non-superusers editing superusers
         //  @todo (Pablo - 2018-12-20) - Handle editing of other users
+        //  @todo (Pablo - 2019-01-21) - Filters
 
         $oInput  = Factory::service('Input');
         $sReturn = $oInput->server('request_uri');
         //  @todo (Pablo - 2018-12-20) - Remove isModal parameter
         $sReturn = urlencode($sReturn);
 
+        static::$aConfigIndexRowButtons = array_merge(
+            static::$aConfigIndexRowButtons,
+            [
+                [
+                    'url'     => site_url('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
+                    'label'   => 'Login As',
+                    'class'   => 'btn-warning',
+                    'enabled' => function ($oItem) {
+                        return $oItem->id !== activeUser('id') &&
+                            userHasPermission('admin:auth:accounts:loginAs');
+                    },
+                ],
+                [
+                    'url'     => 'suspend/{{id}}?return_to=' . $sReturn,
+                    'label'   => 'Suspend',
+                    'class'   => 'btn-danger',
+                    'enabled' => function ($oItem) {
+                        return $oItem->id !== activeUser('id') &&
+                            userHasPermission('admin:auth:accounts:suspend') &&
+                            !$oItem->is_suspended;
+                    },
+                ],
+                [
+                    'url'     => 'unsuspend/{{id}}?return_to=' . $sReturn,
+                    'label'   => 'Unsuspend',
+                    'class'   => 'btn-success',
+                    'enabled' => function ($oItem) {
+                        return $oItem->id !== activeUser('id') &&
+                            userHasPermission('admin:auth:accounts:unsuspend') &&
+                            $oItem->is_suspended;
+                    },
+                ],
+                [
+                    'url'     => site_url('admin/auth/accounts/change_group?users={{id}}'),
+                    'label'   => 'Change Group',
+                    'class'   => 'btn-default',
+                    'enabled' => function ($oItem) {
+                        return $oItem->id !== activeUser('id') &&
+                            userHasPermission('admin:auth:accounts:changeUserGroup');
+                    },
+                ],
+            ]
+        );
 
-        static::$aConfigIndexRowButtons[] = [
-            'url'     => site_url('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
-            'label'   => 'Login As',
-            'class'   => 'btn-warning',
-            'enabled' => function ($oItem) {
-                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:loginAs');
-            },
-        ];
-        static::$aConfigIndexRowButtons[] = [
-            'url'     => 'suspend/{{id}}?return_to=' . $sReturn,
-            'label'   => 'Suspend',
-            'class'   => 'btn-danger',
-            'enabled' => function ($oItem) {
-                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:suspend') && !$oItem->is_suspended;
-            },
-        ];
-        static::$aConfigIndexRowButtons[] = [
-            'url'     => 'unsuspend/{{id}}?return_to=' . $sReturn,
-            'label'   => 'Unsuspend',
-            'class'   => 'btn-success',
-            'enabled' => function ($oItem) {
-                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:unsuspend') && $oItem->is_suspended;
-            },
-        ];
-        static::$aConfigIndexRowButtons[] = [
-            'url'     => site_url('admin/auth/accounts/change_group?users={{id}}'),
-            'label'   => 'Change Group',
-            'class'   => 'btn-default',
-            'enabled' => function ($oItem) {
-                return $oItem->id !== activeUser('id') && userHasPermission('admin:auth:accounts:changeUserGroup');
+        static::$aConfigIndexDynamicFields = [
+            'Image' => function ($oUser) {
+                return img([
+                    'src'    => cdnAvatar($oUser->id, 150, 150),
+                    'alt'    => possessive($oUser->first_name . ' ' . $oUser->last_name) . ' avatar',
+                    'width'  => 75,
+                    'height' => 75,
+                ]);
             },
         ];
 
@@ -169,6 +197,41 @@ class Accounts extends DefaultController
         parent::__construct();
         $this->lang->load('admin_accounts');
         $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function indexCheckboxFilters()
+    {
+        $oGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $aGroups     = $oGroupModel->getAll();
+
+        return array_merge(
+            parent::indexCheckboxFilters(),
+            [
+                Factory::factory('IndexFilter', 'nails/module-admin')
+                    ->setLabel('Group')
+                    ->setColumn('group_id')
+                    ->addOptions(array_map(function ($oGroup) {
+                        return Factory::factory('IndexFilterOption', 'nails/module-admin')
+                            ->setLabel($oGroup->label)
+                            ->setValue($oGroup->id)
+                            ->setIsSelected(true);
+                    }, $aGroups)),
+                Factory::factory('IndexFilter', 'nails/module-admin')
+                    ->setLabel('Suspended')
+                    ->setColumn('is_suspended')
+                    ->addOptions([
+                        Factory::factory('IndexFilterOption', 'nails/module-admin')
+                            ->setLabel('Yes')
+                            ->setValue(true),
+                        Factory::factory('IndexFilterOption', 'nails/module-admin')
+                            ->setLabel('No')
+                            ->setValue(false)
+                            ->setIsSelected(true),
+                    ]),
+            ]
+        );
     }
 
     // --------------------------------------------------------------------------
