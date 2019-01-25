@@ -12,12 +12,13 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
 class Group extends Base
 {
-    protected $defaultGroup;
+    protected $oDefaultGroup;
 
     // --------------------------------------------------------------------------
 
@@ -29,9 +30,8 @@ class Group extends Base
         parent::__construct();
 
         $this->table             = NAILS_DB_PREFIX . 'user_group';
-        $this->tableAlias        = 'ug';
-        $this->defaultGroup      = $this->getDefaultGroup();
         $this->defaultSortColumn = 'id';
+        $this->oDefaultGroup     = $this->getDefaultGroup();
     }
 
     // --------------------------------------------------------------------------
@@ -39,15 +39,15 @@ class Group extends Base
     /**
      * Set's a group as the default group
      *
-     * @param mixed $group_id_slug The group's ID or slug
+     * @param mixed $mGroupIdOrSlug The group's ID or slug
      *
      * @return boolean
      */
-    public function setAsDefault($group_id_slug)
+    public function setAsDefault($mGroupIdOrSlug)
     {
-        $group = $this->getByIdOrSlug($group_id_slug);
+        $oGroup = $this->getByIdOrSlug($mGroupIdOrSlug);
 
-        if (!$group) {
+        if (!$oGroup) {
             $this->setError('Invalid Group');
         }
 
@@ -63,7 +63,7 @@ class Group extends Base
             $oDb->set('modified_by', activeUser('id'));
         }
         $oDb->where('is_default', true);
-        $oDb->update($this->table);
+        $oDb->update($this->getTableName());
 
         //  Set new default
         $oDb->set('is_default', true);
@@ -71,8 +71,8 @@ class Group extends Base
         if (isLoggedIn()) {
             $oDb->set('modified_by', activeUser('id'));
         }
-        $oDb->where('id', $group->id);
-        $oDb->update($this->table);
+        $oDb->where('id', $oGroup->id);
+        $oDb->update($this->getTableName());
 
         if ($oDb->trans_status() === false) {
 
@@ -82,10 +82,7 @@ class Group extends Base
         } else {
 
             $oDb->trans_commit();
-
-            //  Refresh the default group variable
             $this->getDefaultGroup();
-
             return true;
         }
     }
@@ -94,33 +91,36 @@ class Group extends Base
 
     /**
      * Returns the default user group
+     *
      * @return \stdClass
      */
     public function getDefaultGroup()
     {
-        $data['where']   = [];
-        $data['where'][] = ['column' => 'is_default', 'value' => true];
+        $aGroups = $this->getAll([
+            'where' => [
+                ['is_default', true],
+            ],
+        ]);
 
-        $group = $this->getAll(null, null, $data);
-
-        if (!$group) {
-            showFatalError('No Default Group Set', 'A default user group must be set.');
+        if (empty($aGroups)) {
+            throw new NailsException('A default user group must be defined.');
         }
 
-        $this->defaultGroup = $group[0];
+        $this->oDefaultGroup = reset($aGroups);
 
-        return $this->defaultGroup;
+        return $this->oDefaultGroup;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the default group's ID
+     *
      * @return int
      */
     public function getDefaultGroupId()
     {
-        return $this->defaultGroup->id;
+        return $this->oDefaultGroup->id;
     }
 
     // --------------------------------------------------------------------------
@@ -128,60 +128,76 @@ class Group extends Base
     /**
      * Change the user group of multiple users, executing any pre/post upgrade functionality as required
      *
-     * @param  array   $userIds    An array of User ID's to update
-     * @param  integer $newGroupId The ID of the new user group
+     * @param  array   $aUserIds    An array of User ID's to update
+     * @param  integer $iNewGroupId The ID of the new user group
      *
      * @return boolean
      */
-    public function changeUserGroup($userIds, $newGroupId)
+    public function changeUserGroup(array $aUserIds, $iNewGroupId)
     {
-        $group = $this->getById($newGroupId);
+        $oGroup = $this->getById($iNewGroupId);
+        if (empty($oGroup)) {
+            $this->setError('"' . $iNewGroupId . '" is not a valid group ID.');
+            return false;
+        }
 
-        if (empty($group)) {
-            $this->setError('"' . $newGroupId . '" is not a valid group ID.');
+        if (!empty($oGroup->acl) && in_array('admin:superuser', $oGroup->acl) && !isSuperuser()) {
+            $this->setError('You do not have permission to add user\'s to the superuser group.');
             return false;
         }
 
         $oDb        = Factory::service('Database');
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $users      = $oUserModel->getByIds((array) $userIds);
+        $aUsers     = $oUserModel->getByIds((array) $aUserIds);
 
-        $oDb->trans_begin();
+        try {
 
-        foreach ($users as $user) {
+            $oDb->trans_begin();
+            foreach ($aUsers as $oUser) {
 
-            $preMethod  = 'changeUserGroup_pre_' . $user->group_slug . '_' . $group->slug;
-            $postMethod = 'changeUserGroup_post_' . $user->group_slug . '_' . $group->slug;
+                //  Permission check
+                if ($oUser->id === activeUser('id') && !userHasPermission('admin:auth:accounts:changeOwnUserGroup')) {
+                    throw new \RuntimeException('You do not have permission to change your own user group');
+                } elseif ($oUser->id !== activeUser('id') && !userHasPermission('admin:auth:accounts:changeUserGroup')) {
+                    throw new \RuntimeException('You do not have permission to change another user\'s user group');
+                } elseif (isSuperuser($oUser) && !isSuperuser()) {
+                    throw new \RuntimeException('You do not have permission to change a super user\'s usergroup');
+                }
 
-            if (method_exists($this, $preMethod)) {
-                if (!$this->$preMethod($user)) {
-                    $oDb->trans_rollback();
-                    $msg = '"' . $preMethod . '()" returned false for user ' . $user->id . ', rolling back changes';
-                    $this->setError($msg);
-                    return false;
+                //  @todo (Pablo - 2019-01-25) - Use the event system
+                $sPreMethod  = 'changeUserGroup_pre_' . $oUser->group_slug . '_' . $oGroup->slug;
+                $sPostMethod = 'changeUserGroup_post_' . $oUser->group_slug . '_' . $oGroup->slug;
+
+                if (method_exists($this, $sPreMethod)) {
+                    if (!$this->$sPreMethod($oUser)) {
+                        throw new \RuntimeException(
+                            '"' . $sPreMethod . '()" returned false for user ' . $oUser->id . ', rolling back changes'
+                        );
+                    }
+                }
+
+                $aData = ['group_id' => $oGroup->id];
+                if (!$oUserModel->update($oUser->id, $aData)) {
+                    throw new \RuntimeException('Failed to update group ID for user ' . $oUser->id);
+                }
+
+                if (method_exists($this, $sPostMethod)) {
+                    if (!$this->$sPostMethod($oUser)) {
+                        throw new \RuntimeException(
+                            '"' . $sPostMethod . '()" returned false for user ' . $oUser->id . ', rolling back changes'
+                        );
+                    }
                 }
             }
+            $oDb->trans_commit();
 
-            $data = ['group_id' => $group->id];
-            if (!$oUserModel->update($user->id, $data)) {
-                $oDb->trans_rollback();
-                $msg = 'Failed to update group ID for user ' . $user->id;
-                $this->setError($msg);
-                return false;
-            }
+            return true;
 
-            if (method_exists($this, $postMethod)) {
-                if (!$this->$postMethod($user)) {
-                    $oDb->trans_rollback();
-                    $msg = '"' . $postMethod . '()" returned false for user ' . $user->id . ', rolling back changes';
-                    $this->setError($msg);
-                    return false;
-                }
-            }
+        } catch (\Exception $e) {
+            $oDb->trans_rollback();
+            $this->setError($e->getMessage());
+            return false;
         }
-
-        $oDb->trans_commit();
-        return true;
     }
 
     // --------------------------------------------------------------------------
@@ -189,43 +205,43 @@ class Group extends Base
     /**
      * Formats an array of permissions into a JSON encoded string suitable for the database
      *
-     * @param  array $permissions An array of permissions to set
+     * @param  array $aPermissions An array of permissions to set
      *
      * @return string
      */
-    public function processPermissions($permissions)
+    public function processPermissions(array $aPermissions)
     {
-        if (empty($permissions)) {
+        if (empty($aPermissions)) {
             return null;
         }
 
-        $out = [];
+        $aOut = [];
 
         //  Level 1
-        foreach ($permissions as $levelOneSlug => $levelOnePermissions) {
+        foreach ($aPermissions as $levelOneSlug => $levelOnePermissions) {
 
             if (is_string($levelOnePermissions)) {
-                $out[] = $levelOneSlug;
+                $aOut[] = $levelOneSlug;
                 continue;
             }
 
             foreach ($levelOnePermissions as $levelTwoSlug => $levelTwoPermissions) {
 
                 if (is_string($levelTwoPermissions)) {
-                    $out[] = $levelOneSlug . ':' . $levelTwoSlug;
+                    $aOut[] = $levelOneSlug . ':' . $levelTwoSlug;
                     continue;
                 }
 
                 foreach ($levelTwoPermissions as $levelThreeSlug => $levelThreePermissions) {
-                    $out[] = $levelOneSlug . ':' . $levelTwoSlug . ':' . $levelThreeSlug;
+                    $aOut[] = $levelOneSlug . ':' . $levelTwoSlug . ':' . $levelThreeSlug;
                 }
             }
         }
 
-        $out = array_unique($out);
-        $out = array_filter($out);
+        $aOut = array_unique($aOut);
+        $aOut = array_filter($aOut);
 
-        return json_encode($out);
+        return json_encode($aOut);
     }
 
     // --------------------------------------------------------------------------

@@ -106,14 +106,15 @@ class Accounts extends DefaultController
         return array_merge(
             parent::permissions(),
             [
-                'browse'          => 'Can browse users',
-                'create'          => 'Can create users',
-                'delete'          => 'Can delete users',
-                'suspend'         => 'Can suspend users',
-                'unsuspend'       => 'Can unsuspend users',
-                'loginAs'         => 'Can log in as another user',
-                'editOthers'      => 'Can edit other users',
-                'changeUserGroup' => 'Can change a user\'s group',
+                'browse'             => 'Can browse users',
+                'create'             => 'Can create users',
+                'delete'             => 'Can delete users',
+                'suspend'            => 'Can suspend users',
+                'unsuspend'          => 'Can unsuspend users',
+                'loginAs'            => 'Can log in as another user',
+                'editOthers'         => 'Can edit other users',
+                'changeUserGroup'    => 'Can change a user\'s group',
+                'changeOwnUserGroup' => 'Can change their own user group',
             ]
         );
     }
@@ -122,9 +123,6 @@ class Accounts extends DefaultController
 
     /**
      * Accounts constructor.
-     *
-     * @todo (Pablo - 2018-12-20) - Support hiding all actions for non-superusers editing superusers
-     * @todo (Pablo - 2018-12-20) - Handle editing of other users
      *
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\NailsException
@@ -167,10 +165,10 @@ class Accounts extends DefaultController
                          * - target user is not suspended
                          * - if target user is a superuser active user must also be a superuser
                          */
-                        return $oUser->id !== activeUser('id') &&
-                            userHasPermission('admin:auth:accounts:loginAs') &&
-                            !$oUser->is_suspended &&
-                            !(!isSuperuser() && isSuperuser($oUser));
+                        return $oUser->id !== activeUser('id')
+                            && userHasPermission('admin:auth:accounts:loginAs')
+                            && !$oUser->is_suspended
+                            && $this->activeUserCanEditSuperUser($oUser);
                     },
                 ],
                 [
@@ -185,10 +183,10 @@ class Accounts extends DefaultController
                          * - target user is not suspended
                          * - if target user is a superuser active user must also be a superuser
                          */
-                        return $oUser->id !== activeUser('id') &&
-                            userHasPermission('admin:auth:accounts:suspend') &&
-                            !$oUser->is_suspended &&
-                            !(!isSuperuser() && isSuperuser($oUser));
+                        return $oUser->id !== activeUser('id')
+                            && userHasPermission('admin:auth:accounts:suspend')
+                            && !$oUser->is_suspended
+                            && $this->activeUserCanEditSuperUser($oUser);
                     },
                 ],
                 [
@@ -203,10 +201,10 @@ class Accounts extends DefaultController
                          * - target user is suspended
                          * - if target user is a superuser active user must also be a superuser
                          */
-                        return $oUser->id !== activeUser('id') &&
-                            userHasPermission('admin:auth:accounts:unsuspend') &&
-                            $oUser->is_suspended &&
-                            !(!isSuperuser() && isSuperuser($oUser));
+                        return $oUser->id !== activeUser('id')
+                            && userHasPermission('admin:auth:accounts:unsuspend')
+                            && $oUser->is_suspended
+                            && $this->activeUserCanEditSuperUser($oUser);
                     },
                 ],
                 [
@@ -220,9 +218,11 @@ class Accounts extends DefaultController
                          * - active user has changeUserGroup permission
                          * - if target user is a superuser active user must also be a superuser
                          */
-                        return $oUser->id !== activeUser('id') &&
-                            userHasPermission('admin:auth:accounts:changeUserGroup') &&
-                            !(!isSuperuser() && isSuperuser($oUser));
+                        return (
+                                ($oUser->id === activeUser('id') && userHasPermission('admin:auth:accounts:changeOwnUserGroup'))
+                                || ($oUser->id !== activeUser('id') && userHasPermission('admin:auth:accounts:changeUserGroup'))
+                            )
+                            && $this->activeUserCanEditSuperUser($oUser);
                     },
                 ],
             ]
@@ -235,8 +235,7 @@ class Accounts extends DefaultController
             if ($aButton['label'] === lang('action_edit')) {
 
                 $aButton['enabled'] = function ($oUser) {
-                    return static::isEditButtonEnabled($oUser) &&
-                        ($oUser->id === activeUser('id') || userHasPermission('admin:auth:accounts:editOthers')) &&
+                    return ($oUser->id === activeUser('id') || userHasPermission('admin:auth:accounts:editOthers')) &&
                         !(!isSuperuser() && isSuperuser($oUser));
                 };
 
@@ -261,6 +260,20 @@ class Accounts extends DefaultController
 
         $this->lang->load('admin_accounts');
         $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determins whether the active user can edit the target superuser
+     *
+     * @param \stdClass $oUser The user to check
+     *
+     * @return bool
+     */
+    protected function activeUserCanEditSuperUser($oUser)
+    {
+        return !(!isSuperuser() && isSuperuser($oUser));
     }
 
     // --------------------------------------------------------------------------
@@ -962,43 +975,83 @@ class Accounts extends DefaultController
      */
     public function change_group()
     {
-        if (!userHasPermission('admin:auth:accounts:changeUserGroup')) {
+        if (!userHasPermission('admin:auth:accounts:changeUserGroup') && !userHasPermission('admin:auth:accounts:changeOwnUserGroup')) {
             show404();
         }
 
         // --------------------------------------------------------------------------
 
-        $oInput              = Factory::service('Input');
-        $oUserModel          = Factory::model('User', 'nails/module-auth');
-        $aUserIds            = explode(',', $oInput->get('users'));
-        $this->data['users'] = $oUserModel->getByIds($aUserIds);
+        $oInput     = Factory::service('Input');
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $aUserIds   = explode(',', $oInput->get('users'));
+        $aUsers     = $oUserModel->getByIds($aUserIds);
 
-        if (!$this->data['users']) {
+        if (empty($aUsers)) {
             show404();
         }
 
-        foreach ($this->data['users'] as $oUser) {
-            if ($oUserModel->isSuperuser($oUser->id) && !$oUserModel->isSuperuser()) {
-                show404();
+        $aRemovedUsers = [];
+        foreach ($aUsers as &$oUser) {
+            if (
+                ($oUserModel->isSuperuser($oUser) && !$oUserModel->isSuperuser())
+                || ($oUser->id === activeUser('id') && !userHasPermission('admin:auth:accounts:changeOwnUserGroup'))
+                || ($oUser->id !== activeUser('id') && !userHasPermission('admin:auth:accounts:changeUserGroup'))
+            ) {
+                $aRemovedUsers[] = $oUser;
+                $oUser           = null;
             }
         }
 
+        $aUsers = array_filter($aUsers);
+        $aUsers = array_values($aUsers);
+
+        if (!empty($aRemovedUsers)) {
+            $this->data['warning'] = 'You do not have permission to change the group of the following users: ' .
+                implode(', ', array_map(function ($oUser) {
+                    return '<br><strong>#' . $oUser->id . ' ' . $oUser->first_name . ' ' . $oUser->last_name . '</strong>';
+                }, $aRemovedUsers));
+        }
+
+        if (empty($aUsers)) {
+            $this->data['error'] = 'No users selected';
+        }
+
         // --------------------------------------------------------------------------
 
-        $oUserGroupModel          = Factory::model('UserGroup', 'nails/module-auth');
-        $this->data['userGroups'] = $oUserGroupModel->getAllFlat();
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $aGroups         = $oUserGroupModel->getAll();
+
+        if (!isSuperuser()) {
+            foreach ($aGroups as &$oGroup) {
+                if (!empty($oGroup->acl) && in_array('admin:superuser', $oGroup->acl)) {
+                    $oGroup = null;
+                }
+            }
+        }
+
+        $aGroups     = array_filter($aGroups);
+        $aGroups     = array_values($aGroups);
+        $aUserGroups = [];
+        foreach ($aGroups as $oGroup) {
+            $aUserGroups[$oGroup->id] = $oGroup->label;
+        }
 
         // --------------------------------------------------------------------------
 
         if ($oInput->post()) {
-            if ($oUserGroupModel->changeUserGroup($aUserIds, $oInput->post('newGroupId'))) {
+            if ($oUserGroupModel->changeUserGroup(arrayExtractProperty($aUsers, 'id'), (int) $oInput->post('group_id'))) {
                 $oSession = Factory::service('Session', 'nails/module-auth');
                 $oSession->setFlashData('success', 'User group was updated successfully.');
-                redirect('admin/auth/accounts/index');
+                redirect('admin/auth/accounts');
             } else {
                 $this->data['error'] = 'Failed to update user group. ' . $oUserGroupModel->lastError();
             }
         }
+
+
+        $this->data['aUsers']      = $aUsers;
+        $this->data['aUserGroups'] = $aUserGroups;
+        $this->data['page']->title = 'Change a user\'s group';
 
         // --------------------------------------------------------------------------
 
