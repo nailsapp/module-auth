@@ -26,9 +26,7 @@ abstract class BaseMfa extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * BaseMfa constructor.
-     *
-     * @throws \Nails\Common\Exception\FactoryException
+     * Construct the controller and set the Mfa Configs
      */
     public function __construct()
     {
@@ -43,11 +41,6 @@ abstract class BaseMfa extends Base
 
     // --------------------------------------------------------------------------
 
-    /**
-     * Validates the token in the URL
-     *
-     * @throws \Nails\Common\Exception\FactoryException
-     */
     protected function validateToken()
     {
         $oSession   = Factory::service('Session', 'nails/module-auth');
@@ -124,8 +117,6 @@ abstract class BaseMfa extends Base
 
     /**
      * Logs a user In
-     *
-     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function loginUser()
     {
@@ -164,6 +155,7 @@ abstract class BaseMfa extends Base
             }
 
             if ($oConfig->item('authShowLastIpOnLogin')) {
+
                 $sStatus  = 'positive';
                 $sMessage = lang(
                     'auth_login_ok_welcome_with_ip',
@@ -173,7 +165,9 @@ abstract class BaseMfa extends Base
                         $this->mfaUser->last_ip,
                     ]
                 );
+
             } else {
+
                 $sStatus  = 'positive';
                 $sMessage = lang(
                     'auth_login_ok_welcome',
@@ -185,6 +179,7 @@ abstract class BaseMfa extends Base
             }
 
         } else {
+
             $sStatus  = 'positive';
             $sMessage = lang(
                 'auth_login_ok_welcome_notime',

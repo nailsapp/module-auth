@@ -25,7 +25,7 @@ class Auth extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Auth constructor.
+     * Constructor
      */
     public function __construct()
     {
@@ -48,7 +48,6 @@ class Auth extends Base
      * @param  boolean $bRemember   Whether to 'remember' the user or not
      *
      * @return boolean|object
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function login($sIdentifier, $sPassword, $bRemember = false)
     {
@@ -208,7 +207,6 @@ class Auth extends Base
      * @param  string $sPassword   The user's password
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function verifyCredentials($sIdentifier, $sPassword)
     {
@@ -226,7 +224,6 @@ class Auth extends Base
      * Log a user out
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function logout()
     {
@@ -272,7 +269,6 @@ class Auth extends Base
      * @param  int $iUserId The user ID to generate the token for
      *
      * @return array|false
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenGenerate($iUserId)
     {
@@ -319,7 +315,6 @@ class Auth extends Base
      * @param  string $sIp     The user's IP address
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenValidate($iUserId, $sSalt, $sToken, $sIp)
     {
@@ -361,7 +356,6 @@ class Auth extends Base
      * @param  int $iTokenId The token's ID
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenDelete($iTokenId)
     {
@@ -379,7 +373,6 @@ class Auth extends Base
      * @param  int $iUserId The user's ID
      *
      * @return boolean|\stdClass
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaQuestionGet($iUserId)
     {
@@ -444,7 +437,6 @@ class Auth extends Base
      * @param  string $answer      The user's answer
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaQuestionValidate($iQuestionId, $iUserId, $answer)
     {
@@ -468,18 +460,17 @@ class Auth extends Base
     /**
      * Sets MFA questions for a user
      *
-     * @param  int     $iUserId  The user's ID
-     * @param  array   $data     An array of question and answers
-     * @param  boolean $clearOld Whether or not to clear old questions
+     * @param  int     $iUserId   The user's ID
+     * @param  array   $aData     An array of question and answers
+     * @param  boolean $bClearOld Whether or not to clear old questions
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
-    public function mfaQuestionSet($iUserId, $data, $clearOld = true)
+    public function mfaQuestionSet($iUserId, $aData, $bClearOld = true)
     {
         //  Check input
-        foreach ($data as $d) {
-            if (empty($d->question) || empty($d->answer)) {
+        foreach ($aData as $oDatum) {
+            if (empty($oDatum->question) || empty($oDatum->answer)) {
                 $this->setError('Malformed question/answer data.');
                 return false;
             }
@@ -490,7 +481,7 @@ class Auth extends Base
         $oDb->trans_begin();
 
         //  Delete old questions?
-        if ($clearOld) {
+        if ($bClearOld) {
             $oDb->where('user_id', $iUserId);
             $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
@@ -498,27 +489,27 @@ class Auth extends Base
         $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oEncrypt       = Factory::service('Encrypt');
 
-        $questionData = [];
-        $counter      = 0;
-        $oNow         = Factory::factory('DateTime');
-        $sDateTime    = $oNow->format('Y-m-d H:i:s');
+        $aQuestionData = [];
+        $iCounter      = 0;
+        $oNow          = Factory::factory('DateTime');
+        $sDateTime     = $oNow->format('Y-m-d H:i:s');
 
-        foreach ($data as $d) {
-            $sSalt                  = $oPasswordModel->salt();
-            $questionData[$counter] = [
+        foreach ($aData as $oDatum) {
+            $sSalt                    = $oPasswordModel->salt();
+            $aQuestionData[$iCounter] = [
                 'user_id'        => $iUserId,
                 'salt'           => $sSalt,
-                'question'       => $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $sSalt),
-                'answer'         => sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $sSalt),
+                'question'       => $oEncrypt->encode($oDatum->question, APP_PRIVATE_KEY . $sSalt),
+                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . APP_PRIVATE_KEY . $sSalt),
                 'created'        => $sDateTime,
                 'last_requested' => null,
             ];
-            $counter++;
+            $iCounter++;
         }
 
-        if ($questionData) {
+        if ($aQuestionData) {
 
-            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $questionData);
+            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $aQuestionData);
 
             if ($oDb->trans_status() !== false) {
                 $oDb->trans_commit();
@@ -542,8 +533,7 @@ class Auth extends Base
      *
      * @param  int $iUserId The user's ID
      *
-     * @return mixed \stdClass on success, false on failure
-     * @throws \Nails\Common\Exception\FactoryException
+     * @return mixed         \stdClass on success, false on failure
      */
     public function mfaDeviceSecretGet($iUserId)
     {
@@ -573,7 +563,6 @@ class Auth extends Base
      * @param  string $sExistingSecret The existing secret to use instead of generating a new one
      *
      * @return boolean|array
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
@@ -620,7 +609,6 @@ class Auth extends Base
      * @param  int    $iCode   The first code to be generate
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode)
     {
@@ -671,7 +659,6 @@ class Auth extends Base
      * @param  string $sCode   The code to validate
      *
      * @return boolean
-     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceCodeValidate($iUserId, $sCode)
     {

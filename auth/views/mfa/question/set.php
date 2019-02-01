@@ -1,161 +1,120 @@
 <?php
 
-$query              = [];
-$query['return_to'] = $return_to;
-$query['remember']  = $remember;
+$aQuery = array_filter([
+    'return_to' => $return_to,
+    'remember'  => $remember,
+]);
 
-$query = array_filter($query);
-
-if ($query) {
-
-    $query = '?' . http_build_query($query);
-
-} else {
-
-    $query = '';
-}
+$sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
 
 ?>
-<div class="container nails-module-auth mfa mfa-question mfa-question-set">
-    <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
-            <div class="well well-lg">
+<div class="nails-auth mfa mfa--question mfa--question--setup u-center-screen">
+    <div class="panel">
+        <h1 class="panel__header text-center">
+            Set up Two Factor Authentication
+        </h1>
+        <div class="panel__body">
+            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
+                <?=$error?>
+            </p>
+            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
+                <?=$success?>
+            </p>
+            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
+                <?=$message?>
+            </p>
+            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
+                <?=$info?>
+            </p>
+            <?=form_open('auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery)?>
+            <?php
+            if ($num_questions) {
+                ?>
                 <p>
-                    Please set security questions for your account.
+                    <?=lang('auth_twofactor_question_set_system_body')?>
+                </p>
+                <?php
+                if ($num_custom_questions) {
+                    ?>
+                    <h3>
+                        <?=lang('auth_twofactor_question_set_system_legend')?>
+                    </h3>
+                    <?php
+                }
+
+                for ($i = 0; $i < $num_questions; $i++) {
+
+                    $sFieldKey     = 'question[' . $i . '][question]';
+                    $sFieldLabel   = 'Question ' . ($i + 1);
+                    $aFieldOptions = array_merge(['Please Choose...'], $questions);
+                    ?>
+                    <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                        <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                        <?=form_dropdown($sFieldKey, $aFieldOptions, set_value($sFieldKey), 'id="input-' . $sFieldKey . '"')?>
+                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    </div>
+                    <?php
+
+                    $sFieldKey         = 'question[' . $i . '][answer]';
+                    $sFieldLabel       = 'Answer ' . ($i + 1);
+                    $sFieldPlaceholder = 'Type your answer here';
+                    ?>
+                    <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                        <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    </div>
+                    <?php
+                }
+            }
+
+            if ($num_custom_questions) {
+                ?>
+                <p>
+                    <?=lang('auth_twofactor_question_set_custom_body')?>
                 </p>
                 <?php
 
-                echo form_open(
-                    site_url(
-                        'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $query
-                    )
-                );
-
                 if ($num_questions) {
-
-                    echo '<p>';
-                    echo lang('auth_twofactor_question_set_system_body');
-                    echo '</p>';
-
-                    echo '<fieldset>';
-
-                    if ($num_custom_questions) {
-
-                        echo '<legend style="padding-top:20px">';
-                        echo lang('auth_twofactor_question_set_system_legend');
-                        echo '</legend>';
-                    }
-
-                    for ($i = 0; $i < $num_questions; $i++) {
-
-                        $field   = 'question[' . $i . '][question]';
-                        $name    = 'Question ' . ($i + 1);
-                        $error   = form_error($field) ? 'has-error' : null;
-                        $options = array_merge(['Please Choose...'], $questions);
-
-                        echo '<br>';
-                        echo '<div class="' . $error . '">';
-                        echo '<label for="password">' . $name . '</label>';
-                        echo form_dropdown(
-                            $field,
-                            $options,
-                            set_value($field),
-                            'class="form-control"'
-                        );
-                        echo form_error($field, '<span class="help-block">', '</span>');
-                        echo '</div>';
-
-                        // --------------------------------------------------------------------------
-
-                        $field       = 'question[' . $i . '][answer]';
-                        $name        = 'Answer ' . ($i + 1);
-                        $error       = form_error($field) ? 'has-error' : null;
-                        $placeholder = 'Type your answer here';
-                        $options     = array_merge(['Please Choose...'], $questions);
-
-                        echo '<br>';
-                        echo '<div class="' . $error . '">';
-                        echo '<label for="password">' . $name . '</label>';
-                        echo form_input(
-                            $field,
-                            set_value($field),
-                            'autocomplete="off" class="form-control" placeholder="' . $placeholder . '"'
-                        );
-                        echo form_error($field, '<span class="help-block">', '</span>');
-                        echo '</div>';
-
-                        echo '<hr />';
-                    }
-
-                    echo '</fieldset>';
+                    ?>
+                    <h3>
+                        <?=lang('auth_twofactor_question_set_custom_legend')?>
+                    </h3>
+                    <?php
                 }
 
-                // --------------------------------------------------------------------------
+                for ($i = 0; $i < $num_custom_questions; $i++) {
 
-                if ($num_custom_questions) {
+                    $sFieldKey         = 'custom_question[' . $i . '][question]';
+                    $sFieldLabel       = 'Question ' . ($i + 1);
+                    $sFieldPlaceholder = 'Type your question here';
+                    ?>
+                    <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                        <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    </div>
+                    <?php
 
-                    echo '<p>';
-                    echo lang('auth_twofactor_question_set_custom_body');
-                    echo '</p>';
-
-                    echo '<fieldset>';
-
-                    if ($num_questions) {
-
-                        echo '<legend style="padding-top:20px">';
-                        echo lang('auth_twofactor_question_set_custom_legend');
-                        echo '</legend>';
-                    }
-
-                    for ($i = 0; $i < $num_custom_questions; $i++) {
-
-                        $field       = 'custom_question[' . $i . '][question]';
-                        $name        = 'Question ' . ($i + 1);
-                        $error       = form_error($field) ? 'has-error' : null;
-                        $placeholder = 'Type your question here';
-
-                        echo '<br>';
-                        echo '<div class="' . $error . '">';
-                        echo '<label for="password">' . $name . '</label>';
-                        echo form_input(
-                            $field,
-                            set_value($field),
-                            'autocomplete="off" class="form-control" placeholder="' . $placeholder . '"'
-                        );
-                        echo form_error($field, '<span class="help-block">', '</span>');
-                        echo '</div>';
-
-                        // --------------------------------------------------------------------------
-
-                        $field       = 'custom_question[' . $i . '][answer]';
-                        $name        = 'Answer ' . ($i + 1);
-                        $error       = form_error($field) ? 'has-error' : null;
-                        $placeholder = 'Type your answer here';
-                        $options     = array_merge(['Please Choose...'], $questions);
-
-                        echo '<br>';
-                        echo '<div class="' . $error . '">';
-                        echo '<label for="password">' . $name . '</label>';
-                        echo form_input(
-                            $field,
-                            set_value($field),
-                            'autocomplete="off" class="form-control" placeholder="' . $placeholder . '"'
-                        );
-                        echo form_error($field, '<span class="help-block">', '</span>');
-                        echo '</div>';
-
-                        echo '<hr />';
-                    }
-
-                    echo '</fieldset>';
+                    $sFieldKey         = 'custom_question[' . $i . '][answer]';
+                    $sFieldLabel       = 'Answer ' . ($i + 1);
+                    $sFieldPlaceholder = 'Type your answer here';
+                    ?>
+                    <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                        <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    </div>
+                    <?php
                 }
-
-                ?>
-                <button class="btn btn-lg btn-primary btn-block" type="submit">
-                    Set Questions &amp; Sign In
+            }
+            ?>
+            <p>
+                <button type="submit" class="btn btn--block">
+                    Save questions &amp; Sign in
                 </button>
-                <?=form_close()?>
-            </div>
+            </p>
+            <?=form_close()?>
         </div>
     </div>
 </div>

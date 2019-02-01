@@ -17,6 +17,8 @@ class MfaQuestion extends BaseMfa
 {
     /**
      * Ensures we're use the correct MFA type
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function _remap()
     {
@@ -31,7 +33,8 @@ class MfaQuestion extends BaseMfa
 
     /**
      * Sets up, or asks an MFA Question
-     * @throws Exception
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function index()
     {
@@ -83,11 +86,10 @@ class MfaQuestion extends BaseMfa
                  * Determine how many questions a user must have, if the number of questions
                  * is smaller than the number of questions available, use the smaller.
                  */
-
                 if (count($this->data['questions']) < $this->authMfaConfig['numQuestions']) {
                     $this->data['num_questions'] = count($this->data['questions']);
                 } else {
-                    $this->data['num_questions'] = count($this->authMfaConfig['numQuestions']);
+                    $this->data['num_questions'] = $this->authMfaConfig['numQuestions'];
                 }
 
                 //  The number of user generated questions a user must have
@@ -223,11 +225,13 @@ class MfaQuestion extends BaseMfa
 
                 //  No questions, request they set them
                 $this->data['page']->title = lang('auth_twofactor_question_set_title');
-
-                $oView = Factory::service('View');
-                $oView->load('structure/header/blank', $this->data);
-                $oView->load('auth/mfa/question/set', $this->data);
-                $oView->load('structure/footer/blank', $this->data);
+                $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/set.php');
+                Factory::service('View')
+                    ->load([
+                        'structure/header/blank',
+                        'auth/mfa/question/set',
+                        'structure/footer/blank',
+                    ]);
             }
         }
     }
@@ -236,15 +240,19 @@ class MfaQuestion extends BaseMfa
 
     /**
      * Asks one of the user's questions
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function askQuestion()
     {
         //  Ask away cap'n!
         $this->data['page']->title = lang('auth_twofactor_answer_title');
-
-        $oView = Factory::service('View');
-        $oView->load('structure/header/blank', $this->data);
-        $oView->load('auth/mfa/question/ask', $this->data);
-        $oView->load('structure/footer/blank', $this->data);
+        $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/ask.php');
+        Factory::service('View')
+            ->load([
+                'structure/header/blank',
+                'auth/mfa/question/ask',
+                'structure/footer/blank',
+            ]);
     }
 }
