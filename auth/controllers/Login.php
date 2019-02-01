@@ -70,7 +70,9 @@ class Login extends Base
 
     /**
      * Validate data and log the user in.
+     *
      * @return  void
+     * @throws \Nails\Common\Exception\FactoryException
      **/
     public function index()
     {
@@ -126,7 +128,6 @@ class Login extends Base
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -140,10 +141,13 @@ class Login extends Base
         // --------------------------------------------------------------------------
 
         $this->loadStyles(APPPATH . 'modules/auth/views/login/form.php');
-        $oView = Factory::service('View');
-        $oView->load('structure/header/blank', $this->data);
-        $oView->load('auth/login/form', $this->data);
-        $oView->load('structure/footer/blank', $this->data);
+
+        Factory::service('View')
+            ->load([
+                'structure/header/blank',
+                'auth/login/form',
+                'structure/footer/blank',
+            ]);
     }
 
     // --------------------------------------------------------------------------
@@ -151,13 +155,13 @@ class Login extends Base
     /**
      * Handles the next stage of login after successfully authenticating
      *
-     * @param  stdClass $oUser    The user object
-     * @param  boolean  $remember Whether to set the rememberMe cookie or not
-     * @param  string   $provider Which provider authenticated the login
+     * @param  stdClass $oUser     The user object
+     * @param  boolean  $bRemember Whether to set the rememberMe cookie or not
+     * @param  string   $sProvider Which provider authenticated the login
      *
-     * @return void
+     * @throws \Nails\Common\Exception\FactoryException
      */
-    protected function _login($oUser, $remember = false, $provider = 'native')
+    protected function _login($oUser, $bRemember = false, $sProvider = 'native')
     {
         $oConfig            = Factory::service('Config');
         $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
@@ -174,8 +178,7 @@ class Login extends Base
              * Temporary password detected, log user out and redirect to
              * password reset page.
              **/
-
-            $this->resetPassword($oUser->id, $oUser->salt, $remember, 'TEMP');
+            $this->resetPassword($oUser->id, $oUser->salt, $bRemember, 'TEMP');
 
         } elseif ($oUserPasswordModel->isExpired($oUser->id)) {
 
@@ -183,42 +186,41 @@ class Login extends Base
              * Expired password detected, log user out and redirect to
              * password reset page.
              **/
-
-            $this->resetPassword($oUser->id, $oUser->salt, $remember, 'EXPIRED');
+            $this->resetPassword($oUser->id, $oUser->salt, $bRemember, 'EXPIRED');
 
         } elseif ($oConfig->item('authTwoFactorMode')) {
 
             //  Generate token
-            $twoFactorToken = $oAuthModel->mfaTokenGenerate($oUser->id);
+            $aTwoFactorToken = $oAuthModel->mfaTokenGenerate($oUser->id);
 
-            if (!$twoFactorToken) {
-                $subject  = 'Failed to generate two-factor auth token';
-                $sMessage = 'A user tried to login and the system failed to generate a two-factor auth token.';
-                showFatalError($subject, $sMessage);
+            if (!$aTwoFactorToken) {
+                throw new RuntimeException(
+                    'A user tried to login and the system failed to generate a two-factor auth token.'
+                );
             }
 
             //  Is there any query data?
-            $query = [];
+            $aQuery = [];
 
             if ($this->data['return_to']) {
-                $query['return_to'] = $this->data['return_to'];
+                $aQuery['return_to'] = $this->data['return_to'];
             }
 
-            if ($remember) {
-                $query['remember'] = true;
+            if ($bRemember) {
+                $aQuery['remember'] = true;
             }
 
-            $query = $query ? '?' . http_build_query($query) : '';
+            $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
 
             //  Where we sending the user?
             switch ($oConfig->item('authTwoFactorMode')) {
 
                 case 'QUESTION':
-                    $controller = 'mfa/question';
+                    $sController = 'mfa/question';
                     break;
 
                 case 'DEVICE':
-                    $controller = 'mfa/device';
+                    $sController = 'mfa/device';
                     break;
 
                 default:
@@ -227,18 +229,16 @@ class Login extends Base
             }
 
             //  Compile the URL
-            $url = [
+            $aUrl = [
                 'auth',
-                $controller,
+                $sController,
                 $oUser->id,
-                $twoFactorToken['salt'],
-                $twoFactorToken['token'],
+                $aTwoFactorToken['salt'],
+                $aTwoFactorToken['token'],
             ];
 
-            $url = implode($url, '/') . $query;
-
             //  Login was successful, redirect to the appropriate MFA page
-            redirect($url);
+            redirect(implode($aUrl, '/') . $sQuery);
 
         } else {
 
@@ -272,7 +272,7 @@ class Login extends Base
             // --------------------------------------------------------------------------
 
             //  Generate an event for this log in
-            create_event('did_log_in', ['provider' => $provider], $oUser->id);
+            create_event('did_log_in', ['provider' => $sProvider], $oUser->id);
 
             // --------------------------------------------------------------------------
 
@@ -450,7 +450,7 @@ class Login extends Base
      *
      * @param  string $provider The provider to use
      *
-     * @return void
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function socialSignon($provider)
     {
@@ -875,9 +875,9 @@ class Login extends Base
      * Handles requesting of additional data from the user
      *
      * @param  array  &$aRequiredData An array of fields to request
-     * @param  string $provider       The provider to use
+     * @param  string  $provider      The provider to use
      *
-     * @return void
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function requestData(&$aRequiredData, $provider)
     {
@@ -957,9 +957,9 @@ class Login extends Base
      * Renders the "request data" form
      *
      * @param  array  &$aRequiredData An array of fields to request
-     * @param  string $provider       The provider being used
+     * @param  string  $provider      The provider being used
      *
-     * @return void
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function requestDataForm(&$aRequiredData, $provider)
     {
@@ -975,10 +975,12 @@ class Login extends Base
             $this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
         }
 
-        $oView = Factory::service('View');
-        $oView->load('structure/header/blank', $this->data);
-        $oView->load('auth/register/social_request_data', $this->data);
-        $oView->load('structure/footer/blank', $this->data);
+        Factory::service('View')
+            ->load([
+                'structure/header/blank',
+                'auth/register/social_request_data',
+                'structure/footer/blank',
+            ]);
 
         $oOutput = Factory::service('Output');
         echo $oOutput->get_output();
@@ -989,7 +991,8 @@ class Login extends Base
 
     /**
      * Route requests appropriately
-     * @return void
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function _remap()
     {

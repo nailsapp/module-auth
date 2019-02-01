@@ -124,7 +124,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             </p>
         </div>
         <?php
-
         if (appSetting('user_registration_enabled', 'auth')) {
             ?>
             <p class="text-center">
@@ -133,9 +132,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             </p>
             <?php
         }
-
         ?>
+        <?=form_close()?>
     </div>
-    <?=form_close()?>
-</div>
 </div>

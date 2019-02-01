@@ -16,6 +16,11 @@ use Nails\Factory;
 
 abstract class Base extends \App\Controller\Base
 {
+    /**
+     * Base constructor.
+     *
+     * @throws \Nails\Common\Exception\FactoryException
+     */
     public function __construct()
     {
         parent::__construct();
@@ -30,6 +35,8 @@ abstract class Base extends \App\Controller\Base
      * Loads Auth styles if supplied view does not exist
      *
      * @param string $sView The view to test
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function loadStyles($sView)
     {

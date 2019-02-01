@@ -1,57 +1,62 @@
 <?php
 
-$query              = [];
-$query['return_to'] = isset($return_to) ? $return_to : '';
-$query['remember']  = isset($remember) ? $remember : '';
+$aQuery = array_filter([
+    'return_to' => $return_to,
+    'remember'  => $remember,
+]);
 
-$query = array_filter($query);
+$sQuery   = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
+$sFormUrl = null;
 
-if ($query) {
-
-    $query = '?' . http_build_query($query);
-
-} else {
-
-    $query = '';
-}
-
-if (!isset($login_method) || !isset($user_id) || !isset($token)) {
-
-    $formUrl = null;
-
-} else {
-
+if (isset($login_method) && isset($user_id) && isset($token)) {
     $login_method = $login_method && $login_method != 'native' ? '/' . $login_method : '';
-    $formUrl      = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $query;
-    $formUrl      = site_url($formUrl);
+    $sFormUrl     = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $sQuery;
+    $sFormUrl     = site_url($sFormUrl);
 }
 
 ?>
-<div class="container nails-module-auth mfa mfa-question mfa-question-ask">
-    <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
-            <div class="well well-lg text-center">
-                <p>
-                    <?=lang('auth_twofactor_answer_body')?>
-                </p>
-                <hr/>
-                <h4 style="margin-bottom:1.25em;">
-                    <strong><?=$question->question?></strong>
-                </h4>
-                <p>
-                    <?php
+<div class="nails-auth mfa mfa--question mfa--question--ask u-center-screen">
+    <div class="panel">
+        <h1 class="panel__header text-center">
+            Two Factor Authentication
+        </h1>
+        <div class="panel__body">
+            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
+                <?=$error?>
+            </p>
+            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
+                <?=$success?>
+            </p>
+            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
+                <?=$message?>
+            </p>
+            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
+                <?=$info?>
+            </p>
+            <p>
+                <?=lang('auth_twofactor_answer_body')?>
+            </p>
+            <h4>
+                <strong><?=$question->question?></strong>
+            </h4>
+            <?=form_open($sFormUrl)?>
+            <?php
 
-                    echo form_open($formUrl);
-
-                    ?>
-                </p>
-                <p>
-                    <?=form_password('answer', null, 'class="form-control" placeholder="Type your answer here"')?>
-                </p>
-                <hr/>
-                <button class="btn btn-lg btn-primary" type="submit">Login</button>
-                <?=form_close()?>
+            $sFieldKey         = 'answer';
+            $sFieldLabel       = 'Answer';
+            $sFieldPlaceholder = 'Type your answer here';
+            ?>
+            <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
             </div>
+            <p>
+                <button type="submit" class="btn btn--block">
+                    Verify answer &amp; Sign in
+                </button>
+            </p>
+            <?=form_close()?>
         </div>
     </div>
 </div>

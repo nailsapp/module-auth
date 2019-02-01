@@ -222,6 +222,7 @@ class Auth extends Base
 
     /**
      * Log a user out
+     *
      * @return boolean
      */
     public function logout()
@@ -459,17 +460,17 @@ class Auth extends Base
     /**
      * Sets MFA questions for a user
      *
-     * @param  int     $iUserId  The user's ID
-     * @param  array   $data     An array of question and answers
-     * @param  boolean $clearOld Whether or not to clear old questions
+     * @param  int     $iUserId   The user's ID
+     * @param  array   $aData     An array of question and answers
+     * @param  boolean $bClearOld Whether or not to clear old questions
      *
      * @return boolean
      */
-    public function mfaQuestionSet($iUserId, $data, $clearOld = true)
+    public function mfaQuestionSet($iUserId, $aData, $bClearOld = true)
     {
         //  Check input
-        foreach ($data as $d) {
-            if (empty($d->question) || empty($d->answer)) {
+        foreach ($aData as $oDatum) {
+            if (empty($oDatum->question) || empty($oDatum->answer)) {
                 $this->setError('Malformed question/answer data.');
                 return false;
             }
@@ -480,7 +481,7 @@ class Auth extends Base
         $oDb->trans_begin();
 
         //  Delete old questions?
-        if ($clearOld) {
+        if ($bClearOld) {
             $oDb->where('user_id', $iUserId);
             $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
         }
@@ -488,27 +489,27 @@ class Auth extends Base
         $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
         $oEncrypt       = Factory::service('Encrypt');
 
-        $questionData = [];
-        $counter      = 0;
-        $oNow         = Factory::factory('DateTime');
-        $sDateTime    = $oNow->format('Y-m-d H:i:s');
+        $aQuestionData = [];
+        $iCounter      = 0;
+        $oNow          = Factory::factory('DateTime');
+        $sDateTime     = $oNow->format('Y-m-d H:i:s');
 
-        foreach ($data as $d) {
-            $sSalt                  = $oPasswordModel->salt();
-            $questionData[$counter] = [
+        foreach ($aData as $oDatum) {
+            $sSalt                    = $oPasswordModel->salt();
+            $aQuestionData[$iCounter] = [
                 'user_id'        => $iUserId,
                 'salt'           => $sSalt,
-                'question'       => $oEncrypt->encode($d->question, APP_PRIVATE_KEY . $sSalt),
-                'answer'         => sha1(sha1(strtolower($d->answer)) . APP_PRIVATE_KEY . $sSalt),
+                'question'       => $oEncrypt->encode($oDatum->question, APP_PRIVATE_KEY . $sSalt),
+                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . APP_PRIVATE_KEY . $sSalt),
                 'created'        => $sDateTime,
                 'last_requested' => null,
             ];
-            $counter++;
+            $iCounter++;
         }
 
-        if ($questionData) {
+        if ($aQuestionData) {
 
-            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $questionData);
+            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $aQuestionData);
 
             if ($oDb->trans_status() !== false) {
                 $oDb->trans_commit();
@@ -605,31 +606,19 @@ class Auth extends Base
      *
      * @param  int    $iUserId The user's ID
      * @param  string $sSecret The secret being used
-     * @param  int    $iCode1  The first code to be generate
-     * @param  int    $iCode2  The second code to be generated
+     * @param  int    $iCode   The first code to be generate
      *
      * @return boolean
      */
-    public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode1, $iCode2)
+    public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode)
     {
         //  Tidy up codes so that they only contain digits
-        $sCode1 = preg_replace('/[^\d]/', '', $iCode1);
-        $sCode2 = preg_replace('/[^\d]/', '', $iCode2);
+        $sCode = preg_replace('/[^\d]/', '', $iCode);
 
         //  New instance of the authenticator
         $oGoogleAuth = new GoogleAuthenticator();
 
-        //  Check the codes
-        $bCheckCode1 = $oGoogleAuth->checkCode($sSecret, $sCode1);
-        $bCheckCode2 = $oGoogleAuth->checkCode($sSecret, $sCode2);
-
-        if ($bCheckCode1 && $bCheckCode2) {
-
-            /**
-             * Both codes are valid, which means they are sequential and recent.
-             * We must now save the secret against the user and record those codes
-             * so they can't be used again.
-             */
+        if ($oGoogleAuth->checkCode($sSecret, $sCode)) {
 
             $oDb      = Factory::service('Database');
             $oEncrypt = Factory::service('Encrypt');
@@ -643,20 +632,10 @@ class Auth extends Base
                 $iSecretId = $oDb->insert_id();
                 $oNow      = Factory::factory('DateTime');
 
-                $aData = [
-                    [
-                        'secret_id' => $iSecretId,
-                        'code'      => $sCode1,
-                        'used'      => $oNow->format('Y-m-d H:i:s'),
-                    ],
-                    [
-                        'secret_id' => $iSecretId,
-                        'code'      => $sCode2,
-                        'used'      => $oNow->format('Y-m-d H:i:s'),
-                    ],
-                ];
-
-                $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $aData);
+                $oDb->set('secret_id', $iSecretId);
+                $oDb->set('code', $sCode);
+                $oDb->set('used', $oNow->format('Y-m-d H:i:s'));
+                $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
 
                 return true;
 

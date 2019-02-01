@@ -87,12 +87,10 @@ abstract class BaseMfa extends Base
 
             $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
 
-            $aQuery = [
+            $aQuery = array_filter([
                 'return_to' => $this->returnTo,
                 'remember'  => $this->remember,
-            ];
-
-            $aQuery = array_filter($aQuery);
+            ]);
 
             if ($aQuery) {
                 $sQuery = '?' . http_build_query($aQuery);
@@ -158,8 +156,8 @@ abstract class BaseMfa extends Base
 
             if ($oConfig->item('authShowLastIpOnLogin')) {
 
-                $status  = 'positive';
-                $message = lang(
+                $sStatus  = 'positive';
+                $sMessage = lang(
                     'auth_login_ok_welcome_with_ip',
                     [
                         $this->mfaUser->first_name,
@@ -170,8 +168,8 @@ abstract class BaseMfa extends Base
 
             } else {
 
-                $status  = 'positive';
-                $message = lang(
+                $sStatus  = 'positive';
+                $sMessage = lang(
                     'auth_login_ok_welcome',
                     [
                         $this->mfaUser->first_name,
@@ -182,8 +180,8 @@ abstract class BaseMfa extends Base
 
         } else {
 
-            $status  = 'positive';
-            $message = lang(
+            $sStatus  = 'positive';
+            $sMessage = lang(
                 'auth_login_ok_welcome_notime',
                 [
                     $this->mfaUser->first_name,
@@ -192,7 +190,7 @@ abstract class BaseMfa extends Base
         }
 
         $oSession = Factory::service('Session', 'nails/module-auth');
-        $oSession->setFlashData($status, $message);
+        $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
