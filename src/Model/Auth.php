@@ -25,7 +25,7 @@ class Auth extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Constructor
+     * Auth constructor.
      */
     public function __construct()
     {
@@ -48,6 +48,7 @@ class Auth extends Base
      * @param  boolean $bRemember   Whether to 'remember' the user or not
      *
      * @return boolean|object
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function login($sIdentifier, $sPassword, $bRemember = false)
     {
@@ -207,6 +208,7 @@ class Auth extends Base
      * @param  string $sPassword   The user's password
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function verifyCredentials($sIdentifier, $sPassword)
     {
@@ -222,7 +224,9 @@ class Auth extends Base
 
     /**
      * Log a user out
+     *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function logout()
     {
@@ -268,6 +272,7 @@ class Auth extends Base
      * @param  int $iUserId The user ID to generate the token for
      *
      * @return array|false
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenGenerate($iUserId)
     {
@@ -314,6 +319,7 @@ class Auth extends Base
      * @param  string $sIp     The user's IP address
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenValidate($iUserId, $sSalt, $sToken, $sIp)
     {
@@ -355,6 +361,7 @@ class Auth extends Base
      * @param  int $iTokenId The token's ID
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaTokenDelete($iTokenId)
     {
@@ -372,6 +379,7 @@ class Auth extends Base
      * @param  int $iUserId The user's ID
      *
      * @return boolean|\stdClass
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaQuestionGet($iUserId)
     {
@@ -436,6 +444,7 @@ class Auth extends Base
      * @param  string $answer      The user's answer
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaQuestionValidate($iQuestionId, $iUserId, $answer)
     {
@@ -464,6 +473,7 @@ class Auth extends Base
      * @param  boolean $clearOld Whether or not to clear old questions
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaQuestionSet($iUserId, $data, $clearOld = true)
     {
@@ -532,7 +542,8 @@ class Auth extends Base
      *
      * @param  int $iUserId The user's ID
      *
-     * @return mixed         \stdClass on success, false on failure
+     * @return mixed \stdClass on success, false on failure
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceSecretGet($iUserId)
     {
@@ -562,6 +573,7 @@ class Auth extends Base
      * @param  string $sExistingSecret The existing secret to use instead of generating a new one
      *
      * @return boolean|array
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
@@ -605,31 +617,20 @@ class Auth extends Base
      *
      * @param  int    $iUserId The user's ID
      * @param  string $sSecret The secret being used
-     * @param  int    $iCode1  The first code to be generate
-     * @param  int    $iCode2  The second code to be generated
+     * @param  int    $iCode   The first code to be generate
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
-    public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode1, $iCode2)
+    public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode)
     {
         //  Tidy up codes so that they only contain digits
-        $sCode1 = preg_replace('/[^\d]/', '', $iCode1);
-        $sCode2 = preg_replace('/[^\d]/', '', $iCode2);
+        $sCode = preg_replace('/[^\d]/', '', $iCode);
 
         //  New instance of the authenticator
         $oGoogleAuth = new GoogleAuthenticator();
 
-        //  Check the codes
-        $bCheckCode1 = $oGoogleAuth->checkCode($sSecret, $sCode1);
-        $bCheckCode2 = $oGoogleAuth->checkCode($sSecret, $sCode2);
-
-        if ($bCheckCode1 && $bCheckCode2) {
-
-            /**
-             * Both codes are valid, which means they are sequential and recent.
-             * We must now save the secret against the user and record those codes
-             * so they can't be used again.
-             */
+        if ($oGoogleAuth->checkCode($sSecret, $sCode)) {
 
             $oDb      = Factory::service('Database');
             $oEncrypt = Factory::service('Encrypt');
@@ -643,20 +644,10 @@ class Auth extends Base
                 $iSecretId = $oDb->insert_id();
                 $oNow      = Factory::factory('DateTime');
 
-                $aData = [
-                    [
-                        'secret_id' => $iSecretId,
-                        'code'      => $sCode1,
-                        'used'      => $oNow->format('Y-m-d H:i:s'),
-                    ],
-                    [
-                        'secret_id' => $iSecretId,
-                        'code'      => $sCode2,
-                        'used'      => $oNow->format('Y-m-d H:i:s'),
-                    ],
-                ];
-
-                $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code', $aData);
+                $oDb->set('secret_id', $iSecretId);
+                $oDb->set('code', $sCode);
+                $oDb->set('used', $oNow->format('Y-m-d H:i:s'));
+                $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
 
                 return true;
 
@@ -680,6 +671,7 @@ class Auth extends Base
      * @param  string $sCode   The code to validate
      *
      * @return boolean
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function mfaDeviceCodeValidate($iUserId, $sCode)
     {

@@ -26,7 +26,9 @@ abstract class BaseMfa extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the controller and set the Mfa Configs
+     * BaseMfa constructor.
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     public function __construct()
     {
@@ -41,6 +43,11 @@ abstract class BaseMfa extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Validates the token in the URL
+     *
+     * @throws \Nails\Common\Exception\FactoryException
+     */
     protected function validateToken()
     {
         $oSession   = Factory::service('Session', 'nails/module-auth');
@@ -87,12 +94,10 @@ abstract class BaseMfa extends Base
 
             $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
 
-            $aQuery = [
+            $aQuery = array_filter([
                 'return_to' => $this->returnTo,
                 'remember'  => $this->remember,
-            ];
-
-            $aQuery = array_filter($aQuery);
+            ]);
 
             if ($aQuery) {
                 $sQuery = '?' . http_build_query($aQuery);
@@ -119,6 +124,8 @@ abstract class BaseMfa extends Base
 
     /**
      * Logs a user In
+     *
+     * @throws \Nails\Common\Exception\FactoryException
      */
     protected function loginUser()
     {
@@ -157,9 +164,8 @@ abstract class BaseMfa extends Base
             }
 
             if ($oConfig->item('authShowLastIpOnLogin')) {
-
-                $status  = 'positive';
-                $message = lang(
+                $sStatus  = 'positive';
+                $sMessage = lang(
                     'auth_login_ok_welcome_with_ip',
                     [
                         $this->mfaUser->first_name,
@@ -167,11 +173,9 @@ abstract class BaseMfa extends Base
                         $this->mfaUser->last_ip,
                     ]
                 );
-
             } else {
-
-                $status  = 'positive';
-                $message = lang(
+                $sStatus  = 'positive';
+                $sMessage = lang(
                     'auth_login_ok_welcome',
                     [
                         $this->mfaUser->first_name,
@@ -181,9 +185,8 @@ abstract class BaseMfa extends Base
             }
 
         } else {
-
-            $status  = 'positive';
-            $message = lang(
+            $sStatus  = 'positive';
+            $sMessage = lang(
                 'auth_login_ok_welcome_notime',
                 [
                     $this->mfaUser->first_name,
@@ -192,7 +195,7 @@ abstract class BaseMfa extends Base
         }
 
         $oSession = Factory::service('Session', 'nails/module-auth');
-        $oSession->setFlashData($status, $message);
+        $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
