@@ -43,7 +43,7 @@ $config['authShowLastIpOnLogin'] = false;
  * Auth sub config files
  * Load both versions, app version overrides Nails version
  */
-$sAppPath   = APPPATH . 'modules/auth/config/';
+$sAppPath   = NAILS_APP_PATH . 'application/modules/auth/config/';
 $sNailsPath = NAILS_PATH . 'module-auth/auth/config/';
 
 $aFiles = [

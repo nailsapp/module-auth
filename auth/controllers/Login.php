@@ -140,7 +140,7 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->loadStyles(APPPATH . 'modules/auth/views/login/form.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/login/form.php');
 
         Factory::service('View')
             ->load([

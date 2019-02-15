@@ -225,7 +225,7 @@ class MfaQuestion extends BaseMfa
 
                 //  No questions, request they set them
                 $this->data['page']->title = lang('auth_twofactor_question_set_title');
-                $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/set.php');
+                $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/set.php');
                 Factory::service('View')
                     ->load([
                         'structure/header/blank',
@@ -247,7 +247,7 @@ class MfaQuestion extends BaseMfa
     {
         //  Ask away cap'n!
         $this->data['page']->title = lang('auth_twofactor_answer_title');
-        $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/ask.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/ask.php');
         Factory::service('View')
             ->load([
                 'structure/header/blank',

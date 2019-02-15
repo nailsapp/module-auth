@@ -321,7 +321,7 @@ class PasswordReset extends Base
             // --------------------------------------------------------------------------
 
             //  Load the views
-            $this->loadStyles(APPPATH . 'modules/auth/views/password/change_temp.php');
+            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/change_temp.php');
             Factory::service('View')
                    ->load([
                        'structure/header/blank',

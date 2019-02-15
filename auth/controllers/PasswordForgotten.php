@@ -244,7 +244,7 @@ class PasswordForgotten extends Base
         }
 
         //  Load the views
-        $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
         $oView = Factory::service('View');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
@@ -324,7 +324,7 @@ class PasswordForgotten extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer/blank', $this->data);
@@ -337,7 +337,7 @@ class PasswordForgotten extends Base
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-                    $this->loadStyles(APPPATH . 'modules/auth/views/mfa/question/ask.php');
+                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/question/ask', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -360,7 +360,7 @@ class PasswordForgotten extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -395,7 +395,7 @@ class PasswordForgotten extends Base
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                             $oView->load('structure/header/blank', $this->data);
                             $oView->load('auth/password/forgotten_reset', $this->data);
                             $oView->load('structure/footer', $this->data);
@@ -410,7 +410,7 @@ class PasswordForgotten extends Base
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
-                    $this->loadStyles(APPPATH . 'modules/auth/views/mfa/device/ask.php');
+                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/ask.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/mfa/device/ask', $this->data);
                     $oView->load('structure/footer', $this->data);
@@ -433,7 +433,7 @@ class PasswordForgotten extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                     $oView->load('structure/header/blank', $this->data);
                     $oView->load('auth/password/forgotten_reset', $this->data);
                     $oView->load('structure/footer/blank', $this->data);
@@ -455,7 +455,7 @@ class PasswordForgotten extends Base
                 // --------------------------------------------------------------------------
 
                 //  Load the views
-                $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten_reset.php');
+                $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                 $oView->load('structure/header/blank', $this->data);
                 $oView->load('auth/password/forgotten_reset', $this->data);
                 $oView->load('structure/footer/blank', $this->data);
@@ -467,7 +467,7 @@ class PasswordForgotten extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->loadStyles(APPPATH . 'modules/auth/views/password/forgotten.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
         $oView->load('structure/header/blank', $this->data);
         $oView->load('auth/password/forgotten', $this->data);
         $oView->load('structure/footer/blank', $this->data);

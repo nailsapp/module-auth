@@ -127,7 +127,7 @@ class MfaDevice extends BaseMfa
         // --------------------------------------------------------------------------
 
         $this->data['page']->title = 'Set up a new MFA device';
-        $this->loadStyles(APPPATH . 'modules/auth/views/mfa/device/setup.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/setup.php');
         Factory::service('View')
             ->load([
                 'structure/header/blank',
@@ -174,7 +174,7 @@ class MfaDevice extends BaseMfa
         // --------------------------------------------------------------------------
 
         $this->data['page']->title = 'Enter your Code';
-        $this->loadStyles(APPPATH . 'modules/auth/views/mfa/device/ask.php');
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/ask.php');
         Factory::service('View')
             ->load([
                 'structure/header/blank',
