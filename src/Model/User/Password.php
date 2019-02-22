@@ -213,31 +213,33 @@ class Password extends Base
 
         //  Satisfies all the requirements
         $aFailedRequirements = [];
-        foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
-            switch ($sRequirement) {
-                case 'symbol':
-                    if (!$this->strContainsFromCharset($sPassword, 'symbol')) {
-                        $aFailedRequirements[] = 'a symbol';
-                    }
-                    break;
+        if (!empty($aPwRules['requirements'])) {
+            foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
+                switch ($sRequirement) {
+                    case 'symbol':
+                        if (!$this->strContainsFromCharset($sPassword, 'symbol')) {
+                            $aFailedRequirements[] = 'a symbol';
+                        }
+                        break;
 
-                case 'number':
-                    if (!$this->strContainsFromCharset($sPassword, 'number')) {
-                        $aFailedRequirements[] = 'a number';
-                    }
-                    break;
+                    case 'number':
+                        if (!$this->strContainsFromCharset($sPassword, 'number')) {
+                            $aFailedRequirements[] = 'a number';
+                        }
+                        break;
 
-                case 'lower_alpha':
-                    if (!$this->strContainsFromCharset($sPassword, 'lower_alpha')) {
-                        $aFailedRequirements[] = 'a lowercase letter';
-                    }
-                    break;
+                    case 'lower_alpha':
+                        if (!$this->strContainsFromCharset($sPassword, 'lower_alpha')) {
+                            $aFailedRequirements[] = 'a lowercase letter';
+                        }
+                        break;
 
-                case 'upper_alpha':
-                    if (!$this->strContainsFromCharset($sPassword, 'upper_alpha')) {
-                        $aFailedRequirements[] = 'an uppercase letter';
-                    }
-                    break;
+                    case 'upper_alpha':
+                        if (!$this->strContainsFromCharset($sPassword, 'upper_alpha')) {
+                            $aFailedRequirements[] = 'an uppercase letter';
+                        }
+                        break;
+                }
             }
         }
 
@@ -249,10 +251,12 @@ class Password extends Base
         }
 
         //  Not be a banned password?
-        foreach ($aPwRules['banned'] as $sStr) {
-            if (trim(strtolower($sPassword)) == strtolower($sStr)) {
-                $this->setError('Password cannot be "' . $sStr . '"');
-                return false;
+        if (!empty($aPwRules['banned'])) {
+            foreach ($aPwRules['banned'] as $sStr) {
+                if (trim(strtolower($sPassword)) == strtolower($sStr)) {
+                    $this->setError('Password cannot be "' . $sStr . '"');
+                    return false;
+                }
             }
         }
 
@@ -285,6 +289,7 @@ class Password extends Base
 
     /**
      * Generates a null password hash
+     *
      * @return mixed stdClass on success, false on failure
      */
     public function generateNullHash()
@@ -340,33 +345,35 @@ class Password extends Base
         $aCharsets   = [];
         $aCharsets[] = $this->aCharset['lower_alpha'];
 
-        foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
+        if (!empty($aPwRules['requirements'])) {
+            foreach ($aPwRules['requirements'] as $sRequirement => $bValue) {
 
-            switch ($sRequirement) {
-                case 'symbol':
-                    $aCharsets[] = $this->aCharset['symbol'];
-                    break;
+                switch ($sRequirement) {
+                    case 'symbol':
+                        $aCharsets[] = $this->aCharset['symbol'];
+                        break;
 
-                case 'number':
-                    $aCharsets[] = $this->aCharset['number'];
-                    break;
+                    case 'number':
+                        $aCharsets[] = $this->aCharset['number'];
+                        break;
 
-                case 'upper_alpha':
-                    $aCharsets[] = $this->aCharset['upper_alpha'];
-                    break;
+                    case 'upper_alpha':
+                        $aCharsets[] = $this->aCharset['upper_alpha'];
+                        break;
+                }
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Work out the min length
-        $iMin = $aPwRules['min'];
-        if (empty($aPwRules['min'])) {
+        $iMin = getFromArray('min', $aPwRules);
+        if (empty($iMin)) {
             $iMin = 8;
         }
 
         //  Work out the max length
-        $iMax = $aPwRules['max'];
+        $iMax = getFromArray('max', $aPwRules);
         if (empty($iMax) || $iMin > $iMax) {
             $iMax = $iMin + count($aCharsets) * 2;
         }
@@ -384,10 +391,12 @@ class Password extends Base
             } while (count($aPwOut) < $iMax);
 
             //  Check password isn't a prohibited string
-            foreach ($aPwRules['banned'] as $sString) {
-                if (strtolower(implode('', $aPwOut)) == strtolower($sString)) {
-                    $bPwValid = false;
-                    break;
+            if (!empty($aPwRules['banned'])) {
+                foreach ($aPwRules['banned'] as $sString) {
+                    if (strtolower(implode('', $aPwOut)) == strtolower($sString)) {
+                        $bPwValid = false;
+                        break;
+                    }
                 }
             }
 
