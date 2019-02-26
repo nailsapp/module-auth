@@ -455,6 +455,7 @@ class Login extends Base
     protected function socialSignon($provider)
     {
         $oUri       = Factory::service('Uri');
+        $oLogger    = Factory::service('Logger');
         $oSession   = Factory::service('Session', 'nails/module-auth');
         $oSocial    = Factory::service('SocialSignOn', 'nails/module-auth');
         $oUserModel = Factory::model('User', 'nails/module-auth');
@@ -473,9 +474,9 @@ class Login extends Base
         } catch (Exception $e) {
 
             //  Failed to fetch from the provider, something must have gone wrong
-            log_message('error', 'HybridAuth failed to fetch data from provider.');
-            log_message('error', 'Error Code: ' . $e->getCode());
-            log_message('error', 'Error Message: ' . $e->getMessage());
+            $oLogger->line('HybridAuth failed to fetch data from provider.');
+            $oLogger->line('Error Code: ' . $e->getCode());
+            $oLogger->line('Error Message: ' . $e->getMessage());
 
             if (empty($provider)) {
                 $oSession->setFlashData(
@@ -800,15 +801,15 @@ class Login extends Base
                                         $oUserModel->update($newUser->id, $data);
 
                                     } else {
-                                        log_message('debug', 'Failed to upload user\'s profile image');
-                                        log_message('debug', $oCdn->lastError());
+                                        $oLogger->line('Failed to upload user\'s profile image');
+                                        $oLogger->line($oCdn->lastError());
                                     }
                                 }
                             }
 
                         } catch (\Exception $e) {
-                            log_message('debug', 'Failed to upload user\'s profile image');
-                            log_message('debug', $e->getMessage());
+                            $oLogger->line('Failed to upload user\'s profile image');
+                            $oLogger->line($e->getMessage());
                         }
                     }
 
