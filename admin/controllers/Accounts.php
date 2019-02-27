@@ -101,7 +101,7 @@ class Accounts extends DefaultController
      *
      * @return array
      */
-    public static function permissions()
+    public static function permissions(): array
     {
         return array_merge(
             parent::permissions(),
