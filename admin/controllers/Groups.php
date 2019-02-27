@@ -77,9 +77,10 @@ class Groups extends DefaultController
      *
      * @param array $aOverrides Any overrides for the fields; best to do this in the model's describeFields() method
      *
-     * @return mixed
+     * @throws ValidationException
+     * @return void
      */
-    protected function runFormValidation($aOverrides = [])
+    protected function runFormValidation($aOverrides = []): void
     {
         parent::runFormValidation([
             'slug'        => [
