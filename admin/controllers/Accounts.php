@@ -271,7 +271,7 @@ class Accounts extends DefaultController
      *
      * @return bool
      */
-    protected function activeUserCanEditSuperUser($oUser)
+    protected function activeUserCanEditSuperUser($oUser): bool
     {
         return !(!isSuperuser() && isSuperuser($oUser));
     }
@@ -284,7 +284,7 @@ class Accounts extends DefaultController
      * @return array
      * @throws \Nails\Common\Exception\FactoryException
      */
-    protected function indexCheckboxFilters()
+    protected function indexCheckboxFilters(): array
     {
         $oGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $aGroups     = $oGroupModel->getAll();
@@ -327,7 +327,7 @@ class Accounts extends DefaultController
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\ModelException
      */
-    public function create()
+    public function create(): void
     {
         if (!userHasPermission('admin:auth:accounts:create')) {
             unauthorised();
@@ -500,7 +500,7 @@ class Accounts extends DefaultController
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\ModelException
      */
-    public function edit()
+    public function edit(): void
     {
         $oUri   = Factory::service('Uri');
         $oInput = Factory::service('Input');
@@ -900,7 +900,7 @@ class Accounts extends DefaultController
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\ModelException
      */
-    public function delete()
+    public function delete(): void
     {
         if (!userHasPermission('admin:auth:accounts:delete')) {
             unauthorised();
@@ -973,7 +973,7 @@ class Accounts extends DefaultController
      *
      * @throws \Nails\Common\Exception\FactoryException
      */
-    public function change_group()
+    public function change_group(): void
     {
         if (!userHasPermission('admin:auth:accounts:changeUserGroup') && !userHasPermission('admin:auth:accounts:changeOwnUserGroup')) {
             show404();
@@ -1067,7 +1067,7 @@ class Accounts extends DefaultController
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\ModelException
      */
-    public function suspend()
+    public function suspend(): void
     {
         if (!userHasPermission('admin:auth:accounts:suspend')) {
             unauthorised();
@@ -1147,7 +1147,7 @@ class Accounts extends DefaultController
      * @throws \Nails\Common\Exception\FactoryException
      * @throws \Nails\Common\Exception\ModelException
      */
-    public function unsuspend()
+    public function unsuspend(): void
     {
         if (!userHasPermission('admin:auth:accounts:unsuspend')) {
             unauthorised();
@@ -1224,7 +1224,7 @@ class Accounts extends DefaultController
      *
      * @throws \Nails\Common\Exception\FactoryException
      */
-    public function delete_profile_img()
+    public function delete_profile_img(): void
     {
         $oUri = Factory::service('Uri');
         if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
@@ -1294,7 +1294,7 @@ class Accounts extends DefaultController
      *
      * @throws \Nails\Common\Exception\FactoryException
      */
-    public function email()
+    public function email(): void
     {
         $oInput     = Factory::service('Input');
         $oUserModel = Factory::model('User', 'nails/module-auth');

@@ -58,7 +58,7 @@ class Merge extends BaseAdmin
      *
      * @return void
      */
-    public function index()
+    public function index(): void
     {
         if (!userHasPermission('admin:auth:merge:users')) {
             unauthorised();

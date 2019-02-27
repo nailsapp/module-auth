@@ -37,7 +37,7 @@ class Groups extends DefaultController
      *
      * @return void
      */
-    protected function loadEditViewData($oItem = null)
+    protected function loadEditViewData($oItem = null): void
     {
         parent::loadEditViewData($oItem);
 
@@ -98,7 +98,7 @@ class Groups extends DefaultController
      *
      * @return array
      */
-    protected function getPostObject()
+    protected function getPostObject(): array
     {
         $oInput             = Factory::service('Input');
         $oUserGroupModel    = Factory::model('UserGroup', 'nails/module-auth');
@@ -122,7 +122,7 @@ class Groups extends DefaultController
      *
      * @return void
      */
-    public function delete()
+    public function delete(): void
     {
         $oUri       = Factory::service('Uri');
         $oSession   = Factory::service('Session', 'nails/module-auth');
@@ -156,7 +156,7 @@ class Groups extends DefaultController
      *
      * @return void
      */
-    public function set_default()
+    public function set_default(): void
     {
         if (!userHasPermission('admin:auth:groups:setDefault')) {
             show404();

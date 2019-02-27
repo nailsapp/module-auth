@@ -58,7 +58,7 @@ class Settings extends BaseAdmin
      * Set Site Auth settings
      * @return void
      */
-    public function index()
+    public function index(): void
     {
         if (!userHasPermission('admin:auth:settings:update:.*')) {
 
