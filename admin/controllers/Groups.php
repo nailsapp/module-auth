@@ -37,7 +37,7 @@ class Groups extends DefaultController
      *
      * @return void
      */
-    protected function loadEditViewData($oItem = null): void
+    protected function loadEditViewData(\stdClass $oItem = null): void
     {
         parent::loadEditViewData($oItem);
 
@@ -80,7 +80,7 @@ class Groups extends DefaultController
      * @throws ValidationException
      * @return void
      */
-    protected function runFormValidation($aOverrides = []): void
+    protected function runFormValidation(array $aOverrides = []): void
     {
         parent::runFormValidation([
             'slug'        => [
