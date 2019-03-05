@@ -16,16 +16,16 @@ use Nails\Common\Events\Base;
 class Events extends Base
 {
     /**
-     * Fired when a user is modified
-     *
-     * @param \stdClass $iId The ID of the user who was updated
-     */
-    const USER_MODIFIED = 'AUTH:USER:MODIFIED';
-
-    /**
      * Fired when a user is created
      *
-     * @param \stdClass $iId The ID of the user who was created
+     * @param int $iId The ID of the user who was created
      */
     const USER_CREATED = 'AUTH:USER:CREATED';
+
+    /**
+     * Fired when a user is modified
+     *
+     * @param int $iId The ID of the user who was modified
+     */
+    const USER_MODIFIED = 'AUTH:USER:MODIFIED';
 }
