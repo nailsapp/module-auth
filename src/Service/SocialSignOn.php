@@ -14,6 +14,7 @@ namespace Nails\Auth\Service;
 
 use Nails\Factory;
 use Nails\Environment;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Traits\ErrorHandling;
 use Nails\Common\Traits\Caching;
@@ -61,7 +62,7 @@ class SocialSignOn
             }
 
         } else {
-            throw new \Exception(
+            throw new NailsException(
                 'No providers for HybridAuth have been specified or the configuration array is empty.'
             );
         }

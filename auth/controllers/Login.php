@@ -224,7 +224,7 @@ class Login extends Base
                     break;
 
                 default:
-                    throw new \Exception('"' . $oConfig->item('authTwoFactorMode') . '" is not a valid MFA Mode');
+                    throw new NailsException('"' . $oConfig->item('authTwoFactorMode') . '" is not a valid MFA Mode');
                     break;
             }
 

@@ -10,8 +10,9 @@
  * @link
  */
 
-use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
+use Nails\Common\Exception\NailsException;
+use Nails\Factory;
 
 class MfaQuestion extends BaseMfa
 {
@@ -96,7 +97,7 @@ class MfaQuestion extends BaseMfa
                 $this->data['num_custom_questions'] = $this->authMfaConfig['numUserQuestions'];
 
                 if ($this->data['num_questions'] + $this->data['num_custom_questions'] <= 0) {
-                    throw new \Exception('Two-factor auth is enabled, but no questions available');
+                    throw new NailsException('Two-factor auth is enabled, but no questions available');
                 }
 
                 if ($oInput->post()) {

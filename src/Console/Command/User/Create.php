@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Console\Command\User;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\Base;
 use Nails\Environment;
 use Nails\Factory;
@@ -110,7 +111,7 @@ class Create extends Base
             'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
         if (!$oResult->rowCount()) {
-            throw new \Exception('Could not find a group with superuser permissions.');
+            throw new NailsException('Could not find a group with superuser permissions.');
         }
         $oGroup = $oResult->fetchObject();
 
@@ -232,13 +233,13 @@ class Create extends Base
         try {
             $oUser = $oUserModel->create($aUser, false);
             if (empty($oUser)) {
-                throw new \Exception($oUserModel->lastError());
+                throw new NailsException($oUserModel->lastError());
             }
         } catch (\Exception $e) {
             if (!empty($oUser)) {
                 $oUserModel->delete($oUser->id);
             }
-            throw new \Exception($e->getMessage());
+            throw $e;
         }
     }
 

@@ -13,6 +13,7 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Factory;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Traits\Caching;
 use Nails\Common\Traits\ErrorHandling;
 
@@ -162,7 +163,7 @@ class Meta
                     $aRow['user_id'] = $iUserId;
                     $oDb->set($aRow);
                     if (!$oDb->insert($sTable)) {
-                        throw new \Exception('Failed to create item.', 1);
+                        throw new NailsException('Failed to create item.');
                     }
 
                     $aTouchedIds[] = $oDb->insert_id();
@@ -177,7 +178,7 @@ class Meta
                     $oDb->where('user_id', $iUserId);
                     $oDb->set($aRow);
                     if (!$oDb->update($sTable)) {
-                        throw new \Exception('Failed to update item.', 1);
+                        throw new NailsException('Failed to update item.');
                     }
 
                     $aTouchedIds[] = $iId;
@@ -189,7 +190,7 @@ class Meta
                 $oDb->where_not_in('id', $aTouchedIds);
 
                 if (!$oDb->delete($sTable)) {
-                    throw new \Exception('Failed to delete old items.', 1);
+                    throw new NailsException('Failed to delete old items.');
                 }
             }
 
