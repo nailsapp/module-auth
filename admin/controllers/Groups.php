@@ -13,6 +13,7 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Controller\DefaultController;
+use Nails\Common\Resource;
 use Nails\Factory;
 
 class Groups extends DefaultController
@@ -33,11 +34,11 @@ class Groups extends DefaultController
     /**
      * Load data for the edit/create view
      *
-     * @param  \stdClass $oItem The main item object
+     * @param  Resource $oItem The main item object
      *
      * @return void
      */
-    protected function loadEditViewData(\stdClass $oItem = null): void
+    protected function loadEditViewData(Resource $oItem = null): void
     {
         parent::loadEditViewData($oItem);
 
