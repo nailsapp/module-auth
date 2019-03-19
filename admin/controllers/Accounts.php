@@ -522,7 +522,7 @@ class Accounts extends DefaultController
 
         if (!$oUser) {
             $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
-            redirect($oInput->get('return_to'));
+            $this->returnToIndex();
         }
 
         //  Non-superusers editing superusers is not cool
@@ -921,7 +921,7 @@ class Accounts extends DefaultController
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
             $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-            redirect($oInput->get('return_to'));
+            $this->returnToIndex();
         }
 
         // --------------------------------------------------------------------------
@@ -930,11 +930,10 @@ class Accounts extends DefaultController
         $oUser = $oUserModel->getById($iUserId);
 
         if (!$oUser) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
-            redirect($oInput->get('return_to'));
+            show404();
         } elseif ($oUser->id == activeUser('id')) {
             $oSession->setFlashData('error', lang('accounts_delete_error_selfie'));
-            redirect($oInput->get('return_to'));
+            $this->returnToIndex();
         }
 
         // --------------------------------------------------------------------------
@@ -963,7 +962,7 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
-        redirect($oInput->get('return_to'));
+        $this->returnToIndex();
     }
 
     // --------------------------------------------------------------------------
@@ -1089,7 +1088,7 @@ class Accounts extends DefaultController
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
             $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-            redirect($oInput->get('return_to'));
+            $this->returnToIndex();
         }
 
         // --------------------------------------------------------------------------
@@ -1136,7 +1135,7 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
-        redirect($oInput->get('return_to'));
+        $this->returnToIndex();
     }
 
     // --------------------------------------------------------------------------
@@ -1169,7 +1168,7 @@ class Accounts extends DefaultController
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
             $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-            redirect($oInput->get('return_to'));
+            $this->returnToIndex();
         }
 
         // --------------------------------------------------------------------------
@@ -1214,7 +1213,7 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
-        redirect($oInput->get('return_to'));
+        $this->returnToIndex();
     }
 
     // --------------------------------------------------------------------------
