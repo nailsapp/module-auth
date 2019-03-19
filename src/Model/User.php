@@ -2150,17 +2150,27 @@ class User extends Base
     public function destroy($iUserId)
     {
         $oDb = Factory::service('Database');
-        $oDb->where('id', $iUserId);
-        $oDb->delete(NAILS_DB_PREFIX . 'user');
+
+        /**
+         * Delete the meta table first as it is the most likely to have FK's on it
+         * which might fail as part of the delete.
+         */
+
+        $oDb->where('user_id', $iUserId);
+        $oDb->delete(NAILS_DB_PREFIX . 'user_meta_app');
 
         if ((bool) $oDb->affected_rows()) {
 
-            $this->unsetCacheUser($iUserId);
-            return true;
+            $oDb->where('id', $iUserId);
+            $oDb->delete(NAILS_DB_PREFIX . 'user');
 
-        } else {
-            return false;
+            if ((bool) $oDb->affected_rows()) {
+                $this->unsetCacheUser($iUserId);
+                return true;
+            }
         }
+
+        return false;
     }
 
     // --------------------------------------------------------------------------
