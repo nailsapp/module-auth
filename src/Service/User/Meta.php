@@ -5,12 +5,12 @@
  *
  * @package     Nails
  * @subpackage  module-auth
- * @category    Model
+ * @category    Service
  * @author      Nails Dev Team
  * @link
  */
 
-namespace Nails\Auth\Model\User;
+namespace Nails\Auth\Service\User;
 
 use Nails\Factory;
 use Nails\Common\Exception\NailsException;
