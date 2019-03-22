@@ -20,6 +20,7 @@ class Settings extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
+     *
      * @return \stdClass
      */
     public static function announce()
@@ -39,6 +40,7 @@ class Settings extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -56,6 +58,7 @@ class Settings extends BaseAdmin
 
     /**
      * Set Site Auth settings
+     *
      * @return void
      */
     public function index(): void
@@ -183,19 +186,19 @@ class Settings extends BaseAdmin
                     $oDb = Factory::service('Database');
                     $oDb->trans_begin();
 
-                    $bRollback        = false;
-                    $oAppSettingModel = Factory::model('AppSetting');
+                    $bRollback          = false;
+                    $oAppSettingService = Factory::service('AppSetting');
 
                     if (!empty($settings)) {
-                        if (!$oAppSettingModel->set($settings, 'auth')) {
-                            $error     = $oAppSettingModel->lastError();
+                        if (!$oAppSettingService->set($settings, 'auth')) {
+                            $error     = $oAppSettingService->lastError();
                             $bRollback = true;
                         }
                     }
 
                     if (!empty($settingsEncrypted)) {
-                        if (!$oAppSettingModel->set($settingsEncrypted, 'auth', null, true)) {
-                            $error     = $oAppSettingModel->lastError();
+                        if (!$oAppSettingService->set($settingsEncrypted, 'auth', null, true)) {
+                            $error     = $oAppSettingService->lastError();
                             $bRollback = true;
                         }
                     }

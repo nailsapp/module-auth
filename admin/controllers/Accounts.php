@@ -846,8 +846,8 @@ class Accounts extends DefaultController
         $oUserGroupModel      = Factory::model('UserGroup', 'nails/module-auth');
         $this->data['groups'] = $oUserGroupModel->getAll();
 
-        $oLanguageModel          = Factory::model('Language');
-        $this->data['languages'] = $oLanguageModel->getAllEnabledFlat();
+        $oLanguageService        = Factory::service('Language');
+        $this->data['languages'] = $oLanguageService->getAllEnabledFlat();
 
         $oDateTimeModel                 = Factory::model('DateTime');
         $this->data['timezones']        = $oDateTimeModel->getAllTimezone();
