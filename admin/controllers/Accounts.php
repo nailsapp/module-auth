@@ -849,11 +849,11 @@ class Accounts extends DefaultController
         $oLanguageService        = Factory::service('Language');
         $this->data['languages'] = $oLanguageService->getAllEnabledFlat();
 
-        $oDateTimeModel                 = Factory::model('DateTime');
-        $this->data['timezones']        = $oDateTimeModel->getAllTimezone();
-        $this->data['date_formats']     = $oDateTimeModel->getAllDateFormat();
-        $this->data['time_formats']     = $oDateTimeModel->getAllTimeFormat();
-        $this->data['default_timezone'] = $oDateTimeModel->getTimezoneDefault();
+        $oDateTimeService               = Factory::service('DateTime');
+        $this->data['timezones']        = $oDateTimeService->getAllTimezone();
+        $this->data['date_formats']     = $oDateTimeService->getAllDateFormat();
+        $this->data['time_formats']     = $oDateTimeService->getAllTimeFormat();
+        $this->data['default_timezone'] = $oDateTimeService->getTimezoneDefault();
 
         //  Fetch any user uploads
         if (Components::exists('nails/module-cdn')) {

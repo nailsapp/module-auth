@@ -215,16 +215,16 @@ class User extends Base
     public function setActiveUser($oUser)
     {
         $this->activeUser = $oUser;
-        $oDateTimeModel   = Factory::model('DateTime');
+        $oDateTimeService = Factory::service('DateTime');
 
         //  Set the user's date/time formats
         $sFormatDate = $this->activeUser('pref_date_format');
-        $sFormatDate = $sFormatDate ? $sFormatDate : $oDateTimeModel->getDateFormatDefaultSlug();
+        $sFormatDate = $sFormatDate ? $sFormatDate : $oDateTimeService->getDateFormatDefaultSlug();
 
         $sFormatTime = $this->activeUser('pref_time_format');
-        $sFormatTime = $sFormatTime ? $sFormatTime : $oDateTimeModel->getTimeFormatDefaultSlug();
+        $sFormatTime = $sFormatTime ? $sFormatTime : $oDateTimeService->getTimeFormatDefaultSlug();
 
-        $oDateTimeModel->setFormats($sFormatDate, $sFormatTime);
+        $oDateTimeService->setFormats($sFormatDate, $sFormatTime);
     }
 
     // --------------------------------------------------------------------------
@@ -1152,18 +1152,18 @@ class User extends Base
 
             //  Do we need to update any timezone/date/time preferences?
             if (isset($data['timezone'])) {
-                $oDateTimeModel = Factory::model('DateTime');
-                $oDateTimeModel->setUserTimezone($data['timezone']);
+                $oDateTimeService = Factory::service('DateTime');
+                $oDateTimeService->setUserTimezone($data['timezone']);
             }
 
             if (isset($data['datetime_format_date'])) {
-                $oDateTimeModel = Factory::model('DateTime');
-                $oDateTimeModel->setDateFormat($data['datetime_format_date']);
+                $oDateTimeService = Factory::service('DateTime');
+                $oDateTimeService->setDateFormat($data['datetime_format_date']);
             }
 
             if (isset($data['datetime_format_time'])) {
-                $oDateTimeModel = Factory::model('DateTime');
-                $oDateTimeModel->setTimeFormat($data['datetime_format_time']);
+                $oDateTimeService = Factory::service('DateTime');
+                $oDateTimeService->setTimeFormat($data['datetime_format_time']);
             }
 
             // --------------------------------------------------------------------------
