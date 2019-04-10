@@ -30,6 +30,12 @@ class User extends Base
     protected $sAdminRecoveryField;
     protected $aUserColumns;
     protected $aMetaColumns;
+    protected $tableMeta;
+    protected $tableMetaAlias;
+    protected $tableEmail;
+    protected $tableEmailAlias;
+    protected $tableGroup;
+    protected $tableGroupAlias;
 
     // --------------------------------------------------------------------------
 
@@ -45,6 +51,12 @@ class User extends Base
         //  Set defaults
         $this->table               = NAILS_DB_PREFIX . 'user';
         $this->tableAlias          = 'u';
+        $this->tableMeta           = NAILS_DB_PREFIX . 'user_meta_app';
+        $this->tableMetaAlias      = 'um';
+        $this->tableEmail          = NAILS_DB_PREFIX . 'user_email';
+        $this->tableEmailAlias     = 'ue';
+        $this->tableGroup          = NAILS_DB_PREFIX . 'user_group';
+        $this->tableGroupAlias     = 'ug';
         $this->tableSlugColumn     = 'username';
         $this->defaultSortColumn   = $this->tableIdColumn;
         $this->defaultSortOrder    = 'DESC';
@@ -58,7 +70,7 @@ class User extends Base
         $this->searchableFields = [
             $this->tableAlias . '.id',
             $this->tableAlias . '.username',
-            'ue.email',
+            $this->tableEmailAlias . '.email',
             [
                 $this->tableAlias . '.first_name',
                 $this->tableAlias . '.last_name',
@@ -88,7 +100,7 @@ class User extends Base
             $oUser = $this->getById($iTestingAsUser);
             if (empty($oUser)) {
                 set_status_header(500);
-                ErrorHandler::halt('Not a valid User Id');
+                ErrorHandler::halt('Not a valid user ID');
             }
             $this->setLoginData($oUser->id);
 
@@ -153,8 +165,8 @@ class User extends Base
     /**
      * Fetches a value from the active user's session data
      *
-     * @param  string $sKeys      The key to look up in activeUser
-     * @param  string $sDelimiter If multiple fields are requested they'll be joined by this string
+     * @param string $sKeys      The key to look up in activeUser
+     * @param string $sDelimiter If multiple fields are requested they'll be joined by this string
      *
      * @return mixed
      */
@@ -381,7 +393,7 @@ class User extends Base
     /**
      * Determines whether the active user group has admin permissions.
      *
-     * @param  mixed $user The user to check, uses activeUser if null
+     * @param mixed $user The user to check, uses activeUser if null
      *
      * @return boolean
      */
@@ -473,19 +485,16 @@ class User extends Base
      */
     public function unsetAdminRecoveryData()
     {
-        $oSession             = Factory::service('Session', 'nails/module-auth');
-        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
+        $oSession              = Factory::service('Session', 'nails/module-auth');
+        $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
-        if (empty($existingRecoveryData)) {
-
-            $existingRecoveryData = [];
-
+        if (empty($aExistingRecoveryData)) {
+            $aExistingRecoveryData = [];
         } else {
-
-            array_pop($existingRecoveryData);
+            array_pop($aExistingRecoveryData);
         }
 
-        $oSession->setUserData($this->sAdminRecoveryField, $existingRecoveryData);
+        $oSession->setUserData($this->sAdminRecoveryField, $aExistingRecoveryData);
     }
 
     // --------------------------------------------------------------------------
@@ -494,7 +503,7 @@ class User extends Base
      * Determines whether the active user is a superuser. Extend this method to
      * alter it's response.
      *
-     * @param  mixed $user The user to check, uses activeUser if null
+     * @param mixed $user The user to check, uses activeUser if null
      *
      * @return boolean
      */
@@ -508,8 +517,8 @@ class User extends Base
     /**
      * Determines whether the specified user has a certain ACL permission
      *
-     * @param   string $sSearch The permission to check for
-     * @param   mixed  $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object
+     * @param string $sSearch   The permission to check for
+     * @param mixed  $mUser     The user to check for; if null uses activeUser, if numeric, fetches user, if object
      *                          uses that object
      *
      * @return  boolean
@@ -589,29 +598,38 @@ class User extends Base
         //  Define the selects
         $oDb = Factory::service('Database');
         $oDb->select($this->tableAlias . '.*');
-        $oDb->select('ue.email,ue.code email_verification_code,ue.is_verified email_is_verified');
-        $oDb->select('ue.date_verified email_is_verified_on');
-        $oDb->select($this->getMetaColumns('um'));
-        $oDb->select('ug.slug group_slug,ug.label group_name,ug.default_homepage group_homepage,ug.acl group_acl');
+        $oDb->select([
+            $this->tableEmailAlias . '.email',
+            $this->tableEmailAlias . '.code email_verification_code',
+            $this->tableEmailAlias . '.is_verified email_is_verified',
+            $this->tableEmailAlias . '.date_verified email_is_verified_on',
+        ]);
+        $oDb->select($this->getMetaColumns($this->tableMetaAlias));
+        $oDb->select([
+            $this->tableGroupAlias . '.slug group_slug',
+            $this->tableGroupAlias . '.label group_name',
+            $this->tableGroupAlias . '.default_homepage group_homepage',
+            $this->tableGroupAlias . '.acl group_acl',
+        ]);
 
         // --------------------------------------------------------------------------
 
         //  Define the joins
         $oDb->join(
-            NAILS_DB_PREFIX . 'user_email ue',
-            $this->tableAlias . '.id = ue.user_id AND ue.is_primary = 1',
+            $this->tableEmail . ' ' . $this->tableEmailAlias,
+            $this->tableAlias . '.id = ' . $this->tableEmailAlias . '.user_id AND ' . $this->tableEmailAlias . '.is_primary = 1',
             'LEFT'
         );
 
         $oDb->join(
-            NAILS_DB_PREFIX . 'user_meta_app um',
-            $this->tableAlias . '.id = um.user_id',
+            $this->tableMeta . ' ' . $this->tableMetaAlias,
+            $this->tableAlias . '.id = ' . $this->tableMetaAlias . '.user_id',
             'LEFT'
         );
 
         $oDb->join(
-            NAILS_DB_PREFIX . 'user_group ug',
-            $this->tableAlias . '.group_id = ug.id',
+            $this->tableGroup . ' ' . $this->tableGroupAlias,
+            $this->tableAlias . '.group_id = ' . $this->tableGroupAlias . '.id',
             'LEFT'
         );
 
@@ -624,8 +642,8 @@ class User extends Base
     /**
      * Defines the list of columns in the `user` table
      *
-     * @param  string $sPrefix The prefix to add to the columns
-     * @param  array  $aCols   Any additional columns to add
+     * @param string $sPrefix The prefix to add to the columns
+     * @param array  $aCols   Any additional columns to add
      *
      * @return array
      */
@@ -634,7 +652,7 @@ class User extends Base
         if ($this->aUserColumns === null) {
 
             $oDb                = Factory::service('Database');
-            $aResult            = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user`')->result();
+            $aResult            = $oDb->query('DESCRIBE `' . $this->table . '`')->result();
             $this->aUserColumns = [];
 
             foreach ($aResult as $oResult) {
@@ -650,10 +668,10 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Defines the list of columns in the `user_meta_app` table
+     * Defines the list of columns in the meta table
      *
-     * @param  string $sPrefix The prefix to add to the columns
-     * @param  array  $aCols   Any additional columns to add
+     * @param string $sPrefix The prefix to add to the columns
+     * @param array  $aCols   Any additional columns to add
      *
      * @return array
      */
@@ -662,7 +680,7 @@ class User extends Base
         if ($this->aMetaColumns === null) {
 
             $oDb                = Factory::service('Database');
-            $aResult            = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
+            $aResult            = $oDb->query('DESCRIBE `' . $this->tableMeta . '`')->result();
             $this->aMetaColumns = [];
 
             foreach ($aResult as $oResult) {
@@ -708,7 +726,7 @@ class User extends Base
     /**
      * Look up a user by their identifier
      *
-     * @param  string $identifier The user's identifier, either an email address or a username
+     * @param string $identifier The user's identifier, either an email address or a username
      *
      * @return mixed              false on failure, stdClass on success
      */
@@ -742,7 +760,7 @@ class User extends Base
     /**
      * Get a user by their email address
      *
-     * @param  string $email The user's email address
+     * @param string $email The user's email address
      *
      * @return mixed         stdClass on success, false on failure
      */
@@ -758,7 +776,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select('user_id');
         $oDb->where('email', trim($email));
-        $user = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $user = $oDb->get($this->tableEmail)->row();
 
         return $user ? $this->getById($user->user_id) : false;
     }
@@ -768,7 +786,7 @@ class User extends Base
     /**
      * Get a user by their username
      *
-     * @param  string $username The user's username
+     * @param string $username The user's username
      *
      * @return mixed            stdClass on success, false on failure
      */
@@ -797,8 +815,8 @@ class User extends Base
     /**
      * Get a specific user by a MD5 hash of their ID and password
      *
-     * @param  string $md5Id The MD5 hash of their ID
-     * @param  string $md5Pw The MD5 hash of their password
+     * @param string $md5Id The MD5 hash of their ID
+     * @param string $md5Pw The MD5 hash of their password
      *
      * @return mixed         stdClass on success, false on failure
      */
@@ -831,7 +849,7 @@ class User extends Base
     /**
      * Get a user by their referral code
      *
-     * @param  string $referralCode The user's referral code
+     * @param string $referralCode The user's referral code
      *
      * @return mixed                stdClass on success, false on failure
      */
@@ -860,7 +878,7 @@ class User extends Base
     /**
      * Get all the email addresses which are registered to a particular user ID
      *
-     * @param  integer $id The user's ID
+     * @param integer $id The user's ID
      *
      * @return array
      */
@@ -870,7 +888,7 @@ class User extends Base
         $oDb->where('user_id', $id);
         $oDb->order_by('date_added');
         $oDb->order_by('email', 'ASC');
-        return $oDb->get(NAILS_DB_PREFIX . 'user_email')->result();
+        return $oDb->get($this->tableEmail)->result();
     }
 
     // --------------------------------------------------------------------------
@@ -880,8 +898,8 @@ class User extends Base
      * active user. If $data is passed then the method will attempt to update
      * the user and/or user_meta_* tables
      *
-     * @param  integer $iUserId The ID of the user to update
-     * @param  array   $data    Any data to be updated
+     * @param integer $iUserId The ID of the user to update
+     * @param array   $data    Any data to be updated
      *
      * @return boolean
      */
@@ -1049,7 +1067,7 @@ class User extends Base
                     $oDb->set($aDataUser);
                 }
 
-                if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
+                if (!$oDb->update($this->table)) {
                     throw new NailsException('Failed to update user table.');
                 }
 
@@ -1059,7 +1077,7 @@ class User extends Base
                 if ($aDataMeta) {
                     $oDb->where('user_id', $iUserId);
                     $oDb->set($aDataMeta);
-                    if (!$oDb->update(NAILS_DB_PREFIX . 'user_meta_app')) {
+                    if (!$oDb->update($this->tableMeta)) {
                         throw new NailsException('Failed to update user meta table.');
                     }
                 }
@@ -1071,7 +1089,7 @@ class User extends Base
 
                     //  Check if the email is already being used
                     $oDb->where('email', $sDataEmail);
-                    $oEmail = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
+                    $oEmail = $oDb->get($this->tableEmail)->row();
 
                     if ($oEmail) {
 
@@ -1134,7 +1152,7 @@ class User extends Base
 
             $oDb->set('last_update', 'NOW()', false);
             $oDb->where('id', $iUserId);
-            $oDb->update(NAILS_DB_PREFIX . 'user');
+            $oDb->update($this->table);
         }
 
         // --------------------------------------------------------------------------
@@ -1190,7 +1208,7 @@ class User extends Base
     /**
      * Works out the correct user ID, falls back to activeUser()
      *
-     * @param  integer $iUserId The user ID to use
+     * @param integer $iUserId The user ID to use
      *
      * @return integer
      */
@@ -1252,13 +1270,13 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Adds a new email to the user_email table. Will optionally send the verification email, too.
+     * Adds a new email to the user email table. Will optionally send the verification email, too.
      *
-     * @param  string  $email       The email address to add
-     * @param  integer $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
-     * @param  boolean $bIsPrimary  Whether or not the email address should be the primary email address for the user
-     * @param  boolean $is_verified Whether ot not the email should be marked as verified
-     * @param  boolean $send_email  If unverified, whether or not the verification email should be sent
+     * @param string  $email       The email address to add
+     * @param integer $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
+     * @param boolean $bIsPrimary  Whether or not the email address should be the primary email address for the user
+     * @param boolean $is_verified Whether ot not the email should be marked as verified
+     * @param boolean $send_email  If unverified, whether or not the verification email should be sent
      *
      * @return mixed                String containing verification code on success, false on failure
      */
@@ -1292,7 +1310,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select('id, user_id, is_verified, code');
         $oDb->where('email', $oEmail);
-        $oTest = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $oTest = $oDb->get($this->tableEmail)->row();
 
         if ($oTest) {
 
@@ -1339,7 +1357,7 @@ class User extends Base
             $oDb->set('date_verified', 'NOW()', false);
         }
 
-        $oDb->insert(NAILS_DB_PREFIX . 'user_email');
+        $oDb->insert($this->tableEmail);
 
         if ($oDb->affected_rows()) {
 
@@ -1386,8 +1404,8 @@ class User extends Base
     /**
      * Send, or resend, the verify email for a particular email address
      *
-     * @param  integer $email_id The email's ID
-     * @param  integer $iUserId  The user's ID
+     * @param integer $email_id The email's ID
+     * @param integer $iUserId  The user's ID
      *
      * @return boolean
      */
@@ -1397,27 +1415,30 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select(
             [
-                'ue.id',
-                'ue.code',
-                'ue.is_verified',
-                'ue.user_id',
+                $this->tableEmailAlias . '.id',
+                $this->tableEmailAlias . '.code',
+                $this->tableEmailAlias . '.is_verified',
+                $this->tableEmailAlias . '.user_id',
                 $this->tableAlias . '.group_id',
             ]
         );
 
         if (is_numeric($email_id)) {
-            $oDb->where('ue.id', $email_id);
+            $oDb->where($this->tableEmailAlias . '.id', $email_id);
         } else {
-            $oDb->where('ue.email', $email_id);
+            $oDb->where($this->tableEmailAlias . '.email', $email_id);
         }
 
         if (!empty($iUserId)) {
-            $oDb->where('ue.user_id', $iUserId);
+            $oDb->where($this->tableEmailAlias . '.user_id', $iUserId);
         }
 
-        $oDb->join(NAILS_DB_PREFIX . 'user u', $this->tableAlias . '.id = ue.user_id');
+        $oDb->join(
+            $this->table . ' ' . $this->tableAlias,
+            $this->tableAlias . '.id = ' . $this->tableEmailAlias . '.user_id'
+        );
 
-        $oEmailRow = $oDb->get(NAILS_DB_PREFIX . 'user_email ue')->row();
+        $oEmailRow = $oDb->get($this->tableEmail . ' ' . $this->tableEmailAlias)->row();
 
         if (!$oEmailRow) {
             $this->setError('Invalid Email.');
@@ -1456,11 +1477,11 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Deletes a non-primary email from the user_email table, optionally filtering
+     * Deletes a non-primary email from the user email table, optionally filtering
      * by $iUserId
      *
-     * @param  mixed   $mEmailId The email address, or the ID of the email address to remove
-     * @param  integer $iUserId  The ID of the user to restrict to
+     * @param mixed   $mEmailId The email address, or the ID of the email address to remove
+     * @param integer $iUserId  The ID of the user to restrict to
      *
      * @return boolean
      */
@@ -1478,7 +1499,7 @@ class User extends Base
         }
 
         $oDb->where('is_primary', false);
-        $oDb->delete(NAILS_DB_PREFIX . 'user_email');
+        $oDb->delete($this->tableEmail);
 
         if ((bool) $oDb->affected_rows()) {
 
@@ -1498,8 +1519,8 @@ class User extends Base
      * Verifies whether the supplied $code is valid for the requested user ID or email
      * address. If it is then the email is marked as verified.
      *
-     * @param  mixed  $mIdEmail The numeric ID of the user, or the email address
-     * @param  string $sCode    The verification code as generated by emailAdd()
+     * @param mixed  $mIdEmail The numeric ID of the user, or the email address
+     * @param string $sCode    The verification code as generated by emailAdd()
      *
      * @return boolean
      */
@@ -1525,7 +1546,7 @@ class User extends Base
         $oDb->where('is_verified', true);
         $oDb->where('code', $sCode);
 
-        if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
+        if ($oDb->count_all_results($this->tableEmail)) {
             $this->setError('Email has already been verified.');
             return false;
         }
@@ -1539,7 +1560,7 @@ class User extends Base
         $oDb->where('is_verified', false);
         $oDb->where('code', $sCode);
 
-        $oDb->update(NAILS_DB_PREFIX . 'user_email');
+        $oDb->update($this->tableEmail);
 
         if ((bool) $oDb->affected_rows()) {
 
@@ -1566,8 +1587,8 @@ class User extends Base
     /**
      * Sets an email address as the primary email address for that user.
      *
-     * @param  mixed   $mIdEmail The numeric  ID of the email address, or the email address itself
-     * @param  integer $iUserId  Specify the user ID which this should apply to
+     * @param mixed   $mIdEmail The numeric  ID of the email address, or the email address itself
+     * @param integer $iUserId  Specify the user ID which this should apply to
      *
      * @return boolean
      */
@@ -1587,7 +1608,7 @@ class User extends Base
             $oDb->where('user_id', $iUserId);
         }
 
-        $oEmail = $oDb->get(NAILS_DB_PREFIX . 'user_email')->row();
+        $oEmail = $oDb->get($this->tableEmail)->row();
 
         if (empty($oEmail)) {
             return false;
@@ -1598,11 +1619,11 @@ class User extends Base
         try {
             $oDb->set('is_primary', false);
             $oDb->where('user_id', $oEmail->user_id);
-            $oDb->update(NAILS_DB_PREFIX . 'user_email');
+            $oDb->update($this->tableEmail);
 
             $oDb->set('is_primary', true);
             $oDb->where('id', $oEmail->id);
-            $oDb->update(NAILS_DB_PREFIX . 'user_email');
+            $oDb->update($this->tableEmail);
 
             $this->unsetCacheUser($oEmail->user_id);
 
@@ -1631,8 +1652,8 @@ class User extends Base
     /**
      * Increment the user's failed logins
      *
-     * @param  integer $iUserId The user ID to increment
-     * @param  integer $expires How long till the block, if the threshold is reached, expires.
+     * @param integer $iUserId The user ID to increment
+     * @param integer $expires How long till the block, if the threshold is reached, expires.
      *
      * @return boolean
      */
@@ -1652,7 +1673,7 @@ class User extends Base
     /**
      * Reset a user's failed login
      *
-     * @param  integer $iUserId The user ID to reset
+     * @param integer $iUserId The user ID to reset
      *
      * @return boolean
      */
@@ -1669,7 +1690,7 @@ class User extends Base
     /**
      * Update a user's `last_login` field
      *
-     * @param  integer $iUserId The user ID to update
+     * @param integer $iUserId The user ID to update
      *
      * @return boolean
      */
@@ -1686,9 +1707,9 @@ class User extends Base
     /**
      * Set the user's 'rememberMe' cookie, nom nom nom
      *
-     * @param  integer $iId       The User's ID
-     * @param  string  $sPassword The user's password, hashed
-     * @param  string  $sEmail    The user's email\
+     * @param integer $iId       The User's ID
+     * @param string  $sPassword The user's password, hashed
+     * @param string  $sEmail    The user's email\
      *
      * @return boolean
      */
@@ -1726,7 +1747,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', $sSalt);
         $oDb->where('id', $iId);
-        $oDb->update(NAILS_DB_PREFIX . 'user');
+        $oDb->update($this->table);
 
         // --------------------------------------------------------------------------
 
@@ -1829,7 +1850,7 @@ class User extends Base
         $oDb->set('last_seen', 'NOW()', false);
         $oDb->set('last_ip', $oInput->ipAddress());
         $oDb->where('id', $me->id);
-        $oDb->update(NAILS_DB_PREFIX . 'user');
+        $oDb->update($this->table);
 
         return true;
     }
@@ -1839,8 +1860,8 @@ class User extends Base
     /**
      * Create a new user
      *
-     * @param  array   $data        An array of data to create the user with
-     * @param  boolean $sendWelcome Whether to send the welcome email
+     * @param array   $data        An array of data to create the user with
+     * @param boolean $sendWelcome Whether to send the welcome email
      *
      * @return mixed                StdClass on success, false on failure
      */
@@ -1863,7 +1884,7 @@ class User extends Base
 
             //  Check email against DB
             $oDb->where('email', $data['email']);
-            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
+            if ($oDb->count_all_results($this->tableEmail)) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -1890,7 +1911,7 @@ class User extends Base
 
             //  Check email against DB
             $oDb->where('email', $data['email']);
-            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_email')) {
+            if ($oDb->count_all_results($this->tableEmail)) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -2025,7 +2046,7 @@ class User extends Base
 
             $oDb->set($aUserData);
 
-            if (!$oDb->insert(NAILS_DB_PREFIX . 'user')) {
+            if (!$oDb->insert($this->table)) {
                 throw new NailsException('Failed to create base user object.');
             }
 
@@ -2041,26 +2062,26 @@ class User extends Base
             $oDb->set('id_md5', md5($iId));
             $oDb->where('id', $iId);
 
-            if (!$oDb->update(NAILS_DB_PREFIX . 'user')) {
+            if (!$oDb->update($this->table)) {
                 throw new NailsException('Failed to update base user object.');
             }
 
             // --------------------------------------------------------------------------
 
-            //  Create the user_meta_app record, add any extra data if needed
+            //  Create the meta record, add any extra data if needed
             $oDb->set('user_id', $iId);
 
             if ($aMetaData) {
                 $oDb->set($aMetaData);
             }
 
-            if (!$oDb->insert(NAILS_DB_PREFIX . 'user_meta_app')) {
+            if (!$oDb->insert($this->tableMeta)) {
                 throw new NailsException('Failed to create user meta data object.');
             }
 
             // --------------------------------------------------------------------------
 
-            //  Finally add the email address to the user_email table
+            //  Finally add the email address to the user email table
             if (!empty($sEmail)) {
 
                 $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false);
@@ -2143,7 +2164,7 @@ class User extends Base
     /**
      * Delete a user
      *
-     * @param  integer $iUserId The ID of the user to delete
+     * @param integer $iUserId The ID of the user to delete
      *
      * @return boolean
      */
@@ -2157,12 +2178,12 @@ class User extends Base
          */
 
         $oDb->where('user_id', $iUserId);
-        $oDb->delete(NAILS_DB_PREFIX . 'user_meta_app');
+        $oDb->delete($this->tableMeta);
 
         if ((bool) $oDb->affected_rows()) {
 
             $oDb->where('id', $iUserId);
-            $oDb->delete(NAILS_DB_PREFIX . 'user');
+            $oDb->delete($this->table);
 
             if ((bool) $oDb->affected_rows()) {
                 $this->unsetCacheUser($iUserId);
@@ -2178,7 +2199,7 @@ class User extends Base
     /**
      * Alias to destroy()
      *
-     * @param  integer $iUserId The ID of the user to delete
+     * @param integer $iUserId The ID of the user to delete
      *
      * @return boolean
      */
@@ -2203,7 +2224,7 @@ class User extends Base
         while (1 > 0) {
 
             $sReferral = random_string('alnum', 8);
-            $oQuery    = $oDb->get_where(NAILS_DB_PREFIX . 'user', ['referral' => $sReferral]);
+            $oQuery    = $oDb->get_where($this->table, ['referral' => $sReferral]);
 
             if ($oQuery->num_rows() == 0) {
                 break;
@@ -2218,8 +2239,8 @@ class User extends Base
     /**
      * Rewards a user for their referral
      *
-     * @param  integer $iUserId    The ID of the user who signed up
-     * @param  integer $referrerId The ID of the user who made the referral
+     * @param integer $iUserId    The ID of the user who signed up
+     * @param integer $referrerId The ID of the user who made the referral
      *
      * @return void
      */
@@ -2233,7 +2254,7 @@ class User extends Base
     /**
      * Suspend a user
      *
-     * @param  integer $iUserId The ID of the user to suspend
+     * @param integer $iUserId The ID of the user to suspend
      *
      * @return boolean
      */
@@ -2247,7 +2268,7 @@ class User extends Base
     /**
      * Unsuspend a user
      *
-     * @param  integer $iUserId The ID of the user to unsuspend
+     * @param integer $iUserId The ID of the user to unsuspend
      *
      * @return boolean
      */
@@ -2261,9 +2282,9 @@ class User extends Base
     /**
      * Checks whether a username is valid
      *
-     * @param  string  $username     The username to check
-     * @param  boolean $checkDb      Whether to test against the database
-     * @param  mixed   $ignoreUserId The ID of a user to ignore when checking the database
+     * @param string  $username     The username to check
+     * @param boolean $checkDb      Whether to test against the database
+     * @param mixed   $ignoreUserId The ID of a user to ignore when checking the database
      *
      * @return boolean
      */
@@ -2313,7 +2334,7 @@ class User extends Base
                 $oDb->where('id !=', $ignoreUserId);
             }
 
-            if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user')) {
+            if ($oDb->count_all_results($this->table)) {
                 $this->setError('Username is already in use.');
                 return false;
             }
@@ -2374,8 +2395,8 @@ class User extends Base
         $sUserColsStr = "'" . implode("','", $aUserCols) . "'";
 
         $aIgnoreTables = [
-            NAILS_DB_PREFIX . 'user',
-            NAILS_DB_PREFIX . 'user_meta_app',
+            $this->table,
+            $this->tableMeta,
             NAILS_DB_PREFIX . 'user_auth_two_factor_device_code',
             NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret',
             NAILS_DB_PREFIX . 'user_auth_two_factor_question',
@@ -2386,7 +2407,7 @@ class User extends Base
         $sIgnoreTablesStr = "'" . implode("','", $aIgnoreTables) . "'";
 
         $aTables = [];
-        $sQuery  = " SELECT COLUMN_NAME,TABLE_NAME
+        $sQuery  = "SELECT COLUMN_NAME,TABLE_NAME
                     FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE COLUMN_NAME IN (" . $sUserColsStr . ")
                     AND (TABLE_NAME LIKE '" . NAILS_DB_PREFIX . "%' OR TABLE_NAME LIKE '" . APP_DB_PREFIX . "%')
@@ -2457,7 +2478,7 @@ class User extends Base
 
                     //  Additional updates for certain tables
                     switch ($aTables[$i]->name) {
-                        case NAILS_DB_PREFIX . 'user_email':
+                        case $this->tableEmail:
                             $oDb->set('is_primary', false);
                             break;
                     }
@@ -2500,16 +2521,52 @@ class User extends Base
     /**
      * Describes the fields for this model
      *
-     * @param  string $sTable The database table to query
+     * @param string $sTable The database table to query
      *
      * @return array
      */
     public function describeFields($sTable = null)
     {
         $aFields     = parent::describeFields($sTable);
-        $aMetaFields = parent::describeFields(NAILS_DB_PREFIX . 'user_meta_app');
+        $aMetaFields = parent::describeFields($this->tableMeta);
         unset($aMetaFields['user_id']);
         return array_merge($aFields, $aMetaFields);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the name of the user meta table
+     *
+     * @return string
+     */
+    public function getMetaTableName(): string
+    {
+        return $this->tableMeta;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the name of the user email table
+     *
+     * @return string
+     */
+    public function getEmailTableName(): string
+    {
+        return $this->tableEmail;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the name of the user group table
+     *
+     * @return string
+     */
+    public function getGroupTableName(): string
+    {
+        return $this->tableGroup;
     }
 
     // --------------------------------------------------------------------------
@@ -2520,11 +2577,11 @@ class User extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to getCountCommon(), for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     * @param object $oObj      A reference to the object being formatted.
+     * @param array  $aData     The same data array which is passed to getCountCommon(), for reference if needed
+     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void
      */
