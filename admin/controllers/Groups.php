@@ -13,6 +13,7 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Controller\DefaultController;
+use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Factory;
 
@@ -34,7 +35,7 @@ class Groups extends DefaultController
     /**
      * Load data for the edit/create view
      *
-     * @param  Resource $oItem The main item object
+     * @param Resource $oItem The main item object
      *
      * @return void
      */
@@ -76,12 +77,13 @@ class Groups extends DefaultController
     /**
      * Form validation for edit/create
      *
-     * @param array $aOverrides Any overrides for the fields; best to do this in the model's describeFields() method
+     * @param string $sMode      The mode in which the validation is being run
+     * @param array  $aOverrides Any overrides for the fields; best to do this in the model's describeFields() method
      *
-     * @throws ValidationException
      * @return void
+     * @throws ValidationException
      */
-    protected function runFormValidation(array $aOverrides = []): void
+    protected function runFormValidation(string $sMode, array $aOverrides = []): void
     {
         parent::runFormValidation([
             'slug'        => [
