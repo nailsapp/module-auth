@@ -37,9 +37,24 @@
     ]);
 
     ?>
-    <p>
-        <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
-    </p>
+    <div class="admin-floating-controls">
+        <button type="submit" class="btn btn-primary">
+            Save Changes
+        </button>
+        <?php
+        if (!empty($item) && $CONFIG['ENABLE_NOTES']) {
+            ?>
+            <button type="button"
+                    class="btn btn-default pull-right js-admin-notes"
+                    data-model-name="<?=$CONFIG['MODEL_NAME']?>"
+                    data-model-provider="<?=$CONFIG['MODEL_PROVIDER']?>"
+                    data-id="<?=$user_edit->id?>">
+                Notes
+            </button>
+            <?php
+        }
+        ?>
+    </div>
     <?=form_close()?>
 </div>
 <?php
