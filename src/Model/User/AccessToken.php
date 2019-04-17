@@ -194,7 +194,7 @@ class AccessToken extends Base
      *
      * @return boolean
      */
-    public function update($iId, array $aData = [])
+    public function update($iId, array $aData = []): bool
     {
         $this->setError('Access tokens cannot be amended once created.');
         return false;

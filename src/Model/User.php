@@ -903,7 +903,7 @@ class User extends Base
      *
      * @return boolean
      */
-    public function update($iUserId = null, array $data = null)
+    public function update($iUserId = null, array $data = null): bool
     {
         $oDate   = Factory::factory('DateTime');
         $data    = (array) $data;
@@ -2168,7 +2168,7 @@ class User extends Base
      *
      * @return boolean
      */
-    public function destroy($iUserId)
+    public function destroy($iUserId): bool
     {
         $oDb = Factory::service('Database');
 
@@ -2203,7 +2203,7 @@ class User extends Base
      *
      * @return boolean
      */
-    public function delete($iUserId)
+    public function delete($iUserId): bool
     {
         return $this->destroy($iUserId);
     }
