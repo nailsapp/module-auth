@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\DataExport\Source;
 
+use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
 use Nails\Factory;
 
@@ -15,7 +16,7 @@ class UsersAll implements Source
      * Returns the format's label
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return 'Members: All';
     }
@@ -26,7 +27,7 @@ class UsersAll implements Source
      * Returns the format's file name
      * @return string
      */
-    public function getFileName()
+    public function getFileName(): string
     {
         return 'members-all';
     }
@@ -37,7 +38,7 @@ class UsersAll implements Source
      * Returns the format's description
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Export a list of all the site\'s registered users and their meta data.';
     }
@@ -48,7 +49,7 @@ class UsersAll implements Source
      * Returns an array of additional options for the export
      * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         return [];
     }
@@ -59,7 +60,7 @@ class UsersAll implements Source
      * Provides an opportunity for the source to decide whether it is available or not to the user
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         return userHasPermission('admin:auth:accounts:browse');
     }
@@ -71,7 +72,7 @@ class UsersAll implements Source
      *
      * @param array $aData Any data to pass to the source
      *
-     * @return bool|array
+     * @return SourceResponse
      */
     public function execute($aData = [])
     {
