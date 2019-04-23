@@ -85,14 +85,17 @@ class Groups extends DefaultController
      */
     protected function runFormValidation(string $sMode, array $aOverrides = []): void
     {
-        parent::runFormValidation([
-            'slug'        => [
-                'required',
-                'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']',
-            ],
-            'label'       => ['required'],
-            'description' => ['required'],
-        ]);
+        parent::runFormValidation(
+            $sMode,
+            [
+                'slug'        => [
+                    'required',
+                    'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']',
+                ],
+                'label'       => ['required'],
+                'description' => ['required'],
+            ]
+        );
     }
 
     // --------------------------------------------------------------------------
