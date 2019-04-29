@@ -2,6 +2,7 @@
 
 /**
  * The class handles the user's session
+ *
  * @todo        remove dependency on CodeIgniter's Session library
  * @todo        properly handle CLI behaviour
  *
@@ -21,6 +22,7 @@ class Session
 {
     /**
      * The session object
+     *
      * @var \CI_Session
      */
     protected $oSession;
@@ -39,7 +41,8 @@ class Session
         }
 
         $oInput = Factory::service('Input');
-        if (!$oInput::isCli()) {
+        //  class_exists check in case the class is called before CI has finished instanciating
+        if (!$oInput::isCli() && class_exists('CI_Controller')) {
             /**
              * Look for the session cookie, if it exists, then a session exists
              * and the whole service should be loaded up.
@@ -103,7 +106,7 @@ class Session
      * Keeps existing flashdata available to next request.
      * http://codeigniter.com/forums/viewthread/104392/#917834
      *
-     * @param  string|array $mKey The key to keep, null will retain all flashdata
+     * @param string|array $mKey The key to keep, null will retain all flashdata
      *
      * @return $this
      **/
@@ -190,6 +193,7 @@ class Session
 
     /**
      * Destroy the user's session
+     *
      * @return $this
      */
     public function destroy()
@@ -238,6 +242,7 @@ class Session
 
     /**
      * Alias of Session::setFlashData
+     *
      * @see Session::setFlashData()
      * @deprecated
      */
@@ -251,6 +256,7 @@ class Session
 
     /**
      * Alias of Session::getFlashData
+     *
      * @see Session::getFlashData()
      * @deprecated
      */
@@ -264,6 +270,7 @@ class Session
 
     /**
      * Alias of Session::getFlashData
+     *
      * @see Session::getFlashData()
      * @deprecated
      */
@@ -277,6 +284,7 @@ class Session
 
     /**
      * Alias of Session::keepFlashData()
+     *
      * @see Session::keepFlashData()
      * @deprecated
      */
@@ -290,6 +298,7 @@ class Session
 
     /**
      * Alias of Session::setUserData
+     *
      * @see Session::setUserData()
      * @deprecated
      */
@@ -303,6 +312,7 @@ class Session
 
     /**
      * Alias of Session::getUserData
+     *
      * @see Session::getUserData()
      * @deprecated
      */
@@ -316,6 +326,7 @@ class Session
 
     /**
      * Alias of Session::unsetUserData
+     *
      * @see Session::unsetUserData()
      * @deprecated
      */
@@ -329,6 +340,7 @@ class Session
 
     /**
      * Alias of Session::destroy
+     *
      * @see Session::destroy()
      * @deprecated
      */
@@ -342,6 +354,7 @@ class Session
 
     /**
      * Alias of Session::regenerate
+     *
      * @see Session::regenerate()
      * @deprecated
      */
