@@ -1197,8 +1197,10 @@ class User extends Base
         //  Clear the caches for this user
         $this->unsetCacheUser($iUserId);
 
-        $oEventService = Factory::service('Event');
-        $oEventService->trigger(Events::USER_MODIFIED, 'nails/module-auth', [$iUserId]);
+        $this->triggerEvent(
+            Events::USER_MODIFIED,
+            [$iUserId]
+        );
 
         return true;
     }
@@ -2147,8 +2149,10 @@ class User extends Base
 
             $oDb->trans_commit();
 
-            $oEventService = Factory::service('Event');
-            $oEventService->trigger(Events::USER_CREATED, 'nails/module-auth', [$iId]);
+            $this->triggerEvent(
+                Events::USER_CREATED,
+                [$iId]
+            );
 
             return $this->getById($iId);
 
