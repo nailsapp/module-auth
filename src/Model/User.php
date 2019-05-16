@@ -16,6 +16,7 @@ use Nails\Auth\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\ErrorHandler;
+use Nails\Common\Service\Event;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Testing;
@@ -317,6 +318,14 @@ class User extends Base
             //  Set the active user
             $this->setActiveUser($oUser);
 
+            /** @var Event $oEventService */
+            $oEventService = Factory::service('Event');
+            $oEventService->trigger(
+                Events::USER_LOG_IN,
+                Events::getEventNamespace(),
+                [$oUser->id]
+            );
+
             return true;
         }
     }
@@ -344,6 +353,14 @@ class User extends Base
 
         //  Remove any remember me cookie
         $this->clearRememberCookie();
+
+        /** @var Event $oEventService */
+        $oEventService = Factory::service('Event');
+        $oEventService->trigger(
+            Events::USER_LOG_OUT,
+            Events::getEventNamespace(),
+            [$oUser->id]
+        );
     }
 
     // --------------------------------------------------------------------------

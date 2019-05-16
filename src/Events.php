@@ -28,4 +28,18 @@ class Events extends Base
      * @param int $iId The ID of the user who was modified
      */
     const USER_MODIFIED = 'AUTH:USER:MODIFIED';
+
+    /**
+     * Fired when a user logs in
+     *
+     * @param int $iId The ID of the user who logged in
+     */
+    const USER_LOG_IN = 'AUTH:USER:LOGGED_IN';
+
+    /**
+     * Fired when a user logs out
+     *
+     * @param int $iId The ID of the user who logged out
+     */
+    const USER_LOG_OUT = 'AUTH:USER:LOGGED_OUT';
 }
