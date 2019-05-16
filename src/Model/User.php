@@ -339,6 +339,8 @@ class User extends Base
      */
     public function clearLoginData()
     {
+        $iUserId = $this->activeUser('id');
+
         //  Clear the session
         $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->unsetUserData('id');
@@ -359,7 +361,7 @@ class User extends Base
         $oEventService->trigger(
             Events::USER_LOG_OUT,
             Events::getEventNamespace(),
-            [$oUser->id]
+            [$iUserId]
         );
     }
 
