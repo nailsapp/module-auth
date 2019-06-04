@@ -117,8 +117,8 @@ class Groups extends DefaultController
             'description'           => $oInput->post('description'),
             'default_homepage'      => $oInput->post('default_homepage'),
             'registration_redirect' => $oInput->post('registration_redirect'),
-            'acl'                   => $oUserGroupModel->processPermissions($oInput->post('acl')),
-            'password_rules'        => $oUserPasswordModel->processRules($oInput->post('pw')),
+            'acl'                   => $oUserGroupModel->processPermissions($oInput->post('acl') ?: []),
+            'password_rules'        => $oUserPasswordModel->processRules($oInput->post('pw') ?: []),
         ];
     }
 
