@@ -11,6 +11,13 @@
  */
 
 use Nails\Auth\Controller\Base;
+use Nails\Auth\Model\Auth;
+use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Session;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
 class PasswordReset extends Base
@@ -24,6 +31,7 @@ class PasswordReset extends Base
 
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
+            /** @var Session $oSession */
             $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
@@ -35,24 +43,30 @@ class PasswordReset extends Base
     /**
      * Validate the supplied assets and if valid present the user with a reset form
      *
-     * @param  int    $id   The ID of the user to reset
-     * @param  string $hash The hash to validate against
+     * @param int    $iUserId The ID of the user to reset
+     * @param string $sHash   The hash to validate against
      *
      * @return  void
      **/
-    protected function validate($id, $hash)
+    protected function validate($iUserId, $sHash)
     {
-        $oInput     = Factory::service('Input');
-        $oConfig    = Factory::service('Config');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
+        /** @var Auth $oAuthModel */
         $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         //  Check auth credentials
-        $oUser = $oUserModel->getById($id);
+        $oUser = $oUserModel->getById($iUserId);
 
         // --------------------------------------------------------------------------
 
-        if ($oUser && isset($oUser->salt) && $hash == md5($oUser->salt)) {
+        if ($oUser && isset($oUser->salt) && $sHash == md5($oUser->salt)) {
 
             //  Valid combination, is there MFA on the account?
             if ($oConfig->item('authTwoFactorMode')) {
@@ -148,6 +162,7 @@ class PasswordReset extends Base
             if ($bMfaValid && $oInput->post()) {
 
                 // Validate data
+                /** @var FormValidation $oFormValidation */
                 $oFormValidation = Factory::service('FormValidation');
 
                 /**
@@ -254,6 +269,7 @@ class PasswordReset extends Base
                                 );
                             }
 
+                            /** @var Session $oSession */
                             $oSession = Factory::service('Session', 'nails/module-auth');
                             $oSession->setFlashData($sStatus, $sMessage);
 
@@ -287,18 +303,14 @@ class PasswordReset extends Base
             // --------------------------------------------------------------------------
 
             //  Set data
-            $this->data['page']->title = lang('auth_title_reset');
-
-            $this->data['auth']       = new stdClass();
-            $this->data['auth']->id   = $id;
-            $this->data['auth']->hash = $hash;
-
-            $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
-
+            $this->data['page']->title   = lang('auth_title_reset');
+            $this->data['auth']          = (object) [
+                'id'   => $oUser->id,
+                'hash' => $sHash,
+            ];
             $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
-
-            $this->data['return_to'] = $oInput->get('return_to');
-            $this->data['remember']  = $oInput->get('remember');
+            $this->data['return_to']     = $oInput->get('return_to');
+            $this->data['remember']      = $oInput->get('remember');
 
             if (empty($this->data['message'])) {
 
@@ -323,11 +335,11 @@ class PasswordReset extends Base
             //  Load the views
             $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/change_temp.php');
             Factory::service('View')
-                   ->load([
-                       'structure/header/blank',
-                       'auth/password/change_temp',
-                       'structure/footer/blank',
-                   ]);
+                ->load([
+                    'structure/header/blank',
+                    'auth/password/change_temp',
+                    'structure/footer/blank',
+                ]);
 
             return;
         }
@@ -342,13 +354,14 @@ class PasswordReset extends Base
     /**
      * Route requests to the right method
      *
-     * @param   string $id The ID of the user to reset, as per the URL
+     * @param string $iUserId The ID of the user to reset, as per the URL
      *
      * @return  void
      **/
-    public function _remap($id)
+    public function _remap($iUserId)
     {
+        /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        $this->validate($id, $oUri->rsegment(3));
+        $this->validate($iUserId, $oUri->rsegment(3));
     }
 }

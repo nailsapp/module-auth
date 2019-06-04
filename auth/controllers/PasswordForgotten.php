@@ -12,8 +12,17 @@
  */
 
 use Nails\Auth\Controller\Base;
+use Nails\Auth\Model\Auth;
+use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Session;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
+/**
+ * Class PasswordForgotten
+ */
 class PasswordForgotten extends Base
 {
     /**
@@ -33,22 +42,26 @@ class PasswordForgotten extends Base
 
     /**
      * Reset password form
+     *
      * @return  void
      **/
     public function index()
     {
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
+            /** @var Session $oSession */
             $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 
         //  If there's POST data attempt to validate the user
-        if ($this->input->post() || $this->input->get('identifier')) {
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        if ($oInput->post() || $oInput->get('identifier')) {
 
             //  Define vars
-            $_identifier = $this->input->post('identifier');
+            $_identifier = $oInput->post('identifier');
 
             /**
              * Override with the $_GET variable if POST failed to return anything. Populate
@@ -56,10 +69,10 @@ class PasswordForgotten extends Base
              * hacky but works.
              */
 
-            if (!$_identifier && $this->input->get('identifier')) {
+            if (!$_identifier && $oInput->get('identifier')) {
 
-                $_POST['identifier'] = $this->input->get('identifier');
-                $_identifier         = $this->input->get('identifier');
+                $_POST['identifier'] = $oInput->get('identifier');
+                $_identifier         = $oInput->get('identifier');
             }
 
             // --------------------------------------------------------------------------
@@ -69,6 +82,7 @@ class PasswordForgotten extends Base
              * The rules vary depending on what login method is enabled.
              */
 
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
 
             switch (APP_NATIVE_LOGIN_USING) {
@@ -102,14 +116,17 @@ class PasswordForgotten extends Base
                  * even if it wasn't. Bad UX, if you ask me, but I'm not the client.
                  */
 
+                /** @var Config $oConfig */
                 $oConfig       = Factory::service('Config');
                 $alwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
+                /** @var Password $oUserPasswordModel */
                 $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
                 if ($oUserPasswordModel->setToken($_identifier)) {
 
                     //  Send email to user
+                    /** @var \Nails\Auth\Model\User $oUserModel */
                     $oUserModel = Factory::model('User', 'nails/module-auth');
                     switch (APP_NATIVE_LOGIN_USING) {
 
@@ -245,10 +262,13 @@ class PasswordForgotten extends Base
 
         //  Load the views
         $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
-        $oView = Factory::service('View');
-        $oView->load('structure/header/blank', $this->data);
-        $oView->load('auth/password/forgotten', $this->data);
-        $oView->load('structure/footer/blank', $this->data);
+
+        Factory::service('View')
+            ->load([
+                'structure/header/blank',
+                'auth/password/forgotten',
+                'structure/footer/blank',
+            ]);
     }
 
     // --------------------------------------------------------------------------
@@ -256,25 +276,29 @@ class PasswordForgotten extends Base
     /**
      * Validate a code
      *
-     * @param   string $code The code to validate
+     * @param string $code The code to validate
      *
      * @return  void
      */
     public function _validate($code)
     {
-        $oSession   = Factory::service('Session', 'nails/module-auth');
-        $oConfig    = Factory::service('Config');
-        $oView      = Factory::service('View');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
+        /** @var Auth $oAuthModel */
         $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         /**
          * Attempt to verify code, if two factor auth is enabled then don't generate a
          * new password, we'll need the user to jump through some hoops first.
          */
-
-        $generateNewPw      = !$oConfig->item('authTwoFactorMode');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
-        $newPw              = $oUserPasswordModel->validateToken($code, $generateNewPw);
+        $generateNewPw = !$oConfig->item('authTwoFactorMode');
+        $newPw         = $oUserPasswordModel->validateToken($code, $generateNewPw);
 
         // --------------------------------------------------------------------------
 
@@ -298,12 +322,12 @@ class PasswordForgotten extends Base
 
                 if ($this->data['question']) {
 
-                    if ($this->input->post()) {
+                    if ($oInput->post()) {
 
                         $isValid = $oAuthModel->mfaQuestionValidate(
                             $this->data['question']->id,
                             $newPw['user_id'],
-                            $this->input->post('answer')
+                            $oInput->post('answer')
                         );
 
                         if ($isValid) {
@@ -325,9 +349,12 @@ class PasswordForgotten extends Base
 
                             //  Load the views
                             $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
-                            $oView->load('structure/header/blank', $this->data);
-                            $oView->load('auth/password/forgotten_reset', $this->data);
-                            $oView->load('structure/footer/blank', $this->data);
+                            Factory::service('View')
+                                ->load([
+                                    'structure/header/blank',
+                                    'auth/password/forgotten_reset',
+                                    'structure/footer/blank',
+                                ]);
                             return;
 
                         } else {
@@ -338,9 +365,12 @@ class PasswordForgotten extends Base
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/ask.php');
-                    $oView->load('structure/header/blank', $this->data);
-                    $oView->load('auth/mfa/question/ask', $this->data);
-                    $oView->load('structure/footer/blank', $this->data);
+                    Factory::service('View')
+                        ->load([
+                            'structure/header/blank',
+                            'auth/mfa/question/ask',
+                            'structure/footer/blank',
+                        ]);
 
                 } else {
 
@@ -361,9 +391,12 @@ class PasswordForgotten extends Base
 
                     //  Load the views
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
-                    $oView->load('structure/header/blank', $this->data);
-                    $oView->load('auth/password/forgotten_reset', $this->data);
-                    $oView->load('structure/footer/blank', $this->data);
+                    Factory::service('View')
+                        ->load([
+                            'structure/header/blank',
+                            'auth/password/forgotten_reset',
+                            'structure/footer/blank',
+                        ]);
                 }
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
@@ -372,9 +405,9 @@ class PasswordForgotten extends Base
 
                 if ($secret) {
 
-                    if ($this->input->post()) {
+                    if ($oInput->post()) {
 
-                        $mfaCode = $this->input->post('mfaCode');
+                        $mfaCode = $oInput->post('mfaCode');
 
                         //  Verify the inout
                         if ($oAuthModel->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
@@ -396,9 +429,12 @@ class PasswordForgotten extends Base
 
                             //  Load the views
                             $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
-                            $oView->load('structure/header/blank', $this->data);
-                            $oView->load('auth/password/forgotten_reset', $this->data);
-                            $oView->load('structure/footer', $this->data);
+                            Factory::service('View')
+                                ->load([
+                                    'structure/header/blank',
+                                    'auth/password/forgotten_reset',
+                                    'structure/footer/blank',
+                                ]);
                             return;
 
                         } else {
@@ -411,9 +447,12 @@ class PasswordForgotten extends Base
                     $this->data['page']->title = 'Please enter the code from your device';
 
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/ask.php');
-                    $oView->load('structure/header/blank', $this->data);
-                    $oView->load('auth/mfa/device/ask', $this->data);
-                    $oView->load('structure/footer', $this->data);
+                    Factory::service('View')
+                        ->load([
+                            'structure/header/blank',
+                            'auth/mfa/device/ask',
+                            'structure/footer/blank',
+                        ]);
 
                 } else {
 
@@ -434,9 +473,12 @@ class PasswordForgotten extends Base
 
                     //  Load the views
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
-                    $oView->load('structure/header/blank', $this->data);
-                    $oView->load('auth/password/forgotten_reset', $this->data);
-                    $oView->load('structure/footer/blank', $this->data);
+                    Factory::service('View')
+                        ->load([
+                            'structure/header/blank',
+                            'auth/password/forgotten_reset',
+                            'structure/footer/blank',
+                        ]);
                 }
 
             } else {
@@ -456,9 +498,12 @@ class PasswordForgotten extends Base
 
                 //  Load the views
                 $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
-                $oView->load('structure/header/blank', $this->data);
-                $oView->load('auth/password/forgotten_reset', $this->data);
-                $oView->load('structure/footer/blank', $this->data);
+                Factory::service('View')
+                    ->load([
+                        'structure/header/blank',
+                        'auth/password/forgotten_reset',
+                        'structure/footer/blank',
+                    ]);
             }
 
             return;
@@ -468,9 +513,12 @@ class PasswordForgotten extends Base
 
         //  Load the views
         $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
-        $oView->load('structure/header/blank', $this->data);
-        $oView->load('auth/password/forgotten', $this->data);
-        $oView->load('structure/footer/blank', $this->data);
+        Factory::service('View')
+            ->load([
+                'structure/header/blank',
+                'auth/password/forgotten',
+                'structure/footer/blank',
+            ]);
     }
 
     // --------------------------------------------------------------------------
@@ -484,6 +532,7 @@ class PasswordForgotten extends Base
     {
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
+            /** @var Session $oSession */
             $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
