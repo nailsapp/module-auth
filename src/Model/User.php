@@ -612,7 +612,7 @@ class User extends Base
      *
      * @return void
      */
-    protected function getCountCommon(array $aData = [])
+    protected function getCountCommon(array $aData = []): void
     {
         //  Define the selects
         $oDb = Factory::service('Database');
