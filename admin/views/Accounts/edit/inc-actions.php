@@ -1,7 +1,8 @@
 <?php
 
+$oInput       = \Nails\Factory::service('Input');
 $buttons      = [];
-$returnString = '?return_to=' . urlencode(uri_string() . '?' . $this->input->server('QUERY_STRING'));
+$returnString = '?return_to=' . urlencode(uri_string() . '?' . $oInput->server('QUERY_STRING'));
 
 //  Login as
 if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
@@ -9,10 +10,10 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
     //  Generate the return string
     $url = uri_string();
 
-    if ($this->input->get()) {
+    if ($oInput->get()) {
 
         //  Remove common problematic GET vars (for instance, we don't want isModal when we return)
-        $get = $this->input->get();
+        $get = $oInput->get();
         unset($get['isModal']);
 
         if ($get) {

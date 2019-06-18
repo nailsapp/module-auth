@@ -386,8 +386,8 @@ class Accounts extends DefaultController
 
                 //  Success
                 $aData = [
-                    'group_id' => (int) $this->input->post('group_id', true),
-                    'password' => trim($this->input->post('password', true)),
+                    'group_id' => (int) $oInput->post('group_id', true),
+                    'password' => trim($oInput->post('password', true)),
                 ];
 
                 if (!$aData['password']) {

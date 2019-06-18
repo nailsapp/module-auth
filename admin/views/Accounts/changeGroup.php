@@ -1,7 +1,8 @@
 <div class="group-accounts change-group">
     <?php
     if (!empty($aUsers)) {
-        $sFormUrl = uri_string() . '?users=' . $this->input->get('users');
+        $oInput   = \Nails\Factory::service('Input');
+        $sFormUrl = uri_string() . '?users=' . $oInput->get('users');
         echo form_open($sFormUrl);
         ?>
         <p>

@@ -1,3 +1,6 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="nails-auth forgotten-password u-center-screen">
     <div class="panel">
         <h1 class="panel__header text-center">
@@ -52,7 +55,7 @@
             ?>
             <div class="form__group <?=form_error($_field) ? 'has-error' : ''?>">
                 <label><?=$sFieldLabel?></label>
-                <?=$sFieldType($_field, set_value($_field, $this->input->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
+                <?=$sFieldType($_field, set_value($_field, $oInput->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
                 <?=form_error($_field, '<p class="help-block">', '</p>')?>
             </div>
             <p>

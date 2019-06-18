@@ -1,3 +1,6 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="group-accounts groups edit">
     <div class="alert alert-warning">
         <strong>Please note:</strong> while the system will do its best to validate the content you set
@@ -9,9 +12,6 @@
     <hr/>
     <?=form_open()?>
     <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab"/>
-
-
-    <?php $oInput = \Nails\Factory::service('Input'); ?>
     <ul class="tabs">
         <li class="tab <?=$oInput->post('activeTab') == 'tab-basic' || !$oInput->post('activeTab') ? 'active' : ''?>">
             <a href="#" data-tab="tab-basic">Basic Details</a>
@@ -28,7 +28,7 @@
     </ul>
     <section class="tabs">
         <!--    BASICS  -->
-        <div class="tab-page tab-basic <?=$this->input->post('activeTab') == 'tab-basic' || !$this->input->post('activeTab') ? 'active' : ''?>">
+        <div class="tab-page tab-basic <?=$oInput->post('activeTab') == 'tab-basic' || !$oInput->post('activeTab') ? 'active' : ''?>">
             <div class="fieldset">
                 <?php
 
@@ -76,7 +76,7 @@
             </div>
         </div>
         <!--    PASSWORD RULES  -->
-        <div class="tab-page tab-password <?=$this->input->post('activeTab') == 'tab-password' ? 'active' : ''?>">
+        <div class="tab-page tab-password <?=$oInput->post('activeTab') == 'tab-password' ? 'active' : ''?>">
             <div class="fieldset">
                 <?php
 
@@ -148,13 +148,13 @@
             </div>
         </div>
         <!-- 2FA -->
-        <div class="tab-page tab-2fa <?=$this->input->post('activeTab') == 'tab-2fa' ? 'active' : ''?>">
+        <div class="tab-page tab-2fa <?=$oInput->post('activeTab') == 'tab-2fa' ? 'active' : ''?>">
             <p class="alert alert-warning">
                 Currently, 2FA settings are done at a code-level and apply to all users.
             </p>
         </div>
         <!--    PERMISSIONS -->
-        <div class="tab-page tab-permissions <?=$this->input->post('activeTab') == 'tab-permissions' ? 'active' : ''?>">
+        <div class="tab-page tab-permissions <?=$oInput->post('activeTab') == 'tab-permissions' ? 'active' : ''?>">
             <p>
                 For non-superuser groups you may also grant a access to the administration area by selecting which
                 admin modules they have permission to access.

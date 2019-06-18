@@ -64,7 +64,6 @@ class Settings extends BaseAdmin
     public function index(): void
     {
         if (!userHasPermission('admin:auth:settings:update:.*')) {
-
             unauthorised();
         }
 
@@ -76,19 +75,18 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Prepare update
             $settings          = [];
             $settingsEncrypted = [];
 
             if (userHasPermission('admin:auth:settings:update:registration')) {
-
-                $settings['user_registration_enabled'] = $this->input->post('user_registration_enabled');
+                $settings['user_registration_enabled'] = $oInput->post('user_registration_enabled');
             }
 
             if (userHasPermission('admin:auth:settings:update:password')) {
-
                 //  @todo
             }
 
@@ -103,7 +101,7 @@ class Settings extends BaseAdmin
 
                 foreach ($providers as $provider) {
 
-                    $settings['auth_social_signon_' . $provider['slug'] . '_enabled'] = (bool) $this->input->post('auth_social_signon_' . $provider['slug'] . '_enabled');
+                    $settings['auth_social_signon_' . $provider['slug'] . '_enabled'] = (bool) $oInput->post('auth_social_signon_' . $provider['slug'] . '_enabled');
 
                     if ($settings['auth_social_signon_' . $provider['slug'] . '_enabled']) {
 
@@ -116,7 +114,7 @@ class Settings extends BaseAdmin
 
                                     foreach ($label as $key1 => $label1) {
 
-                                        $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
+                                        $value = $oInput->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
 
                                         if (!empty($label1['required']) && empty($value)) {
                                             $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
@@ -132,7 +130,7 @@ class Settings extends BaseAdmin
 
                                 } else {
 
-                                    $value = $this->input->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
+                                    $value = $oInput->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
 
                                     if (!empty($label['required']) && empty($value)) {
                                         $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';

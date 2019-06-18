@@ -1,3 +1,6 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="group-settings site">
     <p>
         Configure how the site handles authentication.
@@ -14,7 +17,7 @@
 
         if (userHasPermission('admin:auth:settings:update:registration')) {
 
-            $active = $this->input->post('activeTab') == 'tab-registration' || !$this->input->post('activeTab') ? 'active' : '';
+            $active = $oInput->post('activeTab') == 'tab-registration' || !$oInput->post('activeTab') ? 'active' : '';
 
             ?>
             <li class="tab <?=$active?>">
@@ -25,7 +28,7 @@
 
         if (userHasPermission('admin:auth:groups:edit')) {
 
-            $active = $this->input->post('activeTab') == 'tab-security' ? 'active' : '';
+            $active = $oInput->post('activeTab') == 'tab-security' ? 'active' : '';
 
             ?>
             <li class="tab <?=$active?>">
@@ -38,7 +41,7 @@
 
             if (!empty($providers)) {
 
-                $active = $this->input->post('activeTab') == 'tab-social' ? 'active' : '';
+                $active = $oInput->post('activeTab') == 'tab-social' ? 'active' : '';
 
                 ?>
                 <li class="tab <?=$active?>">
@@ -55,7 +58,7 @@
 
         if (userHasPermission('admin:auth:settings:update:registration')) {
 
-            $display = $this->input->post('activeTab') == 'tab-registration' || !$this->input->post('activeTab') ? 'active' : '';
+            $display = $oInput->post('activeTab') == 'tab-registration' || !$oInput->post('activeTab') ? 'active' : '';
 
             ?>
             <div class="tab-page tab-registration <?=$display?>">
@@ -78,7 +81,7 @@
 
         if (userHasPermission('admin:auth:groups:edit')) {
 
-            $display = $this->input->post('activeTab') == 'tab-security' ? 'active' : '';
+            $display = $oInput->post('activeTab') == 'tab-security' ? 'active' : '';
 
             ?>
             <div class="tab-page tab-security <?=$display?>">
@@ -96,7 +99,7 @@
 
             if (!empty($providers)) {
 
-                $display = $this->input->post('activeTab') == 'tab-social' ? 'active' : '';
+                $display = $oInput->post('activeTab') == 'tab-social' ? 'active' : '';
 
                 ?>
                 <div class="tab-page tab-social <?=$display?>">

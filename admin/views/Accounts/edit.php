@@ -1,9 +1,11 @@
 <div class="group-accounts edit">
     <?php
 
-    $oView = \Nails\Factory::service('View');
+    $oView   = \Nails\Factory::service('View');
+    $oInput  = \Nails\Factory::service('Input');
+    $oConfig = \Nails\Factory::service('Config');
 
-    echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $this->input->server('QUERY_STRING'));
+    echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $oInput->server('QUERY_STRING'));
     echo form_hidden('id', $user_edit->id);
     echo form_hidden('email_orig', $user_edit->email);
     echo form_hidden('username_orig', $user_edit->username);
@@ -17,8 +19,6 @@
         'Accounts/edit/inc-emails',
         'Accounts/edit/inc-password',
     ]);
-
-    $oConfig = \Nails\Factory::service('Config');
 
     $oConfig->load('auth/auth');
 
@@ -61,7 +61,7 @@
 
 echo form_open('admin/auth/accounts/email', 'id="email-form"');
 echo form_hidden('id', $user_edit->id);
-echo form_hidden('return', uri_string() . '?' . $this->input->server('QUERY_STRING'));
+echo form_hidden('return', uri_string() . '?' . $oInput->server('QUERY_STRING'));
 echo form_hidden('email');
 echo form_hidden('action');
 echo form_hidden('isPrimary');
