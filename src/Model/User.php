@@ -13,10 +13,13 @@
 namespace Nails\Auth\Model;
 
 use Nails\Auth\Events;
+use Nails\Auth\Model\User\Password;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
+use Nails\Common\Service\Input;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Testing;
@@ -612,7 +615,7 @@ class User extends Base
      *
      * @return void
      */
-    protected function getCountCommon(array $aData = []): void
+    protected function getCountCommon(array $aData = [])
     {
         //  Define the selects
         $oDb = Factory::service('Database');
@@ -944,8 +947,11 @@ class User extends Base
         //  If there's some data we'll need to know the columns of `user`
         //  We also want to unset any 'dangerous' items then set it for the query
 
-        $oDb                = Factory::service('Database');
-        $oInput             = Factory::service('Input');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         if ($data) {
@@ -953,31 +959,16 @@ class User extends Base
             //  Set the cols in `user` (rather than querying the DB)
             $aCols = $this->getUserColumns();
 
-            //  Safety first, no updating of user's ID.
+            //  Safety first, no updating of sensitive fields
             unset($data['id']);
             unset($data['id_md5']);
+            unset($data['password_md5']);
+            unset($data['password_engine']);
+            unset($data['password_changed']);
+            unset($data['salt']);
 
-            //  If we're updating the user's password we should generate a new hash
-            if (array_key_exists('password', $data)) {
-
-                $oHash = $oUserPasswordModel->generateHash($oUser->group_id, $data['password']);
-
-                if (empty($oHash)) {
-                    $this->setError($oUserPasswordModel->lastError());
-                    return false;
-                }
-
-                $data['password']         = $oHash->password;
-                $data['password_md5']     = $oHash->password_md5;
-                $data['password_engine']  = $oHash->engine;
-                $data['password_changed'] = $oDate->format('Y-m-d H:i:s');
-                $data['salt']             = $oHash->salt;
-
-                $bPasswordUpdated = true;
-
-            } else {
-                $bPasswordUpdated = false;
-            }
+            $sNewPassword = getFromArray('password', $data);
+            unset($data['password']);
 
             //  Set the data
             $aDataUser            = [];
@@ -1103,6 +1094,19 @@ class User extends Base
 
                 // --------------------------------------------------------------------------
 
+                //  Update the password if it has been supplied
+                if (!empty($sNewPassword)) {
+                    $bIsTemp = (bool) getFromArray('temp_pw', $data);
+                    if (!$oUserPasswordModel->change($iUserId, $sNewPassword, $bIsTemp)) {
+                        throw new NailsException(
+                            'Failed to change password. ' .
+                            $oUserPasswordModel->lastError()
+                        );
+                    }
+                }
+
+                // --------------------------------------------------------------------------
+
                 //  If an email has been passed then attempt to update the user's email too
                 if ($sDataEmail) {
 
@@ -1135,25 +1139,6 @@ class User extends Base
                 }
 
                 $oDb->trans_commit();
-
-                //  If the user's password was updated send them a notification
-                if ($bPasswordUpdated) {
-
-                    $oEmailer = Factory::service('Emailer', 'nails/module-email');
-
-                    $oEmail                  = new \stdClass();
-                    $oEmail->type            = 'password_updated';
-                    $oEmail->to_id           = $iUserId;
-                    $oEmail->data            = new \stdClass();
-                    $oEmail->data->ipAddress = $oInput->ipAddress();
-                    $oEmail->data->updatedAt = $oDate->format('Y-m-d H:i:s');
-
-                    if ($this->activeUser('id')) {
-                        $oEmail->data->updatedBy = $this->activeUser('first_name,last_name');
-                    }
-
-                    $oEmailer->send($oEmail, true);
-                }
 
             } catch (\Exception $e) {
                 $oDb->trans_rollback();

@@ -12,6 +12,10 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Auth\Model\User;
+use Nails\Common\Service\Database;
+use Nails\Common\Service\Input;
+use Nails\Email\Service\Emailer;
 use Nails\Factory;
 use Nails\Common\Model\Base;
 
@@ -43,15 +47,72 @@ class Password extends Base
     /**
      * Changes a password for a particular user
      *
-     * @param  int    $iUserId   The user ID whose password to change
-     * @param  string $sPassword The raw, unencrypted new password
+     * @param int    $iUserId   The user ID whose password to change
+     * @param string $sPassword The raw, unencrypted new password
+     * @param bool   $bIsTemp   Whether the password is temporary
      *
      * @return boolean
      */
-    public function change($iUserId, $sPassword)
+    public function change(int $iUserId, string $sPassword, bool $bIsTemp = false)
     {
-        //  @todo
-        return false;
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Emailer $oEmailer */
+        $oEmailer = Factory::service('Emailer', 'nails/module-email');
+
+        // --------------------------------------------------------------------------
+
+        $oUser = $oUserModel->getById($iUserId);
+        if (empty($oUser)) {
+            $this->setError('Invalid user ID.');
+            return false;
+        }
+
+        $oHash = $this->generateHash($oUser->group_id, $sPassword);
+        if (empty($oHash)) {
+            //  Error messages set by generateHash()
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        $sNow = Factory::factory('DateTime')->format('Y-m-d H:i:s');
+
+        $oDb->set('password', $oHash->password);
+        $oDb->set('password_md5', $oHash->password_md5);
+        $oDb->set('password_engine', $oHash->engine);
+        $oDb->set('password_changed', $sNow);
+        $oDb->set('salt', $oHash->salt);
+        $oDb->set('temp_pw', $bIsTemp);
+        $oDb->set('last_update', $sNow);
+
+        if (!$oDb->update($oUserModel->getTableName())) {
+            $this->setError('Failed to update user record.');
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        $oEmail = (object) [
+            'type'  => 'password_updated',
+            'to_id' => $iUserId,
+            'data'  => (object) [
+                'ipAddress' => $oInput->ipAddress(),
+                'updatedAt' => $sNow,
+            ],
+        ];
+
+        if (activeUser('id') && activeUser('id') !== $iUserId) {
+            $oEmail->data->updatedBy = activeUser('first_name,last_name');
+        }
+
+        $oEmailer->send($oEmail);
+
+        return true;
     }
 
     // --------------------------------------------------------------------------
@@ -59,8 +120,8 @@ class Password extends Base
     /**
      * Determines whether a password is correct for a particular user.
      *
-     * @param  int    $iUserId   The user ID to check for
-     * @param  string $sPassword The raw, unencrypted password to check
+     * @param int    $iUserId   The user ID to check for
+     * @param string $sPassword The raw, unencrypted password to check
      *
      * @return boolean
      */
@@ -101,7 +162,7 @@ class Password extends Base
     /**
      * Determines whether a user's password has expired
      *
-     * @param  integer $iUserId The user ID to check
+     * @param integer $iUserId The user ID to check
      *
      * @return boolean
      */
@@ -148,54 +209,15 @@ class Password extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Returns how many days a password is valid for
+     * Determines whether a password is acceptable for a user group
      *
-     * @param $iGroupId
+     * @param int    $iGroupId  The user group
+     * @param string $sPassword The raw, unencrypted password
      *
-     * @return null
+     * @return bool
      */
-    public function expiresAfter($iGroupId)
+    public function isAcceptable(int $iGroupId, string $sPassword): bool
     {
-        if (empty($iGroupId)) {
-            return null;
-        }
-
-        $oDb = Factory::service('Database');
-        $oDb->select('password_rules');
-        $oDb->where('id', $iGroupId);
-        $oDb->limit(1);
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user_group');
-
-        if ($oResult->num_rows() !== 1) {
-            return null;
-        }
-
-        //  Decode the password rules
-        $oGroupPwRules = json_decode($oResult->row()->password_rules);
-
-        return empty($oGroupPwRules->expiresAfter) ? null : $oGroupPwRules->expiresAfter;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Create a password hash, checks to ensure a password is strong enough according
-     * to the password rules defined by the app.
-     *
-     * @param integer $iGroupId  The group who's rules to fetch
-     * @param  string $sPassword The raw, unencrypted password
-     *
-     * @return mixed            stdClass on success, false on failure
-     */
-    public function generateHash($iGroupId, $sPassword)
-    {
-        if (empty($sPassword)) {
-            $this->setError('No password to hash');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Check password satisfies password rules
         $aPwRules = $this->getRules($iGroupId);
 
@@ -260,7 +282,59 @@ class Password extends Base
             }
         }
 
-        // --------------------------------------------------------------------------
+        return true;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns how many days a password is valid for
+     *
+     * @param $iGroupId
+     *
+     * @return null
+     */
+    public function expiresAfter($iGroupId)
+    {
+        if (empty($iGroupId)) {
+            return null;
+        }
+
+        $oDb = Factory::service('Database');
+        $oDb->select('password_rules');
+        $oDb->where('id', $iGroupId);
+        $oDb->limit(1);
+        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user_group');
+
+        if ($oResult->num_rows() !== 1) {
+            return null;
+        }
+
+        //  Decode the password rules
+        $oGroupPwRules = json_decode($oResult->row()->password_rules);
+
+        return empty($oGroupPwRules->expiresAfter) ? null : $oGroupPwRules->expiresAfter;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Create a password hash, checks to ensure a password is strong enough according
+     * to the password rules defined by the app.
+     *
+     * @param integer $iGroupId  The group who's rules to fetch
+     * @param string  $sPassword The raw, unencrypted password
+     *
+     * @return mixed            stdClass on success, false on failure
+     */
+    public function generateHash($iGroupId, $sPassword): \stdClass
+    {
+        if (empty($sPassword)) {
+            $this->setError('No password to hash');
+            return false;
+        } elseif (!$this->isAcceptable($iGroupId, $sPassword)) {
+            return false;
+        }
 
         //  Password is valid, generate hash object
         return $this->generateHashObject($sPassword);
@@ -271,8 +345,8 @@ class Password extends Base
     /**
      * Determines whether a string contains any of the characters from a defined charset.
      *
-     * @param  string $sStr     The string to analyse
-     * @param  string $sCharset The charset to test against
+     * @param string $sStr     The string to analyse
+     * @param string $sCharset The charset to test against
      *
      * @return boolean
      */
@@ -302,11 +376,11 @@ class Password extends Base
     /**
      * Generates a password hash, no strength checks
      *
-     * @param  string $sPassword The password to generate the hash for
+     * @param string $sPassword The password to generate the hash for
      *
      * @return \stdClass
      */
-    public function generateHashObject($sPassword)
+    public function generateHashObject($sPassword): \stdClass
     {
         $sSalt = $this->salt();
 
@@ -326,7 +400,7 @@ class Password extends Base
     /**
      * Generates a password which is sufficiently secure according to the app's password rules
      *
-     * @param  integer $iGroupId The group who's rules to fetch
+     * @param integer $iGroupId The group who's rules to fetch
      *
      * @return string
      */
@@ -522,7 +596,7 @@ class Password extends Base
     /**
      * Generates a random salt
      *
-     * @param  string $sPepper Additional data to inject into the salt
+     * @param string $sPepper Additional data to inject into the salt
      *
      * @return string
      */
@@ -578,8 +652,8 @@ class Password extends Base
     /**
      * Validate a forgotten password code.
      *
-     * @param  string $sCode          The token to validate
-     * @param  string $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
+     * @param string $sCode          The token to validate
+     * @param string $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      *
      * @return boolean|array
      */
@@ -660,7 +734,7 @@ class Password extends Base
     /**
      * Formats an array of permissions into a JSON encoded string suitable for the database
      *
-     * @param  array $aRules An array of rules to set
+     * @param array $aRules An array of rules to set
      *
      * @return string
      */

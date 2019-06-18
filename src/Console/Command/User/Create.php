@@ -10,8 +10,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class Create
+ *
+ * @package Nails\Auth\Console\Command\User
+ */
 class Create extends Base
 {
+    /**
+     * Configures the command
+     */
     protected function configure()
     {
         $this->setName('make:user')
@@ -59,10 +67,7 @@ class Create extends Base
     {
         parent::execute($oInput, $oOutput);
 
-        $oOutput->writeln('');
-        $oOutput->writeln('<info>---------------</info>');
-        $oOutput->writeln('<info>Nails User Tool</info>');
-        $oOutput->writeln('<info>---------------</info>');
+        $this->banner('Create a new super user');
 
         // --------------------------------------------------------------------------
 
