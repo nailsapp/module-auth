@@ -111,10 +111,8 @@ $oInput = \Nails\Factory::service('Input');
                         their account.
                     </p>
                     <p>
-                        You can refer
-                        to <?=anchor('http://hybridauth.sourceforge.net/userguide.html', 'HybridAuth\'s Documentation', 'target="_blank"')?>
-                        for
-                        instructions on how to create these applications.
+                        You can refer to <?=anchor('https://hybridauth.github.io/', 'Hybridauth\'s Documentation', 'target="_blank"')?>
+                        for instructions on how to create these applications.
                     </p>
                     <div class="fieldset" id="site-settings-socialsignin">
                         <?php
