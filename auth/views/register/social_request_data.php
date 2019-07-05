@@ -5,10 +5,21 @@
         </h1>
         <?=form_open($form_url)?>
         <div class="panel__body">
+            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
+                <?=$error?>
+            </p>
+            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
+                <?=$success?>
+            </p>
+            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
+                <?=$message?>
+            </p>
+            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
+                <?=$info?>
+            </p>
             <p class="text-center">
                 <?=lang('auth_register_extra_message')?>
             </p>
-            <hr>
             <?php
             if (APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME') {
                 if (isset($required_data['email'])) {
