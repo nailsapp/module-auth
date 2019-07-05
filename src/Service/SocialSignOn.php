@@ -12,8 +12,11 @@
 
 namespace Nails\Auth\Service;
 
+use Hybridauth\Adapter\AdapterInterface;
 use Hybridauth\Hybridauth;
+use Nails\Auth\Model\User;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Logger;
 use Nails\Common\Traits\Caching;
@@ -28,9 +31,24 @@ class SocialSignOn
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @var Database
+     */
     protected $oDb;
+
+    /**
+     * @var User
+     */
     protected $oUserModel;
+
+    /**
+     * @var array
+     */
     protected $aProviders;
+
+    /**
+     * @var Hybridauth
+     */
     protected $oHybridAuth;
 
     // --------------------------------------------------------------------------
@@ -40,8 +58,10 @@ class SocialSignOn
      */
     public function __construct()
     {
-        $oCi              = get_instance();
-        $this->oDb        = Factory::service('Database');
+        $oCi = get_instance();
+        /** @var Database oDb */
+        $this->oDb = Factory::service('Database');
+        /** @var User oUserModel */
         $this->oUserModel = Factory::model('User', 'nails/module-auth');
 
         $this->aProviders = ['all' => [], 'enabled' => [], 'disabled' => []];
@@ -74,8 +94,6 @@ class SocialSignOn
         //  Set up Hybrid Auth
         /** @var Logger $oLogger */
         $oLogger = Factory::service('Logger');
-        /** @var \DateTime $oDate */
-        $oDate = Factory::factory('DateTime');
 
         $aConfig = [
             'callback'   => current_url(),
@@ -233,7 +251,7 @@ class SocialSignOn
      * @param string $sProvider The provider to authenticate against
      * @param mixed  $mParams   Additional parameters to pass to the Provider
      *
-     * @return Hybrid_Provider_Adapter|false
+     * @return AdapterInterface|false
      */
     public function authenticate($sProvider, $mParams = null)
     {
@@ -335,13 +353,10 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         if (!is_array($provider)) {
-
             $_provider = (array) $provider;
             $_provider = array_unique($_provider);
             $_provider = array_filter($_provider);
-
         } else {
-
             $_provider = $provider;
         }
 
