@@ -1022,6 +1022,8 @@ class Login extends Base
             $this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
         }
 
+        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/register/social_request_data.php');
+
         Factory::service('View')
             ->load([
                 'structure/header/blank',
