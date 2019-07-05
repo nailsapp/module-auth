@@ -12,12 +12,14 @@
 
 namespace Nails\Auth\Service;
 
-use Nails\Factory;
-use Nails\Environment;
+use Hybridauth\Hybridauth;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\ErrorHandler;
-use Nails\Common\Traits\ErrorHandling;
+use Nails\Common\Service\Logger;
 use Nails\Common\Traits\Caching;
+use Nails\Common\Traits\ErrorHandling;
+use Nails\Environment;
+use Nails\Factory;
 
 class SocialSignOn
 {
@@ -70,12 +72,16 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Set up Hybrid Auth
-        $oDate   = Factory::factory('DateTime');
+        /** @var Logger $oLogger */
+        $oLogger = Factory::service('Logger');
+        /** @var \DateTime $oDate */
+        $oDate = Factory::factory('DateTime');
+
         $aConfig = [
-            'base_url'   => site_url('vendor/hybridauth/hybridauth/hybridauth/index.php'),
+            'callback'   => current_url(),
             'providers'  => [],
             'debug_mode' => Environment::not(Environment::ENV_PROD),
-            'debug_file' => DEPLOY_LOG_DIR . 'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php',
+            'debug_file' => $oLogger->getDir() . $oLogger->getFile(),
         ];
 
         foreach ($this->aProviders['enabled'] as $aProvider) {
@@ -113,13 +119,13 @@ class SocialSignOn
 
         try {
 
-            $this->oHybridAuth = new \Hybrid_Auth($aConfig);
+            $this->oHybridAuth = new Hybridauth($aConfig);
 
         } catch (\Exception $e) {
 
             /**
              * An exception occurred during instantiation, this is probably a result
-             * of the user denying the authentication request. If we reinit the Hybrid_Auth
+             * of the user denying the authentication request. If we reinit the Hybridauth
              * things work again, but it's as if nothing ever happened and the user may be
              * redirected back to the authentication screen (which is annoying). The
              * alternative is to bail out with an error; this informs the user that something
@@ -129,7 +135,7 @@ class SocialSignOn
             switch ($oCi->config->item('auth_social_signon_init_fail_behaviour')) {
 
                 case 'reinit':
-                    $this->oHybridAuth = new \Hybrid_Auth($aConfig);
+                    $this->oHybridAuth = new Hybridauth($aConfig);
                     break;
 
                 case 'error':
@@ -144,6 +150,7 @@ class SocialSignOn
 
     /**
      * Determines whether social sign on is enabled or not
+     *
      * @return boolean
      */
     public function isEnabled()
@@ -156,7 +163,7 @@ class SocialSignOn
     /**
      * Returns a list of providers, optionally filtered by availability
      *
-     * @param  string $status The filter to apply
+     * @param string $status The filter to apply
      *
      * @return array
      */
@@ -176,7 +183,7 @@ class SocialSignOn
     /**
      * Returns the details of a particular provider
      *
-     * @param  string $provider The provider to return
+     * @param string $provider The provider to return
      *
      * @return mixed            Array on success, false on failure
      */
@@ -194,7 +201,7 @@ class SocialSignOn
     /**
      * Returns the correct casing for a provider
      *
-     * @param  string $sProvider The provider to return
+     * @param string $sProvider The provider to return
      *
      * @return mixed            String on success, null on failure
      */
@@ -209,7 +216,7 @@ class SocialSignOn
     /**
      * Determines whether a provider is valid and enabled
      *
-     * @param  string $sProvider The provider to check
+     * @param string $sProvider The provider to check
      *
      * @return boolean
      */
@@ -223,8 +230,8 @@ class SocialSignOn
     /**
      * Authenticates a user using Hybrid Auth's authenticate method
      *
-     * @param  string $sProvider The provider to authenticate against
-     * @param  mixed  $mParams   Additional parameters to pass to the Provider
+     * @param string $sProvider The provider to authenticate against
+     * @param mixed  $mParams   Additional parameters to pass to the Provider
      *
      * @return Hybrid_Provider_Adapter|false
      */
@@ -244,7 +251,7 @@ class SocialSignOn
     /**
      * Returns the user's profile for a particular provider.
      *
-     * @param  string $provider The name of the provider.
+     * @param string $provider The name of the provider.
      *
      * @return mixed           Hybrid_User_Profile on success, false on failure
      */
@@ -264,6 +271,7 @@ class SocialSignOn
 
     /**
      * Logs out all providers
+     *
      * @return void
      */
     public function logout()
@@ -276,8 +284,8 @@ class SocialSignOn
     /**
      * Fetches a local user profile via a provider and provider ID
      *
-     * @param  string $provider   The provider to use
-     * @param  string $identifier The provider's user ID
+     * @param string $provider   The provider to use
+     * @param string $identifier The provider's user ID
      *
      * @return mixed               stdClass on success, false on failure
      */
@@ -301,8 +309,8 @@ class SocialSignOn
     /**
      * Saves the social session data to the user's account
      *
-     * @param  mixed  $user_id  The User's ID (if null, then the active user ID is used)
-     * @param  string $provider The providers to save
+     * @param mixed  $user_id  The User's ID (if null, then the active user ID is used)
+     * @param string $provider The providers to save
      *
      * @return boolean
      */
@@ -463,7 +471,7 @@ class SocialSignOn
     /**
      * Restores a user's social session
      *
-     * @param  mixed $user_id The User's ID (if null, then the active user ID is used)
+     * @param mixed $user_id The User's ID (if null, then the active user ID is used)
      *
      * @return boolean
      */
@@ -509,7 +517,7 @@ class SocialSignOn
     /**
      * Determines whether the active user is connected with $provider
      *
-     * @param  string $sProvider the provider to test for
+     * @param string $sProvider the provider to test for
      *
      * @return boolean
      */
@@ -523,6 +531,7 @@ class SocialSignOn
 
     /**
      * Returns an array of connected providers (for the active user)
+     *
      * @return array
      */
     public function getConnectedProviders()
@@ -535,8 +544,8 @@ class SocialSignOn
     /**
      * Abstraction to a provider's API
      *
-     * @param  string $sProvider The provider whose API you wish to call
-     * @param  string $call      The API call
+     * @param string $sProvider The provider whose API you wish to call
+     * @param string $call      The API call
      *
      * @return mixed
      */
