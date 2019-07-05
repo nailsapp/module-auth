@@ -392,6 +392,7 @@ class Login extends Base
             } else {
 
                 //  We are logging in as someone else, log the current user out and try again
+                /** @var Auth $oAuthModel */
                 $oAuthModel = Factory::model('Auth', 'nails/module-auth');
                 $oAuthModel->logout();
 
