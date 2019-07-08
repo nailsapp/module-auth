@@ -362,6 +362,12 @@ class SocialSignOn
 
         // --------------------------------------------------------------------------
 
+        //  @todo (Pablo - 2019-07-05) - Get this working; `getSessionData` is removed
+        dd(
+            $_provider,
+            $this->oHybridAuth->getConnectedAdapters()[$_provider['class']]->getAccessToken()
+        );
+
         $_session     = $this->oHybridAuth->getSessionData();
         $_session     = unserialize($_session);
         $_save        = [];
