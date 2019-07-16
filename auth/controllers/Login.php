@@ -625,7 +625,7 @@ class Login extends Base
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($oSocial->saveSession(activeUser('id'), $provider)) {
+            if ($oSocial->saveSession(activeUser('id'), [$provider])) {
 
                 create_event('did_link_provider', ['provider' => $provider]);
                 $oSession->setFlashData('success', lang('auth_social_linked_ok', $provider['label']));
@@ -805,7 +805,7 @@ class Login extends Base
                      * - Upload profile image if available
                      */
 
-                    $oSocial->saveSession($newUser->id, $provider);
+                    $oSocial->saveSession($newUser->id, [$provider]);
 
                     if (!empty($socialUser->photoURL)) {
 
@@ -863,6 +863,7 @@ class Login extends Base
 
                     // --------------------------------------------------------------------------
 
+                    //  @todo (Pablo - 2019-07-16) - Setting login data is causing a cascae of ini_set errors
                     //  Aint that swell, all registered! Redirect!
                     $oUserModel->setLoginData($newUser->id);
 
@@ -884,6 +885,7 @@ class Login extends Base
                     } else {
                         $sRedirectUrl = $this->data['return_to'];
                     }
+
 
                     redirect($sRedirectUrl);
 

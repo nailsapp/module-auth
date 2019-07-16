@@ -327,12 +327,12 @@ class SocialSignOn
     /**
      * Saves the social session data to the user's account
      *
-     * @param mixed  $user_id  The User's ID (if null, then the active user ID is used)
-     * @param string $provider The providers to save
+     * @param mixed $user_id   The User's ID (if null, then the active user ID is used)
+     * @param array $providers The providers to save
      *
      * @return boolean
      */
-    public function saveSession($user_id = null, $provider = [])
+    public function saveSession($user_id = null, array $providers = [])
     {
         if (empty($user_id)) {
             $user_id = activeUser('id');
@@ -352,73 +352,20 @@ class SocialSignOn
 
         // --------------------------------------------------------------------------
 
-        if (!is_array($provider)) {
-            $_provider = (array) $provider;
-            $_provider = array_unique($_provider);
-            $_provider = array_filter($_provider);
-        } else {
-            $_provider = $provider;
-        }
+        $aSave            = [];
+        $aProviderClasses = arrayExtractProperty($providers, 'class');
+        $aAdapters        = $this->oHybridAuth->getConnectedAdapters();
+        foreach ($aAdapters as $sProvider => $oAdapter) {
 
-        // --------------------------------------------------------------------------
-
-        //  @todo (Pablo - 2019-07-05) - Get this working; `getSessionData` is removed
-        dd(
-            $_provider,
-            $this->oHybridAuth->getConnectedAdapters()[$_provider['class']]->getAccessToken()
-        );
-
-        $_session     = $this->oHybridAuth->getSessionData();
-        $_session     = unserialize($_session);
-        $_save        = [];
-        $_identifiers = [];
-
-        //  Now we sort the session into individual providers
-        foreach ($_session as $key => $value) {
-
-            //  Get the bits
-            list($hauth, $provider) = explode('.', $key, 3);
-
-            if (!isset($_save[$provider])) {
-                $_save[$provider] = [];
-            }
-
-            $_save[$provider][$key] = $value;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Prune any which aren't worth saving
-        foreach ($_save as $provider => $values) {
-
-            //  Are we only interested in a particular provider?
-            if (!empty($_provider)) {
-
-                if (array_search($provider, $_provider) === false) {
-                    unset($_save[$provider]);
-                    continue;
-                }
-            }
-
-            //  Connected?
-            if (!$this->isConnectedWith($provider)) {
-                unset($_save[$provider]);
-                continue;
-            }
-
-            //  Got an identifier?
-            try {
-
-                $oAdapter = $this->oHybridAuth->getAdapter($provider);
-                $oProfile = $oAdapter->getUserProfile();
-
-                if (!empty($oProfile->identifier)) {
-                    $_identifiers[$provider] = $oProfile->identifier;
-                }
-
-            } catch (\Exception $e) {
-                unset($_save[$provider]);
-                continue;
+            if (empty($providers) || in_array($sProvider, $aProviderClasses)) {
+                $aToken            = $oAdapter->getAccessToken();
+                $aSave[$sProvider] = [
+                    'identifier' => $oAdapter->getUserProfile()->identifier,
+                    'token'      => [
+                        'token'      => getFromArray('access_token', $aToken),
+                        'expires_at' => getFromArray('expires_at', $aToken),
+                    ],
+                ];
             }
         }
 
@@ -444,19 +391,19 @@ class SocialSignOn
 
         $oNow = Factory::factory('DateTime');
 
-        foreach ($_save as $provider => $keys) {
+        foreach ($aSave as $sProvider => $aSaveData) {
 
-            if (isset($aExists[$provider])) {
+            if (isset($aExists[$sProvider])) {
 
                 //  Update
                 $aData = [
-                    'identifier'   => $_identifiers[$provider],
-                    'session_data' => serialize($keys),
-                    'modified'     => $oNow->format('Y-m-d H:i{s'),
+                    'identifier'   => $aSaveData['identifier'],
+                    'session_data' => json_encode($aSaveData['token']),
+                    'modified'     => $oNow->format('Y-m-d H:i:s'),
                 ];
 
                 $this->oDb->set($aData);
-                $this->oDb->where('id', $aExists[$provider]);
+                $this->oDb->where('id', $aExists[$sProvider]);
                 $this->oDb->update(NAILS_DB_PREFIX . 'user_social');
 
             } else {
@@ -464,9 +411,9 @@ class SocialSignOn
                 //  Insert
                 $aData = [
                     'user_id'      => (int) $user_id,
-                    'provider'     => $provider,
-                    'identifier'   => $_identifiers[$provider],
-                    'session_data' => serialize($keys),
+                    'provider'     => $sProvider,
+                    'identifier'   => $aSaveData['identifier'],
+                    'session_data' => json_encode($aSaveData['token']),
                     'created'      => $oNow->format('Y-m-d H:i:s'),
                     'modified'     => $oNow->format('Y-m-d H:i:s'),
                 ];
