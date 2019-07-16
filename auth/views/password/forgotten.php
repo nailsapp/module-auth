@@ -59,7 +59,7 @@ $oInput = \Nails\Factory::service('Input');
                 <?=form_error($_field, '<p class="help-block">', '</p>')?>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     <?=lang('auth_forgot_action_reset')?>
                 </button>
                 <?=anchor('auth/login', 'Log In', 'class="btn btn--block btn--link"')?>

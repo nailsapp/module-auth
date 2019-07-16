@@ -123,7 +123,7 @@
                 ?>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     <?=lang('auth_forgot_action_reset_continue')?>
                 </button>
             </p>

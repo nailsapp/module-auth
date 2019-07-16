@@ -44,7 +44,7 @@ if (isset($user_id) && isset($token)) {
                 <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     Verify code &amp; Sign in
                 </button>
             </p>

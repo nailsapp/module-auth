@@ -110,7 +110,7 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
             }
             ?>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     Save questions &amp; Sign in
                 </button>
             </p>

@@ -97,7 +97,9 @@
             }
             ?>
             <p>
-                <button type="submit" class="btn btn--block"><?=lang('action_continue')?></button>
+                <button type="submit" class="btn btn--block btn--primary">
+                    <?=lang('action_continue')?>
+                </button>
             </p>
         </div>
         <?=form_close()?>

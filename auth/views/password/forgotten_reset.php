@@ -24,7 +24,7 @@
                 <?=$new_password?>
             </p>
             <p>
-                <?=anchor('auth/login', lang('auth_forgot_action_proceed'), 'class="btn btn--block"')?>
+                <?=anchor('auth/login', lang('auth_forgot_action_proceed'), 'class="btn btn--block btn--primary"')?>
             </p>
         </div>
     </div>
