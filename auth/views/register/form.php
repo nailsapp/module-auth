@@ -142,14 +142,17 @@
                 <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     <?=lang('action_register')?>
                 </button>
             </p>
             <?=form_close()?>
+            <hr/>
             <p class="text-center">
                 Already got an account?
-                <?=anchor('auth/login', 'Sign in now', 'class="btn btn--block btn--link"')?>
+            </p>
+            <p>
+                <?=anchor('auth/login', 'Sign in now', 'class="btn btn--block"')?>
             </p>
         </div>
     </div>

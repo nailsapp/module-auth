@@ -113,7 +113,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 </div>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     Sign in
                 </button>
                 <?=anchor('auth/password/forgotten', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
@@ -122,9 +122,12 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             <?php
             if (appSetting('user_registration_enabled', 'auth')) {
                 ?>
+                <hr/>
                 <p class="text-center">
                     Not got an account?
-                    <?=anchor('auth/register', 'Register now', 'class="btn btn--block btn--link"')?>
+                </p>
+                <p class="text-center">
+                    <?=anchor('auth/register', 'Register now', 'class="btn btn--block"')?>
                 </p>
                 <?php
             }
