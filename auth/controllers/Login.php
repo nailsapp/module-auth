@@ -90,8 +90,15 @@ class Login extends Base
      **/
     public function index()
     {
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
+            $oSession->setFlashData(
+                'error',
+                lang('auth_no_access_already_logged_in', activeUser('email'))
+            );
             redirect($this->data['return_to']);
         }
 

@@ -8,7 +8,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
         <h1 class="panel__header text-center">
             Welcome
         </h1>
-        <?=form_open(site_url('auth/login' . $sReturnTo))?>
         <div class="panel__body">
             <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
                 <?=$error?>
@@ -23,9 +22,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <?=$info?>
             </p>
             <?php
-
             if ($social_signon_enabled) {
-
                 ?>
                 <p class="text-center">
                     Sign in using your preferred social network.
@@ -44,9 +41,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <hr/>
                 <p class="text-center">
                     <?php
-
-                    switch (APP_NATIVE_LOGIN_USING) :
-
+                    switch (APP_NATIVE_LOGIN_USING) {
                         case 'EMAIL':
                             echo 'Or sign in using your email address and password.';
                             break;
@@ -58,14 +53,13 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                         default:
                             echo 'Or sign in using your email address or username and password.';
                             break;
-
-                    endswitch;
-
+                    }
                     ?>
                 </p>
                 <?php
-
             }
+
+            echo form_open(site_url('auth/login' . $sReturnTo));
 
             switch (APP_NATIVE_LOGIN_USING) {
 
@@ -119,20 +113,22 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 </div>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">Sign in</button>
+                <button type="submit" class="btn btn--block">
+                    Sign in
+                </button>
                 <?=anchor('auth/password/forgotten', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
             </p>
-        </div>
-        <?php
-        if (appSetting('user_registration_enabled', 'auth')) {
-            ?>
-            <p class="text-center">
-                Not got an account?
-                <?=anchor('auth/register', 'Register now', 'class="btn btn--block btn--link"')?>.
-            </p>
+            <?=form_close()?>
             <?php
-        }
-        ?>
-        <?=form_close()?>
+            if (appSetting('user_registration_enabled', 'auth')) {
+                ?>
+                <p class="text-center">
+                    Not got an account?
+                    <?=anchor('auth/register', 'Register now', 'class="btn btn--block btn--link"')?>
+                </p>
+                <?php
+            }
+            ?>
+        </div>
     </div>
 </div>
