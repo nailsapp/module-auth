@@ -28,7 +28,7 @@
                     echo anchor(
                         'auth/login/' . $aProvider['slug'],
                         $aProvider['label'],
-                        'class="btn btn--block"'
+                        'class="btn btn--block btn--primary"'
                     );
                 }
 
@@ -66,7 +66,7 @@
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                     <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                    <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 </div>
                 <?php
             }
@@ -81,13 +81,13 @@
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                     <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                    <p class="help-block">
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
+                    <p class="form__help">
                         <small>
                             Usernames can only contain alpha numeric characters, underscores,
                             periods and dashes (no spaces).
                         </small>
                     </p>
-                    <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
                 </div>
                 <?php
             }
@@ -102,16 +102,16 @@
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=form_password($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 <?php
                 if (!empty($passwordRulesAsString)) {
                     ?>
-                    <p class="help-block">
+                    <p class="form__help">
                         <small><?=$passwordRulesAsString?></small>
                     </p>
                     <?php
                 }
                 ?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
             </div>
             <?php
 
@@ -125,7 +125,7 @@
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
 
@@ -139,7 +139,7 @@
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
                 <button type="submit" class="btn btn--block btn--primary">

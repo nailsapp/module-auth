@@ -56,7 +56,7 @@ $oInput = \Nails\Factory::service('Input');
             <div class="form__group <?=form_error($_field) ? 'has-error' : ''?>">
                 <label><?=$sFieldLabel?></label>
                 <?=$sFieldType($_field, set_value($_field, $oInput->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
-                <?=form_error($_field, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
                 <button type="submit" class="btn btn--block btn--primary">

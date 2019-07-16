@@ -33,7 +33,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                     echo anchor(
                         'auth/login/' . $aProvider['slug'] . $sReturnTo,
                         $aProvider['label'],
-                        'class="btn btn--block"'
+                        'class="btn btn--block btn--primary"'
                     );
                 }
 
@@ -88,7 +88,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
 
@@ -100,16 +100,14 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=form_password($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
-            <div class="form__group">
+            <div class="form__group form__group--checkbox">
                 <div class="col-sm-offset-3 col-sm-9">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="remember" <?=set_checkbox('remember')?>>
-                            Remember me
-                        </label>
-                    </div>
+                    <label>
+                        <input type="checkbox" name="remember" <?=set_checkbox('remember')?>>
+                        Remember me
+                    </label>
                 </div>
             </div>
             <p>

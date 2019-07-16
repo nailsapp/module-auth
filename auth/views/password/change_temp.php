@@ -38,13 +38,13 @@
                     <label for="input-<?=$sField?>">
                         <?=$sFieldLabel?>:
                     </label>
-                    <?php
-
-                    echo '<p><strong>' . $mfaQuestion->question . '</strong></p>';
-                    echo form_password($sField, set_value($sField), $sFieldAttr);
-                    echo form_error($sField, '<p class="help-block">', '</p>');
-
-                    ?>
+                    <p>
+                        <strong>
+                            <?=$mfaQuestion->question?>
+                        </strong>
+                    </p>
+                    <?=form_password($sField, set_value($sField), $sFieldAttr)?>
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 </div>
                 <?php
             }
@@ -63,17 +63,13 @@
                     <label for="input-<?=$sField?>">
                         <?=$sFieldLabel?>:
                     </label>
-                    <?php
-
-                    echo form_input($sField, set_value($sField), $sFieldAttr);
-                    echo '<p class="help-block">';
-                    echo '<small>';
-                    echo 'Use your device to generate a single use code.';
-                    echo '</small>';
-                    echo '</p>';
-                    echo form_error($sField, '<p class="help-block">', '</p>');
-
-                    ?>
+                    <?=form_input($sField, set_value($sField), $sFieldAttr)?>
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
+                    <p class="form__help">
+                        <small>
+                            Use your device to generate a single use code.
+                        </small>
+                    </p>
                 </div>
                 <?php
             }
@@ -90,19 +86,18 @@
                 <label for="input-<?=$sField?>">
                     <?=$sFieldLabel?>:
                 </label>
+                <?=form_password($sField, set_value($sField), $sFieldAttr)?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 <?php
-
-                echo form_password($sField, set_value($sField), $sFieldAttr);
                 if (!empty($passwordRules)) {
-
-                    echo '<p class="help-block">';
-                    echo '<small>';
-                    echo $passwordRules;
-                    echo '</small>';
-                    echo '</p>';
+                    ?>
+                    <p class="form__help">
+                        <small>
+                            <?=$passwordRules?>
+                        </small>
+                    </p>
+                    <?php
                 }
-                echo form_error($sField, '<p class="help-block">', '</p>');
-
                 ?>
             </div>
             <?php
@@ -115,12 +110,8 @@
             ?>
             <div class="form__group <?=form_error($sField) ? 'has-error' : ''?>">
                 <label for="input-<?=$sField?>"><?=$sFieldLabel?>:</label>
-                <?php
-
-                echo form_password($sField, set_value($sField), $sFieldAttr);
-                echo form_error($sField, '<p class="help-block">', '</p>');
-
-                ?>
+                <?=form_password($sField, set_value($sField), $sFieldAttr)?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
                 <button type="submit" class="btn btn--block btn--primary">

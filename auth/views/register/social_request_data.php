@@ -34,7 +34,7 @@
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                         <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
                 }
@@ -54,7 +54,7 @@
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                         <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
 
@@ -74,7 +74,7 @@
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                     <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                    <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 </div>
                 <?php
 
@@ -90,7 +90,7 @@
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                     <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                    <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                    <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 </div>
                 <?php
 

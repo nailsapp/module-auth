@@ -41,7 +41,7 @@ if (isset($user_id) && isset($token)) {
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                 <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
                 <button type="submit" class="btn btn--block btn--primary">
