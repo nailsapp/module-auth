@@ -154,7 +154,7 @@ class Accounts extends DefaultController
             $this->aConfig['INDEX_ROW_BUTTONS'],
             [
                 [
-                    'url'     => site_url('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
+                    'url'     => siteUrl('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
                     'label'   => 'Login As',
                     'class'   => 'btn-warning',
                     'enabled' => function ($oUser) {
@@ -208,7 +208,7 @@ class Accounts extends DefaultController
                     },
                 ],
                 [
-                    'url'     => site_url('admin/auth/accounts/change_group?users={{id}}'),
+                    'url'     => siteUrl('admin/auth/accounts/change_group?users={{id}}'),
                     'label'   => 'Change Group',
                     'class'   => 'btn-default',
                     'enabled' => function ($oUser) {

@@ -150,7 +150,7 @@ class Auth extends Base
                         break;
                 }
 
-                $error = lang('auth_login_fail_social', site_url('auth/password/forgotten?identifier=' . $sIdentifier));
+                $error = lang('auth_login_fail_social', siteUrl('auth/password/forgotten?identifier=' . $sIdentifier));
                 $this->setError($error);
 
                 return false;

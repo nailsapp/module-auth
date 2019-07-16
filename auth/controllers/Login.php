@@ -43,7 +43,7 @@ class Login extends Base
 
         if ($sReturnTo) {
 
-            $sReturnTo = preg_match('#^https?\://#', $sReturnTo) ? $sReturnTo : site_url($sReturnTo);
+            $sReturnTo = preg_match('#^https?\://#', $sReturnTo) ? $sReturnTo : siteUrl($sReturnTo);
             $aReturnTo = parse_url($sReturnTo);
 
             //  urlencode the query if there is one
@@ -53,7 +53,7 @@ class Login extends Base
                 $aReturnTo['query'] = http_build_query($aQuery);
             }
 
-            if (empty($aReturnTo['host']) && site_url() === '/') {
+            if (empty($aReturnTo['host']) && siteUrl() === '/') {
                 $this->data['return_to'] = [
                     !empty($aReturnTo['path']) ? $aReturnTo['path'] : '',
                     !empty($aReturnTo['query']) ? '?' . $aReturnTo['query'] : '',
@@ -61,7 +61,7 @@ class Login extends Base
             } else {
                 $this->data['return_to'] = [
                     !empty($aReturnTo['scheme']) ? $aReturnTo['scheme'] . '://' : 'http://',
-                    !empty($aReturnTo['host']) ? $aReturnTo['host'] : site_url(),
+                    !empty($aReturnTo['host']) ? $aReturnTo['host'] : siteUrl(),
                     !empty($aReturnTo['port']) ? ':' . $aReturnTo['port'] : '',
                     !empty($aReturnTo['path']) ? $aReturnTo['path'] : '',
                     !empty($aReturnTo['query']) ? '?' . $aReturnTo['query'] : '',
@@ -461,7 +461,7 @@ class Login extends Base
             // --------------------------------------------------------------------------
 
             //  Redirect user
-            if ($this->data['return_to'] != site_url()) {
+            if ($this->data['return_to'] != siteUrl()) {
 
                 //  We have somewhere we want to go
                 redirect($this->data['return_to']);
@@ -960,17 +960,17 @@ class Login extends Base
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_email_already_registered', site_url('auth/password/forgotten'))
+                    lang('fv_email_already_registered', siteUrl('auth/password/forgotten'))
                 );
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_username_already_registered', site_url('auth/password/forgotten'))
+                    lang('fv_username_already_registered', siteUrl('auth/password/forgotten'))
                 );
             } else {
                 $oFormValidation->set_message(
                     'is_unique',
-                    lang('fv_identity_already_registered', site_url('auth/password/forgotten'))
+                    lang('fv_identity_already_registered', siteUrl('auth/password/forgotten'))
                 );
             }
 

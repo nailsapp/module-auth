@@ -10,7 +10,7 @@ $sFormUrl = null;
 
 if (isset($user_id) && isset($token)) {
     $sFormUrl = 'auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery;
-    $sFormUrl = site_url($sFormUrl);
+    $sFormUrl = siteUrl($sFormUrl);
 }
 
 ?>

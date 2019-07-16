@@ -54,7 +54,7 @@
                 <?php
             }
 
-            echo form_open(site_url('auth/register'), 'class="form form-horizontal"');
+            echo form_open(siteUrl('auth/register'), 'class="form form-horizontal"');
 
             // --------------------------------------------------------------------------
 

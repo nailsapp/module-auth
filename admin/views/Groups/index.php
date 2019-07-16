@@ -27,7 +27,7 @@
                         <td class="homepage">
                             <code>
                             <span style="color:#ccc">
-                                <?=substr(site_url(), 0, -1)?>
+                                <?=substr(siteUrl(), 0, -1)?>
                             </span>
                                 <?=$oGroup->default_homepage?>
                             </code>

@@ -26,7 +26,7 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
 
     // --------------------------------------------------------------------------
 
-    $url = site_url('auth/override/login_as/' . md5($user_edit->id) . '/' . md5($user_edit->password) . $returnString);
+    $url = siteUrl('auth/override/login_as/' . md5($user_edit->id) . '/' . md5($user_edit->password) . $returnString);
 
     $buttons[] = anchor($url, lang('admin_login_as') . ' ' . $user_edit->first_name, 'class="btn btn-primary" target="_parent"');
 }

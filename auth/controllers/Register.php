@@ -124,11 +124,11 @@ class Register extends Base
             $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
             if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
-                $sMessage = lang('auth_register_email_is_unique', site_url('auth/password/forgotten'));
+                $sMessage = lang('auth_register_email_is_unique', siteUrl('auth/password/forgotten'));
             } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
-                $sMessage = lang('auth_register_username_is_unique', site_url('auth/password/forgotten'));
+                $sMessage = lang('auth_register_username_is_unique', siteUrl('auth/password/forgotten'));
             } else {
-                $sMessage = lang('auth_register_identity_is_unique', site_url('auth/password/forgotten'));
+                $sMessage = lang('auth_register_identity_is_unique', siteUrl('auth/password/forgotten'));
             }
 
             $oFormValidation->set_message('is_unique', $sMessage);

@@ -200,7 +200,7 @@ abstract class BaseMfa extends Base
 
         // --------------------------------------------------------------------------
 
-        $sRedirectUrl = $this->returnTo != site_url() ? $this->returnTo : $this->mfaUser->group_homepage;
+        $sRedirectUrl = $this->returnTo != siteUrl() ? $this->returnTo : $this->mfaUser->group_homepage;
         redirect($sRedirectUrl);
     }
 }

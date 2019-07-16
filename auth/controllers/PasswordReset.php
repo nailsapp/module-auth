@@ -288,7 +288,7 @@ class PasswordReset extends Base
                             }
 
                         } else {
-                            $this->data['error'] = lang('auth_forgot_reset_badlogin', site_url('auth/login'));
+                            $this->data['error'] = lang('auth_forgot_reset_badlogin', siteUrl('auth/login'));
                         }
 
                     } else {

@@ -11,7 +11,7 @@ $sFormUrl = null;
 if (isset($login_method) && isset($user_id) && isset($token)) {
     $login_method = $login_method && $login_method != 'native' ? '/' . $login_method : '';
     $sFormUrl     = 'auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $login_method . $sQuery;
-    $sFormUrl     = site_url($sFormUrl);
+    $sFormUrl     = siteUrl($sFormUrl);
 }
 
 ?>

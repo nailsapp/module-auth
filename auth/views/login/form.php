@@ -59,7 +59,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <?php
             }
 
-            echo form_open(site_url('auth/login' . $sReturnTo));
+            echo form_open(siteUrl('auth/login' . $sReturnTo));
 
             switch (APP_NATIVE_LOGIN_USING) {
 
