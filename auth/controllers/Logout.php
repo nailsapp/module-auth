@@ -1,7 +1,7 @@
 <?php
 
 /**
- * USer logout facility
+ * Logs a user out
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -11,8 +11,13 @@
  */
 
 use Nails\Auth\Controller\Base;
+use Nails\Auth\Model\Auth;
+use Nails\Auth\Service\SocialSignOn;
 use Nails\Factory;
 
+/**
+ * Class Logout
+ */
 class Logout extends Base
 {
     /**
@@ -32,14 +37,12 @@ class Logout extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Log social media out
+        /** @var SocialSignOn $oSocial */
         $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
-        $oSocial->logout();
-
-        // --------------------------------------------------------------------------
-
-        //  Log user out
+        /** @var Auth $oAuthModel */
         $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+
+        $oSocial->logout();
         $oAuthModel->logout();
 
         // --------------------------------------------------------------------------

@@ -32,7 +32,7 @@
         "nails/common": "dev-develop",
         "nails/module-cdn": "dev-develop",
         "nails/module-console": "dev-develop",
-        "hybridauth/hybridauth": "~2.10",
+        "hybridauth/hybridauth": "~3.0",
         "sonata-project/google-authenticator": "~2.2.0"
     },
     "require-dev": {

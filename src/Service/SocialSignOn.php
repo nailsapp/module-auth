@@ -12,12 +12,17 @@
 
 namespace Nails\Auth\Service;
 
-use Nails\Factory;
-use Nails\Environment;
+use Hybridauth\Adapter\AdapterInterface;
+use Hybridauth\Hybridauth;
+use Nails\Auth\Model\User;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
-use Nails\Common\Traits\ErrorHandling;
+use Nails\Common\Service\Logger;
 use Nails\Common\Traits\Caching;
+use Nails\Common\Traits\ErrorHandling;
+use Nails\Environment;
+use Nails\Factory;
 
 class SocialSignOn
 {
@@ -26,9 +31,24 @@ class SocialSignOn
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @var Database
+     */
     protected $oDb;
+
+    /**
+     * @var User
+     */
     protected $oUserModel;
+
+    /**
+     * @var array
+     */
     protected $aProviders;
+
+    /**
+     * @var Hybridauth
+     */
     protected $oHybridAuth;
 
     // --------------------------------------------------------------------------
@@ -38,9 +58,27 @@ class SocialSignOn
      */
     public function __construct()
     {
-        $oCi              = get_instance();
-        $this->oDb        = Factory::service('Database');
+        /** @var \CI_Controller $oCi */
+        $oCi = get_instance();
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var Database oDb */
+        $this->oDb = Factory::service('Database');
+        /** @var User oUserModel */
         $this->oUserModel = Factory::model('User', 'nails/module-auth');
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * Pablo (2019-07-17):
+         * This hack forces CI Sessions to fully build, so that when HybridAuth attempts to create/join the
+         * session there is one to join – otherwise we get conflicts.
+         */
+        $oSession->setup();
+        $oSession->setUserData('temp');
+        $oSession->unsetUserData('temp');
+
+        // --------------------------------------------------------------------------
 
         $this->aProviders = ['all' => [], 'enabled' => [], 'disabled' => []];
 
@@ -70,12 +108,14 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Set up Hybrid Auth
-        $oDate   = Factory::factory('DateTime');
+        /** @var Logger $oLogger */
+        $oLogger = Factory::service('Logger');
+
         $aConfig = [
-            'base_url'   => site_url('vendor/hybridauth/hybridauth/hybridauth/index.php'),
+            'callback'   => current_url(),
             'providers'  => [],
             'debug_mode' => Environment::not(Environment::ENV_PROD),
-            'debug_file' => DEPLOY_LOG_DIR . 'log-hybrid-auth-' . $oDate->format('Y-m-d') . '.php',
+            'debug_file' => $oLogger->getDir() . $oLogger->getFile(),
         ];
 
         foreach ($this->aProviders['enabled'] as $aProvider) {
@@ -113,13 +153,13 @@ class SocialSignOn
 
         try {
 
-            $this->oHybridAuth = new \Hybrid_Auth($aConfig);
+            $this->oHybridAuth = new Hybridauth($aConfig);
 
         } catch (\Exception $e) {
 
             /**
              * An exception occurred during instantiation, this is probably a result
-             * of the user denying the authentication request. If we reinit the Hybrid_Auth
+             * of the user denying the authentication request. If we reinit the Hybridauth
              * things work again, but it's as if nothing ever happened and the user may be
              * redirected back to the authentication screen (which is annoying). The
              * alternative is to bail out with an error; this informs the user that something
@@ -129,7 +169,7 @@ class SocialSignOn
             switch ($oCi->config->item('auth_social_signon_init_fail_behaviour')) {
 
                 case 'reinit':
-                    $this->oHybridAuth = new \Hybrid_Auth($aConfig);
+                    $this->oHybridAuth = new Hybridauth($aConfig);
                     break;
 
                 case 'error':
@@ -144,6 +184,7 @@ class SocialSignOn
 
     /**
      * Determines whether social sign on is enabled or not
+     *
      * @return boolean
      */
     public function isEnabled()
@@ -156,7 +197,7 @@ class SocialSignOn
     /**
      * Returns a list of providers, optionally filtered by availability
      *
-     * @param  string $status The filter to apply
+     * @param string $status The filter to apply
      *
      * @return array
      */
@@ -176,7 +217,7 @@ class SocialSignOn
     /**
      * Returns the details of a particular provider
      *
-     * @param  string $provider The provider to return
+     * @param string $provider The provider to return
      *
      * @return mixed            Array on success, false on failure
      */
@@ -194,7 +235,7 @@ class SocialSignOn
     /**
      * Returns the correct casing for a provider
      *
-     * @param  string $sProvider The provider to return
+     * @param string $sProvider The provider to return
      *
      * @return mixed            String on success, null on failure
      */
@@ -209,7 +250,7 @@ class SocialSignOn
     /**
      * Determines whether a provider is valid and enabled
      *
-     * @param  string $sProvider The provider to check
+     * @param string $sProvider The provider to check
      *
      * @return boolean
      */
@@ -223,16 +264,15 @@ class SocialSignOn
     /**
      * Authenticates a user using Hybrid Auth's authenticate method
      *
-     * @param  string $sProvider The provider to authenticate against
-     * @param  mixed  $mParams   Additional parameters to pass to the Provider
+     * @param string $sProvider The provider to authenticate against
      *
-     * @return Hybrid_Provider_Adapter|false
+     * @return AdapterInterface|false
      */
-    public function authenticate($sProvider, $mParams = null)
+    public function authenticate($sProvider)
     {
         try {
             $sProvider = $this->getProviderClass($sProvider);
-            return $this->oHybridAuth->authenticate($sProvider, $mParams);
+            return $this->oHybridAuth->authenticate($sProvider);
         } catch (\Exception $e) {
             $this->setError('Provider Error: ' . $e->getMessage());
             return false;
@@ -244,13 +284,13 @@ class SocialSignOn
     /**
      * Returns the user's profile for a particular provider.
      *
-     * @param  string $provider The name of the provider.
+     * @param string $sProvider The name of the provider.
      *
-     * @return mixed           Hybrid_User_Profile on success, false on failure
+     * @return \Hybridauth\User\Profile
      */
-    public function getUserProfile($provider)
+    public function getUserProfile($sProvider)
     {
-        $oAdapter = $this->authenticate($provider);
+        $oAdapter = $this->authenticate($sProvider);
 
         try {
             return $oAdapter->getUserProfile();
@@ -263,12 +303,74 @@ class SocialSignOn
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the user's contacts for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return \Hybridauth\User\Contact
+     */
+    public function getUserContacts($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserContacts();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the user's pages for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return array
+     */
+    public function getUserPages($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserPages();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Returns the user's activity for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return array
+     */
+    public function getUserActivity($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserActivity();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Logs out all providers
+     *
      * @return void
      */
     public function logout()
     {
-        $this->oHybridAuth->logoutAllProviders();
+        $this->oHybridAuth->disconnectAllAdapters();
     }
 
     // --------------------------------------------------------------------------
@@ -276,8 +378,8 @@ class SocialSignOn
     /**
      * Fetches a local user profile via a provider and provider ID
      *
-     * @param  string $provider   The provider to use
-     * @param  string $identifier The provider's user ID
+     * @param string $provider   The provider to use
+     * @param string $identifier The provider's user ID
      *
      * @return mixed               stdClass on success, false on failure
      */
@@ -301,12 +403,12 @@ class SocialSignOn
     /**
      * Saves the social session data to the user's account
      *
-     * @param  mixed  $user_id  The User's ID (if null, then the active user ID is used)
-     * @param  string $provider The providers to save
+     * @param mixed $user_id   The User's ID (if null, then the active user ID is used)
+     * @param array $providers The providers to save
      *
      * @return boolean
      */
-    public function saveSession($user_id = null, $provider = [])
+    public function saveSession($user_id = null, array $providers = [])
     {
         if (empty($user_id)) {
             $user_id = activeUser('id');
@@ -326,70 +428,20 @@ class SocialSignOn
 
         // --------------------------------------------------------------------------
 
-        if (!is_array($provider)) {
+        $aSave            = [];
+        $aProviderClasses = arrayExtractProperty($providers, 'class');
+        $aAdapters        = $this->oHybridAuth->getConnectedAdapters();
+        foreach ($aAdapters as $sProvider => $oAdapter) {
 
-            $_provider = (array) $provider;
-            $_provider = array_unique($_provider);
-            $_provider = array_filter($_provider);
-
-        } else {
-
-            $_provider = $provider;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $_session     = $this->oHybridAuth->getSessionData();
-        $_session     = unserialize($_session);
-        $_save        = [];
-        $_identifiers = [];
-
-        //  Now we sort the session into individual providers
-        foreach ($_session as $key => $value) {
-
-            //  Get the bits
-            list($hauth, $provider) = explode('.', $key, 3);
-
-            if (!isset($_save[$provider])) {
-                $_save[$provider] = [];
-            }
-
-            $_save[$provider][$key] = $value;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Prune any which aren't worth saving
-        foreach ($_save as $provider => $values) {
-
-            //  Are we only interested in a particular provider?
-            if (!empty($_provider)) {
-
-                if (array_search($provider, $_provider) === false) {
-                    unset($_save[$provider]);
-                    continue;
-                }
-            }
-
-            //  Connected?
-            if (!$this->isConnectedWith($provider)) {
-                unset($_save[$provider]);
-                continue;
-            }
-
-            //  Got an identifier?
-            try {
-
-                $oAdapter = $this->oHybridAuth->getAdapter($provider);
-                $oProfile = $oAdapter->getUserProfile();
-
-                if (!empty($oProfile->identifier)) {
-                    $_identifiers[$provider] = $oProfile->identifier;
-                }
-
-            } catch (\Exception $e) {
-                unset($_save[$provider]);
-                continue;
+            if (empty($providers) || in_array($sProvider, $aProviderClasses)) {
+                $aToken            = $oAdapter->getAccessToken();
+                $aSave[$sProvider] = [
+                    'identifier' => $oAdapter->getUserProfile()->identifier,
+                    'token'      => [
+                        'token'      => getFromArray('access_token', $aToken),
+                        'expires_at' => getFromArray('expires_at', $aToken),
+                    ],
+                ];
             }
         }
 
@@ -415,19 +467,19 @@ class SocialSignOn
 
         $oNow = Factory::factory('DateTime');
 
-        foreach ($_save as $provider => $keys) {
+        foreach ($aSave as $sProvider => $aSaveData) {
 
-            if (isset($aExists[$provider])) {
+            if (isset($aExists[$sProvider])) {
 
                 //  Update
                 $aData = [
-                    'identifier'   => $_identifiers[$provider],
-                    'session_data' => serialize($keys),
-                    'modified'     => $oNow->format('Y-m-d H:i{s'),
+                    'identifier'   => $aSaveData['identifier'],
+                    'session_data' => json_encode($aSaveData['token']),
+                    'modified'     => $oNow->format('Y-m-d H:i:s'),
                 ];
 
                 $this->oDb->set($aData);
-                $this->oDb->where('id', $aExists[$provider]);
+                $this->oDb->where('id', $aExists[$sProvider]);
                 $this->oDb->update(NAILS_DB_PREFIX . 'user_social');
 
             } else {
@@ -435,9 +487,9 @@ class SocialSignOn
                 //  Insert
                 $aData = [
                     'user_id'      => (int) $user_id,
-                    'provider'     => $provider,
-                    'identifier'   => $_identifiers[$provider],
-                    'session_data' => serialize($keys),
+                    'provider'     => $sProvider,
+                    'identifier'   => $aSaveData['identifier'],
+                    'session_data' => json_encode($aSaveData['token']),
                     'created'      => $oNow->format('Y-m-d H:i:s'),
                     'modified'     => $oNow->format('Y-m-d H:i:s'),
                 ];
@@ -463,9 +515,9 @@ class SocialSignOn
     /**
      * Restores a user's social session
      *
-     * @param  mixed $user_id The User's ID (if null, then the active user ID is used)
+     * @param mixed $user_id The User's ID (if null, then the active user ID is used)
      *
-     * @return boolean
+     * @return $this
      */
     public function restoreSession($user_id = null)
     {
@@ -488,7 +540,7 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Clean slate
-        $this->oHybridAuth->logoutAllProviders();
+        $this->logout();
 
         // --------------------------------------------------------------------------
 
@@ -497,11 +549,12 @@ class SocialSignOn
         $aRestore  = [];
 
         foreach ($aSessions as $oSession) {
-            $oSession->session_data = unserialize($oSession->session_data);
-            $aRestore               = array_merge($aRestore, $oSession->session_data);
+            $aSessionData = json_decode($oSession->session_data, JSON_OBJECT_AS_ARRAY);
+            $oAdapter     = $this->oHybridAuth->getAdapter($oSession->provider);
+            $oAdapter->setAccessToken(['access_token' => getFromArray('token', $aSessionData)]);
         }
 
-        return $this->oHybridAuth->restoreSessionData(serialize($aRestore));
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -509,7 +562,7 @@ class SocialSignOn
     /**
      * Determines whether the active user is connected with $provider
      *
-     * @param  string $sProvider the provider to test for
+     * @param string $sProvider the provider to test for
      *
      * @return boolean
      */
@@ -523,6 +576,7 @@ class SocialSignOn
 
     /**
      * Returns an array of connected providers (for the active user)
+     *
      * @return array
      */
     public function getConnectedProviders()
@@ -535,12 +589,12 @@ class SocialSignOn
     /**
      * Abstraction to a provider's API
      *
-     * @param  string $sProvider The provider whose API you wish to call
-     * @param  string $call      The API call
+     * @param string $sProvider The provider whose API you wish to call
+     * @param string $call      The API call
      *
      * @return mixed
      */
-    public function api($sProvider, $call = '')
+    public function api($sProvider, $sUrl = '', $sMethod = 'GET', $aParameters = [], $aHeaders = [])
     {
         if (!$this->isConnectedWith($sProvider)) {
             $this->setError('Not connected with provider "' . $sProvider . '"');
@@ -551,7 +605,12 @@ class SocialSignOn
 
             $sProvider = $this->getProviderClass($sProvider);
             $oProvider = $this->oHybridAuth->getAdapter($sProvider);
-            return $oProvider->api()->api($call);
+            return $oProvider->apiRequest(
+                $sUrl,
+                $sMethod,
+                $aParameters,
+                $aHeaders
+            );
 
         } catch (\Exception $e) {
             $this->setError('Provider Error: ' . $e->getMessage());

@@ -47,22 +47,25 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey     = 'question[' . $i . '][question]';
                     $sFieldLabel   = 'Question ' . ($i + 1);
                     $aFieldOptions = array_merge(['Please Choose...'], $questions);
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
                         <?=form_dropdown($sFieldKey, $aFieldOptions, set_value($sFieldKey), 'id="input-' . $sFieldKey . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
 
                     $sFieldKey         = 'question[' . $i . '][answer]';
                     $sFieldLabel       = 'Answer ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your answer here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
                 }
@@ -88,29 +91,33 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey         = 'custom_question[' . $i . '][question]';
                     $sFieldLabel       = 'Question ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your question here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
 
                     $sFieldKey         = 'custom_question[' . $i . '][answer]';
                     $sFieldLabel       = 'Answer ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your answer here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
-                        <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
+                        <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
                 }
             }
             ?>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     Save questions &amp; Sign in
                 </button>
             </p>

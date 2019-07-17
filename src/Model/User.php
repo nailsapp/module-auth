@@ -471,7 +471,7 @@ class User extends Base
         $adminRecoveryData->loginUrl = 'auth/override/login_as/';
         $adminRecoveryData->loginUrl .= md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash;
         $adminRecoveryData->loginUrl .= '?returningAdmin=1';
-        $adminRecoveryData->loginUrl = site_url($adminRecoveryData->loginUrl);
+        $adminRecoveryData->loginUrl = siteUrl($adminRecoveryData->loginUrl);
 
         //  Put the new session onto the stack and save to the session
         $existingRecoveryData[] = $adminRecoveryData;
@@ -1463,7 +1463,7 @@ class User extends Base
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
         $oEmail->data            = new \stdClass();
-        $oEmail->data->verifyUrl = site_url('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
+        $oEmail->data->verifyUrl = siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
 
         if (!$oEmailer->send($oEmail, true)) {
 
@@ -2130,7 +2130,7 @@ class User extends Base
 
                     //  If the email isn't verified we'll want to include a note asking them to do so
                     if (empty($bEmailIsVerified)) {
-                        $oEmail->data->verifyUrl = site_url('email/verify/' . $iId . '/' . $sCode);
+                        $oEmail->data->verifyUrl = siteUrl('email/verify/' . $iId . '/' . $sCode);
                     }
 
                     if (!$oEmailer->send($oEmail, true)) {

@@ -49,17 +49,17 @@ $oInput = \Nails\Factory::service('Input');
                     break;
             }
 
-            $_field = 'identifier';
-            $_error = form_error($_field) ? 'error' : null
+            $sFieldKey  = 'identifier';
+            $sFieldAttr = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
-            <div class="form__group <?=form_error($_field) ? 'has-error' : ''?>">
-                <label><?=$sFieldLabel?></label>
-                <?=$sFieldType($_field, set_value($_field, $oInput->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
-                <?=form_error($_field, '<p class="help-block">', '</p>')?>
+            <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                <?=$sFieldType($sFieldKey, set_value($sFieldKey, $oInput->get('email')), $sFieldAttr)?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">
+                <button type="submit" class="btn btn--block btn--primary">
                     <?=lang('auth_forgot_action_reset')?>
                 </button>
                 <?=anchor('auth/login', 'Log In', 'class="btn btn--block btn--link"')?>

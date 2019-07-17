@@ -1,5 +1,11 @@
 <?php
 
+use Nails\Common\Service\Input;
+use Nails\Factory;
+
+/** @var Input $oInput */
+$oInput = Factory::service('Input');
+
 $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
 
 ?>
@@ -8,7 +14,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
         <h1 class="panel__header text-center">
             Welcome
         </h1>
-        <?=form_open(site_url('auth/login' . $sReturnTo))?>
         <div class="panel__body">
             <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
                 <?=$error?>
@@ -23,9 +28,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <?=$info?>
             </p>
             <?php
-
             if ($social_signon_enabled) {
-
                 ?>
                 <p class="text-center">
                     Sign in using your preferred social network.
@@ -36,7 +39,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                     echo anchor(
                         'auth/login/' . $aProvider['slug'] . $sReturnTo,
                         $aProvider['label'],
-                        'class="btn btn--block"'
+                        'class="btn btn--block btn--primary"'
                     );
                 }
 
@@ -44,9 +47,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <hr/>
                 <p class="text-center">
                     <?php
-
-                    switch (APP_NATIVE_LOGIN_USING) :
-
+                    switch (APP_NATIVE_LOGIN_USING) {
                         case 'EMAIL':
                             echo 'Or sign in using your email address and password.';
                             break;
@@ -58,14 +59,13 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                         default:
                             echo 'Or sign in using your email address or username and password.';
                             break;
-
-                    endswitch;
-
+                    }
                     ?>
                 </p>
                 <?php
-
             }
+
+            echo form_open(siteUrl('auth/login' . $sReturnTo));
 
             switch (APP_NATIVE_LOGIN_USING) {
 
@@ -88,51 +88,56 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                     break;
             }
 
-            $sFieldKey = 'identifier';
+            $sFieldKey  = 'identifier';
+            $sFieldAttr = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=$FieldType($sFieldKey, set_value($sFieldKey, $oInput->get('identity')), $sFieldAttr)?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
 
             $sFieldKey         = 'password';
             $sFieldLabel       = lang('form_label_password');
             $sFieldPlaceholder = lang('auth_login_password_placeholder');
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_password($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
-                <?=form_error($sFieldKey, '<p class="help-block">', '</p>')?>
+                <?=form_password($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
+                <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
-            <div class="form__group">
+            <div class="form__group form__group--checkbox">
                 <div class="col-sm-offset-3 col-sm-9">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="remember" <?=set_checkbox('remember')?>>
-                            Remember me
-                        </label>
-                    </div>
+                    <label>
+                        <input type="checkbox" name="remember" <?=set_checkbox('remember')?>>
+                        Remember me
+                    </label>
                 </div>
             </div>
             <p>
-                <button type="submit" class="btn btn--block">Sign in</button>
+                <button type="submit" class="btn btn--block btn--primary">
+                    Sign in
+                </button>
                 <?=anchor('auth/password/forgotten', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
             </p>
-        </div>
-        <?php
-        if (appSetting('user_registration_enabled', 'auth')) {
-            ?>
-            <p class="text-center">
-                Not got an account?
-                <?=anchor('auth/register', 'Register now', 'class="btn btn--block btn--link"')?>.
-            </p>
+            <?=form_close()?>
             <?php
-        }
-        ?>
-        <?=form_close()?>
+            if (appSetting('user_registration_enabled', 'auth')) {
+                ?>
+                <hr/>
+                <p class="text-center">
+                    Not got an account?
+                </p>
+                <p class="text-center">
+                    <?=anchor('auth/register', 'Register now', 'class="btn btn--block"')?>
+                </p>
+                <?php
+            }
+            ?>
+        </div>
     </div>
 </div>

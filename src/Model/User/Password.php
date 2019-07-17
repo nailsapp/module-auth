@@ -13,11 +13,11 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Auth\Model\User;
+use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
-use Nails\Common\Model\Base;
 
 class Password extends Base
 {
@@ -655,9 +655,9 @@ class Password extends Base
      * Validate a forgotten password code.
      *
      * @param string $sCode          The token to validate
-     * @param string $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
+     * @param bool   $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      *
-     * @return boolean|array
+     * @return boolean|string|array
      */
     public function validateToken($sCode, $bGenerateNewPw)
     {
@@ -667,10 +667,15 @@ class Password extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
-        $oDb->select('id, group_id, forgotten_password_code');
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+
+        $oDb->select('u.id, u.group_id, u.forgotten_password_code, e.email, u.username');
+        $oDb->join($oUserModel->getEmailTableName() . ' e', 'e.user_id = u.id AND e.is_primary = 1');
         $oDb->like('forgotten_password_code', ':' . $sCode, 'before');
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user');
+        $oResult = $oDb->get($oUserModel->getTableName() . ' u');
 
         // --------------------------------------------------------------------------
 
@@ -693,8 +698,24 @@ class Password extends Base
         } else {
 
             //  Valid hash and hasn't expired.
-            $aOut            = [];
-            $aOut['user_id'] = $oUser->id;
+            $aOut = [
+                'user_id' => $oUser->id,
+            ];
+
+            switch (APP_NATIVE_LOGIN_USING) {
+
+                case 'EMAIL':
+                    $aOut['user_identity'] = $oUser->email;
+                    break;
+
+                case 'USERNAME':
+                    $aOut['user_identity'] = $oUser->username;
+                    break;
+
+                default:
+                    $aOut['user_identity'] = $oUser->email ?? $oUser->username;
+                    break;
+            }
 
             //  Generate a new password?
             if ($bGenerateNewPw) {

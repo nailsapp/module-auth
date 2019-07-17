@@ -16,6 +16,8 @@
 namespace Nails\Auth\Service;
 
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
 class Session
@@ -34,19 +36,22 @@ class Session
      *
      * @param bool $bForceSetup Whether to force session set up
      */
-    protected function setup($bForceSetup = false)
+    public function setup($bForceSetup = false)
     {
         if (!empty($this->oSession)) {
             return;
         }
 
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
+
         //  class_exists check in case the class is called before CI has finished instanciating
         if (!$oInput::isCli() && class_exists('CI_Controller')) {
             /**
              * Look for the session cookie, if it exists, then a session exists
              * and the whole service should be loaded up.
              */
+            /** @var Config $oConfig */
             $oConfig     = Factory::service('Config');
             $sCookieName = $oConfig->item('sess_cookie_name');
 

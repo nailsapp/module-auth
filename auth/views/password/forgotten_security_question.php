@@ -14,7 +14,9 @@
                     <?=form_password('answer', null, 'class="form-control" placeholder="Type your answer here"')?>
                 </p>
                 <hr/>
-                <button class="btn btn-lg btn-primary" type="submit"><?=lang('action_continue')?></button>
+                <button class="btn btn-lg btn-primary" type="submit">
+                    <?=lang('action_continue')?>
+                </button>
                 <?=form_close()?>
             </div>
         </div>
