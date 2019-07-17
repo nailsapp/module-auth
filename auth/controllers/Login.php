@@ -661,12 +661,12 @@ class Login extends Base
                         break;
 
                     case 'USERNAME':
-                        $aRequiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
+                        $aRequiredData['username'] = '';
                         break;
 
                     default:
                         $aRequiredData['email']    = trim($socialUser->email);
-                        $aRequiredData['username'] = !empty($socialUser->username) ? trim($socialUser->username) : '';
+                        $aRequiredData['username'] = '';
                         break;
                 }
 

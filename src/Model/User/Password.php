@@ -713,7 +713,7 @@ class Password extends Base
                     break;
 
                 default:
-                    $aOut['user_identity'] = $oUser->email ?? $oUserModel->username;
+                    $aOut['user_identity'] = $oUser->email ?? $oUser->username;
                     break;
             }
 
