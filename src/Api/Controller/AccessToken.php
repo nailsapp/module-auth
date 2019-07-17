@@ -14,25 +14,33 @@ namespace Nails\Auth\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
+use Nails\Auth\Model\Auth;
+use Nails\Common\Service\HttpCodes;
 use Nails\Factory;
 
 class AccessToken extends Base
 {
     /**
      * Retrieves an access token for a user
+     *
      * @return ApiResponse
      */
     public function postIndex()
     {
-        $oInput            = Factory::service('Input');
-        $oHttpCodes        = Factory::service('HttpCodes');
-        $oAuthModel        = Factory::model('Auth', 'nails/module-auth');
+        /** @var HttpCodes $oHttpCodes */
+        $oHttpCodes = Factory::service('HttpCodes');
+        /** @var Auth $oAuthModel */
+        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
         $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
-        $sIdentifier       = $oInput->post('identifier');
-        $sPassword         = $oInput->post('password');
-        $sScope            = $oInput->post('scope');
-        $sLabel            = $oInput->post('label');
-        $bIsValid          = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
+
+        $aData       = $this->getRequestData();
+        $sIdentifier = getFromArray('identifier', $aData);
+        $sPassword   = getFromArray('password', $aData);
+        $sScope      = getFromArray('scope', $aData);
+        $sLabel      = getFromArray('label', $aData);
+
+        $bIsValid = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
 
         if (!$bIsValid) {
             throw new ApiException(
@@ -87,21 +95,25 @@ class AccessToken extends Base
         }
 
         return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData([
-                          'token'   => $oToken->token,
-                          'expires' => $oToken->expires,
-                      ]);
+            ->setData([
+                'token'   => $oToken->token,
+                'expires' => $oToken->expires,
+            ]);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Revoke an access token for the authenticated user
+     *
      * @return ApiResponse
      */
     public function postRevoke()
     {
-        $oHttpCodes        = Factory::service('HttpCodes');
+        //  @todo (Pablo - 2019-07-12) - Convert to a `DELETE` and revoke the access code used in the request
+        /** @var HttpCodes $oHttpCodes */
+        $oHttpCodes = Factory::service('HttpCodes');
+        /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
         $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
 
         if (!isLoggedIn()) {
@@ -111,8 +123,8 @@ class AccessToken extends Base
             );
         }
 
-        $oInput       = Factory::service('Input');
-        $sAccessToken = $oInput->post('access_token');
+        $aData        = $this->getRequestData();
+        $sAccessToken = getFromArray('access_token', $aData);
 
         if (empty($sAccessToken)) {
             throw new ApiException(

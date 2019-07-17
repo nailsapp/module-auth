@@ -90,6 +90,8 @@ class Password extends Base
         $oDb->set('temp_pw', $bIsTemp);
         $oDb->set('last_update', $sNow);
 
+        $oDb->where('id', $oUser->id);
+
         if (!$oDb->update($oUserModel->getTableName())) {
             $this->setError('Failed to update user record.');
             return false;

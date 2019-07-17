@@ -1,11 +1,9 @@
 <?php
 
-namespace Nails\Auth\Console\Command\User\Password;
+namespace Nails\Auth\Console\Command\User\AccessToken;
 
-use Nails\Auth\Exception\Console\PasswordNotAcceptableException;
 use Nails\Auth\Exception\Console\UserNotFoundException;
 use Nails\Auth\Model\User;
-use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\Base;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,17 +13,17 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Class Reset
  *
- * @package Nails\Auth\Console\Command\User\Password
+ * @package Nails\Auth\Console\Command\User\AccessToken
  */
-class Reset extends Base
+class Generate extends Base
 {
     /**
      * Configures the command
      */
     protected function configure()
     {
-        $this->setName('user:password:reset')
-            ->setDescription('Resets a user\'s password')
+        $this->setName('user:accesstoken:generate')
+            ->setDescription('Generate an access token for a user')
             ->addOption(
                 'user',
                 'u',
@@ -33,16 +31,16 @@ class Reset extends Base
                 'The users ID, email, or username'
             )
             ->addOption(
-                'password',
-                'p',
+                'label',
+                'l',
                 InputOption::VALUE_OPTIONAL,
-                'The password to set'
+                'The token\'s label'
             )
             ->addOption(
-                'temp',
-                't',
-                InputOption::VALUE_NONE,
-                'Whether the user will be asked to change their password on log in'
+                'scope',
+                's',
+                InputOption::VALUE_OPTIONAL,
+                'The token\'s scope'
             );
     }
 
@@ -61,20 +59,20 @@ class Reset extends Base
     {
         parent::execute($oInput, $oOutput);
 
-        $this->banner('Reset a user\'s password');
+        $this->banner('Genenrate an Access Token');
 
         // --------------------------------------------------------------------------
 
-        $sUser     = $this->oInput->getOption('user');
-        $sPassword = $this->oInput->getOption('password');
-        $bIsTemp   = $this->oInput->getOption('temp');
+        $sUser  = $this->oInput->getOption('user');
+        $sLabel = $this->oInput->getOption('label');
+        $sScope = $this->oInput->getOption('scope');
 
         // --------------------------------------------------------------------------
 
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        /** @var User\Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        /** @var User\AccessToken $oUserPasswordModel */
+        $oUserAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
 
         // --------------------------------------------------------------------------
 
@@ -91,30 +89,12 @@ class Reset extends Base
             throw new UserNotFoundException('Could not find a user by ID, email, or username "' . $sUser . '"');
         }
 
-        if (!empty($sPassword)) {
-            if (!$oUserPasswordModel->isAcceptable($oUser->group_id, $sPassword)) {
-                throw new PasswordNotAcceptableException(
-                    '"' . $sPassword . '" is not an acceptable password. ' .
-                    $oUserPasswordModel->getRulesAsString($oUser->group_id)
-                );
-            }
-            $bGenerated = false;
-        } else {
-            $sPassword  = $oUserPasswordModel->generate($oUser->group_id);
-            $bGenerated = true;
-        }
-
         // --------------------------------------------------------------------------
 
         //  Confirm
-        $oOutput->writeln('');
         $oOutput->writeln('OK, here\'s what\'s going to happen:');
         $oOutput->writeln('');
-        $oOutput->writeln('- The password for user #' . $oUser->id . ' will be changed.');
-        $oOutput->writeln('- The user will be informed their password has changed, but not what it is.');
-        if ($bIsTemp) {
-            $oOutput->writeln('- The password is temporary and the user will be asked to change this on next log in.');
-        }
+        $oOutput->writeln('- An access token will be generated for user #' . $oUser->id . ' ' . $oUser->first_name . ' ' . $oUser->last_name);
         $oOutput->writeln('');
         if (!$this->confirm('Continue?', true)) {
             return self::EXIT_CODE_FAILURE;
@@ -122,13 +102,24 @@ class Reset extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!$oUserPasswordModel->change($oUser->id, $sPassword, $bIsTemp)) {
+        $oAccessToken = $oUserAccessTokenModel->create([
+            'user_id' => $oUser->id,
+            'scope'   => $sScope,
+            'label'   => $sLabel,
+        ]);
+
+        if (!$oAccessToken) {
             $this->error(array_filter([
-                'Failed to change password',
-                $oUserPasswordModel->lastError(),
+                'Failed to generate access token',
+                $oUserAccessTokenModel->lastError(),
             ]));
             return self::EXIT_CODE_FAILURE;
         }
+
+        $oOutput->writeln('');
+        $oOutput->writeln('Access Token: <info>' . $oAccessToken->token . '</info>');
+        $oOutput->writeln('Expires:      <info>' . $oAccessToken->expires . '</info>');
+        $oOutput->writeln('');
 
         // --------------------------------------------------------------------------
 
@@ -136,13 +127,6 @@ class Reset extends Base
         $oOutput->writeln('');
         $oOutput->writeln('Complete!');
         $oOutput->writeln('');
-
-        if ($bGenerated) {
-            $this->warning([
-                'The generated password is: ' . $sPassword . '',
-                'It is up to you to tell the user their new password.',
-            ]);
-        }
 
         return self::EXIT_CODE_SUCCESS;
     }
