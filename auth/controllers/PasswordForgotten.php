@@ -245,11 +245,11 @@ class PasswordForgotten extends Base
     /**
      * Validate a code
      *
-     * @param string $code The code to validate
+     * @param string $sCode The code to validate
      *
      * @return  void
      */
-    public function _validate($code)
+    public function _validate($sCode)
     {
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
@@ -266,18 +266,18 @@ class PasswordForgotten extends Base
          * Attempt to verify code, if two factor auth is enabled then don't generate a
          * new password, we'll need the user to jump through some hoops first.
          */
-        $generateNewPw = !$oConfig->item('authTwoFactorMode');
-        $newPw         = $oUserPasswordModel->validateToken($code, $generateNewPw);
+        $bGenerateNewPw = !$oConfig->item('authTwoFactorMode');
+        $mNewPassword   = $oUserPasswordModel->validateToken($sCode, $bGenerateNewPw);
 
         // --------------------------------------------------------------------------
 
         //  Determine outcome of validation
-        if ($newPw === 'EXPIRED') {
+        if ($mNewPassword === 'EXPIRED') {
 
             //  Code has expired
             $this->data['error'] = lang('auth_forgot_expired_code');
 
-        } elseif ($newPw === false) {
+        } elseif ($mNewPassword === false) {
 
             //  Code was invalid
             $this->data['error'] = lang('auth_forgot_invalid_code');
@@ -287,38 +287,47 @@ class PasswordForgotten extends Base
             if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
-                $this->data['question'] = $oAuthModel->mfaQuestionGet($newPw['user_id']);
+                $this->data['question'] = $oAuthModel->mfaQuestionGet($mNewPassword['user_id']);
 
                 if ($this->data['question']) {
 
                     if ($oInput->post()) {
 
-                        $isValid = $oAuthModel->mfaQuestionValidate(
+                        $bIsValid = $oAuthModel->mfaQuestionValidate(
                             $this->data['question']->id,
-                            $newPw['user_id'],
+                            $mNewPassword['user_id'],
                             $oInput->post('answer')
                         );
 
-                        if ($isValid) {
+                        if ($bIsValid) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $oUserPasswordModel->validateToken($code, true);
+                            $mNewPassword = $oUserPasswordModel->validateToken($sCode, true);
 
-                            $this->data['new_password'] = $newPw['password'];
+                            //  @todo (Pablo - 2019-07-17) - Do failures need handled here?
 
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $status  = 'notice';
-                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
-
-                            $oSession->setFlashData($status, $message);
+                            $sStatus  = 'notice';
+                            $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
+                            $oSession->setFlashData($sStatus, $sMessage);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(
+                                NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                            );
+
                             Factory::service('View')
+                                ->setData([
+                                    'new_password' => $mNewPassword['password'],
+                                    'user'         => (object) [
+                                        'id'       => $mNewPassword['user_id'],
+                                        'identity' => $mNewPassword['user_identity'],
+                                    ],
+                                ])
                                 ->load([
                                     'structure/header/blank',
                                     'auth/password/forgotten_reset',
@@ -334,6 +343,7 @@ class PasswordForgotten extends Base
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/ask.php');
+
                     Factory::service('View')
                         ->load([
                             'structure/header/blank',
@@ -344,23 +354,33 @@ class PasswordForgotten extends Base
                 } else {
 
                     //  No questions, reset and load views
-                    $newPw = $oUserPasswordModel->validateToken($code, true);
+                    $mNewPassword = $oUserPasswordModel->validateToken($sCode, true);
 
-                    $this->data['new_password'] = $newPw['password'];
+                    //  @todo (Pablo - 2019-07-17) - Do failures need handled here?
 
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $status  = 'notice';
-                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
+                    $sStatus  = 'notice';
+                    $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
 
-                    $oSession->setFlashData($status, $message);
+                    $oSession->setFlashData($sStatus, $sMessage);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(
+                        NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                    );
+
                     Factory::service('View')
+                        ->setData([
+                            'new_password' => $mNewPassword['password'],
+                            'user'         => (object) [
+                                'id'       => $mNewPassword['user_id'],
+                                'identity' => $mNewPassword['user_identity'],
+                            ],
+                        ])
                         ->load([
                             'structure/header/blank',
                             'auth/password/forgotten_reset',
@@ -370,35 +390,45 @@ class PasswordForgotten extends Base
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
-                $secret = $oAuthModel->mfaDeviceSecretGet($newPw['user_id']);
+                $mSecret = $oAuthModel->mfaDeviceSecretGet($mNewPassword['user_id']);
 
-                if ($secret) {
+                if ($mSecret) {
 
                     if ($oInput->post()) {
 
-                        $mfaCode = $oInput->post('mfaCode');
+                        $sMfaCode = $oInput->post('mfaCode');
 
                         //  Verify the inout
-                        if ($oAuthModel->mfaDeviceCodeValidate($newPw['user_id'], $mfaCode)) {
+                        if ($oAuthModel->mfaDeviceCodeValidate($mNewPassword['user_id'], $sMfaCode)) {
 
                             //  Correct answer, reset password and render views
-                            $newPw = $oUserPasswordModel->validateToken($code, true);
+                            $mNewPassword = $oUserPasswordModel->validateToken($sCode, true);
 
-                            $this->data['new_password'] = $newPw['password'];
+                            //  @todo (Pablo - 2019-07-17) - Do failures need handled here?
 
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $status  = 'notice';
-                            $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
+                            $sStatus  = 'notice';
+                            $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
 
-                            $oSession->setFlashData($status, $message);
+                            $oSession->setFlashData($sStatus, $sMessage);
 
                             // --------------------------------------------------------------------------
 
                             //  Load the views
-                            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
+                            $this->loadStyles(
+                                NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                            );
+
                             Factory::service('View')
+                                ->setData([
+                                    'new_password' => $mNewPassword['password'],
+                                    'user'         => (object) [
+                                        'id'       => $mNewPassword['user_id'],
+                                        'identity' => $mNewPassword['user_identity'],
+                                    ],
+                                ])
                                 ->load([
                                     'structure/header/blank',
                                     'auth/password/forgotten_reset',
@@ -407,7 +437,6 @@ class PasswordForgotten extends Base
                             return;
 
                         } else {
-
                             $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
                             $this->data['error'] .= $oAuthModel->lastError();
                         }
@@ -416,6 +445,7 @@ class PasswordForgotten extends Base
                     $this->data['page']->title = 'Please enter the code from your device';
 
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/ask.php');
+
                     Factory::service('View')
                         ->load([
                             'structure/header/blank',
@@ -426,23 +456,30 @@ class PasswordForgotten extends Base
                 } else {
 
                     //  No devices, reset and load views
-                    $newPw = $oUserPasswordModel->validateToken($code, true);
+                    $mNewPassword = $oUserPasswordModel->validateToken($sCode, true);
 
-                    $this->data['new_password'] = $newPw['password'];
+                    //  @todo (Pablo - 2019-07-17) - Do failures need handled here?
 
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $status  = 'notice';
-                    $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
+                    $sStatus  = 'notice';
+                    $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
 
-                    $oSession->setFlashData($status, $message);
+                    $oSession->setFlashData($sStatus, $sMessage);
 
                     // --------------------------------------------------------------------------
 
                     //  Load the views
                     $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                     Factory::service('View')
+                        ->setData([
+                            'new_password' => $mNewPassword['password'],
+                            'user'         => (object) [
+                                'id'       => $mNewPassword['user_id'],
+                                'identity' => $mNewPassword['user_identity'],
+                            ],
+                        ])
                         ->load([
                             'structure/header/blank',
                             'auth/password/forgotten_reset',
@@ -453,21 +490,24 @@ class PasswordForgotten extends Base
             } else {
 
                 //  Everything worked!
-                $this->data['new_password'] = $newPw['password'];
-
-                // --------------------------------------------------------------------------
-
                 //  Set some flashdata for the login page when they go to it; just a little reminder
-                $status  = 'notice';
-                $message = lang('auth_forgot_reminder', htmlentities($newPw['password']));
+                $sStatus  = 'notice';
+                $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
 
-                $oSession->setFlashData($status, $message);
+                $oSession->setFlashData($sStatus, $sMessage);
 
                 // --------------------------------------------------------------------------
 
                 //  Load the views
                 $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
                 Factory::service('View')
+                    ->setData([
+                        'new_password' => $mNewPassword['password'],
+                        'user'         => (object) [
+                            'id'       => $mNewPassword['user_id'],
+                            'identity' => $mNewPassword['user_identity'],
+                        ],
+                    ])
                     ->load([
                         'structure/header/blank',
                         'auth/password/forgotten_reset',

@@ -58,11 +58,27 @@ class SocialSignOn
      */
     public function __construct()
     {
+        /** @var \CI_Controller $oCi */
         $oCi = get_instance();
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
         /** @var Database oDb */
         $this->oDb = Factory::service('Database');
         /** @var User oUserModel */
         $this->oUserModel = Factory::model('User', 'nails/module-auth');
+
+        // --------------------------------------------------------------------------
+
+        /**
+         * Pablo (2019-07-17):
+         * This hack forces CI Sessions to fully build, so that when HybridAuth attempts to create/join the
+         * session there is one to join – otherwise we get conflicts.
+         */
+        $oSession->setup();
+        $oSession->setUserData('temp');
+        $oSession->unsetUserData('temp');
+
+        // --------------------------------------------------------------------------
 
         $this->aProviders = ['all' => [], 'enabled' => [], 'disabled' => []];
 
@@ -294,7 +310,7 @@ class SocialSignOn
      */
     public function logout()
     {
-        $this->oHybridAuth->logoutAllProviders();
+        $this->oHybridAuth->disconnectAllAdapters();
     }
 
     // --------------------------------------------------------------------------

@@ -49,13 +49,13 @@ $oInput = \Nails\Factory::service('Input');
                     break;
             }
 
-            $_field = 'identifier';
-            $_error = form_error($_field) ? 'error' : null
+            $sFieldKey  = 'identifier';
+            $sFieldAttr = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
-            <div class="form__group <?=form_error($_field) ? 'has-error' : ''?>">
-                <label><?=$sFieldLabel?></label>
-                <?=$sFieldType($_field, set_value($_field, $oInput->get('email')), 'placeholder="' . $sFieldPlaceholder . '""')?>
+            <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
+                <?=$sFieldType($sFieldKey, set_value($sFieldKey, $oInput->get('email')), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>

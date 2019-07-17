@@ -47,6 +47,7 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey     = 'question[' . $i . '][question]';
                     $sFieldLabel   = 'Question ' . ($i + 1);
                     $aFieldOptions = array_merge(['Please Choose...'], $questions);
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
@@ -58,10 +59,12 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey         = 'question[' . $i . '][answer]';
                     $sFieldLabel       = 'Answer ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your answer here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                         <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
@@ -88,10 +91,12 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey         = 'custom_question[' . $i . '][question]';
                     $sFieldLabel       = 'Question ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your question here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                         <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php
@@ -99,10 +104,12 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
                     $sFieldKey         = 'custom_question[' . $i . '][answer]';
                     $sFieldLabel       = 'Answer ' . ($i + 1);
                     $sFieldPlaceholder = 'Type your answer here';
+                    $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
                     ?>
                     <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                         <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                        <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                        <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                         <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     </div>
                     <?php

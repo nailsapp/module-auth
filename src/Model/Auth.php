@@ -43,9 +43,9 @@ class Auth extends Base
     /**
      * Log a user in
      *
-     * @param  string  $sIdentifier The identifier to use for the user lookup
-     * @param  string  $sPassword   The user's password
-     * @param  boolean $bRemember   Whether to 'remember' the user or not
+     * @param string  $sIdentifier The identifier to use for the user lookup
+     * @param string  $sPassword   The user's password
+     * @param boolean $bRemember   Whether to 'remember' the user or not
      *
      * @return boolean|object
      */
@@ -203,8 +203,8 @@ class Auth extends Base
     /**
      * Verifies a user's login credentials
      *
-     * @param  string $sIdentifier The identifier to use for the lookup
-     * @param  string $sPassword   The user's password
+     * @param string $sIdentifier The identifier to use for the lookup
+     * @param string $sPassword   The user's password
      *
      * @return boolean
      */
@@ -266,7 +266,7 @@ class Auth extends Base
     /**
      * Generate an MFA token
      *
-     * @param  int $iUserId The user ID to generate the token for
+     * @param int $iUserId The user ID to generate the token for
      *
      * @return array|false
      */
@@ -309,10 +309,10 @@ class Auth extends Base
     /**
      * Validate a MFA token
      *
-     * @param  int    $iUserId The ID of the user the token belongs to
-     * @param  string $sSalt   The token's salt
-     * @param  string $sToken  The token's hash
-     * @param  string $sIp     The user's IP address
+     * @param int    $iUserId The ID of the user the token belongs to
+     * @param string $sSalt   The token's salt
+     * @param string $sToken  The token's hash
+     * @param string $sIp     The user's IP address
      *
      * @return boolean
      */
@@ -353,7 +353,7 @@ class Auth extends Base
     /**
      * Delete an MFA token
      *
-     * @param  int $iTokenId The token's ID
+     * @param int $iTokenId The token's ID
      *
      * @return boolean
      */
@@ -370,7 +370,7 @@ class Auth extends Base
     /**
      * Fetches a random MFA question for a user
      *
-     * @param  int $iUserId The user's ID
+     * @param int $iUserId The user's ID
      *
      * @return boolean|\stdClass
      */
@@ -432,9 +432,9 @@ class Auth extends Base
     /**
      * Validates the answer to an MFA Question
      *
-     * @param  int    $iQuestionId The question's ID
-     * @param  int    $iUserId     The user's ID
-     * @param  string $answer      The user's answer
+     * @param int    $iQuestionId The question's ID
+     * @param int    $iUserId     The user's ID
+     * @param string $answer      The user's answer
      *
      * @return boolean
      */
@@ -460,9 +460,9 @@ class Auth extends Base
     /**
      * Sets MFA questions for a user
      *
-     * @param  int     $iUserId   The user's ID
-     * @param  array   $aData     An array of question and answers
-     * @param  boolean $bClearOld Whether or not to clear old questions
+     * @param int     $iUserId   The user's ID
+     * @param array   $aData     An array of question and answers
+     * @param boolean $bClearOld Whether or not to clear old questions
      *
      * @return boolean
      */
@@ -531,9 +531,9 @@ class Auth extends Base
     /**
      * Gets the user's MFA device if there is one
      *
-     * @param  int $iUserId The user's ID
+     * @param int $iUserId The user's ID
      *
-     * @return mixed         \stdClass on success, false on failure
+     * @return bool|\stdClass         \stdClass on success, false on failure
      */
     public function mfaDeviceSecretGet($iUserId)
     {
@@ -559,8 +559,8 @@ class Auth extends Base
     /**
      * Generates a MFA Device Secret
      *
-     * @param  int    $iUserId         The user ID to generate for
-     * @param  string $sExistingSecret The existing secret to use instead of generating a new one
+     * @param int    $iUserId         The user ID to generate for
+     * @param string $sExistingSecret The existing secret to use instead of generating a new one
      *
      * @return boolean|array
      */
@@ -604,9 +604,9 @@ class Auth extends Base
      * Validates a secret against two given codes, if valid adds as a device for
      * the user
      *
-     * @param  int    $iUserId The user's ID
-     * @param  string $sSecret The secret being used
-     * @param  int    $iCode   The first code to be generate
+     * @param int    $iUserId The user's ID
+     * @param string $sSecret The secret being used
+     * @param int    $iCode   The first code to be generate
      *
      * @return boolean
      */
@@ -655,8 +655,8 @@ class Auth extends Base
     /**
      * Validates an MFA Device code
      *
-     * @param  int    $iUserId The user's ID
-     * @param  string $sCode   The code to validate
+     * @param int    $iUserId The user's ID
+     * @param string $sCode   The code to validate
      *
      * @return boolean
      */

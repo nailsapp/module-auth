@@ -530,10 +530,15 @@ class Login extends Base
                     'error',
                     'Sorry, there was a problem communicating with the network.'
                 );
-            } else {
+            } elseif (is_array($provider)) {
                 $oSession->setFlashData(
                     'error',
                     'Sorry, there was a problem communicating with ' . $provider['label'] . '.'
+                );
+            } else {
+                $oSession->setFlashData(
+                    'error',
+                    'Sorry, there was a problem communicating with ' . $provider . '.'
                 );
             }
 
@@ -886,7 +891,6 @@ class Login extends Base
                         $sRedirectUrl = $this->data['return_to'];
                     }
 
-
                     redirect($sRedirectUrl);
 
                 } else {
@@ -1058,19 +1062,19 @@ class Login extends Base
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
 
-        $method = $oUri->segment(3) ? $oUri->segment(3) : 'index';
+        $sMethod = $oUri->segment(3) ? $oUri->segment(3) : 'index';
 
-        if (method_exists($this, $method) && substr($method, 0, 1) != '_') {
+        if (method_exists($this, $sMethod) && substr($sMethod, 0, 1) != '_') {
 
-            $this->{$method}();
+            $this->{$sMethod}();
 
         } else {
 
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
             /** @var SocialSignOn $oSocial */
             $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
-            if ($oSocial->isValidProvider($method)) {
-                $this->socialSignon($method);
+            if ($oSocial->isValidProvider($sMethod)) {
+                $this->socialSignon($sMethod);
             } else {
                 show404();
             }

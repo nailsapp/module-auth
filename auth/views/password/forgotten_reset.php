@@ -20,26 +20,14 @@
             <p>
                 <?=lang('auth_forgot_reset_ok')?>
             </p>
-            <p class="alert alert--info new-password">
-                <?=$new_password?>
-            </p>
+            <div>
+                <p class="alert alert--info new-password">
+                    <?=$new_password?>
+                </p>
+            </div>
             <p>
-                <?=anchor('auth/login', lang('auth_forgot_action_proceed'), 'class="btn btn--block btn--primary"')?>
+                <?=anchor('auth/login?identity=' . urlencode($user->identity), lang('auth_forgot_action_proceed'), 'class="btn btn--block btn--primary"')?>
             </p>
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-
-    var textBox = document.getElementById('temp-password');
-    textBox.onfocus = function() {
-        textBox.select();
-        // Work around Chrome's little problem
-        textBox.onmouseup = function() {
-            // Prevent further mouseup intervention
-            textBox.onmouseup = null;
-            return false;
-        };
-    };
-</script>

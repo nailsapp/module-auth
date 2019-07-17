@@ -59,13 +59,16 @@
             // --------------------------------------------------------------------------
 
             if (APP_NATIVE_LOGIN_USING === 'EMAIL' || APP_NATIVE_LOGIN_USING === 'BOTH') {
+
                 $sFieldKey         = 'email';
                 $sFieldLabel       = lang('form_label_email');
                 $sFieldPlaceholder = lang('auth_register_email_placeholder');
+                $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
+
                 ?>
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                    <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                    <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                     <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 </div>
                 <?php
@@ -74,13 +77,16 @@
             // --------------------------------------------------------------------------
 
             if (APP_NATIVE_LOGIN_USING === 'USERNAME' || APP_NATIVE_LOGIN_USING === 'BOTH') {
+
                 $sFieldKey         = 'username';
                 $sFieldLabel       = lang('form_label_username');
                 $sFieldPlaceholder = lang('auth_register_username_placeholder');
+                $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
+
                 ?>
                 <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                     <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                    <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                    <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                     <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                     <p class="form__help">
                         <small>
@@ -97,11 +103,12 @@
             $sFieldKey         = 'password';
             $sFieldLabel       = lang('form_label_password');
             $sFieldPlaceholder = lang('auth_register_password_placeholder');
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_password($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_password($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
                 <?php
                 if (!empty($passwordRulesAsString)) {
@@ -120,11 +127,12 @@
             $sFieldKey         = 'first_name';
             $sFieldLabel       = lang('form_label_first_name');
             $sFieldPlaceholder = lang('auth_register_first_name_placeholder');
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
@@ -134,11 +142,12 @@
             $sFieldKey         = 'last_name';
             $sFieldLabel       = lang('form_label_last_name');
             $sFieldPlaceholder = lang('auth_register_last_name_placeholder');
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>

@@ -1,5 +1,11 @@
 <?php
 
+use Nails\Common\Service\Input;
+use Nails\Factory;
+
+/** @var Input $oInput */
+$oInput = Factory::service('Input');
+
 $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
 
 ?>
@@ -82,12 +88,13 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                     break;
             }
 
-            $sFieldKey = 'identifier';
+            $sFieldKey  = 'identifier';
+            $sFieldAttr = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=$FieldType($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=$FieldType($sFieldKey, set_value($sFieldKey, $oInput->get('identity')), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
@@ -95,11 +102,12 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             $sFieldKey         = 'password';
             $sFieldLabel       = lang('form_label_password');
             $sFieldPlaceholder = lang('auth_login_password_placeholder');
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_password($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_password($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <div class="form__group form__group--checkbox">

@@ -45,10 +45,12 @@ if (isset($login_method) && isset($user_id) && isset($token)) {
             $sFieldKey         = 'answer';
             $sFieldLabel       = 'Answer';
             $sFieldPlaceholder = 'Type your answer here';
+            $sFieldAttr        = 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"';
+
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=form_text($sFieldKey, set_value($sFieldKey), 'id="input-' . $sFieldKey . '" autocomplete="off" placeholder="' . $sFieldPlaceholder . '"')?>
+                <?=form_text($sFieldKey, set_value($sFieldKey), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <p>
