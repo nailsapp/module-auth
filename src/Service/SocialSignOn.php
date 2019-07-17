@@ -265,15 +265,14 @@ class SocialSignOn
      * Authenticates a user using Hybrid Auth's authenticate method
      *
      * @param string $sProvider The provider to authenticate against
-     * @param mixed  $mParams   Additional parameters to pass to the Provider
      *
      * @return AdapterInterface|false
      */
-    public function authenticate($sProvider, $mParams = null)
+    public function authenticate($sProvider)
     {
         try {
             $sProvider = $this->getProviderClass($sProvider);
-            return $this->oHybridAuth->authenticate($sProvider, $mParams);
+            return $this->oHybridAuth->authenticate($sProvider);
         } catch (\Exception $e) {
             $this->setError('Provider Error: ' . $e->getMessage());
             return false;
@@ -285,16 +284,77 @@ class SocialSignOn
     /**
      * Returns the user's profile for a particular provider.
      *
-     * @param string $provider The name of the provider.
+     * @param string $sProvider The name of the provider.
      *
-     * @return mixed           Hybrid_User_Profile on success, false on failure
+     * @return \Hybridauth\User\Profile
      */
-    public function getUserProfile($provider)
+    public function getUserProfile($sProvider)
     {
-        $oAdapter = $this->authenticate($provider);
+        $oAdapter = $this->authenticate($sProvider);
 
         try {
             return $oAdapter->getUserProfile();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the user's contacts for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return \Hybridauth\User\Contact
+     */
+    public function getUserContacts($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserContacts();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the user's pages for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return array
+     */
+    public function getUserPages($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserPages();
+        } catch (\Exception $e) {
+            $this->setError('Provider Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Returns the user's activity for a particular provider.
+     *
+     * @param string $sProvider The name of the provider.
+     *
+     * @return array
+     */
+    public function getUserActivity($sProvider)
+    {
+        $oAdapter = $this->authenticate($sProvider);
+
+        try {
+            return $oAdapter->getUserActivity();
         } catch (\Exception $e) {
             $this->setError('Provider Error: ' . $e->getMessage());
             return false;
@@ -457,7 +517,7 @@ class SocialSignOn
      *
      * @param mixed $user_id The User's ID (if null, then the active user ID is used)
      *
-     * @return boolean
+     * @return $this
      */
     public function restoreSession($user_id = null)
     {
@@ -480,7 +540,7 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Clean slate
-        $this->oHybridAuth->logoutAllProviders();
+        $this->logout();
 
         // --------------------------------------------------------------------------
 
@@ -489,11 +549,12 @@ class SocialSignOn
         $aRestore  = [];
 
         foreach ($aSessions as $oSession) {
-            $oSession->session_data = unserialize($oSession->session_data);
-            $aRestore               = array_merge($aRestore, $oSession->session_data);
+            $aSessionData = json_decode($oSession->session_data, JSON_OBJECT_AS_ARRAY);
+            $oAdapter     = $this->oHybridAuth->getAdapter($oSession->provider);
+            $oAdapter->setAccessToken(['access_token' => getFromArray('token', $aSessionData)]);
         }
 
-        return $this->oHybridAuth->restoreSessionData(serialize($aRestore));
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -533,7 +594,7 @@ class SocialSignOn
      *
      * @return mixed
      */
-    public function api($sProvider, $call = '')
+    public function api($sProvider, $sUrl = '', $sMethod = 'GET', $aParameters = [], $aHeaders = [])
     {
         if (!$this->isConnectedWith($sProvider)) {
             $this->setError('Not connected with provider "' . $sProvider . '"');
@@ -544,7 +605,12 @@ class SocialSignOn
 
             $sProvider = $this->getProviderClass($sProvider);
             $oProvider = $this->oHybridAuth->getAdapter($sProvider);
-            return $oProvider->api()->api($call);
+            return $oProvider->apiRequest(
+                $sUrl,
+                $sMethod,
+                $aParameters,
+                $aHeaders
+            );
 
         } catch (\Exception $e) {
             $this->setError('Provider Error: ' . $e->getMessage());
