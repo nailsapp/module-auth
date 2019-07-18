@@ -20,6 +20,7 @@ use Nails\Auth\Service\SocialSignOn;
 use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Config;
+use Nails\Common\Service\FileCache;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Logger;
@@ -838,9 +839,12 @@ class Login extends Base
                                 //  Attempt upload
                                 /** @var Cdn $oCdn */
                                 $oCdn = Factory::service('Cdn', 'nails/module-cdn');
+                                /** @var FileCache $oFileCache */
+                                $oFileCache = Factory::service('FileCache');
 
                                 //  Save file to cache
-                                $cacheFile = CACHE_PATH . 'new-user-profile-image-' . $newUser->id;
+                                //  @todo (Pablo - 2019-07-18) - Use the file cache write methods
+                                $cacheFile = $oFileCache->getDir() . 'new-user-profile-image-' . $newUser->id;
 
                                 if (@file_put_contents($cacheFile, (string) $oResponse->getBody)) {
 
