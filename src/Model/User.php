@@ -1850,13 +1850,15 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Update user's `last_seen` and `last_ip` properties
-        $oDb    = Factory::service('Database');
-        $oInput = Factory::service('Input');
+        if (!wasAdmin()) {
+            $oDb    = Factory::service('Database');
+            $oInput = Factory::service('Input');
 
-        $oDb->set('last_seen', 'NOW()', false);
-        $oDb->set('last_ip', $oInput->ipAddress());
-        $oDb->where('id', $me->id);
-        $oDb->update($this->table);
+            $oDb->set('last_seen', 'NOW()', false);
+            $oDb->set('last_ip', $oInput->ipAddress());
+            $oDb->where('id', $me->id);
+            $oDb->update($this->table);
+        }
 
         return true;
     }
