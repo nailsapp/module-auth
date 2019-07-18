@@ -13,8 +13,13 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Controller\DefaultController;
+use Nails\Auth\Model\User\Group;
+use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Session;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
 class Groups extends DefaultController
@@ -88,10 +93,10 @@ class Groups extends DefaultController
         parent::runFormValidation(
             $sMode,
             [
-                'slug'        => [
+                'slug'        => array_filter([
                     'required',
-                    'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']',
-                ],
+                    $this->data['item'] ? 'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']' : null,
+                ]),
                 'label'       => ['required'],
                 'description' => ['required'],
             ]
@@ -107,8 +112,11 @@ class Groups extends DefaultController
      */
     protected function getPostObject(): array
     {
-        $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', 'nails/module-auth');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Group $oUserGroupModel */
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
 
         return [
@@ -131,8 +139,11 @@ class Groups extends DefaultController
      */
     public function delete(): void
     {
-        $oUri       = Factory::service('Uri');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var Group $oItemModel */
         $oItemModel = Factory::model(
             $this->aConfig['MODEL_NAME'],
             $this->aConfig['MODEL_PROVIDER']
@@ -169,9 +180,12 @@ class Groups extends DefaultController
             show404();
         }
 
-        $oUri            = Factory::service('Uri');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
-        $oSession        = Factory::service('Session', 'nails/module-auth');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
             $oSession->setFlashData(
