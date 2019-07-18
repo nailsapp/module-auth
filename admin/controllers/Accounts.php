@@ -16,7 +16,21 @@ use Nails\Admin\Controller\DefaultController;
 use Nails\Admin\Helper;
 use Nails\Admin\Model\ChangeLog;
 use Nails\Admin\Nav;
-use Nails\Auth\Controller\BaseAdmin;
+use Nails\Auth\Model\User;
+use Nails\Auth\Model\User\Group;
+use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Session;
+use Nails\Cdn\Service\Cdn;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\Database;
+use Nails\Common\Service\DateTime;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\Language;
+use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
 
@@ -64,7 +78,7 @@ class Accounts extends DefaultController
      * Announces this controller's navGroups
      *
      * @return Nav
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public static function announce()
     {
@@ -124,8 +138,8 @@ class Accounts extends DefaultController
     /**
      * Accounts constructor.
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\NailsException
+     * @throws FactoryException
+     * @throws NailsException
      */
     public function __construct()
     {
@@ -133,6 +147,7 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
+        /** @var Input $oInput */
         $oInput  = Factory::service('Input');
         $sReturn = $oInput->server('request_uri');
 
@@ -259,6 +274,7 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         $this->lang->load('admin_accounts');
+        /** @var ChangeLog oChangeLogModel */
         $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
     }
 
@@ -282,10 +298,11 @@ class Accounts extends DefaultController
      * Returns the available checkbox filters
      *
      * @return array
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function indexCheckboxFilters(): array
     {
+        /** @var Group $oGroupModel */
         $oGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $aGroups     = $oGroupModel->getAll();
 
@@ -322,10 +339,10 @@ class Accounts extends DefaultController
     /**
      * Create a new user account
      *
+     * @throws FactoryException
+     * @throws ModelException
      * @todo (Pablo - 2019-01-22) - Use the DefaultController create() method
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\ModelException
      */
     public function create(): void
     {
@@ -344,6 +361,7 @@ class Accounts extends DefaultController
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
 
             //  Set rules
@@ -392,6 +410,7 @@ class Accounts extends DefaultController
 
                 if (!$aData['password']) {
                     //  Password isn't set, generate one
+                    /** @var Password $oUserPasswordModel */
                     $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
                     $aData['password']  = $oUserPasswordModel->generate($aData['group_id']);
                 }
@@ -409,6 +428,7 @@ class Accounts extends DefaultController
                 $aData['temp_pw']        = stringToBoolean($oInput->post('temp_pw', true));
                 $aData['inform_user_pw'] = true;
 
+                /** @var User $oUserModel */
                 $oUserModel = Factory::model('User', 'nails/module-auth');
                 $new_user   = $oUserModel->create($aData, stringToBoolean($oInput->post('send_activation', true)));
 
@@ -419,6 +439,7 @@ class Accounts extends DefaultController
                      * might happen along the way
                      */
 
+                    /** @var Session $oSession */
                     $oSession = Factory::service('Session', 'nails/module-auth');
 
                     if ($oUserModel->getErrors()) {
@@ -475,8 +496,11 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         //  Get data for the view
-        $oUserGroupModel             = Factory::model('UserGroup', 'nails/module-auth');
-        $oUserPasswordModel          = Factory::model('UserPassword', 'nails/module-auth');
+        /** @var Group $oUserGroupModel */
+        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+
         $this->data['groups']        = $oUserGroupModel->getAll();
         $this->data['passwordRules'] = [];
 
@@ -495,14 +519,16 @@ class Accounts extends DefaultController
     /**
      * Edit a user account
      *
+     * @throws FactoryException
+     * @throws ModelException
      * @todo (Pablo - 2019-01-22) - Use the DefaultController edit() method
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\ModelException
      */
     public function edit(): void
     {
-        $oUri   = Factory::service('Uri');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
 
         if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
@@ -516,9 +542,12 @@ class Accounts extends DefaultController
          * (we need to know the group of the user so we can pull up the correct cols/rules)
          */
 
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $oUser      = $oUserModel->getById($oUri->segment(5));
+
+        $oUser = $oUserModel->getById($oUri->segment(5));
 
         if (!$oUser) {
             $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
@@ -546,8 +575,11 @@ class Accounts extends DefaultController
          * and the form validation
          */
 
-        $oDb           = Factory::service('Database');
-        $oConfig       = Factory::service('Config');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
+
         $aUserMetaCols = $oConfig->item('user_meta_cols');
         $iGroupId      = (int) $oInput->post('group_id') ?: $oUser->group_id;
 
@@ -617,6 +649,7 @@ class Accounts extends DefaultController
         if ($oInput->post()) {
 
             //  Load validation library
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
 
             // --------------------------------------------------------------------------
@@ -686,6 +719,7 @@ class Accounts extends DefaultController
                 //  If we have a profile image, attempt to upload it
                 if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
+                    /** @var Cdn $oCdn */
                     $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
                     $object = $oCdn->objectReplace($oUser->profile_img, 'profile-images', 'profile_img');
 
@@ -843,12 +877,15 @@ class Accounts extends DefaultController
         );
 
         //  Get the groups, timezones and languages
+        /** @var Group $oUserGroupModel */
         $oUserGroupModel      = Factory::model('UserGroup', 'nails/module-auth');
         $this->data['groups'] = $oUserGroupModel->getAll();
 
+        /** @var Language $oLanguageService */
         $oLanguageService        = Factory::service('Language');
         $this->data['languages'] = $oLanguageService->getAllEnabledFlat();
 
+        /** @var DateTime $oDateTimeService */
         $oDateTimeService               = Factory::service('DateTime');
         $this->data['timezones']        = $oDateTimeService->getAllTimezone();
         $this->data['date_formats']     = $oDateTimeService->getAllDateFormat();
@@ -857,6 +894,7 @@ class Accounts extends DefaultController
 
         //  Fetch any user uploads
         if (Components::exists('nails/module-cdn')) {
+            /** @var Cdn $oCdn */
             $oCdn                       = Factory::service('Cdn', 'nails/module-cdn');
             $this->data['user_uploads'] = $oCdn->getObjectsForUser($oUser->id);
         }
@@ -881,6 +919,7 @@ class Accounts extends DefaultController
             }
         }
 
+        /** @var Password $oUserPasswordModel */
         $oUserPasswordModel          = Factory::model('UserPassword', 'nails/module-auth');
         $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
 
@@ -895,10 +934,10 @@ class Accounts extends DefaultController
     /**
      * Delete a user
      *
+     * @throws FactoryException
+     * @throws ModelException
      * @todo (Pablo - 2019-01-22) - Use the DefaultController edit() method
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\ModelException
      */
     public function delete(): void
     {
@@ -909,12 +948,17 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $oUri       = Factory::service('Uri');
-        $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $iUserId    = $oUri->segment(5);
-        $oUser      = $oUserModel->getById($iUserId);
+
+        $iUserId = $oUri->segment(5);
+        $oUser   = $oUserModel->getById($iUserId);
 
         // --------------------------------------------------------------------------
 
@@ -970,7 +1014,7 @@ class Accounts extends DefaultController
     /**
      * Change a user's group
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function change_group(): void
     {
@@ -980,10 +1024,13 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
-        $oInput     = Factory::service('Input');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $aUserIds   = explode(',', $oInput->get('users'));
-        $aUsers     = $oUserModel->getByIds($aUserIds);
+
+        $aUserIds = explode(',', $oInput->get('users'));
+        $aUsers   = $oUserModel->getByIds($aUserIds);
 
         if (empty($aUsers)) {
             show404();
@@ -1017,6 +1064,7 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
+        /** @var Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $aGroups         = $oUserGroupModel->getAll();
 
@@ -1030,15 +1078,16 @@ class Accounts extends DefaultController
 
         $aGroups     = array_filter($aGroups);
         $aGroups     = array_values($aGroups);
-        $aUserGroups = [];
-        foreach ($aGroups as $oGroup) {
-            $aUserGroups[$oGroup->id] = $oGroup->label;
-        }
+        $aUserGroups = array_combine(
+            arrayExtractProperty($aGroups, 'id'),
+            arrayExtractProperty($aGroups, 'label')
+        );
 
         // --------------------------------------------------------------------------
 
         if ($oInput->post()) {
             if ($oUserGroupModel->changeUserGroup(arrayExtractProperty($aUsers, 'id'), (int) $oInput->post('group_id'))) {
+                /** @var Session $oSession */
                 $oSession = Factory::service('Session', 'nails/module-auth');
                 $oSession->setFlashData('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts');
@@ -1046,7 +1095,6 @@ class Accounts extends DefaultController
                 $this->data['error'] = 'Failed to update user group. ' . $oUserGroupModel->lastError();
             }
         }
-
 
         $this->data['aUsers']      = $aUsers;
         $this->data['aUserGroups'] = $aUserGroups;
@@ -1063,8 +1111,8 @@ class Accounts extends DefaultController
     /**
      * Suspend a user
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\ModelException
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function suspend(): void
     {
@@ -1075,13 +1123,18 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $oUri       = Factory::service('Uri');
-        $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $iUserId    = $oUri->segment(5);
-        $oUser      = $oUserModel->getById($iUserId);
-        $bOldValue  = $oUser->is_suspended;
+
+        $iUserId   = $oUri->segment(5);
+        $oUser     = $oUserModel->getById($iUserId);
+        $bOldValue = $oUser->is_suspended;
 
         // --------------------------------------------------------------------------
 
@@ -1143,8 +1196,8 @@ class Accounts extends DefaultController
     /**
      * Unsuspend a user
      *
-     * @throws \Nails\Common\Exception\FactoryException
-     * @throws \Nails\Common\Exception\ModelException
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function unsuspend(): void
     {
@@ -1155,13 +1208,18 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         //  Get the user's details
-        $oUri       = Factory::service('Uri');
-        $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $iUserId    = $oUri->segment(5);
-        $oUser      = $oUserModel->getById($iUserId);
-        $bOldValue  = $oUser->is_suspended;
+
+        $iUserId   = $oUri->segment(5);
+        $oUser     = $oUserModel->getById($iUserId);
+        $bOldValue = $oUser->is_suspended;
 
         // --------------------------------------------------------------------------
 
@@ -1221,7 +1279,7 @@ class Accounts extends DefaultController
     /**
      * Delete a user's profile image
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function delete_profile_img(): void
     {
@@ -1232,12 +1290,16 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
-        $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', 'nails/module-auth');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $iUserId    = $oUri->segment(5);
-        $oUser      = $oUserModel->getById($iUserId);
-        $sReturnTo  = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/auth/accounts/edit/' . $iUserId;
+
+        $iUserId   = $oUri->segment(5);
+        $oUser     = $oUserModel->getById($iUserId);
+        $sReturnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/auth/accounts/edit/' . $iUserId;
 
         // --------------------------------------------------------------------------
 
@@ -1258,6 +1320,7 @@ class Accounts extends DefaultController
 
             if ($oUser->profile_img) {
 
+                /** @var Cdn $oCdn */
                 $oCdn = Factory::service('Cdn', 'nails/module-cdn');
 
                 if ($oCdn->objectDelete($oUser->profile_img, 'profile-images')) {
@@ -1291,15 +1354,18 @@ class Accounts extends DefaultController
     /**
      * Manage a user's email address
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function email(): void
     {
-        $oInput     = Factory::service('Input');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', 'nails/module-auth');
-        $action     = $oInput->post('action');
-        $sEmail     = trim($oInput->post('email'));
-        $iId        = (int) $oInput->post('id') ?: null;
+
+        $action = $oInput->post('action');
+        $sEmail = trim($oInput->post('email'));
+        $iId    = (int) $oInput->post('id') ?: null;
 
         switch ($action) {
 
@@ -1370,6 +1436,7 @@ class Accounts extends DefaultController
                 break;
         }
 
+        /** @var Session $oSession */
         $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->setFlashData($sStatus, $sMessage);
         redirect($oInput->post('return'));
