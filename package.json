@@ -1,10 +1,10 @@
 {
-  "name": "nails-module-asset",
-  "description": "This is the \"Auth\" module for Nails.",
-  "author": "Nails Dev Team <hello@nailsapp.co.uk>",
-  "analyze": true,
-  "license": "MIT",
-  "repository": "https://github.com/nails/module-auth",
+    "name": "nails-module-asset",
+    "description": "This is the \"Auth\" module for Nails.",
+    "author": "Nails Dev Team <hello@nailsapp.co.uk>",
+    "analyze": true,
+    "license": "MIT",
+    "repository": "https://github.com/nails/module-auth",
     "devDependencies": {
         "css-loader": "^3.0.0",
         "autoprefixer": "^9.6.1",
