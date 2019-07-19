@@ -16,6 +16,7 @@ use Nails\Auth\Events;
 use Nails\Auth\Model\User\Password;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Cookie;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
@@ -140,7 +141,9 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Get the credentials from the cookie set earlier
-        $remember = get_cookie($this->sRememberCookie);
+        /** @var Cookie $oCookie */
+        $oCookie = Factory::service('Cookie');
+        $remember = $oCookie->read($this->sRememberCookie);
 
         if ($remember) {
 
@@ -795,6 +798,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Look up the email, and if we find an ID then fetch that user
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('user_id');
         $oDb->where('email', trim($email));
