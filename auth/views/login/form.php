@@ -14,6 +14,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
         <h1 class="panel__header text-center">
             Welcome
         </h1>
+        <?=form_open(siteUrl('auth/login' . $sReturnTo))?>
         <div class="panel__body">
             <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
                 <?=$error?>
@@ -64,8 +65,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 </p>
                 <?php
             }
-
-            echo form_open(siteUrl('auth/login' . $sReturnTo));
 
             switch (APP_NATIVE_LOGIN_USING) {
 
@@ -124,7 +123,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 </button>
                 <?=anchor('auth/password/forgotten', 'Forgotten Your Password?', 'class="btn btn--block btn--link"')?>
             </p>
-            <?=form_close()?>
             <?php
             if (appSetting('user_registration_enabled', 'auth')) {
                 ?>
@@ -139,5 +137,6 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
             }
             ?>
         </div>
+        <?=form_close()?>
     </div>
 </div>
