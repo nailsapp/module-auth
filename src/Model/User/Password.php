@@ -13,6 +13,7 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Auth\Model\User;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
@@ -72,9 +73,10 @@ class Password extends Base
             return false;
         }
 
-        $oHash = $this->generateHash($oUser->group_id, $sPassword);
-        if (empty($oHash)) {
-            //  Error messages set by generateHash()
+        try {
+            $oHash = $this->generateHash($oUser->group_id, $sPassword);
+        } catch (NailsException $e) {
+            $this->setError($e->getMessage());
             return false;
         }
 
@@ -327,19 +329,52 @@ class Password extends Base
      * @param integer $iGroupId  The group who's rules to fetch
      * @param string  $sPassword The raw, unencrypted password
      *
-     * @return mixed            stdClass on success, false on failure
+     * @return \stdClass
+     * @throws NailsException
      */
     public function generateHash($iGroupId, $sPassword): \stdClass
     {
         if (empty($sPassword)) {
-            $this->setError('No password to hash');
-            return false;
+            throw new NailsException('No password to hash.');
         } elseif (!$this->isAcceptable($iGroupId, $sPassword)) {
-            return false;
+            throw new NailsException('Password does not meet requirements.');
+        } else {
+            return $this->generateHashObject($sPassword);
         }
+    }
 
-        //  Password is valid, generate hash object
-        return $this->generateHashObject($sPassword);
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generates a null password hash
+     *
+     * @return \stdClass
+     */
+    public function generateNullHash(): \stdClass
+    {
+        return $this->generateHashObject(null);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generates a password hash, no strength checks
+     *
+     * @param string $sPassword The password to generate the hash for
+     *
+     * @return \stdClass
+     */
+    public function generateHashObject($sPassword): \stdClass
+    {
+        $sSalt = $this->salt();
+        $sHash = sha1(sha1($sPassword) . $sSalt);
+
+        return (object) [
+            'password'     => $sHash,
+            'password_md5' => md5($sHash),
+            'salt'         => $sSalt,
+            'engine'       => 'NAILS_1',
+        ];
     }
 
     // --------------------------------------------------------------------------
@@ -359,42 +394,6 @@ class Password extends Base
         }
 
         return preg_match('/[' . preg_quote($this->aCharset[$sCharset], '/') . ']/', $sStr);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Generates a null password hash
-     *
-     * @return mixed stdClass on success, false on failure
-     */
-    public function generateNullHash()
-    {
-        return $this->generateHashObject(null);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Generates a password hash, no strength checks
-     *
-     * @param string $sPassword The password to generate the hash for
-     *
-     * @return \stdClass
-     */
-    public function generateHashObject($sPassword): \stdClass
-    {
-        $sSalt = $this->salt();
-
-        // --------------------------------------------------------------------------
-
-        $oOut               = new \stdClass();
-        $oOut->password     = sha1(sha1($sPassword) . $sSalt);
-        $oOut->password_md5 = md5($oOut->password);
-        $oOut->salt         = $sSalt;
-        $oOut->engine       = 'NAILS_1';
-
-        return $oOut;
     }
 
     // --------------------------------------------------------------------------
@@ -720,17 +719,17 @@ class Password extends Base
             //  Generate a new password?
             if ($bGenerateNewPw) {
 
-                $aOut['password'] = $this->generate($oUser->group_id);
+                try {
 
-                if (empty($aOut['password'])) {
-                    //  This should never happen, but just in case.
-                    return false;
-                }
+                    $aOut['password'] = $this->generate($oUser->group_id);
+                    if (empty($aOut['password'])) {
+                        throw new NailsException('Generated password was empty.');
+                    }
 
-                $oHash = $this->generateHash($oUser->group_id, $aOut['password']);
+                    $oHash = $this->generateHash($oUser->group_id, $aOut['password']);
 
-                if (!$oHash) {
-                    //  Again, this should never happen, but just in case.
+                } catch (NailsException $e) {
+                    $this->setError($e->getMessage());
                     return false;
                 }
 

@@ -1965,19 +1965,17 @@ class User extends Base
          * that they need to set a password using forgotten password.
          */
 
-        if (empty($data['password'])) {
-            $oPassword = $oUserPasswordModel->generateNullHash();
-            if (!$oPassword) {
-                $this->setError($oUserPasswordModel->lastError());
-                return false;
+        try {
+
+            if (empty($data['password'])) {
+                $oPassword = $oUserPasswordModel->generateNullHash();
+            } else {
+                $oPassword = $oUserPasswordModel->generateHash($aUserData['group_id'], $data['password']);
             }
 
-        } else {
-            $oPassword = $oUserPasswordModel->generateHash($aUserData['group_id'], $data['password']);
-            if (!$oPassword) {
-                $this->setError($oUserPasswordModel->lastError());
-                return false;
-            }
+        } catch (NailsException $e) {
+            $this->setError($e->getMessage());
+            return false;
         }
 
         /**
