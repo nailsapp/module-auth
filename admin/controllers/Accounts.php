@@ -809,6 +809,17 @@ class Accounts extends DefaultController
 
                         foreach ($aData as $field => $value) {
                             if (isset($oUser->$field)) {
+
+                                if ($field === 'password' && !empty($value)) {
+                                    $sOldVlaue = '[REDACTED]';
+                                    $sNewVlaue = '[REDACTED]';
+                                    $bForce    = true;
+                                } else {
+                                    $sOldVlaue = $oUser->$field;
+                                    $sNewVlaue = $value;
+                                    $bForce    = false;
+                                }
+
                                 $this->oChangeLogModel->add(
                                     'updated',
                                     'a',
@@ -817,9 +828,10 @@ class Accounts extends DefaultController
                                     $name,
                                     'admin/auth/accounts/edit/' . $oInput->post('id'),
                                     $field,
-                                    $oUser->$field,
-                                    $value,
-                                    false
+                                    $sOldVlaue,
+                                    $sNewVlaue,
+                                    false,
+                                    $bForce
                                 );
                             }
                         }
