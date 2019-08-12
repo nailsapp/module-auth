@@ -30,6 +30,20 @@ class Events extends Base
     const USER_MODIFIED = 'AUTH:USER:MODIFIED';
 
     /**
+     * Fired when a user is deleted
+     *
+     * @param int $iId The ID of the user who was deleted
+     */
+    const USER_DELETED = 'AUTH:USER:DELETED';
+
+    /**
+     * Fired when a user is destroyed
+     *
+     * @param int $iId The ID of the user who was destroyed
+     */
+    const USER_DESTROYED = 'AUTH:USER:DESTROYED';
+
+    /**
      * Fired when a user logs in
      *
      * @param int $iId The ID of the user who logged in

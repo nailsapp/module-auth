@@ -142,7 +142,7 @@ class User extends Base
 
         //  Get the credentials from the cookie set earlier
         /** @var Cookie $oCookie */
-        $oCookie = Factory::service('Cookie');
+        $oCookie  = Factory::service('Cookie');
         $remember = $oCookie->read($this->sRememberCookie);
 
         if ($remember) {
@@ -2199,6 +2199,10 @@ class User extends Base
 
             if ((bool) $oDb->affected_rows()) {
                 $this->unsetCacheUser($iUserId);
+                $this->triggerEvent(
+                    Events::USER_DESTROYED,
+                    [$iUserId]
+                );
                 return true;
             }
         }
@@ -2217,6 +2221,10 @@ class User extends Base
      */
     public function delete($iUserId): bool
     {
+        $this->triggerEvent(
+            Events::USER_DELETED,
+            [$iUserId]
+        );
         return $this->destroy($iUserId);
     }
 
