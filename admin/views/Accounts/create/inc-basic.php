@@ -23,7 +23,7 @@ $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         foreach ($groups as $group) {
 
             //  If the group is a superuser group and the active user is not a superuser then remove it
-            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !$user->isSuperuser()) {
+            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !isSuperuser()) {
 
                 continue;
             }
@@ -36,7 +36,7 @@ $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
         $field['info']   = '<ul id="user-group-descriptions">';
         foreach ($groups as $group) {
 
-            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !$user->isSuperuser()) {
+            if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !isSuperuser()) {
 
                 continue;
             }
