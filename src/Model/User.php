@@ -27,20 +27,104 @@ use Nails\Testing;
 
 class User extends Base
 {
-    protected $me;
-    protected $activeUser;
-    protected $sRememberCookie;
-    protected $bIsRemembered;
-    protected $bIsLoggedIn;
-    protected $sAdminRecoveryField;
-    protected $aUserColumns;
-    protected $aMetaColumns;
-    protected $tableMeta;
-    protected $tableMetaAlias;
-    protected $tableEmail;
-    protected $tableEmailAlias;
-    protected $tableGroup;
-    protected $tableGroupAlias;
+
+    /**
+     * The ID of the active user
+     *
+     * @var int|null
+     */
+    protected $iActiveUserId;
+
+    /**
+     * The Active User object
+     *
+     * @var \stdClass
+     */
+    protected $oActiveUser;
+
+    /**
+     * The name of the "Remember me" cookie
+     *
+     * @var string
+     */
+    protected $sRememberCookie = 'nailsrememberme';
+
+    /**
+     * Whether the active user is to be remembered
+     *
+     * @var bool
+     */
+    protected $bIsRemembered = false;
+
+    /**
+     * Whether the active user is logged in or not
+     *
+     * @var bool
+     */
+    protected $bIsLoggedIn = false;
+
+    /**
+     * The name of the "Admin recovery" field
+     *
+     * @var string
+     */
+    protected $sAdminRecoveryField = 'nailsAdminRecoveryData';
+
+    /**
+     * The columns in the user table
+     *
+     * @var array|null
+     */
+    protected $aUserColumns = null;
+
+    /**
+     * The columns in the user meta table
+     *
+     * @var array|null
+     */
+    protected $aMetaColumns = null;
+
+    /**
+     * The name of the user meta table
+     *
+     * @var string
+     */
+    protected $tableMeta = NAILS_DB_PREFIX . 'user_meta_app';
+
+    /**
+     * The alias to give the user meta table
+     *
+     * @var string
+     */
+    protected $tableMetaAlias = 'um';
+
+    /**
+     * The name of the user email table
+     *
+     * @var string
+     */
+    protected $tableEmail = NAILS_DB_PREFIX . 'user_email';
+
+    /**
+     * The alias to give the user email table
+     *
+     * @var string
+     */
+    protected $tableEmailAlias = 'ue';
+
+    /**
+     * The name of the user group table
+     *
+     * @var string
+     */
+    protected $tableGroup = NAILS_DB_PREFIX . 'user_group';
+
+    /**
+     * The alias to give the user group table
+     *
+     * @var string
+     */
+    protected $tableGroupAlias = 'ug';
 
     // --------------------------------------------------------------------------
 
@@ -54,20 +138,11 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->table               = NAILS_DB_PREFIX . 'user';
-        $this->tableAlias          = 'u';
-        $this->tableMeta           = NAILS_DB_PREFIX . 'user_meta_app';
-        $this->tableMetaAlias      = 'um';
-        $this->tableEmail          = NAILS_DB_PREFIX . 'user_email';
-        $this->tableEmailAlias     = 'ue';
-        $this->tableGroup          = NAILS_DB_PREFIX . 'user_group';
-        $this->tableGroupAlias     = 'ug';
-        $this->tableSlugColumn     = 'username';
-        $this->defaultSortColumn   = $this->tableIdColumn;
-        $this->defaultSortOrder    = 'DESC';
-        $this->sRememberCookie     = 'nailsrememberme';
-        $this->sAdminRecoveryField = 'nailsAdminRecoveryData';
-        $this->bIsRemembered       = null;
+        $this->table             = NAILS_DB_PREFIX . 'user';
+        $this->tableAlias        = 'u';
+        $this->tableSlugColumn   = 'username';
+        $this->defaultSortColumn = $this->tableIdColumn;
+        $this->defaultSortOrder  = 'DESC';
 
         // --------------------------------------------------------------------------
 
@@ -159,7 +234,7 @@ class User extends Base
                 if ($user && $code === $user->remember_code) {
                     //  User was validated, log them in!
                     $this->setLoginData($user->id);
-                    $this->me = $user->id;
+                    $this->iActiveUserId = $user->id;
                 }
             }
         }
@@ -188,7 +263,7 @@ class User extends Base
 
         //  If $sKeys is false just return the user object in its entirety
         if (empty($sKeys)) {
-            return $this->activeUser;
+            return $this->oActiveUser;
         }
 
         // --------------------------------------------------------------------------
@@ -196,7 +271,7 @@ class User extends Base
         //  If only one key is being requested then don't do anything fancy
         if (strpos($sKeys, ',') === false) {
 
-            $val = isset($this->activeUser->{trim($sKeys)}) ? $this->activeUser->{trim($sKeys)} : null;
+            $val = isset($this->oActiveUser->{trim($sKeys)}) ? $this->oActiveUser->{trim($sKeys)} : null;
 
         } else {
 
@@ -208,8 +283,8 @@ class User extends Base
             foreach ($aKeys as $sKey) {
 
                 //  If something is found, use that.
-                if (isset($this->activeUser->{trim($sKey)})) {
-                    $aOut[] = $this->activeUser->{trim($sKey)};
+                if (isset($this->oActiveUser->{trim($sKey)})) {
+                    $aOut[] = $this->oActiveUser->{trim($sKey)};
                 }
             }
 
@@ -233,8 +308,8 @@ class User extends Base
      */
     public function setActiveUser($oUser)
     {
-        $this->activeUser = $oUser;
-        $oDateTimeService = Factory::service('DateTime');
+        $this->oActiveUser = $oUser;
+        $oDateTimeService  = Factory::service('DateTime');
 
         //  Set the user's date/time formats
         $sFormatDate = $this->activeUser('pref_date_format');
@@ -255,7 +330,7 @@ class User extends Base
      */
     public function clearActiveUser()
     {
-        $this->activeUser = new \stdClass();
+        $this->oActiveUser = new \stdClass();
     }
 
     // --------------------------------------------------------------------------
@@ -378,7 +453,7 @@ class User extends Base
      *
      * @return  bool
      */
-    public function isLoggedIn()
+    public function isLoggedIn(): bool
     {
         return $this->bIsLoggedIn;
     }
@@ -390,7 +465,7 @@ class User extends Base
      *
      * @return  bool
      */
-    public function bIsRemembered()
+    public function bIsRemembered(): bool
     {
         //  Deja vu?
         if (!is_null($this->bIsRemembered)) {
@@ -1167,10 +1242,10 @@ class User extends Base
 
         //  If we just updated the active user we should probably update their session info
         if ($iUserId == $this->activeUser('id')) {
-            $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
+            $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
             if ($data) {
                 foreach ($data as $key => $val) {
-                    $this->activeUser->{$key} = $val;
+                    $this->oActiveUser->{$key} = $val;
                 }
             }
 
@@ -1390,14 +1465,14 @@ class User extends Base
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
 
-                $oDate                         = Factory::factory('DateTime');
-                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
+                $oDate                          = Factory::factory('DateTime');
+                $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 if ($bIsPrimary) {
-                    $this->activeUser->email                   = $oEmail;
-                    $this->activeUser->email_verification_code = $sCode;
-                    $this->activeUser->email_is_verified       = (bool) $is_verified;
-                    $this->activeUser->email_is_verified_on    = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
+                    $this->oActiveUser->email                   = $oEmail;
+                    $this->oActiveUser->email_verification_code = $sCode;
+                    $this->oActiveUser->email_is_verified       = (bool) $is_verified;
+                    $this->oActiveUser->email_is_verified_on    = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
                 }
             }
 
@@ -1579,8 +1654,8 @@ class User extends Base
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
 
-                $oDate                         = Factory::factory('DateTime');
-                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
+                $oDate                          = Factory::factory('DateTime');
+                $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
             }
@@ -1640,8 +1715,8 @@ class User extends Base
             //  Update the activeUser
             if ($oEmail->user_id == $this->activeUser('id')) {
 
-                $oDate                         = Factory::factory('DateTime');
-                $this->activeUser->last_update = $oDate->format('Y-m-d H:i:s');
+                $oDate                          = Factory::factory('DateTime');
+                $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 //  @todo: update the rest of the activeUser
             }
@@ -1818,7 +1893,7 @@ class User extends Base
 
         //  Is anybody home? Hello...?
         if (!$me) {
-            $me = $this->me;
+            $me = $this->iActiveUserId;
             if (!$me) {
                 return false;
             }
@@ -1872,12 +1947,12 @@ class User extends Base
     /**
      * Create a new user
      *
-     * @param array   $data        An array of data to create the user with
-     * @param boolean $sendWelcome Whether to send the welcome email
+     * @param array   $data         An array of data to create the user with
+     * @param boolean $bSendWelcome Whether to send the welcome email
      *
      * @return mixed                StdClass on success, false on failure
      */
-    public function create(array $data = [], $sendWelcome = true)
+    public function create(array $data = [], $bSendWelcome = true)
     {
         $oDate              = Factory::factory('DateTime');
         $oDb                = Factory::service('Database');
@@ -2102,7 +2177,7 @@ class User extends Base
                 }
 
                 //  Send the user the welcome email
-                if ($sendWelcome) {
+                if ($bSendWelcome) {
 
                     $oEmailer      = Factory::service('Emailer', 'nails/module-email');
                     $oEmail        = new \stdClass();
