@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
@@ -51,7 +52,7 @@ class Register extends Base
     public function index()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -65,7 +66,7 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         /** @var Group $oUserGroupModel */
-        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         $iDefaultGroupId = $oUserGroupModel->getDefaultGroupId();
 
         // --------------------------------------------------------------------------
@@ -158,7 +159,7 @@ class Register extends Base
                 // --------------------------------------------------------------------------
 
                 /** @var \Nails\Auth\Model\User $oUserModel */
-                $oUserModel = Factory::model('User', 'nails/module-auth');
+                $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
                 $oUser      = $oUserModel->create($aInsertData);
 
                 if ($oUser) {
@@ -205,9 +206,9 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         /** @var SocialSignOn $oSocial */
-        $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         $this->data['social_signon_enabled']   = $oSocial->isEnabled();
         $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');

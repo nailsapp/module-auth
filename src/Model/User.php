@@ -12,8 +12,10 @@
 
 namespace Nails\Auth\Model;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Events;
 use Nails\Auth\Model\User\Password;
+use Nails\Auth\Resource;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Cookie;
@@ -21,12 +23,33 @@ use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\Input;
+use Nails\Email;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Testing;
 
+/**
+ * Class User
+ *
+ * @package Nails\Auth\Model
+ */
 class User extends Base
 {
+    /**
+     * The name of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_NAME = 'User';
+
+    /**
+     * The provider of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
+
+    // --------------------------------------------------------------------------
 
     /**
      * The ID of the active user
@@ -38,7 +61,7 @@ class User extends Base
     /**
      * The Active User object
      *
-     * @var \stdClass
+     * @var Resource\User
      */
     protected $oActiveUser;
 
@@ -201,7 +224,7 @@ class User extends Base
     /**
      * Log in a previously logged in user
      *
-     * @return boolean
+     * @return bool
      */
     protected function loginRememberedUser()
     {
@@ -304,9 +327,9 @@ class User extends Base
     /**
      * Set the active user
      *
-     * @param \stdClass $oUser The user object to set
+     * @param Resource\User $oUser The user object to set
      */
-    public function setActiveUser($oUser)
+    public function setActiveUser(Resource\User $oUser)
     {
         $this->oActiveUser = $oUser;
         $oDateTimeService  = Factory::service('DateTime');
@@ -330,7 +353,7 @@ class User extends Base
      */
     public function clearActiveUser()
     {
-        $this->oActiveUser = new \stdClass();
+        $this->oActiveUser = Factory::resource(static::RESOURCE_NAME, static::RESOURCE_PROVIDER, (object) []);
     }
 
     // --------------------------------------------------------------------------
@@ -338,10 +361,10 @@ class User extends Base
     /**
      * Set the user's login data
      *
-     * @param mixed   $mIdEmail        The user's ID or email address
-     * @param boolean $bSetSessionData Whether to set the session data or not
+     * @param mixed $mIdEmail        The user's ID or email address
+     * @param bool  $bSetSessionData Whether to set the session data or not
      *
-     * @return boolean
+     * @return bool
      */
     public function setLoginData($mIdEmail, $bSetSessionData = true)
     {
@@ -388,7 +411,7 @@ class User extends Base
 
             //  Set session variables
             if ($bSetSessionData) {
-                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
                 $oSession->setUserData([
                     'id'       => $oUser->id,
                     'email'    => $oUser->email,
@@ -423,7 +446,7 @@ class User extends Base
         $iUserId = $this->activeUser('id');
 
         //  Clear the session
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         $oSession->unsetUserData('id');
         $oSession->unsetUserData('email');
         $oSession->unsetUserData('group_id');
@@ -495,7 +518,7 @@ class User extends Base
      *
      * @param mixed $user The user to check, uses activeUser if null
      *
-     * @return boolean
+     * @return bool
      */
     public function isAdmin($user = null)
     {
@@ -509,11 +532,11 @@ class User extends Base
      * the system can log them back in. This method is simply a quick and logical
      * way of checking if the session variable exists.
      *
-     * @return boolean
+     * @return bool
      */
     public function wasAdmin()
     {
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         return (bool) $oSession->getUserData($this->sAdminRecoveryField);
     }
 
@@ -522,12 +545,12 @@ class User extends Base
     /**
      * Adds to the admin recovery array, allowing suers to login as other users multiple times, and come back
      *
-     * @param integer $loggingInAs The ID of the user who is being imitated
-     * @param string  $returnTo    Where to redirect the user when they log back in
+     * @param int    $loggingInAs The ID of the user who is being imitated
+     * @param string $returnTo    Where to redirect the user when they log back in
      */
     public function setAdminRecoveryData($loggingInAs, $returnTo = '')
     {
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         $oInput   = Factory::service('Input');
         //  Look for existing Recovery Data
         $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
@@ -566,7 +589,7 @@ class User extends Base
      */
     public function getAdminRecoveryData()
     {
-        $oSession             = Factory::service('Session', 'nails/module-auth');
+        $oSession             = Factory::service('Session', Constants::MODULE_SLUG);
         $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -585,7 +608,7 @@ class User extends Base
      */
     public function unsetAdminRecoveryData()
     {
-        $oSession              = Factory::service('Session', 'nails/module-auth');
+        $oSession              = Factory::service('Session', Constants::MODULE_SLUG);
         $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($aExistingRecoveryData)) {
@@ -605,7 +628,7 @@ class User extends Base
      *
      * @param mixed $user The user to check, uses activeUser if null
      *
-     * @return boolean
+     * @return bool
      */
     public function isSuperuser($user = null)
     {
@@ -621,7 +644,7 @@ class User extends Base
      * @param mixed  $mUser     The user to check for; if null uses activeUser, if numeric, fetches user, if object
      *                          uses that object
      *
-     * @return  boolean
+     * @return  bool
      */
     public function hasPermission($sSearch, $mUser = null)
     {
@@ -826,33 +849,33 @@ class User extends Base
     /**
      * Look up a user by their identifier
      *
-     * @param string $identifier The user's identifier, either an email address or a username
+     * @param string $sIdentifier The user's identifier, either an email address or a username
      *
-     * @return mixed              false on failure, stdClass on success
+     * @return Resource\User|null
      */
-    public function getByIdentifier($identifier)
+    public function getByIdentifier(string $sIdentifier): ?Resource\User
     {
         switch (APP_NATIVE_LOGIN_USING) {
 
             case 'EMAIL':
-                $user = $this->getByEmail($identifier);
+                return $this->getByEmail($sIdentifier);
                 break;
 
             case 'USERNAME':
-                $user = $this->getByUsername($identifier);
+                return $this->getByUsername($sIdentifier);
                 break;
 
             default:
                 Factory::helper('email');
-                if (valid_email($identifier)) {
-                    $user = $this->getByEmail($identifier);
+                if (valid_email($sIdentifier)) {
+                    return $this->getByEmail($sIdentifier);
                 } else {
-                    $user = $this->getByUsername($identifier);
+                    return $this->getByUsername($sIdentifier);
                 }
                 break;
         }
 
-        return $user;
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -860,26 +883,20 @@ class User extends Base
     /**
      * Get a user by their email address
      *
-     * @param string $email The user's email address
+     * @param string $sEmail The user's email address
      *
-     * @return mixed         stdClass on success, false on failure
+     * @return Resource\User|null
      */
-    public function getByEmail($email)
+    public function getByEmail(string $sEmail): ?Resource\User
     {
-        if (!is_string($email)) {
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Look up the email, and if we find an ID then fetch that user
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('user_id');
-        $oDb->where('email', trim($email));
+        $oDb->where('email', trim($sEmail));
         $user = $oDb->get($this->tableEmail)->row();
 
-        return $user ? $this->getById($user->user_id) : false;
+        return $user ? $this->getById($user->user_id) : null;
     }
 
     // --------------------------------------------------------------------------
@@ -887,28 +904,22 @@ class User extends Base
     /**
      * Get a user by their username
      *
-     * @param string $username The user's username
+     * @param string $sUsername The user's username
      *
-     * @return mixed            stdClass on success, false on failure
+     * @return Resource\User|null
      */
-    public function getByUsername($username)
+    public function getByUsername(string $sUsername): ?Resource\User
     {
-        if (!is_string($username)) {
-            return false;
-        }
-
-        $data = [
+        $aUsers = $this->getAll([
             'where' => [
                 [
                     'column' => $this->tableAlias . '.username',
-                    'value'  => $username,
+                    'value'  => $sUsername,
                 ],
             ],
-        ];
+        ]);
 
-        $user = $this->getAll(null, null, $data);
-
-        return empty($user) ? false : $user[0];
+        return empty($aUsers) ? null : reset($aUsers);
     }
 
     // --------------------------------------------------------------------------
@@ -919,15 +930,15 @@ class User extends Base
      * @param string $md5Id The MD5 hash of their ID
      * @param string $md5Pw The MD5 hash of their password
      *
-     * @return mixed         stdClass on success, false on failure
+     * @return Resource\User|null
      */
-    public function getByHashes($md5Id, $md5Pw)
+    public function getByHashes(string $md5Id, string $md5Pw): ?Resource\User
     {
         if (empty($md5Id) || empty($md5Pw)) {
-            return false;
+            return null;
         }
 
-        $data = [
+        $aUsers = $this->getAll([
             'where' => [
                 [
                     'column' => $this->tableAlias . '.id_md5',
@@ -938,11 +949,9 @@ class User extends Base
                     'value'  => $md5Pw,
                 ],
             ],
-        ];
+        ]);
 
-        $user = $this->getAll(null, null, $data);
-
-        return empty($user) ? false : $user[0];
+        return empty($aUsers) ? null : reset($aUsers);
     }
 
     // --------------------------------------------------------------------------
@@ -950,28 +959,22 @@ class User extends Base
     /**
      * Get a user by their referral code
      *
-     * @param string $referralCode The user's referral code
+     * @param string $sReferralCode The user's referral code
      *
-     * @return mixed                stdClass on success, false on failure
+     * @return Resource\User|null
      */
-    public function getByReferral($referralCode)
+    public function getByReferral(string $sReferralCode): ?Resource\User
     {
-        if (!is_string($referralCode)) {
-            return false;
-        }
-
-        $data = [
+        $aUsers = $this->getAll([
             'where' => [
                 [
                     'column' => $this->tableAlias . '.referral',
-                    'value'  => $referralCode,
+                    'value'  => $sReferralCode,
                 ],
             ],
-        ];
+        ]);
 
-        $user = $this->getAll(null, null, $data);
-
-        return empty($user) ? false : $user[0];
+        return empty($aUsers) ? null : reset($aUsers);
     }
 
     // --------------------------------------------------------------------------
@@ -979,12 +982,13 @@ class User extends Base
     /**
      * Get all the email addresses which are registered to a particular user ID
      *
-     * @param integer $id The user's ID
+     * @param int $id The user's ID
      *
      * @return array
      */
     public function getEmailsForUser($id)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->where('user_id', $id);
         $oDb->order_by('date_added');
@@ -999,10 +1003,10 @@ class User extends Base
      * active user. If $data is passed then the method will attempt to update
      * the user and/or user_meta_* tables
      *
-     * @param integer $iUserId The ID of the user to update
-     * @param array   $data    Any data to be updated
+     * @param int   $iUserId The ID of the user to update
+     * @param array $data    Any data to be updated
      *
-     * @return boolean
+     * @return bool
      */
     public function update($iUserId = null, array $data = null): bool
     {
@@ -1031,7 +1035,7 @@ class User extends Base
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         if ($data) {
 
@@ -1293,9 +1297,9 @@ class User extends Base
     /**
      * Works out the correct user ID, falls back to activeUser()
      *
-     * @param integer $iUserId The user ID to use
+     * @param int $iUserId The user ID to use
      *
-     * @return integer
+     * @return int
      */
     protected function getUserId($iUserId = null)
     {
@@ -1316,10 +1320,10 @@ class User extends Base
     /**
      * Saves a user object to the persistent cache
      *
-     * @param integer $iUserId The user ID to cache
-     * @param array   $aData   The data array
+     * @param int   $iUserId The user ID to cache
+     * @param array $aData   The data array
      *
-     * @return boolean
+     * @return bool
      */
     public function setCacheUser($iUserId, $aData = [])
     {
@@ -1343,7 +1347,7 @@ class User extends Base
     /**
      * Removes a user from the cache
      *
-     * @param integer $iUserId The User ID to remove
+     * @param int $iUserId The User ID to remove
      */
     protected function unsetCacheUser($iUserId)
     {
@@ -1357,11 +1361,11 @@ class User extends Base
     /**
      * Adds a new email to the user email table. Will optionally send the verification email, too.
      *
-     * @param string  $email       The email address to add
-     * @param integer $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
-     * @param boolean $bIsPrimary  Whether or not the email address should be the primary email address for the user
-     * @param boolean $is_verified Whether ot not the email should be marked as verified
-     * @param boolean $send_email  If unverified, whether or not the verification email should be sent
+     * @param string $email       The email address to add
+     * @param int    $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
+     * @param bool   $bIsPrimary  Whether or not the email address should be the primary email address for the user
+     * @param bool   $is_verified Whether ot not the email should be marked as verified
+     * @param bool   $send_email  If unverified, whether or not the verification email should be sent
      *
      * @return mixed                String containing verification code on success, false on failure
      */
@@ -1429,7 +1433,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         $sCode          = $oPasswordModel->salt();
 
         $oDb->set('user_id', $oUser->id);
@@ -1489,10 +1493,10 @@ class User extends Base
     /**
      * Send, or resend, the verify email for a particular email address
      *
-     * @param integer $email_id The email's ID
-     * @param integer $iUserId  The user's ID
+     * @param int $email_id The email's ID
+     * @param int $iUserId  The user's ID
      *
-     * @return boolean
+     * @return bool
      */
     public function emailAddSendVerify($email_id, $iUserId = null)
     {
@@ -1537,7 +1541,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oEmailer                = Factory::service('Emailer', 'nails/module-email');
+        $oEmailer                = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
         $oEmail                  = new \stdClass();
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
@@ -1565,10 +1569,10 @@ class User extends Base
      * Deletes a non-primary email from the user email table, optionally filtering
      * by $iUserId
      *
-     * @param mixed   $mEmailId The email address, or the ID of the email address to remove
-     * @param integer $iUserId  The ID of the user to restrict to
+     * @param mixed $mEmailId The email address, or the ID of the email address to remove
+     * @param int   $iUserId  The ID of the user to restrict to
      *
-     * @return boolean
+     * @return bool
      */
     public function emailDelete($mEmailId, $iUserId = null)
     {
@@ -1607,7 +1611,7 @@ class User extends Base
      * @param mixed  $mIdEmail The numeric ID of the user, or the email address
      * @param string $sCode    The verification code as generated by emailAdd()
      *
-     * @return boolean
+     * @return bool
      */
     public function emailVerify($mIdEmail, $sCode)
     {
@@ -1672,10 +1676,10 @@ class User extends Base
     /**
      * Sets an email address as the primary email address for that user.
      *
-     * @param mixed   $mIdEmail The numeric  ID of the email address, or the email address itself
-     * @param integer $iUserId  Specify the user ID which this should apply to
+     * @param mixed $mIdEmail The numeric  ID of the email address, or the email address itself
+     * @param int   $iUserId  Specify the user ID which this should apply to
      *
-     * @return boolean
+     * @return bool
      */
     public function emailMakePrimary($mIdEmail, $iUserId = null)
     {
@@ -1737,10 +1741,10 @@ class User extends Base
     /**
      * Increment the user's failed logins
      *
-     * @param integer $iUserId The user ID to increment
-     * @param integer $expires How long till the block, if the threshold is reached, expires.
+     * @param int $iUserId The user ID to increment
+     * @param int $expires How long till the block, if the threshold is reached, expires.
      *
-     * @return boolean
+     * @return bool
      */
     public function incrementFailedLogin($iUserId, $expires = 300)
     {
@@ -1758,9 +1762,9 @@ class User extends Base
     /**
      * Reset a user's failed login
      *
-     * @param integer $iUserId The user ID to reset
+     * @param int $iUserId The user ID to reset
      *
-     * @return boolean
+     * @return bool
      */
     public function resetFailedLogin($iUserId)
     {
@@ -1775,9 +1779,9 @@ class User extends Base
     /**
      * Update a user's `last_login` field
      *
-     * @param integer $iUserId The user ID to update
+     * @param int $iUserId The user ID to update
      *
-     * @return boolean
+     * @return bool
      */
     public function updateLastLogin($iUserId)
     {
@@ -1792,11 +1796,11 @@ class User extends Base
     /**
      * Set the user's 'rememberMe' cookie, nom nom nom
      *
-     * @param integer $iId       The User's ID
-     * @param string  $sPassword The user's password, hashed
-     * @param string  $sEmail    The user's email\
+     * @param int    $iId       The User's ID
+     * @param string $sPassword The user's password, hashed
+     * @param string $sEmail    The user's email\
      *
-     * @return boolean
+     * @return bool
      */
     public function setRememberCookie($iId = null, $sPassword = null, $sEmail = null)
     {
@@ -1871,12 +1875,12 @@ class User extends Base
     /**
      * Refresh the user's session from the database
      *
-     * @return boolean
+     * @return bool
      */
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         if ($this->wasAdmin()) {
 
             $recoveryData = $this->getAdminRecoveryData();
@@ -1947,8 +1951,8 @@ class User extends Base
     /**
      * Create a new user
      *
-     * @param array   $data         An array of data to create the user with
-     * @param boolean $bSendWelcome Whether to send the welcome email
+     * @param array $data         An array of data to create the user with
+     * @param bool  $bSendWelcome Whether to send the welcome email
      *
      * @return mixed                StdClass on success, false on failure
      */
@@ -1957,8 +1961,8 @@ class User extends Base
         $oDate              = Factory::factory('DateTime');
         $oDb                = Factory::service('Database');
         $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', 'nails/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserGroupModel    = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         //  Has an email or a username been submitted?
         if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
@@ -2179,7 +2183,7 @@ class User extends Base
                 //  Send the user the welcome email
                 if ($bSendWelcome) {
 
-                    $oEmailer      = Factory::service('Emailer', 'nails/module-email');
+                    $oEmailer      = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
                     $oEmail        = new \stdClass();
                     $oEmail->type  = 'new_user_' . $oGroup->id;
                     $oEmail->to_id = $iId;
@@ -2251,9 +2255,9 @@ class User extends Base
     /**
      * Delete a user
      *
-     * @param integer $iUserId The ID of the user to delete
+     * @param int $iUserId The ID of the user to delete
      *
-     * @return boolean
+     * @return bool
      */
     public function destroy($iUserId): bool
     {
@@ -2290,9 +2294,9 @@ class User extends Base
     /**
      * Alias to destroy()
      *
-     * @param integer $iUserId The ID of the user to delete
+     * @param int $iUserId The ID of the user to delete
      *
-     * @return boolean
+     * @return bool
      */
     public function delete($iUserId): bool
     {
@@ -2334,8 +2338,8 @@ class User extends Base
     /**
      * Rewards a user for their referral
      *
-     * @param integer $iUserId    The ID of the user who signed up
-     * @param integer $referrerId The ID of the user who made the referral
+     * @param int $iUserId    The ID of the user who signed up
+     * @param int $referrerId The ID of the user who made the referral
      *
      * @return void
      */
@@ -2349,9 +2353,9 @@ class User extends Base
     /**
      * Suspend a user
      *
-     * @param integer $iUserId The ID of the user to suspend
+     * @param int $iUserId The ID of the user to suspend
      *
-     * @return boolean
+     * @return bool
      */
     public function suspend($iUserId)
     {
@@ -2363,9 +2367,9 @@ class User extends Base
     /**
      * Unsuspend a user
      *
-     * @param integer $iUserId The ID of the user to unsuspend
+     * @param int $iUserId The ID of the user to unsuspend
      *
-     * @return boolean
+     * @return bool
      */
     public function unsuspend($iUserId)
     {
@@ -2377,11 +2381,11 @@ class User extends Base
     /**
      * Checks whether a username is valid
      *
-     * @param string  $username     The username to check
-     * @param boolean $checkDb      Whether to test against the database
-     * @param mixed   $ignoreUserId The ID of a user to ignore when checking the database
+     * @param string $username     The username to check
+     * @param bool   $checkDb      Whether to test against the database
+     * @param mixed  $ignoreUserId The ID of a user to ignore when checking the database
      *
-     * @return boolean
+     * @return bool
      */
     public function isValidUsername($username, $checkDb = false, $ignoreUserId = null)
     {
@@ -2443,11 +2447,11 @@ class User extends Base
     /**
      * Merges users with ID in $mergeIds into $iUserId
      *
-     * @param integer $iUserId    The user ID to keep
-     * @param array   $aMergeIds  An array of user ID's to merge into $iUserId
-     * @param boolean $bIsPreview Whether we're generating a preview or not
+     * @param int   $iUserId    The user ID to keep
+     * @param array $aMergeIds  An array of user ID's to merge into $iUserId
+     * @param bool  $bIsPreview Whether we're generating a preview or not
      *
-     * @return boolean
+     * @return bool
      */
     public function merge($iUserId, $aMergeIds, $bIsPreview = false)
     {
@@ -2670,12 +2674,12 @@ class User extends Base
      * Formats a single object
      *
      * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     * correctly format the output. Use this to cast ints and bools and/or organise data into objects.
      *
      * @param object $oObj      A reference to the object being formatted.
      * @param array  $aData     The same data array which is passed to getCountCommon(), for reference if needed
-     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aIntegers Fields which should be cast as ints if numerical and not null
+     * @param array  $aBools    Fields which should be cast as bools if not null
      * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void

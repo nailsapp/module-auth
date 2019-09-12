@@ -1,8 +1,11 @@
 <?php
 
+use Nails\Auth\Constants;
+use Nails\Auth\Model\User\Group;
 use Nails\Factory;
 
-$oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+/** @var Group $oUserGroupModel */
+$oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
 
 ?>
 <fieldset>
@@ -24,7 +27,6 @@ $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
 
             //  If the group is a superuser group and the active user is not a superuser then remove it
             if (is_array($group->acl) && in_array('admin:superuser', $group->acl) && !isSuperuser()) {
-
                 continue;
             }
 

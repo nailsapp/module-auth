@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\Auth;
 use Nails\Auth\Service\SocialSignOn;
@@ -38,9 +39,9 @@ class Logout extends Base
         // --------------------------------------------------------------------------
 
         /** @var SocialSignOn $oSocial */
-        $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
 
         $oSocial->logout();
         $oAuthModel->logout();

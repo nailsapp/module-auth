@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Controller;
 
+use Nails\Auth\Constants;
 use Nails\Factory;
 
 abstract class BaseMfa extends Base
@@ -43,8 +44,8 @@ abstract class BaseMfa extends Base
 
     protected function validateToken()
     {
-        $oSession   = Factory::service('Session', 'nails/module-auth');
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oSession   = Factory::service('Session', Constants::MODULE_SLUG);
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oInput     = Factory::service('Input');
         $oUri       = Factory::service('Uri');
 
@@ -82,7 +83,7 @@ abstract class BaseMfa extends Base
                 break;
         }
 
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         if (!$oAuthModel->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
             $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
@@ -121,7 +122,7 @@ abstract class BaseMfa extends Base
     protected function loginUser()
     {
         //  Set login data for this user
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUserModel->setLoginData($this->mfaUser->id);
 
         //  If we're remembering this user set a cookie
@@ -189,13 +190,13 @@ abstract class BaseMfa extends Base
             );
         }
 
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
         //  Delete the token we generated, it's no needed, eh!
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         $oAuthModel->mfaTokenDelete($this->data['token']['id']);
 
         // --------------------------------------------------------------------------

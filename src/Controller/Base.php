@@ -12,6 +12,8 @@
 
 namespace Nails\Auth\Controller;
 
+use Nails\Auth\Constants;
+use Nails\Common\Exception\FactoryException;
 use Nails\Factory;
 
 abstract class Base extends \App\Controller\Base
@@ -19,7 +21,7 @@ abstract class Base extends \App\Controller\Base
     /**
      * Base constructor.
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function __construct()
     {
@@ -36,7 +38,7 @@ abstract class Base extends \App\Controller\Base
      *
      * @param string $sView The view to test
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function loadStyles($sView)
     {
@@ -45,7 +47,7 @@ abstract class Base extends \App\Controller\Base
             $oAsset = Factory::service('Asset');
             $oAsset->clear();
             $oAsset->load('nails.min.css', 'nails/common');
-            $oAsset->load('styles.min.css', 'nails/module-auth');
+            $oAsset->load('styles.min.css', Constants::MODULE_SLUG);
         }
     }
 }

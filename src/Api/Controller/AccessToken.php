@@ -14,6 +14,7 @@ namespace Nails\Auth\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
+use Nails\Auth\Constants;
 use Nails\Auth\Model\Auth;
 use Nails\Common\Service\HttpCodes;
 use Nails\Factory;
@@ -30,9 +31,9 @@ class AccessToken extends Base
         /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
         /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
-        $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
+        $oAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
         $aData       = $this->getRequestData();
         $sIdentifier = getFromArray('identifier', $aData);
@@ -57,8 +58,8 @@ class AccessToken extends Base
          * - @todo: handle 2FA, perhaps?
          */
 
-        $oUserModel         = Factory::model('User', 'nails/module-auth');
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserModel         = Factory::model('User', Constants::MODULE_SLUG);
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         $oUser              = $oUserModel->getByIdentifier($sIdentifier);
         $bIsSuspended       = $oUser->is_suspended;
         $bPwIsTemp          = $oUser->temp_pw;
@@ -114,7 +115,7 @@ class AccessToken extends Base
         /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
         /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
-        $oAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
+        $oAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
         if (!isLoggedIn()) {
             throw new ApiException(

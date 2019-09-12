@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Console\Command\User\Password;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Exception\Console\PasswordNotAcceptableException;
 use Nails\Auth\Exception\Console\UserNotFoundException;
 use Nails\Auth\Model\User;
@@ -72,9 +73,9 @@ class Reset extends Base
         // --------------------------------------------------------------------------
 
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var User\Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 

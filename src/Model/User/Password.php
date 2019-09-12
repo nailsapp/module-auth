@@ -12,11 +12,13 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
+use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
 
@@ -57,13 +59,13 @@ class Password extends Base
     public function change(int $iUserId, string $sPassword, bool $bIsTemp = false)
     {
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Emailer $oEmailer */
-        $oEmailer = Factory::service('Emailer', 'nails/module-email');
+        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -631,7 +633,7 @@ class Password extends Base
         // --------------------------------------------------------------------------
 
         //  Update the user
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUser      = $oUserModel->getByIdentifier($sIdentifier);
 
         if ($oUser) {
@@ -669,7 +671,7 @@ class Password extends Base
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $oDb->select('u.id, u.group_id, u.forgotten_password_code, e.email, u.username');
         $oDb->join($oUserModel->getEmailTableName() . ' e', 'e.user_id = u.id AND e.is_primary = 1');

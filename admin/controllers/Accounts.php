@@ -16,6 +16,7 @@ use Nails\Admin\Controller\DefaultController;
 use Nails\Admin\Helper;
 use Nails\Admin\Model\ChangeLog;
 use Nails\Admin\Nav;
+use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
@@ -37,7 +38,7 @@ use Nails\Factory;
 class Accounts extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'User';
-    const CONFIG_MODEL_PROVIDER = 'nails/module-auth';
+    const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
     const CONFIG_PERMISSION     = 'auth:accounts';
     const CONFIG_SORT_DIRECTION = 'desc';
     const CONFIG_INDEX_DATA     = [
@@ -303,7 +304,7 @@ class Accounts extends DefaultController
     protected function indexCheckboxFilters(): array
     {
         /** @var Group $oGroupModel */
-        $oGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         $aGroups     = $oGroupModel->getAll();
 
         return array_merge(
@@ -411,7 +412,7 @@ class Accounts extends DefaultController
                 if (!$aData['password']) {
                     //  Password isn't set, generate one
                     /** @var Password $oUserPasswordModel */
-                    $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+                    $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
                     $aData['password']  = $oUserPasswordModel->generate($aData['group_id']);
                 }
 
@@ -429,7 +430,7 @@ class Accounts extends DefaultController
                 $aData['inform_user_pw'] = true;
 
                 /** @var User $oUserModel */
-                $oUserModel = Factory::model('User', 'nails/module-auth');
+                $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
                 $new_user   = $oUserModel->create($aData, stringToBoolean($oInput->post('send_activation', true)));
 
                 if ($new_user) {
@@ -440,7 +441,7 @@ class Accounts extends DefaultController
                      */
 
                     /** @var Session $oSession */
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Constants::MODULE_SLUG);
 
                     if ($oUserModel->getErrors()) {
 
@@ -497,9 +498,9 @@ class Accounts extends DefaultController
 
         //  Get data for the view
         /** @var Group $oUserGroupModel */
-        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         $this->data['groups']        = $oUserGroupModel->getAll();
         $this->data['passwordRules'] = [];
@@ -543,9 +544,9 @@ class Accounts extends DefaultController
          */
 
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $oUser = $oUserModel->getById($oUri->segment(5));
 
@@ -890,7 +891,7 @@ class Accounts extends DefaultController
 
         //  Get the groups, timezones and languages
         /** @var Group $oUserGroupModel */
-        $oUserGroupModel      = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserGroupModel      = Factory::model('UserGroup', Constants::MODULE_SLUG);
         $this->data['groups'] = $oUserGroupModel->getAll();
 
         /** @var Language $oLanguageService */
@@ -932,7 +933,7 @@ class Accounts extends DefaultController
         }
 
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel          = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel          = Factory::model('UserPassword', Constants::MODULE_SLUG);
         $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
 
         // --------------------------------------------------------------------------
@@ -965,9 +966,9 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $iUserId = $oUri->segment(5);
         $oUser   = $oUserModel->getById($iUserId);
@@ -1039,7 +1040,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $aUserIds = explode(',', $oInput->get('users'));
         $aUsers   = $oUserModel->getByIds($aUserIds);
@@ -1077,7 +1078,7 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         /** @var Group $oUserGroupModel */
-        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         $aGroups         = $oUserGroupModel->getAll();
 
         if (!isSuperuser()) {
@@ -1100,7 +1101,7 @@ class Accounts extends DefaultController
         if ($oInput->post()) {
             if ($oUserGroupModel->changeUserGroup(arrayExtractProperty($aUsers, 'id'), (int) $oInput->post('group_id'))) {
                 /** @var Session $oSession */
-                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
                 $oSession->setFlashData('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts');
             } else {
@@ -1140,9 +1141,9 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $iUserId   = $oUri->segment(5);
         $oUser     = $oUserModel->getById($iUserId);
@@ -1225,9 +1226,9 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $iUserId   = $oUri->segment(5);
         $oUser     = $oUserModel->getById($iUserId);
@@ -1305,9 +1306,9 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $iUserId   = $oUri->segment(5);
         $oUser     = $oUserModel->getById($iUserId);
@@ -1373,7 +1374,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $action = $oInput->post('action');
         $sEmail = trim($oInput->post('email'));
@@ -1449,7 +1450,7 @@ class Accounts extends DefaultController
         }
 
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         $oSession->setFlashData($sStatus, $sMessage);
         redirect($oInput->post('return'));
     }

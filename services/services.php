@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'services' => [
+    'services'  => [
         'Session'      => function () {
             if (class_exists('\App\Auth\Service\Session')) {
                 return new \App\Auth\Service\Session();
@@ -24,7 +24,7 @@ return [
             }
         },
     ],
-    'models'   => [
+    'models'    => [
         'Auth'            => function () {
             if (class_exists('\App\Auth\Model\Auth')) {
                 return new \App\Auth\Model\Auth();
@@ -58,6 +58,15 @@ return [
                 return new \App\Auth\Model\User\Password();
             } else {
                 return new \Nails\Auth\Model\User\Password();
+            }
+        },
+    ],
+    'resources' => [
+        'User' => function ($mObj) {
+            if (class_exists('\App\Auth\Resource\User')) {
+                return new \App\Auth\Resource\User($mObj);
+            } else {
+                return new \Nails\Auth\Resource\User($mObj);
             }
         },
     ],

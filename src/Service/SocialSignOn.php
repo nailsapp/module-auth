@@ -14,6 +14,7 @@ namespace Nails\Auth\Service;
 
 use Hybridauth\Adapter\AdapterInterface;
 use Hybridauth\Hybridauth;
+use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Database;
@@ -61,11 +62,11 @@ class SocialSignOn
         /** @var \CI_Controller $oCi */
         $oCi = get_instance();
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var Database oDb */
         $this->oDb = Factory::service('Database');
         /** @var User oUserModel */
-        $this->oUserModel = Factory::model('User', 'nails/module-auth');
+        $this->oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 

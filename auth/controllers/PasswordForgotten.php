@@ -11,6 +11,7 @@
  * @todo        Refactor this class so that not so much code is being duplicated, especially re: MFA
  */
 
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\Auth;
 use Nails\Auth\Model\User\Password;
@@ -20,6 +21,7 @@ use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
 
@@ -47,7 +49,7 @@ class PasswordForgotten extends Base
     public function index()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         if (isLoggedIn()) {
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
@@ -119,12 +121,12 @@ class PasswordForgotten extends Base
 
                 //  Attempt to reset password
                 /** @var Password $oUserPasswordModel */
-                $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+                $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
                 if ($oUserPasswordModel->setToken($sIdentifier)) {
 
                     //  Send email to user
                     /** @var \Nails\Auth\Model\User $oUserModel */
-                    $oUserModel = Factory::model('User', 'nails/module-auth');
+                    $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL':
@@ -189,7 +191,7 @@ class PasswordForgotten extends Base
                         // --------------------------------------------------------------------------
 
                         /** @var Emailer $oEmailer */
-                        $oEmailer = Factory::service('Emailer', 'nails/module-email');
+                        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
                         if (!$oEmailer->send($oEmail, true)) {
                             if (!$bAlwaysSucceed) {
                                 throw new NailsException(lang('auth_forgot_email_fail'));
@@ -254,13 +256,13 @@ class PasswordForgotten extends Base
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         /**
          * Attempt to verify code, if two factor auth is enabled then don't generate a
@@ -542,7 +544,7 @@ class PasswordForgotten extends Base
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
             /** @var Session $oSession */
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }

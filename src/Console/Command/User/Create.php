@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Console\Command\User;
 
+use Nails\Auth\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\Base;
 use Nails\Environment;
@@ -23,13 +24,13 @@ class Create extends Base
     protected function configure()
     {
         $this->setName('make:user')
-             ->setDescription('Creates a new super user')
-             ->addOption(
-                 'defaults',
-                 'd',
-                 InputOption::VALUE_NONE,
-                 'Use Default Values'
-             );
+            ->setDescription('Creates a new super user')
+            ->addOption(
+                'defaults',
+                'd',
+                InputOption::VALUE_NONE,
+                'Use Default Values'
+            );
 
         //  Allow user to pass in specific fields; these will override any values picked up using --default
         foreach (['first_name', 'last_name', 'username', 'email', 'password'] as $sField) {
@@ -57,8 +58,8 @@ class Create extends Base
     /**
      * Executes the app
      *
-     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
-     * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     * @param InputInterface  $oInput  The Input Interface provided by Symfony
+     * @param OutputInterface $oOutput The Output Interface provided by Symfony
      *
      * @return int
      * @throws \Exception
@@ -207,8 +208,8 @@ class Create extends Base
         if (file_exists($sConfigFile)) {
             $sJson = file_get_contents($sConfigFile);
             $oJson = json_decode($sJson);
-            if (!empty($oJson->{'nails/module-auth'}->default_user)) {
-                $oDefault = $oJson->{'nails/module-auth'}->default_user;
+            if (!empty($oJson->{Constants::MODULE_SLUG}->default_user)) {
+                $oDefault = $oJson->{Constants::MODULE_SLUG}->default_user;
             }
         }
 
@@ -233,7 +234,7 @@ class Create extends Base
      */
     private function createUser($aUser, $iGroupId)
     {
-        $oUserModel        = Factory::model('User', 'nails/module-auth');
+        $oUserModel        = Factory::model('User', Constants::MODULE_SLUG);
         $aUser['group_id'] = $iGroupId;
         try {
             $oUser = $oUserModel->create($aUser, false);
@@ -253,8 +254,8 @@ class Create extends Base
     /**
      * Performs the abort functionality and returns the exit code
      *
-     * @param  array   $aMessages The error message
-     * @param  integer $iExitCode The exit code
+     * @param array   $aMessages The error message
+     * @param integer $iExitCode The exit code
      *
      * @return int
      */

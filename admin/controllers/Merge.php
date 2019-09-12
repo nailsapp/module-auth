@@ -13,6 +13,7 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Helper;
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Common\Exception\ValidationException;
 use Nails\Factory;
@@ -93,7 +94,7 @@ class Merge extends BaseAdmin
                     throw new ValidationException('You cannot list yourself as a user to merge.');
                 }
 
-                $oUserModel   = Factory::model('User', 'nails/module-auth');
+                $oUserModel   = Factory::model('User', Constants::MODULE_SLUG);
                 $oMergeResult = $oUserModel->merge($iUserId, $aMergeIds, $bPreview);
 
                 if (empty($oMergeResult)) {
@@ -107,7 +108,7 @@ class Merge extends BaseAdmin
                     return;
 
                 } else {
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Users were merged successfully.');
                     redirect('admin/auth/merge');
                 }

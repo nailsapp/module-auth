@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Console\Command\User\AccessToken;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Exception\Console\UserNotFoundException;
 use Nails\Auth\Model\User;
 use Nails\Console\Command\Base;
@@ -70,9 +71,9 @@ class Generate extends Base
         // --------------------------------------------------------------------------
 
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var User\AccessToken $oUserPasswordModel */
-        $oUserAccessTokenModel = Factory::model('UserAccessToken', 'nails/module-auth');
+        $oUserAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 

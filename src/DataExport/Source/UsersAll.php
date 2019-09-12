@@ -4,16 +4,19 @@ namespace Nails\Auth\DataExport\Source;
 
 use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
+use Nails\Auth\Constants;
 use Nails\Factory;
 
 /**
  * Class UsersAll
+ *
  * @package Nails\Auth\DataExport
  */
 class UsersAll implements Source
 {
     /**
      * Returns the format's label
+     *
      * @return string
      */
     public function getLabel(): string
@@ -25,6 +28,7 @@ class UsersAll implements Source
 
     /**
      * Returns the format's file name
+     *
      * @return string
      */
     public function getFileName(): string
@@ -36,6 +40,7 @@ class UsersAll implements Source
 
     /**
      * Returns the format's description
+     *
      * @return string
      */
     public function getDescription(): string
@@ -47,6 +52,7 @@ class UsersAll implements Source
 
     /**
      * Returns an array of additional options for the export
+     *
      * @return array
      */
     public function getOptions(): array
@@ -58,6 +64,7 @@ class UsersAll implements Source
 
     /**
      * Provides an opportunity for the source to decide whether it is available or not to the user
+     *
      * @return bool
      */
     public function isEnabled(): bool
@@ -77,8 +84,8 @@ class UsersAll implements Source
     public function execute($aData = [])
     {
         $oDb             = Factory::service('Database');
-        $oUserModel      = Factory::model('User', 'nails/module-auth');
-        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+        $oUserModel      = Factory::model('User', Constants::MODULE_SLUG);
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
 
         $aTables = [
             $oUserModel->getTableName(),

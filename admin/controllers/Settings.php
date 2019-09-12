@@ -13,6 +13,7 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Helper;
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Factory;
 
@@ -69,7 +70,7 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oSocial                 = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oSocial                 = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         $providers               = $oSocial->getProviders();
         $this->data['providers'] = $providers;
 

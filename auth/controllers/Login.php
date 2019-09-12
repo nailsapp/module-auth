@@ -10,6 +10,7 @@
  * @link
  */
 
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Exception\AuthException;
 use Nails\Auth\Model\Auth;
@@ -18,6 +19,7 @@ use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Session;
 use Nails\Auth\Service\SocialSignOn;
 use Nails\Cdn\Service\Cdn;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FileCache;
@@ -87,12 +89,12 @@ class Login extends Base
      * Validate data and log the user in.
      *
      * @return  void
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      **/
     public function index()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -143,7 +145,7 @@ class Login extends Base
                 $bRememberMe = (bool) $oInput->post('remember');
 
                 /** @var Auth $oAuthModel */
-                $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
 
                 $oUser = $oAuthModel->login($sIdentifier, $sPassword, $bRememberMe);
 
@@ -161,7 +163,7 @@ class Login extends Base
         // --------------------------------------------------------------------------
 
         /** @var SocialSignOn $oSocial */
-        $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
 
         $this->data['social_signon_enabled']   = $oSocial->isEnabled();
         $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');
@@ -187,16 +189,16 @@ class Login extends Base
      * @param boolean  $bRemember Whether to set the rememberMe cookie or not
      * @param string   $sProvider Which provider authenticated the login
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function _login($oUser, $bRemember = false, $sProvider = 'native')
     {
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel = Factory::model('UserPassword', 'nails/module-auth');
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
 
         if ($oUser->is_suspended) {
 
@@ -296,7 +298,7 @@ class Login extends Base
             }
 
             /** @var Session $oSession */
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
             $oSession->setFlashData($sStatus, $sMessage);
 
             $sRedirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $oUser->group_homepage;
@@ -339,7 +341,7 @@ class Login extends Base
          */
 
         /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         $oAuthModel->logout();
 
         redirect('auth/password/reset/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
@@ -401,7 +403,7 @@ class Login extends Base
 
                 //  We are logging in as someone else, log the current user out and try again
                 /** @var Auth $oAuthModel */
-                $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
                 $oAuthModel->logout();
 
                 redirect(preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
@@ -416,9 +418,9 @@ class Login extends Base
          */
 
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUser      = $oUserModel->getByHashes($hash['id'], $hash['pw']);
 
         // --------------------------------------------------------------------------
@@ -488,7 +490,7 @@ class Login extends Base
      *
      * @param string $provider The provider to use
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function socialSignon($provider)
     {
@@ -497,11 +499,11 @@ class Login extends Base
         /** @var Logger $oLogger */
         $oLogger = Factory::service('Logger');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var SocialSignOn $oSocial */
-        $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         //  Fetch the user's social profile and, if one exists, the local profile.
         try {
@@ -888,7 +890,7 @@ class Login extends Base
 
                     if (empty($this->data['return_to'])) {
                         /** @var Group $oUserGroupModel */
-                        $oUserGroupModel = Factory::model('UserGroup', 'nails/module-auth');
+                        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
                         $group           = $oUserGroupModel->getById($newUser->group_id);
                         $sRedirectUrl    = $group->registration_redirect ? $group->registration_redirect : $group->default_homepage;
                     } else {
@@ -937,7 +939,7 @@ class Login extends Base
      * @param array  &$aRequiredData An array of fields to request
      * @param string  $provider      The provider to use
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function requestData(&$aRequiredData, $provider)
     {
@@ -1021,7 +1023,7 @@ class Login extends Base
      * @param array  &$aRequiredData An array of fields to request
      * @param string  $provider      The provider being used
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function requestDataForm(&$aRequiredData, $provider)
     {
@@ -1059,7 +1061,7 @@ class Login extends Base
     /**
      * Route requests appropriately
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function _remap()
     {
@@ -1076,7 +1078,7 @@ class Login extends Base
 
             //  Assume the 3rd segment is a login provider supported by Hybrid Auth
             /** @var SocialSignOn $oSocial */
-            $oSocial = Factory::service('SocialSignOn', 'nails/module-auth');
+            $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
             if ($oSocial->isValidProvider($sMethod)) {
                 $this->socialSignon($sMethod);
             } else {

@@ -10,7 +10,9 @@
  * @link
  */
 
+use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseMfa;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Factory;
 
@@ -19,7 +21,7 @@ class MfaQuestion extends BaseMfa
     /**
      * Ensures we're use the correct MFA type
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function _remap()
     {
@@ -35,7 +37,7 @@ class MfaQuestion extends BaseMfa
     /**
      * Sets up, or asks an MFA Question
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function index()
     {
@@ -45,7 +47,7 @@ class MfaQuestion extends BaseMfa
         // --------------------------------------------------------------------------
 
         $oInput     = Factory::service('Input');
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
 
         if ($oInput->post('answer')) {
 
@@ -203,14 +205,14 @@ class MfaQuestion extends BaseMfa
                                 $sMessage .= 'successfully set your security questions. You will be asked to answer ';
                                 $sMessage .= 'one of them every time you log in.';
 
-                                $oSession = Factory::service('Session', 'nails/module-auth');
+                                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
                                 $oSession->setFlashData($sStatus, $sMessage);
 
                                 $this->loginUser();
 
                             } else {
 
-                                $oUserModel          = Factory::model('User', 'nails/module-auth');
+                                $oUserModel          = Factory::model('User', Constants::MODULE_SLUG);
                                 $this->data['error'] = lang('auth_twofactor_question_set_fail');
                                 $this->data['error'] .= ' ' . $oUserModel->lastError();
                             }
@@ -242,7 +244,7 @@ class MfaQuestion extends BaseMfa
     /**
      * Asks one of the user's questions
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function askQuestion()
     {

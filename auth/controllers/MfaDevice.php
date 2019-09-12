@@ -10,6 +10,8 @@
  * @link
  */
 
+use Nails\Auth\Constants;
+use Nails\Common\Exception\FactoryException;
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 
@@ -18,7 +20,7 @@ class MfaDevice extends BaseMfa
     /**
      * Ensures we're use the correct MFA type
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function _remap()
     {
@@ -34,7 +36,7 @@ class MfaDevice extends BaseMfa
     /**
      * Remaps requests to the correct method
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     public function index()
     {
@@ -44,7 +46,7 @@ class MfaDevice extends BaseMfa
         // --------------------------------------------------------------------------
 
         //  Has this user already set up an MFA?
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         $oMfaDevice = $oAuthModel->mfaDeviceSecretGet($this->mfaUser->id);
 
         if ($oMfaDevice) {
@@ -59,12 +61,12 @@ class MfaDevice extends BaseMfa
     /**
      * Sets up a new MFA device
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function setupDevice()
     {
-        $oSession   = Factory::service('Session', 'nails/module-auth');
-        $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+        $oSession   = Factory::service('Session', Constants::MODULE_SLUG);
+        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
         $oInput     = Factory::service('Input');
 
         if ($oInput->post()) {
@@ -141,7 +143,7 @@ class MfaDevice extends BaseMfa
     /**
      * Requests a code from the user
      *
-     * @throws \Nails\Common\Exception\FactoryException
+     * @throws FactoryException
      */
     protected function requestCode()
     {
@@ -155,7 +157,7 @@ class MfaDevice extends BaseMfa
 
             if ($oFormValidation->run()) {
 
-                $oAuthModel = Factory::model('Auth', 'nails/module-auth');
+                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
                 $sMfaCode   = $oInput->post('mfa_code');
 
                 //  Verify the inout

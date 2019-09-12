@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Auth\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
@@ -147,7 +148,7 @@ class Group extends Base
         }
 
         $oDb        = Factory::service('Database');
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $aUsers     = $oUserModel->getByIds((array) $aUserIds);
 
         try {
