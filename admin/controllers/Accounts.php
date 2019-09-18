@@ -32,7 +32,6 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Language;
 use Nails\Common\Service\Uri;
-use Nails\Components;
 use Nails\Factory;
 
 class Accounts extends DefaultController
@@ -721,7 +720,7 @@ class Accounts extends DefaultController
                 if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
 
                     /** @var Cdn $oCdn */
-                    $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
+                    $oCdn   = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
                     $object = $oCdn->objectReplace($oUser->profile_img, 'profile-images', 'profile_img');
 
                     if ($object) {
@@ -906,11 +905,9 @@ class Accounts extends DefaultController
         $this->data['default_timezone'] = $oDateTimeService->getTimezoneDefault();
 
         //  Fetch any user uploads
-        if (Components::exists('nails/module-cdn')) {
-            /** @var Cdn $oCdn */
-            $oCdn                       = Factory::service('Cdn', 'nails/module-cdn');
-            $this->data['user_uploads'] = $oCdn->getObjectsForUser($oUser->id);
-        }
+        /** @var Cdn $oCdn */
+        $oCdn                       = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
+        $this->data['user_uploads'] = $oCdn->getObjectsForUser($oUser->id);
 
         // --------------------------------------------------------------------------
 
@@ -1334,7 +1331,7 @@ class Accounts extends DefaultController
             if ($oUser->profile_img) {
 
                 /** @var Cdn $oCdn */
-                $oCdn = Factory::service('Cdn', 'nails/module-cdn');
+                $oCdn = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
 
                 if ($oCdn->objectDelete($oUser->profile_img, 'profile-images')) {
 

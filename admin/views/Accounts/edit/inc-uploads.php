@@ -1,50 +1,42 @@
-<?php
+<fieldset id="edit-user-uploads" class="uploads">
+    <legend><?=lang('accounts_edit_upload_legend')?></legend>
+    <ul>
+        <?php
 
-if (\Nails\Components::exists('nails/module-cdn')) {
+        if ($user_uploads) {
 
-    ?>
-    <fieldset id="edit-user-uploads" class="uploads">
-        <legend><?=lang('accounts_edit_upload_legend')?></legend>
-        <ul>
-            <?php
+            foreach ($user_uploads as $file) {
 
-            if ($user_uploads) {
+                echo '<li class="file">';
 
-                foreach ($user_uploads as $file) {
+                switch ($file->file->mime) {
 
-                    echo '<li class="file">';
+                    case 'image/jpg':
+                    case 'image/jpeg':
+                    case 'image/gif':
+                    case 'image/png':
 
-                    switch ($file->file->mime) {
+                        echo '<a href="' . cdnServe($file->id) . '" class="fancybox image">';
+                        echo img(cdnCrop($file->id, 35, 35));
+                        echo $file->file->name->human;
+                        echo '<small>Bucket: ' . $file->bucket->slug . '</small>';
+                        echo '</a>';
+                        break;
 
-                        case 'image/jpg':
-                        case 'image/jpeg':
-                        case 'image/gif':
-                        case 'image/png':
+                    default:
 
-                            echo '<a href="' . cdnServe($file->id) . '" class="fancybox image">';
-                            echo img(cdnCrop($file->id, 35, 35));
-                            echo $file->file->name->human;
-                            echo '<small>Bucket: ' . $file->bucket->slug . '</small>';
-                            echo '</a>';
-                            break;
-
-                        default:
-
-                            echo anchor(cdnServe($file->id) . '?dl=1', $file->file->name->human . '<small>Bucket: ' . $file->bucket->slug . '</small>');
-                            break;
-                    }
-
-                    echo '</li>';
+                        echo anchor(cdnServe($file->id) . '?dl=1', $file->file->name->human . '<small>Bucket: ' . $file->bucket->slug . '</small>');
+                        break;
                 }
 
-            } else {
-
-                echo '<li class="no-data">' . lang('accounts_edit_upload_nofile') . '</li>';
+                echo '</li>';
             }
 
-            ?>
-        </ul>
-    </fieldset>
-    <?php
+        } else {
 
-}
+            echo '<li class="no-data">' . lang('accounts_edit_upload_nofile') . '</li>';
+        }
+
+        ?>
+    </ul>
+</fieldset>

@@ -840,7 +840,7 @@ class Login extends Base
 
                                 //  Attempt upload
                                 /** @var Cdn $oCdn */
-                                $oCdn = Factory::service('Cdn', 'nails/module-cdn');
+                                $oCdn = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
                                 /** @var FileCache $oFileCache */
                                 $oFileCache = Factory::service('FileCache');
 
