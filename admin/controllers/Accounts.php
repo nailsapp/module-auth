@@ -15,7 +15,7 @@ namespace Nails\Admin\Auth;
 use Nails\Admin\Controller\DefaultController;
 use Nails\Admin\Helper;
 use Nails\Admin\Model\ChangeLog;
-use Nails\Admin\Nav;
+use Nails\Admin\Factory\Nav;
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
