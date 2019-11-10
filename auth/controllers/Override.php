@@ -131,6 +131,11 @@ class Override extends Base
 
         // --------------------------------------------------------------------------
 
+        //  Record the event
+        create_event('did_log_in_as', ['new_user' => $oUser->id], activeUser('id'));
+
+        // --------------------------------------------------------------------------
+
         //  Replace current user's session data
         $oUserModel->setLoginData($oUser->id);
 
