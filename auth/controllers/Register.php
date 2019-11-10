@@ -20,6 +20,9 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Factory;
 
+/**
+ * Class Register
+ */
 class Register extends Base
 {
     /**
@@ -165,7 +168,7 @@ class Register extends Base
                 if ($oUser) {
 
                     //  Create an event for this event
-                    create_event('did_register', ['method' => 'native'], $oUser->id);
+                    createUserEvent('did_register', ['method' => 'native'], null, $oUser->id);
 
                     //  Log the user in
                     if (!$oUserModel->setLoginData($oUser->id)) {

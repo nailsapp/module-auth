@@ -34,7 +34,7 @@ class Logout extends Base
         // --------------------------------------------------------------------------
 
         //  Generate an event for this log in
-        create_event('did_log_out');
+        createUserEvent('did_log_out');
 
         // --------------------------------------------------------------------------
 

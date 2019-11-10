@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * Migration:   11
+ * Started:     10/11/2019
+ *
+ * @package     Nails
+ * @subpackage  module-auth
+ * @category    Database Migration
+ * @author      Nails Dev Team
+ * @link
+ */
+
+namespace Nails\Database\Migration\Nails\ModuleAuth;
+
+use Nails\Common\Console\Migrate\Base;
+
+class Migration11 extends Base
+{
+    /**
+     * Execute the migration
+     *
+     * @return Void
+     */
+    public function execute()
+    {
+        $this->query('
+            CREATE TABLE IF NOT EXISTS `{{NAILS_DB_PREFIX}}user_event` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `type` varchar(50) NOT NULL DEFAULT \'\',
+                `url` varchar(300) DEFAULT NULL,
+                `data` mediumtext,
+                `ref` int(11) unsigned DEFAULT NULL,
+                `created` datetime NOT NULL,
+                `created_by` int(11) unsigned DEFAULT NULL,
+                `modified` datetime NOT NULL,
+                `modified_by` int(11) unsigned DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `created_by` (`created_by`),
+                KEY `modified_by` (`modified_by`),
+                CONSTRAINT `{{NAILS_DB_PREFIX}}user_event_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `{{NAILS_DB_PREFIX}}user` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `{{NAILS_DB_PREFIX}}user_event_ibfk_2` FOREIGN KEY (`modified_by`) REFERENCES `{{NAILS_DB_PREFIX}}user` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ');
+
+        //  Migrate legacy events
+        $aResults = $this->query('SHOW TABLES LIKE "{{NAILS_DB_PREFIX}}event"')->fetch();
+        if (count($aResults) > 0) {
+            $this->query('
+                INSERT INTO `{{NAILS_DB_PREFIX}}user_event`
+                    (`id`, `type`, `url`, `data`, `ref`, `created`, `created_by`, `modified`, `modified_by`)
+                SELECT
+                    `id`, `type`, `url`, `data`, `ref`, `created`, `created_by`, `created`, `created_by`
+                FROM `{{NAILS_DB_PREFIX}}event`;
+            ');
+            $this->query('DROP TABLE `{{NAILS_DB_PREFIX}}event`;');
+            $this->query('DELETE FROM `{{NAILS_DB_PREFIX}}migration` WHERE `module` = "nails/module-event";');
+        }
+    }
+}

@@ -19,7 +19,7 @@ if (!function_exists('activeUser')) {
      * Alias to UserModel->activeUser(); method
      *
      * @param bool|string $mKeys      The key to look up in activeUser
-     * @param string         $sDelimiter If multiple fields are requested they'll be joined by this string
+     * @param string      $sDelimiter If multiple fields are requested they'll be joined by this string
      *
      * @return mixed
      */
@@ -165,5 +165,21 @@ if (!function_exists('unsetAdminRecoveryData')) {
     {
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         return $oUserModel ? $oUserModel->unsetAdminRecoveryData() : false;
+    }
+}
+
+// --------------------------------------------------------------------------
+
+if (!function_exists('createUserEvent')) {
+    function createUserEvent(
+        string $sType,
+        $mData = null,
+        int $iRef = null,
+        int $iCreatedBy = null,
+        string $sCreated = null
+    ): int {
+        /** @var \Nails\Auth\Service\User\Event $oUserEventService */
+        $oUserEventService = Factory::service('UserEvent', Constants::MODULE_SLUG);
+        return $oUserEventService->create($sType, $mData, $iRef, $iCreatedBy, $sCreated);
     }
 }

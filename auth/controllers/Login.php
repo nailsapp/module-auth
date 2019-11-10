@@ -30,6 +30,9 @@ use Nails\Common\Service\Output;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class Login
+ */
 class Login extends Base
 {
     /**
@@ -306,7 +309,7 @@ class Login extends Base
             // --------------------------------------------------------------------------
 
             //  Generate an event for this log in
-            create_event('did_log_in', ['provider' => $sProvider], $oUser->id);
+            createUserEvent('did_log_in', ['provider' => $sProvider]);
 
             // --------------------------------------------------------------------------
 
@@ -635,7 +638,7 @@ class Login extends Base
 
             if ($oSocial->saveSession(activeUser('id'), [$provider])) {
 
-                create_event('did_link_provider', ['provider' => $provider]);
+                createUserEvent('did_link_provider', ['provider' => $provider]);
                 $oSession->setFlashData('success', lang('auth_social_linked_ok', $provider['label']));
 
             } else {
@@ -881,7 +884,7 @@ class Login extends Base
                     // --------------------------------------------------------------------------
 
                     //  Create an event for this event
-                    create_event('did_register', ['method' => $provider], $newUser->id);
+                    createUserEvent('did_register', ['method' => $provider], $newUser->id, $newUser->id);
 
                     // --------------------------------------------------------------------------
 

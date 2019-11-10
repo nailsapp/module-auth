@@ -14,6 +14,9 @@ use Nails\Auth\Constants;
 use Nails\Factory;
 use Nails\Auth\Controller\Base;
 
+/**
+ * Class Override
+ */
 class Override extends Base
 {
     /**
@@ -132,7 +135,15 @@ class Override extends Base
         // --------------------------------------------------------------------------
 
         //  Record the event
-        create_event('did_log_in_as', ['new_user' => $oUser->id], activeUser('id'));
+        createUserEvent(
+            'did_log_in_as',
+            [
+                'id'         => $oUser->id,
+                'first_name' => $oUser->first_name,
+                'last_name'  => $oUser->last_name,
+                'email'      => $oUser->email,
+            ]
+        );
 
         // --------------------------------------------------------------------------
 

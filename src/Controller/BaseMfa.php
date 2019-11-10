@@ -15,6 +15,11 @@ namespace Nails\Auth\Controller;
 use Nails\Auth\Constants;
 use Nails\Factory;
 
+/**
+ * Class BaseMfa
+ *
+ * @package Nails\Auth\Controller
+ */
 abstract class BaseMfa extends Base
 {
     protected $authMfaMode;
@@ -140,7 +145,7 @@ abstract class BaseMfa extends Base
         // --------------------------------------------------------------------------
 
         //  Generate an event for this log in
-        create_event('did_log_in', ['method' => $this->loginMethod], $this->mfaUser->id);
+        createUserEvent('did_log_in', ['method' => $this->loginMethod], null, $this->mfaUser->id);
 
         // --------------------------------------------------------------------------
 
