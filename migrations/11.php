@@ -44,8 +44,18 @@ class Migration11 extends Base
         ');
 
         //  Migrate legacy events
-        $aResults = $this->query('SHOW TABLES LIKE "{{NAILS_DB_PREFIX}}event"')->fetch();
-        if (count($aResults) > 0) {
+        $oResult = $this->query('
+            SELECT
+                COUNT(*)
+            FROM `information_schema`.`TABLES`
+            WHERE
+                `TABLE_SCHEMA` = "' . DEPLOY_DB_DATABASE . '"
+                AND `TABLE_TYPE` = "BASE TABLE"
+                AND `TABLE_NAME` = "{{NAILS_DB_PREFIX}}event";
+        ');
+
+        if ((int) $oResult->fetchColumn() > 0) {
+
             $this->query('
                 INSERT INTO `{{NAILS_DB_PREFIX}}user_event`
                     (`id`, `type`, `url`, `data`, `ref`, `created`, `created_by`, `modified`, `modified_by`)
