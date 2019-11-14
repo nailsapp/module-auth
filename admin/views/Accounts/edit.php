@@ -1,40 +1,83 @@
+<?php
+
+use Nails\Admin\Helper;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\View;
+use Nails\Factory;
+
+/** @var View $oView */
+$oView = Factory::service('View');
+/** @var Config $oConfig */
+$oConfig = Factory::service('Config');
+/** @var Input $oView */
+$oInput = Factory::service('Input');
+
+echo form_open('admin/auth/accounts/email', 'id="email-form"');
+echo form_hidden('id', $user_edit->id);
+echo form_hidden('return', uri_string() . '?' . $oInput->server('QUERY_STRING'));
+echo form_hidden('email');
+echo form_hidden('action');
+echo form_hidden('isPrimary');
+echo form_hidden('isVerified');
+echo form_close();
+
+?>
 <div class="group-accounts edit">
     <?php
 
-    $oView   = \Nails\Factory::service('View');
-    $oInput  = \Nails\Factory::service('Input');
-    $oConfig = \Nails\Factory::service('Config');
+    echo form_open();
 
-    echo form_open_multipart('admin/auth/accounts/edit/' . $user_edit->id . '?' . $oInput->server('QUERY_STRING'));
     echo form_hidden('id', $user_edit->id);
     echo form_hidden('email_orig', $user_edit->email);
     echo form_hidden('username_orig', $user_edit->username);
 
     if (!empty($isModal)) {
-        $oView->load('Accounts/edit/inc-actions');
+        echo $oView->load('Accounts/edit/inc-actions', [], true);
     }
 
-    $oView->load([
-        'Accounts/edit/inc-basic',
-        'Accounts/edit/inc-emails',
-        'Accounts/edit/inc-password',
-    ]);
+    $aUserTabs = [
+        //        [
+        //            'label'   => 'Meta',
+        //            'content' => function () use ($oView) {
+        //                return $oView->load('Accounts/edit/inc-meta', [], true);
+        //            },
+        //        ],
+        //        [
+        //            'label'   => 'Emails',
+        //            'content' => function () use ($oView) {
+        //                return $oView->load('Accounts/edit/inc-emails', [], true);
+        //            },
+        //        ],
+        //        [
+        //            'label'   => 'Security',
+        //            'content' => function () use ($oView, $oConfig) {
+        //                $oConfig->load('auth/auth');
+        //                return $oView->load(
+        //                    array_filter([
+        //                        'Accounts/edit/inc-password',
+        //                        $oConfig->item('authTwoFactorMode') == 'QUESTION' ? 'Accounts/edit/inc-mfa-question' : null,
+        //                        $oConfig->item('authTwoFactorMode') == 'DEVICE' ? 'Accounts/edit/inc-mfa-device' : null,
+        //                    ]),
+        //                    [],
+        //                    true
+        //                );
+        //            },
+        //        ],
+    ];
 
-    $oConfig->load('auth/auth');
-
-    if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
-        $oView->load('Accounts/edit/inc-mfa-question');
+    /** @var \Nails\Auth\Interfaces\Admin\User\Tab $oTab */
+    foreach ($aTabs as $oTab) {
+        $aUserTabs[] = [
+            'order'   => $oTab->getOrder(),
+            'label'   => $oTab->getLabel(),
+            'content' => $oTab->getBody($user_edit),
+        ];
     }
 
-    if ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
-        $oView->load('Accounts/edit/inc-mfa-device');
-    }
+//    arraySortMulti($aUserTabs, 'order');
 
-    $oView->load([
-        'Accounts/edit/inc-meta',
-        'Accounts/edit/inc-profile-img',
-        'Accounts/edit/inc-uploads',
-    ]);
+    echo Helper::tabs($aUserTabs);
 
     ?>
     <div class="admin-floating-controls">
@@ -42,7 +85,7 @@
             Save Changes
         </button>
         <?php
-        if (!empty($item) && $CONFIG['ENABLE_NOTES']) {
+        if (!empty($user_edit) && $CONFIG['ENABLE_NOTES']) {
             ?>
             <button type="button"
                     class="btn btn-default pull-right js-admin-notes"
@@ -57,13 +100,3 @@
     </div>
     <?=form_close()?>
 </div>
-<?php
-
-echo form_open('admin/auth/accounts/email', 'id="email-form"');
-echo form_hidden('id', $user_edit->id);
-echo form_hidden('return', uri_string() . '?' . $oInput->server('QUERY_STRING'));
-echo form_hidden('email');
-echo form_hidden('action');
-echo form_hidden('isPrimary');
-echo form_hidden('isVerified');
-echo form_close();

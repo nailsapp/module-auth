@@ -1,6 +1,6 @@
 <?php
 
-namespace Nails\Auth\DataExport\Source;
+namespace Nails\Auth\DataExport\Source\User;
 
 use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
@@ -8,11 +8,11 @@ use Nails\Auth\Constants;
 use Nails\Factory;
 
 /**
- * Class UsersAll
+ * Class All
  *
- * @package Nails\Auth\DataExport
+ * @package Nails\Auth\DataExport\Source\User
  */
-class UsersAll implements Source
+class All implements Source
 {
     /**
      * Returns the format's label

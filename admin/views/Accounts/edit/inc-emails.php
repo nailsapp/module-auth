@@ -98,13 +98,13 @@
                 ?>
                 <tr id="add-email-form">
                     <td class="email">
-                        <input type="email" name="email" placeholder="Type an email address to add to the user here"/>
+                        <input type="email" name="email" placeholder="Type an email address to add to the user here" />
                     </td>
                     <td class="is-primary">
-                        <input type="checkbox" name="isPrimary" value="1"/>
+                        <input type="checkbox" name="isPrimary" value="1" />
                     </td>
                     <td class="is-verified">
-                        <input type="checkbox" name="isVerified" value="1"/>
+                        <input type="checkbox" name="isVerified" value="1" />
                     </td>
                     <td class="date-added">
                         <span class="text-muted">&mdash;</span>
@@ -120,3 +120,4 @@
         </table>
     </div>
 </fieldset>
+

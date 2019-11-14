@@ -13,10 +13,11 @@
 namespace Nails\Admin\Auth;
 
 use Nails\Admin\Controller\DefaultController;
+use Nails\Admin\Factory\Nav;
 use Nails\Admin\Helper;
 use Nails\Admin\Model\ChangeLog;
-use Nails\Admin\Factory\Nav;
 use Nails\Auth\Constants;
+use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
@@ -25,6 +26,8 @@ use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Factory\Component;
+use Nails\Common\Helper\Directory;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\DateTime;
@@ -32,6 +35,7 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Language;
 use Nails\Common\Service\Uri;
+use Nails\Components;
 use Nails\Factory;
 
 class Accounts extends DefaultController
@@ -537,6 +541,26 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
+        $aTabs = [];
+        /** @var Component $oComponent */
+        foreach (Components::available() as $oComponent) {
+
+            $sNamespace = $oComponent->namespace . 'Auth\\Admin\\User\\Tab\\';
+            $sPath      = $oComponent->path . 'src/Auth/Admin/User/Tab';
+            $aFiles     = Directory::map($sPath, null, false);
+
+            foreach ($aFiles as $sFile) {
+                $sClass = $sNamespace . str_replace(DIRECTORY_SEPARATOR, '\\', preg_replace('/\.php$/', '', $sFile));
+                if (class_exists($sClass) && classImplements($sClass, Tab::class)) {
+                    $aTabs[$sClass] = new $sClass();
+                }
+            }
+        }
+
+        $this->data['aTabs'] = $aTabs;
+
+        // --------------------------------------------------------------------------
+
         /**
          * Get the user's data; loaded early because it's required for the user_meta_cols
          * (we need to know the group of the user so we can pull up the correct cols/rules)
@@ -892,17 +916,6 @@ class Accounts extends DefaultController
         /** @var Group $oUserGroupModel */
         $oUserGroupModel      = Factory::model('UserGroup', Constants::MODULE_SLUG);
         $this->data['groups'] = $oUserGroupModel->getAll();
-
-        /** @var Language $oLanguageService */
-        $oLanguageService        = Factory::service('Language');
-        $this->data['languages'] = $oLanguageService->getAllEnabledFlat();
-
-        /** @var DateTime $oDateTimeService */
-        $oDateTimeService               = Factory::service('DateTime');
-        $this->data['timezones']        = $oDateTimeService->getAllTimezone();
-        $this->data['date_formats']     = $oDateTimeService->getAllDateFormat();
-        $this->data['time_formats']     = $oDateTimeService->getAllTimeFormat();
-        $this->data['default_timezone'] = $oDateTimeService->getTimezoneDefault();
 
         //  Fetch any user uploads
         /** @var Cdn $oCdn */
