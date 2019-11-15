@@ -6,6 +6,7 @@ use Nails\Auth\Constants;
 use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource\User;
+use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\View;
@@ -67,7 +68,7 @@ class Security implements Tab
                 ]),
                 [
                     'oUser'          => $oUser,
-                    'aPasswordRules' => $oUserPasswordModel->getRulesAsString($oUser->group_id),
+                    'sPasswordRules' => $oUserPasswordModel->getRulesAsString($oUser->group_id),
                 ],
                 true
             );
@@ -91,6 +92,7 @@ class Security implements Tab
 
     /**
      * Returns an array of validation rules compatible with Validator objects
+     *inc=
      *
      * @param User $oUser The user being edited
      *
@@ -102,6 +104,9 @@ class Security implements Tab
         $oInput = Factory::service('Input');
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
+
         $oConfig->load('auth/auth');
 
         $aRules = [
@@ -109,7 +114,13 @@ class Security implements Tab
         ];
 
         if (!empty($oInput->post('password'))) {
-            $aRules['password'] = []; //  @todo (Pablo - 2019-11-15) - Validate password
+            $aRules['password'] = [
+                function ($sPassword) use ($oUser, $oUserPasswordModel) {
+                    if (!$oUserPasswordModel->isAcceptable($oUser->group_id, $sPassword)) {
+                        throw new ValidationException('Password does not meet requirements.');
+                    }
+                },
+            ];
         }
 
         switch ($oConfig->item('authTwoFactorMode')) {

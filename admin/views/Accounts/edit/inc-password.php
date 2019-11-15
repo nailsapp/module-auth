@@ -7,7 +7,7 @@ echo form_field([
     'info'        => implode('', [
         '<div class="alert alert-info" style="margin:0;">',
         lang('accounts_edit_password_field_password_tip'),
-        '<br />' . $aPasswordRules,
+        '<br />' . $sPasswordRules,
         '</div>',
     ]),
 ]);
