@@ -103,6 +103,14 @@ class Auth extends Base
                     if (time() < strtotime($oUser->failed_login_expires)) {
                         $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
                         $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
+                        createUserEvent(
+                            'did_login_fail',
+                            [
+                                'reason' => 'brute_force_block_in_affect'
+                            ],
+                            null,
+                            $oUser->id
+                        );
                         return false;
                     }
                 }
@@ -153,7 +161,14 @@ class Auth extends Base
 
                 $error = lang('auth_login_fail_social', siteUrl('auth/password/forgotten?identifier=' . $sIdentifier));
                 $this->setError($error);
-
+                createUserEvent(
+                    'did_login_fail',
+                    [
+                        'reason' => 'no_password'
+                    ],
+                    null,
+                    $oUser->id
+                );
                 return false;
 
             } else {
@@ -169,6 +184,14 @@ class Auth extends Base
                     if (time() < strtotime($oUser->failed_login_expires)) {
                         $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
                         $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
+                        createUserEvent(
+                            'did_login_fail',
+                            [
+                                'reason' => 'brute_force_block_in_affect'
+                            ],
+                            null,
+                            $oUser->id
+                        );
                         return false;
                     }
 
@@ -186,6 +209,15 @@ class Auth extends Base
                         $sChangedRecently = niceTime($iChanged);
                     }
                 }
+
+                createUserEvent(
+                    'did_login_fail',
+                    [
+                        'reason' => 'password_incorrect'
+                    ],
+                    null,
+                    $oUser->id
+                );
             }
         }
 
