@@ -774,36 +774,6 @@ class User extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Defines the list of columns in the meta table
-     *
-     * @param string $sPrefix The prefix to add to the columns
-     * @param array  $aCols   Any additional columns to add
-     *
-     * @return array
-     */
-    protected function getMetaColumns($sPrefix = '', $aCols = [])
-    {
-        if ($this->aMetaColumns === null) {
-
-            $oDb                = Factory::service('Database');
-            $aResult            = $oDb->query('DESCRIBE `' . $this->tableMeta . '`')->result();
-            $this->aMetaColumns = [];
-
-            foreach ($aResult as $oResult) {
-                if ($oResult->Field !== 'user_id') {
-                    $this->aMetaColumns[] = $oResult->Field;
-                }
-            }
-        }
-
-        $aCols = array_merge($aCols, $this->aMetaColumns);
-
-        return $this->prepareDbColumns($sPrefix, $aCols);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Filter out duplicates and prefix column names if necessary
      *
      * @param string $sPrefix
@@ -2101,8 +2071,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set Meta data
-        $aMetaCols = $this->getMetaColumns();
-        dd('Use describeMetaFields?', 2);
+        $aMetaCols = array_keys($this->describeMetaFields());
         $aMetaData = [];
 
         foreach ($data as $key => $val) {
