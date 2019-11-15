@@ -13,10 +13,6 @@ $oView = Factory::service('View');
 
     echo form_open();
 
-    echo form_hidden('id', $oUser->id);
-    echo form_hidden('email_orig', $oUser->email);
-    echo form_hidden('username_orig', $oUser->username);
-
     if (!empty($isModal)) {
         echo $oView->load('Accounts/edit/inc-actions', [], true);
     }

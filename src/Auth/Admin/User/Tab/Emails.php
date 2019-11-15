@@ -90,8 +90,8 @@ class Emails implements Tab
             form_hidden('return', uri_string() . '?' . $oInput->server('QUERY_STRING')) .
             form_hidden('email') .
             form_hidden('action') .
-            form_hidden('isPrimary') .
-            form_hidden('isVerified') .
+            form_hidden('is_primary') .
+            form_hidden('is_verified') .
             form_close();
     }
 

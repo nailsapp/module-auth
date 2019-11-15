@@ -603,7 +603,7 @@ class Accounts extends DefaultController
                 $oValidator = $oFormValidation->buildValidator($aRules, [], $aData);
                 $oValidator->run();
 
-                if (!$oUserModel->update($oInput->post('id'), $aData)) {
+                if (!$oUserModel->update($oUser->id, $aData)) {
                     throw new NailsException('Failed to update user. ' . $oUserModel->lastError());
                 }
 
@@ -1025,8 +1025,8 @@ class Accounts extends DefaultController
         switch ($action) {
 
             case 'add':
-                $bIsPrimary  = (bool) $oInput->post('isPrimary');
-                $bIsVerified = (bool) $oInput->post('isVerified');
+                $bIsPrimary  = (bool) $oInput->post('is_primary');
+                $bIsVerified = (bool) $oInput->post('is_verified');
 
                 if ($oUserModel->emailAdd($sEmail, $iId, $bIsPrimary, $bIsVerified)) {
                     $sStatus  = 'success';
