@@ -206,6 +206,14 @@ class Login extends Base
         if ($oUser->is_suspended) {
 
             $this->data['error'] = lang('auth_login_fail_suspended');
+            createUserEvent(
+                'did_login_fail',
+                [
+                    'reason' => 'suspended'
+                ],
+                null,
+                $oUser->id
+            );
             return;
 
         } elseif (!empty($oUser->temp_pw)) {
