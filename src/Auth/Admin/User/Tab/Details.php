@@ -5,6 +5,7 @@ namespace Nails\Auth\Auth\Admin\User\Tab;
 use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Resource\User;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ValidationException;
 use Nails\Common\Exception\ViewNotFoundException;
 use Nails\Common\Service\DateTime;
 use Nails\Common\Service\View;
@@ -99,6 +100,9 @@ class Details implements Tab
      */
     public function getValidationRules(User $oUser): array
     {
+        /** @var \Nails\Auth\Model\User $oUserModel */
+        $oUserModel = Factory::model('User', 'nails/module-auth');
+
         $aFields  = $this->getFields($oUser);
         $aRules   = [];
         $aInclude = [
@@ -117,7 +121,14 @@ class Details implements Tab
             $aRules[$sField] = getFromArray($sField, $aFields)->validation;
         }
 
-        //  @todo (Pablo - 2019-11-15) - Username validation
+        //  Validate username
+        $aRules['username'][] = function ($sUsername) use ($oUser, $oUserModel) {
+            if (!$oUserModel->isValidUsername($sUsername, true, $oUser->id)) {
+                throw new ValidationException(
+                    $oUserModel->lastError()
+                );
+            }
+        };
 
         return $aRules;
     }

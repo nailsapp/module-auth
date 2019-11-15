@@ -2365,13 +2365,13 @@ class User extends Base
     /**
      * Checks whether a username is valid
      *
-     * @param string $username     The username to check
-     * @param bool   $checkDb      Whether to test against the database
-     * @param mixed  $ignoreUserId The ID of a user to ignore when checking the database
+     * @param string $sUsername     The username to check
+     * @param bool   $bCheckDb      Whether to test against the database
+     * @param int    $iIgnoreUserId The ID of a user to ignore when checking the database
      *
      * @return bool
      */
-    public function isValidUsername($username, $checkDb = false, $ignoreUserId = null)
+    public function isValidUsername($sUsername, $bCheckDb = false, $iIgnoreUserId = null): bool
     {
         /**
          * Check username doesn't contain invalid characters - we're actively looking
@@ -2380,41 +2380,37 @@ class User extends Base
          * we're good guys.
          */
 
-        $invalidChars = '/[^a-zA-Z0-9\-_\.]/';
+        $sInvalidChars = '/[^a-zA-Z0-9\-_\.]/';
 
         //  Minimum length of the username
-        $minLength = 2;
+        $iMinLength = 2;
 
         // --------------------------------------------------------------------------
 
-        //  Check for illegal characters
-        $containsInvalidChars = preg_match($invalidChars, $username);
+        if (preg_match($sInvalidChars, $sUsername)) {
 
-        if ($containsInvalidChars) {
+            $this->setError(
+                'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).'
+            );
+            return false;
 
-            $msg = 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
+        } elseif (strlen($sUsername) < $iMinLength) {
 
-            $this->setError($msg);
+            $this->setError(
+                'Usernames must be at least ' . $iMinLength . ' characters long.'
+            );
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        //  Check length
-        if (strlen($username) < $minLength) {
-            $this->setError('Usernames must be at least ' . $minLength . ' characters long.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        if ($checkDb) {
+        if ($bCheckDb) {
 
             $oDb = Factory::service('Database');
-            $oDb->where('username', $username);
+            $oDb->where('username', $sUsername);
 
-            if (!empty($ignoreUserId)) {
-                $oDb->where('id !=', $ignoreUserId);
+            if (!empty($iIgnoreUserId)) {
+                $oDb->where('id !=', $iIgnoreUserId);
             }
 
             if ($oDb->count_all_results($this->table)) {
