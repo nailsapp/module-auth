@@ -22,18 +22,14 @@ use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Session;
-use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\ValidationException;
 use Nails\Common\Factory\Component;
 use Nails\Common\Helper\Directory;
-use Nails\Common\Service\Config;
-use Nails\Common\Service\Database;
-use Nails\Common\Service\DateTime;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Language;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
@@ -534,9 +530,35 @@ class Accounts extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
             unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
+        $oUser = $oUserModel->getById($oUri->segment(5));
+
+        if (empty($oUser)) {
+
+            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
+            $this->returnToIndex();
+
+        } elseif (!$oUserModel->isSuperuser() && userHasPermission('superuser', $oUser)) {
+
+            //  Non-superusers editing superusers is not cool
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $this->returnToIndex();
+
+        } elseif (activeUser('id') != $oUser->id && !userHasPermission('admin:auth:accounts:editOthers')) {
+
+            //  Is this user editing someone other than themselves? If so, do they have permission?
+            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $this->returnToIndex();
         }
 
         // --------------------------------------------------------------------------
@@ -557,370 +579,61 @@ class Accounts extends DefaultController
             }
         }
 
-        $this->data['aTabs'] = $aTabs;
-
-        // --------------------------------------------------------------------------
-
-        /**
-         * Get the user's data; loaded early because it's required for the user_meta_cols
-         * (we need to know the group of the user so we can pull up the correct cols/rules)
-         */
-
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
-        /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-
-        $oUser = $oUserModel->getById($oUri->segment(5));
-
-        if (!$oUser) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
-            $this->returnToIndex();
-        }
-
-        //  Non-superusers editing superusers is not cool
-        if (!$oUserModel->isSuperuser() && userHasPermission('superuser', $oUser)) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-            $sReturnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
-            redirect($sReturnTo);
-        }
-
-        //  Is this user editing someone other than themselves? If so, do they have permission?
-        if (activeUser('id') != $oUser->id && !userHasPermission('admin:auth:accounts:editOthers')) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-            $sReturnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/dashboard';
-            redirect($sReturnTo);
-        }
-
-        // --------------------------------------------------------------------------
-
-        /**
-         * Load the user_meta_cols; loaded here because it's needed for both the view
-         * and the form validation
-         */
-
-        /** @var Database $oDb */
-        $oDb = Factory::service('Database');
-        /** @var Config $oConfig */
-        $oConfig = Factory::service('Config');
-
-        $aUserMetaCols = $oConfig->item('user_meta_cols');
-        $iGroupId      = (int) $oInput->post('group_id') ?: $oUser->group_id;
-
-        if (isset($aUserMetaCols[$iGroupId])) {
-            $this->data['user_meta_cols'] = $aUserMetaCols[$oUser->group_id];
-        } else {
-            $this->data['user_meta_cols'] = null;
-        }
-
-        //  Set fields to ignore by default
-        $this->data['ignored_fields'] = [
-            'id',
-            'user_id',
-        ];
-
-        /**
-         * If no cols were found, DESCRIBE the user_meta_app table - where possible you
-         * should manually set columns, including datatypes
-         */
-
-        if (is_null($this->data['user_meta_cols'])) {
-
-            $aResult                      = $oDb->query('DESCRIBE `' . NAILS_DB_PREFIX . 'user_meta_app`')->result();
-            $this->data['user_meta_cols'] = [];
-
-            foreach ($aResult as $col) {
-
-                //  Always ignore some fields
-                if (array_search($col->Field, $this->data['ignored_fields']) !== false) {
-                    continue;
-                }
-
-                // --------------------------------------------------------------------------
-
-                //  Attempt to detect datatype
-                $sDataType = 'string';
-                $type      = 'text';
-
-                switch (strtolower($col->Type)) {
-
-                    case 'text':
-                        $type = 'textarea';
-                        break;
-
-                    case 'date':
-                        $sDataType = 'date';
-                        break;
-
-                    case 'tinyint(1) unsigned':
-                        $sDataType = 'bool';
-                        break;
-                }
-
-                // --------------------------------------------------------------------------
-
-                $this->data['user_meta_cols'][$col->Field] = [
-                    'datatype' => $sDataType,
-                    'type'     => $type,
-                    'label'    => ucwords(str_replace('_', ' ', $col->Field)),
-                ];
-            }
-        }
-
         // --------------------------------------------------------------------------
 
         //  Validate if we're saving, otherwise get the data and display the edit form
         if ($oInput->post()) {
 
-            //  Load validation library
-            /** @var FormValidation $oFormValidation */
-            $oFormValidation = Factory::service('FormValidation');
+            try {
 
-            // --------------------------------------------------------------------------
+                /** @var FormValidation $oFormValidation */
+                $oFormValidation = Factory::service('FormValidation');
 
-            //  Define user table rules
-            $oFormValidation->set_rules('first_name', '', 'trim|required');
-            $oFormValidation->set_rules('last_name', '', 'trim|required');
-            $oFormValidation->set_rules('gender', '', 'required');
-            $oFormValidation->set_rules('dob', '', 'valid_date');
-            $oFormValidation->set_rules('timezone', '', 'required');
-            $oFormValidation->set_rules('datetime_format_date', '', 'required');
-            $oFormValidation->set_rules('datetime_format_time', '', 'required');
-
-            // --------------------------------------------------------------------------
-
-            //  Define user_meta table rules
-            foreach ($this->data['user_meta_cols'] as $col => $value) {
-
-                $sDataType = isset($value['datatype']) ? $value['datatype'] : 'string';
-                $label     = isset($value['label']) ? $value['label'] : ucwords(str_replace('_', ' ', $col));
-
-                //  Some data types require different handling
-                switch ($sDataType) {
-
-                    case 'date':
-                        //  Dates must validate
-                        if (isset($value['validation'])) {
-                            $oFormValidation->set_rules($col, $label, $value['validation'] . '|valid_date[' . $col . ']');
-                        } else {
-                            $oFormValidation->set_rules($col, $label, 'valid_date[' . $col . ']');
-                        }
-                        break;
-
-                    // --------------------------------------------------------------------------
-
-                    case 'file':
-                    case 'upload':
-                    case 'string':
-                    default:
-                        if (isset($value['validation'])) {
-                            $oFormValidation->set_rules($col, $label, $value['validation']);
-                        }
-                        break;
+                $aRules = [];
+                /** @var Tab $oTab */
+                foreach ($aTabs as $oTab) {
+                    $aRules = array_merge($aRules, $oTab->getValidationRules($oUser));
                 }
-            }
 
-            // --------------------------------------------------------------------------
-
-            //  Set messages
-            $oFormValidation->set_message('required', lang('fv_required'));
-            $oFormValidation->set_message('min_length', lang('fv_min_length'));
-            $oFormValidation->set_message('alpha_dash_period', lang('fv_alpha_dash_period'));
-            $oFormValidation->set_message('is_natural_no_zero', lang('fv_required'));
-            $oFormValidation->set_message('valid_date', lang('fv_valid_date'));
-            $oFormValidation->set_message('valid_datetime', lang('fv_valid_datetime'));
-
-            // --------------------------------------------------------------------------
-
-            //  Data is valid; ALL GOOD :]
-            if ($oFormValidation->run()) {
-
-                //  Define the data var
                 $aData = [];
-
-                // --------------------------------------------------------------------------
-
-                //  If we have a profile image, attempt to upload it
-                if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] != UPLOAD_ERR_NO_FILE) {
-
-                    /** @var Cdn $oCdn */
-                    $oCdn   = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
-                    $object = $oCdn->objectReplace($oUser->profile_img, 'profile-images', 'profile_img');
-
-                    if ($object) {
-
-                        $aData['profile_img'] = $object->id;
-
-                    } else {
-
-                        $this->data['upload_error'] = $oCdn->getErrors();
-                        $this->data['error']        = lang('accounts_edit_error_profile_img');
-                    }
+                foreach ($aRules as $sField => $aValidationRules) {
+                    $aData[$sField] = getFromArray($sField, $_POST);
                 }
 
-                // --------------------------------------------------------------------------
+                $oValidator = $oFormValidation->buildValidator($aRules, [], $aData);
+                $oValidator->run();
 
-                if (!isset($this->data['upload_error'])) {
-
-                    //  Set basic data
-
-                    $aData['temp_pw']              = stringToBoolean($oInput->post('temp_pw', true));
-                    $aData['reset_mfa_question']   = stringToBoolean($oInput->post('reset_mfa_question', true));
-                    $aData['reset_mfa_device']     = stringToBoolean($oInput->post('reset_mfa_device', true));
-                    $aData['first_name']           = $oInput->post('first_name', true);
-                    $aData['last_name']            = $oInput->post('last_name', true);
-                    $aData['username']             = $oInput->post('username', true);
-                    $aData['gender']               = $oInput->post('gender', true);
-                    $aData['dob']                  = $oInput->post('dob', true);
-                    $aData['dob']                  = !empty($aData['dob']) ? $aData['dob'] : null;
-                    $aData['timezone']             = $oInput->post('timezone', true);
-                    $aData['datetime_format_date'] = $oInput->post('datetime_format_date', true);
-                    $aData['datetime_format_time'] = $oInput->post('datetime_format_time', true);
-
-                    if ($oInput->post('password', true)) {
-                        $aData['password'] = $oInput->post('password', true);
-                    }
-
-                    //  Set meta data
-                    foreach ($this->data['user_meta_cols'] as $col => $value) {
-
-                        $mValue = $oInput->post($col, true);
-
-                        //  Should the field be made null on empty?
-                        if (!empty($value['nullOnEmpty']) && empty($mValue)) {
-                            $mValue = null;
-                        }
-
-                        switch ($value['datatype']) {
-
-                            case 'bool':
-                            case 'boolean':
-                                //  Convert all to boolean from string
-                                $aData[$col] = stringToBoolean($mValue);
-                                break;
-
-                            case 'file':
-                            case 'upload':
-                                //  File uploads should be an integer, or if empty, null
-                                $aData[$col] = (int) $mValue ?: null;
-                                break;
-
-                            default:
-                                $aData[$col] = $mValue;
-                                break;
-                        }
-                    }
-
-                    // --------------------------------------------------------------------------
-
-                    //  Update account
-                    if ($oUserModel->update($oInput->post('id'), $aData)) {
-
-                        $name                  = $oInput->post('first_name', true) . ' ' . $oInput->post('last_name', true);
-                        $this->data['success'] = lang('accounts_edit_ok', [title_case($name)]);
-                        // --------------------------------------------------------------------------
-
-                        //  Set Admin changelogs
-                        $name = '#' . number_format($oInput->post('id'));
-
-                        if ($aData['first_name']) {
-                            $name .= ' ' . $aData['first_name'];
-                        }
-
-                        if ($aData['last_name']) {
-                            $name .= ' ' . $aData['last_name'];
-                        }
-
-                        foreach ($aData as $field => $value) {
-                            if (isset($oUser->$field)) {
-
-                                if ($field === 'password' && !empty($value)) {
-                                    $sOldVlaue = '[REDACTED]';
-                                    $sNewVlaue = '[REDACTED]';
-                                    $bForce    = true;
-                                } else {
-                                    $sOldVlaue = $oUser->$field;
-                                    $sNewVlaue = $value;
-                                    $bForce    = false;
-                                }
-
-                                $this->oChangeLogModel->add(
-                                    'updated',
-                                    'a',
-                                    'user',
-                                    $oInput->post('id'),
-                                    $name,
-                                    'admin/auth/accounts/edit/' . $oInput->post('id'),
-                                    $field,
-                                    $sOldVlaue,
-                                    $sNewVlaue,
-                                    false,
-                                    $bForce
-                                );
-                            }
-                        }
-
-                        // --------------------------------------------------------------------------
-
-                        //  refresh the user object
-                        $oUser = $oUserModel->getById($oInput->post('id'));
-
-                        //  The account failed to update, feedback to user
-                    } else {
-
-                        $this->data['error'] = lang(
-                            'accounts_edit_fail',
-                            implode(', ', $oUserModel->getErrors())
-                        );
-                    }
+                if (!$oUserModel->update($oInput->post('id'), $aData)) {
+                    throw new NailsException('Failed to update user. ' . $oUserModel->lastError());
                 }
 
-                //  Update failed for another reason
-            } else {
+                $this->addToChangeLogEdit(
+                    $oUser,
+                    $oUserModel->getById($oUser->id)
+                );
 
-                $this->data['error'] = lang('fv_there_were_errors');
+                $oSession->setFlashData(
+                    'success',
+                    sprintf('User %s updated successfully.', title_case($oUser->first_name . ' ' . $oUser->last_name))
+                );
+
+                redirect('admin/auth/accounts/edit/' . $oUser->id);
+
+            } catch (ValidationException $e) {
+                $this->data['error'] = $e->getMessage();
             }
         }
-        //  End POST() check
 
         // --------------------------------------------------------------------------
 
-        //  Get the user's meta data
-        if ($this->data['user_meta_cols']) {
-
-            $oDb->select(implode(',', array_keys($this->data['user_meta_cols'])));
-            $oDb->where('user_id', $oUser->id);
-            $aUserMeta = (array) $oDb->get(NAILS_DB_PREFIX . 'user_meta_app')->row();
-
-        } else {
-            $aUserMeta = [];
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Get the user's email addresses
-        $this->data['user_emails'] = $oUserModel->getEmailsForUser($oUser->id);
-
-        // --------------------------------------------------------------------------
-
-        $this->data['user_edit'] = $oUser;
-        $this->data['user_meta'] = $aUserMeta;
+        $this->data['aTabs'] = $aTabs;
+        $this->data['oUser'] = $oUser;
 
         //  Page Title
         $this->data['page']->title = lang(
             'accounts_edit_title',
             title_case($oUser->first_name . ' ' . $oUser->last_name)
         );
-
-        //  Get the groups, timezones and languages
-        /** @var Group $oUserGroupModel */
-        $oUserGroupModel      = Factory::model('UserGroup', Constants::MODULE_SLUG);
-        $this->data['groups'] = $oUserGroupModel->getAll();
-
-        //  Fetch any user uploads
-        /** @var Cdn $oCdn */
-        $oCdn                       = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
-        $this->data['user_uploads'] = $oCdn->getObjectsForUser($oUser->id);
 
         // --------------------------------------------------------------------------
 
@@ -941,12 +654,6 @@ class Accounts extends DefaultController
                     break;
             }
         }
-
-        /** @var Password $oUserPasswordModel */
-        $oUserPasswordModel          = Factory::model('UserPassword', Constants::MODULE_SLUG);
-        $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
-
-        // --------------------------------------------------------------------------
 
         //  Load views
         Helper::loadView('edit');
@@ -1295,81 +1002,6 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         $this->returnToIndex();
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Delete a user's profile image
-     *
-     * @throws FactoryException
-     */
-    public function delete_profile_img(): void
-    {
-        $oUri = Factory::service('Uri');
-        if ($oUri->segment(5) != activeUser('id') && !userHasPermission('admin:auth:accounts:editOthers')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        /** @var Input $oInput */
-        $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
-        /** @var User $oUserModel */
-        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-
-        $iUserId   = $oUri->segment(5);
-        $oUser     = $oUserModel->getById($iUserId);
-        $sReturnTo = $oInput->get('return_to') ? $oInput->get('return_to') : 'admin/auth/accounts/edit/' . $iUserId;
-
-        // --------------------------------------------------------------------------
-
-        if (!$oUser) {
-
-            $oSession->setFlashData('error', lang('accounts_delete_img_error_noid'));
-            redirect('admin/auth/accounts');
-
-        } else {
-
-            //  Non-superusers editing superusers is not cool
-            if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
-                $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
-                redirect($sReturnTo);
-            }
-
-            // --------------------------------------------------------------------------
-
-            if ($oUser->profile_img) {
-
-                /** @var Cdn $oCdn */
-                $oCdn = Factory::service('Cdn', \Nails\Cdn\Constants::MODULE_SLUG);
-
-                if ($oCdn->objectDelete($oUser->profile_img, 'profile-images')) {
-
-                    //  Update the user
-                    $oUserModel->update($iUserId, ['profile_img' => null]);
-
-                    $sStatus  = 'notice';
-                    $sMessage = lang('accounts_delete_img_success');
-
-                } else {
-                    $sStatus  = 'error';
-                    $sMessage = lang('accounts_delete_img_error', implode('", "', $oCdn->getErrors()));
-                }
-
-            } else {
-                $sStatus  = 'notice';
-                $sMessage = lang('accounts_delete_img_error_noimg');
-            }
-
-            $oSession->setFlashData($sStatus, $sMessage);
-
-            // --------------------------------------------------------------------------
-
-            redirect($sReturnTo);
-        }
     }
 
     // --------------------------------------------------------------------------

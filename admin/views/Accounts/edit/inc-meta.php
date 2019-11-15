@@ -1,123 +1,28 @@
-<fieldset id="edit-user-meta">
-    <legend><?=lang('accounts_edit_meta_legend')?></legend>
-    <?php
+<?php
 
-    if ($user_meta) {
+use Nails\Auth\Resource\User;
+use Nails\Common\Factory\Model\Field;
 
-        foreach ($user_meta as $metaField => $value) {
+/**
+ * @var User    $oUser
+ * @var Field[] $aMetaCols
+ */
 
-            //  Always ignore some fields
-            if (array_search($metaField, $ignored_fields) !== false) {
+if (!empty($aMetaCols)) {
+    foreach ($aMetaCols as $oField) {
 
-                continue;
-            }
+        $oField->default = property_exists($oUser, $oField->key) ? $oUser->{$oField->key} : null;
 
-            // --------------------------------------------------------------------------
-
-            $dataType = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'string';
-
-            $field             = [];
-            $field['key']      = $metaField;
-            $field['type']     = isset($user_meta_cols[$metaField]['datatype']) ? $user_meta_cols[$metaField]['datatype'] : 'text';
-            $field['class']    = isset($user_meta_cols[$metaField]['class']) ? $user_meta_cols[$metaField]['class'] : '';
-            $field['label']    = isset($user_meta_cols[$metaField]['label']) ? $user_meta_cols[$metaField]['label'] : ucwords(str_replace('_', ' ', $metaField));
-            $field['required'] = isset($user_meta_cols[$metaField]['required']) ? $user_meta_cols[$metaField]['required'] : false;
-            $field['options']  = isset($user_meta_cols[$metaField]['options']) ? $user_meta_cols[$metaField]['options'] : [];
-            $field['default']  = $value;
-
-            switch ($dataType) {
-
-                case 'bool':
-                case 'boolean':
-
-                    $field['text_on']  = strtoupper(lang('yes'));
-                    $field['text_off'] = strtoupper(lang('no'));
-
-                    echo form_field_boolean($field);
-                    break;
-
-                case 'dropdown':
-                case 'select':
-
-                    $field['class'] .= ' select2';
-                    echo form_field_dropdown($field, $field['options']);
-                    break;
-
-                case 'date':
-
-                    echo form_field_date($field);
-                    break;
-
-                case 'datetime':
-
-                    echo form_field_datetime($field);
-                    break;
-
-                case 'id':
-
-                    //  Fetch items from the joining table
-                    if (isset($user_meta_cols[$metaField]['join'])) {
-
-                        $table      = isset($user_meta_cols[$metaField]['join']['table']) ? $user_meta_cols[$metaField]['join']['table'] : null;
-                        $selectId   = isset($user_meta_cols[$metaField]['join']['id']) ? $user_meta_cols[$metaField]['join']['id'] : null;
-                        $selectName = isset($user_meta_cols[$metaField]['join']['name']) ? $user_meta_cols[$metaField]['join']['name'] : null;
-                        $orderCol   = isset($user_meta_cols[$metaField]['join']['order_col']) ? $user_meta_cols[$metaField]['join']['order_col'] : null;
-                        $orderDir   = isset($user_meta_cols[$metaField]['join']['order_dir']) ? $user_meta_cols[$metaField]['join']['order_dir'] : 'ASC';
-
-                        if ($table && $selectId && $selectName) {
-
-                            $oDb = \Nails\Factory::service('Database');
-                            $oDb->select($selectId . ',' . $selectName);
-
-                            if ($orderCol) {
-                                $oDb->order_by($orderCol, $orderDir);
-                            }
-
-                            $results = $oDb->get($table)->result();
-
-                            foreach ($results as $row) {
-                                $field['options'][$row->{$selectId}] = $row->{$selectName};
-                            }
-
-                            $field['class'] .= ' select2';
-
-                            echo form_field_dropdown($field);
-
-                        } else {
-
-                            echo form_field($field);
-                        }
-
-                    } else {
-
-                        echo form_field($field);
-                    }
-                    break;
-
-                case 'file':
-                case 'upload':
-
-                    $field['bucket'] = isset($user_meta_cols[$metaField]['bucket']) ? $user_meta_cols[$metaField]['bucket'] : false;
-                    if (isset(${'upload_error_' . $field['key']})) {
-
-                        $field['error'] = implode(' ', ${'upload_error_' . $field['key']});
-                    }
-
-                    echo form_field_cdn_object_picker($field);
-                    break;
-
-                case 'string':
-                default:
-
-                    echo form_field($field);
-                    break;
-            }
+        if (is_callable('form_field_' . $oField->type)) {
+            echo call_user_func('form_field_' . $oField->type, (array) $oField);
+        } else {
+            echo form_field((array) $oField);
         }
-
-    } else {
-
-        echo '<p>' . lang('accounts_edit_meta_noeditable') . '</p>';
     }
-
+} else {
     ?>
-</fieldset>
+    <p>
+        <?=lang('accounts_edit_meta_noeditable')?>
+    </p>
+    <?php
+}
