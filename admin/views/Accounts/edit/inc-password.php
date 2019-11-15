@@ -1,51 +1,32 @@
-<fieldset id="edit-user-password">
-    <legend>
-        <?=lang('accounts_edit_password_legend')?>
-    </legend>
-    <div class="box-container">
-        <?php
+<?php
 
-        //  Reset Password
-        $aField                = [];
-        $aField['key']         = 'password';
-        $aField['label']       = lang('accounts_edit_password_field_password_label');
-        $aField['default']     = '';
-        $aField['required']    = false;
-        $aField['placeholder'] = lang('accounts_edit_password_field_password_placeholder');
+echo form_field([
+    'key'         => 'password',
+    'label'       => lang('accounts_edit_password_field_password_label'),
+    'placeholder' => lang('accounts_edit_password_field_password_placeholder'),
+    'info'        => implode('', [
+        '<div class="alert alert-info" style="margin:0;">',
+        lang('accounts_edit_password_field_password_tip'),
+        '<br />' . $sPasswordRules,
+        '</div>',
+    ]),
+]);
 
-        //  PAssword rules
-        $aField['info'] = '<div class="alert alert-info" style="margin:0;">';
-        $aField['info'] .= lang('accounts_edit_password_field_password_tip');
-        $aField['info'] .= '<br />' . $passwordRules;
-        $aField['info'] .= '</div>';
-
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        //  Require password update on log in
-        $aField             = [];
-        $aField['key']      = 'temp_pw';
-        $aField['label']    = lang('accounts_edit_password_field_temp_pw_label');
-        $aField['default']  = false;
-        $aField['required'] = false;
-
-        $options = [];
-
-        $options[] = [
-            'value'    => 'TRUE',
+echo form_field_radio([
+    'key'     => 'temp_pw',
+    'label'   => lang('accounts_edit_password_field_temp_pw_label'),
+    'options' => [
+        [
+            'value'    => true,
             'label'    => lang('accounts_edit_password_field_temp_pw_yes'),
-            'selected' => $user_edit->temp_pw ? true : false,
-        ];
-
-        $options[] = [
-            'value'    => 'FALSE',
+            'selected' => $oUser->temp_pw,
+        ],
+        [
+            'value'    => false,
             'label'    => lang('accounts_edit_password_field_temp_pw_no'),
-            'selected' => !$user_edit->temp_pw ? true : false,
-        ];
+            'selected' => !$oUser->temp_pw,
+        ],
+    ],
+]);
 
-        echo form_field_radio($aField, $options);
 
-        ?>
-    </div>
-</fieldset>

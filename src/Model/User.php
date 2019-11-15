@@ -17,9 +17,11 @@ use Nails\Auth\Events;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Factory\Model\Field;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Cookie;
 use Nails\Common\Service\Database;
+use Nails\Common\Service\DateTime;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\Input;
@@ -727,7 +729,16 @@ class User extends Base
             $this->tableEmailAlias . '.is_verified email_is_verified',
             $this->tableEmailAlias . '.date_verified email_is_verified_on',
         ]);
-        $oDb->select($this->getMetaColumns($this->tableMetaAlias));
+        $oDb->select(
+            array_values(
+                array_map(
+                    function (Field $oField) {
+                        return $this->tableMetaAlias . '.' . $oField->key;
+                    },
+                    $this->describeMetaFields()
+                )
+            )
+        );
         $oDb->select([
             $this->tableGroupAlias . '.slug group_slug',
             $this->tableGroupAlias . '.label group_name',
@@ -758,34 +769,6 @@ class User extends Base
 
         //  Let the parent method handle sorting, etc
         parent::getCountCommon($aData);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Defines the list of columns in the `user` table
-     *
-     * @param string $sPrefix The prefix to add to the columns
-     * @param array  $aCols   Any additional columns to add
-     *
-     * @return array
-     */
-    protected function getUserColumns($sPrefix = '', $aCols = [])
-    {
-        if ($this->aUserColumns === null) {
-
-            $oDb                = Factory::service('Database');
-            $aResult            = $oDb->query('DESCRIBE `' . $this->table . '`')->result();
-            $this->aUserColumns = [];
-
-            foreach ($aResult as $oResult) {
-                $this->aUserColumns[] = $oResult->Field;
-            }
-        }
-
-        $aCols = array_merge($aCols, $this->aUserColumns);
-
-        return $this->prepareDbColumns($sPrefix, $aCols);
     }
 
     // --------------------------------------------------------------------------
@@ -1004,14 +987,14 @@ class User extends Base
      * the user and/or user_meta_* tables
      *
      * @param int   $iUserId The ID of the user to update
-     * @param array $data    Any data to be updated
+     * @param array $aData   Any data to be updated
      *
      * @return bool
      */
-    public function update($iUserId = null, array $data = null): bool
+    public function update($iUserId = null, array $aData = null): bool
     {
         $oDate   = Factory::factory('DateTime');
-        $data    = (array) $data;
+        $aData   = (array) $aData;
         $iUserId = $this->getUserId($iUserId);
         if (empty($iUserId)) {
             return false;
@@ -1037,31 +1020,31 @@ class User extends Base
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
-        if ($data) {
+        if ($aData) {
 
             //  Set the cols in `user` (rather than querying the DB)
-            $aCols = $this->getUserColumns();
+            $aCols = array_keys($this->describeFields());
 
             //  Safety first, no updating of sensitive fields
-            unset($data['id']);
-            unset($data['id_md5']);
-            unset($data['password_md5']);
-            unset($data['password_engine']);
-            unset($data['password_changed']);
-            unset($data['salt']);
+            unset($aData['id']);
+            unset($aData['id_md5']);
+            unset($aData['password_md5']);
+            unset($aData['password_engine']);
+            unset($aData['password_changed']);
+            unset($aData['salt']);
 
-            $sNewPassword = getFromArray('password', $data);
-            unset($data['password']);
+            $sNewPassword = getFromArray('password', $aData);
+            unset($aData['password']);
 
             //  Set the data
-            $aDataUser            = [];
-            $aDataMeta            = [];
-            $sDataEmail           = '';
-            $sDataUsername        = '';
-            $dataResetMfaQuestion = false;
-            $dataResetMfaDevice   = false;
+            $aDataUser         = [];
+            $aDataMeta         = [];
+            $sDataEmail        = '';
+            $sDataUsername     = '';
+            $bResetMfaQuestion = false;
+            $bResetMfaDevice   = false;
 
-            foreach ($data as $key => $val) {
+            foreach ($aData as $key => $val) {
 
                 //  user or user_meta?
                 if (array_search($key, $aCols) !== false) {
@@ -1083,9 +1066,9 @@ class User extends Base
                 } elseif ($key == 'username') {
                     $sDataUsername = strtolower(trim($val));
                 } elseif ($key == 'reset_mfa_question') {
-                    $dataResetMfaQuestion = $val;
+                    $bResetMfaQuestion = $val;
                 } elseif ($key == 'reset_mfa_device') {
-                    $dataResetMfaDevice = $val;
+                    $bResetMfaDevice = $val;
                 } else {
                     $aDataMeta[$key] = $val;
                 }
@@ -1124,13 +1107,13 @@ class User extends Base
                 // --------------------------------------------------------------------------
 
                 //  Resetting 2FA?
-                if ($dataResetMfaQuestion || $dataResetMfaDevice) {
+                if ($bResetMfaQuestion || $bResetMfaDevice) {
 
                     $oConfig = Factory::service('Config');
                     $oConfig->load('auth/auth');
                     $sTwoFactorMode = $oConfig->item('authTwoFactorMode');
 
-                    if ($sTwoFactorMode == 'QUESTION' && $dataResetMfaQuestion) {
+                    if ($sTwoFactorMode == 'QUESTION' && $bResetMfaQuestion) {
 
                         $oDb->where('user_id', $iUserId);
                         if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
@@ -1139,7 +1122,7 @@ class User extends Base
                             return false;
                         }
 
-                    } elseif ($sTwoFactorMode == 'DEVICE' && $dataResetMfaDevice) {
+                    } elseif ($sTwoFactorMode == 'DEVICE' && $bResetMfaDevice) {
 
                         $oDb->where('user_id', $iUserId);
                         if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
@@ -1179,7 +1162,7 @@ class User extends Base
 
                 //  Update the password if it has been supplied
                 if (!empty($sNewPassword)) {
-                    $bIsTemp = (bool) getFromArray('temp_pw', $data);
+                    $bIsTemp = (bool) getFromArray('temp_pw', $aData);
                     if (!$oUserPasswordModel->change($iUserId, $sNewPassword, $bIsTemp)) {
                         throw new NailsException(
                             'Failed to change password. ' .
@@ -1247,8 +1230,8 @@ class User extends Base
         //  If we just updated the active user we should probably update their session info
         if ($iUserId == $this->activeUser('id')) {
             $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
-            if ($data) {
-                foreach ($data as $key => $val) {
+            if ($aData) {
+                foreach ($aData as $key => $val) {
                     $this->oActiveUser->{$key} = $val;
                 }
             }
@@ -1256,19 +1239,19 @@ class User extends Base
             // --------------------------------------------------------------------------
 
             //  Do we need to update any timezone/date/time preferences?
-            if (isset($data['timezone'])) {
+            if (isset($aData['timezone'])) {
                 $oDateTimeService = Factory::service('DateTime');
-                $oDateTimeService->setUserTimezone($data['timezone']);
+                $oDateTimeService->setUserTimezone($aData['timezone']);
             }
 
-            if (isset($data['datetime_format_date'])) {
+            if (isset($aData['datetime_format_date'])) {
                 $oDateTimeService = Factory::service('DateTime');
-                $oDateTimeService->setDateFormat($data['datetime_format_date']);
+                $oDateTimeService->setDateFormat($aData['datetime_format_date']);
             }
 
-            if (isset($data['datetime_format_time'])) {
+            if (isset($aData['datetime_format_time'])) {
                 $oDateTimeService = Factory::service('DateTime');
-                $oDateTimeService->setTimeFormat($data['datetime_format_time']);
+                $oDateTimeService->setTimeFormat($aData['datetime_format_time']);
             }
 
             // --------------------------------------------------------------------------
@@ -1276,7 +1259,7 @@ class User extends Base
             //  If there's a remember me cookie then update that too, but only if the password
             //  or email address has changed
 
-            if ((isset($data['email']) || !empty($bPasswordUpdated)) && $this->bIsRemembered()) {
+            if ((isset($aData['email']) || !empty($bPasswordUpdated)) && $this->bIsRemembered()) {
                 $this->setRememberCookie();
             }
         }
@@ -2119,6 +2102,7 @@ class User extends Base
 
         //  Set Meta data
         $aMetaCols = $this->getMetaColumns();
+        dd('Use describeMetaFields?', 2);
         $aMetaData = [];
 
         foreach ($data as $key => $val) {
@@ -2381,13 +2365,13 @@ class User extends Base
     /**
      * Checks whether a username is valid
      *
-     * @param string $username     The username to check
-     * @param bool   $checkDb      Whether to test against the database
-     * @param mixed  $ignoreUserId The ID of a user to ignore when checking the database
+     * @param string $sUsername     The username to check
+     * @param bool   $bCheckDb      Whether to test against the database
+     * @param int    $iIgnoreUserId The ID of a user to ignore when checking the database
      *
      * @return bool
      */
-    public function isValidUsername($username, $checkDb = false, $ignoreUserId = null)
+    public function isValidUsername($sUsername, $bCheckDb = false, $iIgnoreUserId = null): bool
     {
         /**
          * Check username doesn't contain invalid characters - we're actively looking
@@ -2396,41 +2380,37 @@ class User extends Base
          * we're good guys.
          */
 
-        $invalidChars = '/[^a-zA-Z0-9\-_\.]/';
+        $sInvalidChars = '/[^a-zA-Z0-9\-_\.]/';
 
         //  Minimum length of the username
-        $minLength = 2;
+        $iMinLength = 2;
 
         // --------------------------------------------------------------------------
 
-        //  Check for illegal characters
-        $containsInvalidChars = preg_match($invalidChars, $username);
+        if (preg_match($sInvalidChars, $sUsername)) {
 
-        if ($containsInvalidChars) {
+            $this->setError(
+                'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).'
+            );
+            return false;
 
-            $msg = 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
+        } elseif (strlen($sUsername) < $iMinLength) {
 
-            $this->setError($msg);
+            $this->setError(
+                'Usernames must be at least ' . $iMinLength . ' characters long.'
+            );
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        //  Check length
-        if (strlen($username) < $minLength) {
-            $this->setError('Usernames must be at least ' . $minLength . ' characters long.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        if ($checkDb) {
+        if ($bCheckDb) {
 
             $oDb = Factory::service('Database');
-            $oDb->where('username', $username);
+            $oDb->where('username', $sUsername);
 
-            if (!empty($ignoreUserId)) {
-                $oDb->where('id !=', $ignoreUserId);
+            if (!empty($iIgnoreUserId)) {
+                $oDb->where('id !=', $iIgnoreUserId);
             }
 
             if ($oDb->count_all_results($this->table)) {
@@ -2617,19 +2597,82 @@ class User extends Base
 
     // --------------------------------------------------------------------------
 
+    public function describeFields($sTable = null)
+    {
+        $aFields = parent::describeFields($sTable);
+
+        //  Data types
+        $aFields['profile_img']->type          = 'cdn_object_picker';
+        $aFields['timezone']->type             = 'dropdown';
+        $aFields['datetime_format_date']->type = 'dropdown';
+        $aFields['datetime_format_time']->type = 'dropdown';
+
+        //  Labels
+        $aFields['first_name']->label           = 'First Name';
+        $aFields['last_name']->label            = 'Surname';
+        $aFields['profile_img']->label          = 'Profile Image';
+        $aFields['dob']->label                  = 'Date of Birth';
+        $aFields['datetime_format_date']->label = 'Date Format';
+        $aFields['datetime_format_time']->label = 'Time Format';
+        $aFields['ip_address']->label           = 'Registration IP';
+        $aFields['last_ip']->label              = 'Last IP';
+        $aFields['last_update']->label          = 'Modified';
+        $aFields['referral']->label             = 'Referral Code';
+
+        //  Validation rules
+        $aRules = [
+            'required' => [
+                'first_name',
+                'last_name',
+            ],
+        ];
+
+        foreach ($aRules as $sRule => $aProperties) {
+            foreach ($aProperties as $sProperty) {
+                $aFields[$sProperty]->validation[] = $sRule;
+            }
+        }
+
+        //  Notes
+        $aFields['username']->info = 'Username can only contain alpha numeric characters, underscores, periods and dashes (no spaces).';
+
+        //  Dropdown values
+        /** @var DateTime $oDateTimeService */
+        $oDateTimeService                         = Factory::service('DateTime');
+        $aFields['timezone']->options             = $oDateTimeService->getAllTimezoneFlat();
+        $aFields['datetime_format_date']->options = $oDateTimeService->getAllDateFormatFlat();
+        $aFields['datetime_format_time']->options = $oDateTimeService->getAllTimeFormatFlat();
+
+        //  Dropdown validation
+        $aFields['timezone']->validation[]             = 'in_list[' . implode(',', array_keys($aFields['timezone']->options)) . ']';
+        $aFields['datetime_format_date']->validation[] = 'in_list[' . implode(',', array_keys($aFields['datetime_format_date']->options)) . ']';
+        $aFields['datetime_format_time']->validation[] = 'in_list[' . implode(',', array_keys($aFields['datetime_format_time']->options)) . ']';
+
+        //  Defaults
+        $aFields['timezone']->default             = $oDateTimeService->getTimezoneDefault();
+        $aFields['datetime_format_date']->default = $oDateTimeService->getDateFormatDefaultSlug();
+        $aFields['datetime_format_time']->default = $oDateTimeService->gettimeFormatDefaultSlug();
+
+        //  Misc
+        $aFields['timezone']->class             = 'select2';
+        $aFields['datetime_format_date']->class = 'select2';
+        $aFields['datetime_format_time']->class = 'select2';
+
+        return $aFields;
+    }
+
+    // --------------------------------------------------------------------------
+
     /**
-     * Describes the fields for this model
-     *
-     * @param string $sTable The database table to query
+     * Describes the meta fields of the user object
      *
      * @return array
      */
-    public function describeFields($sTable = null)
+    public function describeMetaFields(): array
     {
-        $aFields     = parent::describeFields($sTable);
-        $aMetaFields = parent::describeFields($this->tableMeta);
-        unset($aMetaFields['user_id']);
-        return array_merge($aFields, $aMetaFields);
+        $aFields = parent::describeFields($this->tableMeta);
+        unset($aFields['user_id']);
+        return $aFields;
     }
 
     // --------------------------------------------------------------------------

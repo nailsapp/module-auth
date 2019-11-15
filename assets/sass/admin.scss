@@ -167,33 +167,30 @@
             }
         }
 
-        .emails {
-            table {
-                th,
-                td {
-                    &.email {
-                        input {
-                            width: 100%;
-                            box-sizing: border-box;
-                        }
+        table.emails {
+            th,
+            td {
+                &.email {
+                    input {
+                        width: 100%;
+                        box-sizing: border-box;
                     }
+                }
 
-                    &.is-primary,
-                    &.is-verified {
-                        width: 50px;
-                        text-align: center;
-                    }
+                &.is-primary,
+                &.is-verified {
+                    width: 50px;
+                    text-align: center;
+                }
 
-                    &.date-added,
-                    &.date-verified {
-                        width: 120px;
-                        text-align: center;
-                    }
+                &.date-added,
+                &.date-verified {
+                    width: 120px;
+                    text-align: center;
+                }
 
-                    &.actions {
-                        width: 220px;
-                        text-align: center;
-                    }
+                &.actions {
+                    width: 220px;
                 }
             }
         }
