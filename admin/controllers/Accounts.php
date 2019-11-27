@@ -371,29 +371,15 @@ class Accounts extends DefaultController
 
             //  Set rules
             $oFormValidation->set_rules('group_id', '', 'required|is_natural_no_zero');
-            $oFormValidation->set_rules('first_name', '', 'required');
-            $oFormValidation->set_rules('last_name', '', 'required');
+            $oFormValidation->set_rules('password', '', '');
+            $oFormValidation->set_rules('send_activation', '', '');
+            $oFormValidation->set_rules('temp_pw', '', '');
+            $oFormValidation->set_rules('first_name', '', 'required|max_length[150]');
+            $oFormValidation->set_rules('last_name', '', 'required|max_length[150]');
+            $oFormValidation->set_rules('email', '', 'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]|max_length[255]');
 
-            $aEmailRules = [
-                'required',
-                'valid_email',
-                'is_unique[' . NAILS_DB_PREFIX . 'user_email.email]',
-            ];
-
-            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
-
-                $oFormValidation->set_rules('email', '', implode('|', $aEmailRules));
-
-            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
-
-                $oFormValidation->set_rules('username', '', 'required');
-                if ($oInput->post('email')) {
-                    $oFormValidation->set_rules('email', '', implode('|', $aEmailRules));
-                }
-
-            } else {
-                $oFormValidation->set_rules('email', '', implode('|', $aEmailRules));
-                $oFormValidation->set_rules('username', '', 'required');
+            if (in_array(APP_NATIVE_LOGIN_USING, ['BOTH', 'USERNAME'])) {
+                $oFormValidation->set_rules('username', '', 'required|max_length[150]|alpha_dash_period|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
             }
 
             //  Set messages
@@ -435,9 +421,9 @@ class Accounts extends DefaultController
 
                 /** @var User $oUserModel */
                 $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-                $new_user   = $oUserModel->create($aData, stringToBoolean($oInput->post('send_activation', true)));
+                $oNewUser   = $oUserModel->create($aData, stringToBoolean($oInput->post('send_activation', true)));
 
-                if ($new_user) {
+                if ($oNewUser) {
 
                     /**
                      * Any errors happen? While the user can be created successfully other problems
@@ -459,33 +445,27 @@ class Accounts extends DefaultController
                     // --------------------------------------------------------------------------
 
                     //  Add item to admin changelog
-                    $name = '#' . number_format($new_user->id);
-
-                    if ($new_user->first_name) {
-                        $name .= ' ' . $new_user->first_name;
-                    }
-
-                    if ($new_user->last_name) {
-                        $name .= ' ' . $new_user->last_name;
-                    }
+                    $sName = '#' . number_format($oNewUser->id);
+                    $sName .= trim($oNewUser->first_name . ' ' . $oNewUser->last_name);
+                    $sName = trim($sName);
 
                     $this->oChangeLogModel->add(
                         'created',
                         'a',
                         'user',
-                        $new_user->id,
-                        $name,
-                        'admin/auth/accounts/edit/' . $new_user->id
+                        $oNewUser->id,
+                        $sName,
+                        'admin/auth/accounts/edit/' . $oNewUser->id
                     );
 
                     // --------------------------------------------------------------------------
 
                     $sStatus  = 'success';
                     $sMessage = 'A user account was created for <strong>';
-                    $sMessage .= $new_user->first_name . '</strong>, update their details now.';
+                    $sMessage .= $oNewUser->first_name . '</strong>, update their details now.';
                     $oSession->setFlashData($sStatus, $sMessage);
 
-                    redirect('admin/auth/accounts/edit/' . $new_user->id);
+                    redirect('admin/auth/accounts/edit/' . $oNewUser->id);
 
                 } else {
                     $this->data['error'] = 'There was an error when creating the user ';
@@ -526,8 +506,6 @@ class Accounts extends DefaultController
      *
      * @throws FactoryException
      * @throws ModelException
-     * @todo (Pablo - 2019-01-22) - Use the DefaultController edit() method
-     *
      */
     public function edit(): void
     {

@@ -106,7 +106,7 @@ class Details implements Tab
 
         $aFields  = $this->getFields($oUser);
         $aRules   = [];
-        $aInclude = [
+        $aInclude = array_filter([
             'first_name',
             'last_name',
             'username',
@@ -116,20 +116,25 @@ class Details implements Tab
             'timezone',
             'datetime_format_date',
             'datetime_format_time',
-        ];
+        ]);
 
         foreach ($aInclude as $sField) {
-            $aRules[$sField] = getFromArray($sField, $aFields)->validation;
+            $oField = getFromArray($sField, $aFields);
+            if (!empty($oField)) {
+                $aRules[$sField] = getFromArray($sField, $aFields)->validation;
+            }
         }
 
         //  Validate username
-        $aRules['username'][] = function ($sUsername) use ($oUser, $oUserModel) {
-            if (!$oUserModel->isValidUsername($sUsername, true, $oUser->id)) {
-                throw new ValidationException(
-                    $oUserModel->lastError()
-                );
-            }
-        };
+        if (in_array('username', $aRules)) {
+            $aRules['username'][] = function ($sUsername) use ($oUser, $oUserModel) {
+                if (!$oUserModel->isValidUsername($sUsername, true, $oUser->id)) {
+                    throw new ValidationException(
+                        $oUserModel->lastError()
+                    );
+                }
+            };
+        }
 
         return $aRules;
     }
@@ -193,10 +198,10 @@ class Details implements Tab
         $aFields          = [];
 
         // The order and fields to include
-        $aFieldOrder = [
+        $aFieldOrder = array_filter([
             'first_name',
             'last_name',
-            'username',
+            in_array(APP_NATIVE_LOGIN_USING, ['BOTH', 'USERNAME']) ? 'username' : null,
             'profile_img',
             'gender',
             'dob',
@@ -211,7 +216,7 @@ class Details implements Tab
             'last_login',
             'referral',
             'referred_by',
-        ];
+        ]);
 
         $aReadOnly = [
             'ip_address',
