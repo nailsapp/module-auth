@@ -34,6 +34,11 @@ use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
 
+/**
+ * Class Accounts
+ *
+ * @package Nails\Admin\Auth
+ */
 class Accounts extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'User';
@@ -590,14 +595,12 @@ class Accounts extends DefaultController
                 $oFormValidation = Factory::service('FormValidation');
 
                 $aRules = [];
+                $aData  = [];
+
                 /** @var Tab $oTab */
                 foreach ($aTabs as $oTab) {
                     $aRules = array_merge($aRules, $oTab->getValidationRules($oUser));
-                }
-
-                $aData = [];
-                foreach ($aRules as $sField => $aValidationRules) {
-                    $aData[$sField] = getFromArray($sField, $_POST);
+                    $aData  = array_merge($aData, $oTab->getPostData($oUser, $oInput->post()));
                 }
 
                 $oValidator = $oFormValidation->buildValidator($aRules, [], $aData);

@@ -108,4 +108,19 @@ class Emails implements Tab
     {
         return [];
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a key/value array of columns and the data to populate
+     *
+     * @param User  $oUser The user being edited
+     * @param array $aPost The POST array
+     *
+     * @return array
+     */
+    public function getPostData(User $oUser, array $aPost): array
+    {
+        return [];
+    }
 }

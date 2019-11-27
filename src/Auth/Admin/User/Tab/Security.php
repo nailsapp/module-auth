@@ -134,4 +134,46 @@ class Security implements Tab
 
         return $aRules;
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a key/value array of columns and the data to populate
+     *
+     * @param User  $oUser The user being edited
+     * @param array $aPost The POST array
+     *
+     * @return array
+     */
+    public function getPostData(User $oUser, array $aPost): array
+    {
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
+
+        $aData = [
+            'password' => getFromArray('password', $aPost),
+            'temp_pw'  => (bool) getFromArray('temp_pw', $aPost),
+        ];
+
+        switch ($oConfig->item('authTwoFactorMode')) {
+            case 'QUESTION':
+                $aData = array_merge(
+                    $aData,
+                    [
+                        'reset_mfa_question' => (bool) getFromArray('reset_mfa_question', $aPost),
+                    ]
+                );
+                break;
+            case 'DEVICE':
+                $aData = array_merge(
+                    $aData,
+                    [
+                        'reset_mfa_device' => (bool) getFromArray('reset_mfa_device', $aPost),
+                    ]
+                );
+                break;
+        }
+
+        return $aData;
+    }
 }

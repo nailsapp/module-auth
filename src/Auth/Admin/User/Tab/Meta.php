@@ -109,6 +109,49 @@ class Meta implements Tab
     // --------------------------------------------------------------------------
 
     /**
+     * Returns a key/value array of columns and the data to populate
+     *
+     * @param User  $oUser The user being edited
+     * @param array $aPost The POST array
+     *
+     * @return array
+     */
+    public function getPostData(User $oUser, array $aPost): array
+    {
+        $aMetaCols = $this->getFieldsForGroup($oUser->group_id);
+        $aData     = [];
+
+        /** @var Field $oField */
+        foreach ($aMetaCols as $oField) {
+
+            $aData[$oField->key] = getFromArray($oField->key, $aPost);
+
+            switch ($oField->type) {
+
+                case 'cdn_object_picker':
+                    $aData[$oField->key] = (int) $aData[$oField->key] ?: null;
+                    break;
+
+                case 'number':
+                    if (empty($aData[$oField->key]) && $aData[$oField->key] !== '0' && $oField->allow_null) {
+                        $aData[$oField->key] = null;
+                    } else {
+                        $aData[$oField->key] = (int) $aData[$oField->key];
+                    }
+                    break;
+
+                case 'boolean':
+                    $aData[$oField->key] = (bool) $aData[$oField->key];
+                    break;
+            }
+        }
+
+        return $aData;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Returns the appropriate meta fields for the given user group
      *
      * @param int|null $iGroupId
@@ -130,6 +173,10 @@ class Meta implements Tab
 
         if ($iGroupId && is_array($aDefinedCols)) {
 
+            if (!array_key_exists($iGroupId, $aDefinedCols)) {
+                return $aMetaCols;
+            }
+
             $aGroupFields = getFromArray($iGroupId, $aDefinedCols);
 
             //  @todo (Pablo - 2019-11-15) - Remove backwards compatability
@@ -141,6 +188,7 @@ class Meta implements Tab
             return array_filter($aMetaCols, function (Field $oField) use ($aGroupFields) {
                 return in_array($oField->key, $aGroupFields);
             });
+
         } else {
             return $aMetaCols;
         }

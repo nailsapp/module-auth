@@ -1022,8 +1022,19 @@ class User extends Base
                     //  Careful now, some items cannot be blank and must be null
                     switch ($key) {
 
+                        //  Int or null
                         case 'profile_img':
-                            $aDataUser[$key] = $val ? $val : null;
+                            $aDataUser[$key] = (int) $val ?: null;
+                            break;
+
+                        //  Null if empty
+                        case 'dob':
+                            $aDataUser[$key] = $val ?: null;
+                            break;
+
+                        //  Boolean
+                        case 'temp_pw':
+                            $aDataUser[$key] = (bool) $val;
                             break;
 
                         default:

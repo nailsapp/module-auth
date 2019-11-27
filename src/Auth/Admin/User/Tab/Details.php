@@ -7,6 +7,7 @@ use Nails\Auth\Resource\User;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Exception\ViewNotFoundException;
+use Nails\Common\Factory\Model\Field;
 use Nails\Common\Service\DateTime;
 use Nails\Common\Service\View;
 use Nails\Factory;
@@ -131,6 +132,46 @@ class Details implements Tab
         };
 
         return $aRules;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a key/value array of columns and the data to populate
+     *
+     * @param User  $oUser The user being edited
+     * @param array $aPost The POST array
+     *
+     * @return array
+     */
+    public function getPostData(User $oUser, array $aPost): array
+    {
+        $aFields = arrayFilterMulti(
+            'readonly',
+            $this->getFields($oUser),
+            function (bool $sReadonly) {
+                return !$sReadonly;
+            }
+        );
+
+        $aData = [];
+        /** @var Field $oField */
+        foreach ($aFields as $oField) {
+
+            switch ($oField->key) {
+                case 'dob':
+                    $aData[$oField->key] = getFromArray($oField->key, $aPost) ?: null;
+                    break;
+                case 'profile_img':
+                    $aData[$oField->key] = (int) getFromArray($oField->key, $aPost) ?: null;
+                    break;
+                default:
+                    $aData[$oField->key] = getFromArray($oField->key, $aPost);
+                    break;
+            }
+        }
+
+        return $aData;
     }
 
     // --------------------------------------------------------------------------
