@@ -8,9 +8,29 @@ import Groups from './components/Groups.js';
 import SearchUser from './components/SearchUser.js';
 
 (function() {
-    new AccountCreate();
-    new AccountEdit();
-    new AccountMerge();
-    new Groups();
-    new SearchUser();
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-auth',
+        'AccountCreate',
+        new AccountCreate()
+    );
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-auth',
+        'AccountEdit',
+        new AccountEdit()
+    );
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-auth',
+        'AccountMerge',
+        new AccountMerge()
+    );
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-auth',
+        'Groups',
+        new Groups()
+    );
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-auth',
+        'SearchUser',
+        new SearchUser()
+    );
 })();
