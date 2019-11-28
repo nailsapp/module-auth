@@ -12,12 +12,22 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Factory\Nav;
 use Nails\Admin\Helper;
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Auth\Model\User;
+use Nails\Auth\Service\Session;
 use Nails\Common\Exception\ValidationException;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
+/**
+ * Class Merge
+ *
+ * @package Nails\Admin\Auth
+ */
 class Merge extends BaseAdmin
 {
     /**
@@ -28,11 +38,12 @@ class Merge extends BaseAdmin
     public static function announce()
     {
         if (userHasPermission('admin:auth:merge:users')) {
+            /** @var Nav $oNavGroup */
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
-            $oNavGroup->setLabel('Users');
-            $oNavGroup->setIcon('fa-users');
-            $oNavGroup->addAction('Merge Users');
-            return $oNavGroup;
+            return $oNavGroup
+                ->setLabel('Users')
+                ->setIcon('fa-users')
+                ->addAction('Merge Users');
         }
     }
 
@@ -71,10 +82,12 @@ class Merge extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
             try {
 
+                /** @var FormValidation $oFormValidation */
                 $oFormValidation = Factory::service('FormValidation');
 
                 $oFormValidation->set_rules('user_id', '', 'required');
@@ -94,6 +107,7 @@ class Merge extends BaseAdmin
                     throw new ValidationException('You cannot list yourself as a user to merge.');
                 }
 
+                /** @var User $oUserModel */
                 $oUserModel   = Factory::model('User', Constants::MODULE_SLUG);
                 $oMergeResult = $oUserModel->merge($iUserId, $aMergeIds, $bPreview);
 
@@ -108,6 +122,7 @@ class Merge extends BaseAdmin
                     return;
 
                 } else {
+                    /** @var Session $oSession */
                     $oSession = Factory::service('Session', Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Users were merged successfully.');
                     redirect('admin/auth/merge');
@@ -118,9 +133,6 @@ class Merge extends BaseAdmin
             }
         }
 
-        // --------------------------------------------------------------------------
-
-        //  Load views
         Helper::loadView('index');
     }
 }
