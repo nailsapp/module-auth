@@ -334,7 +334,8 @@ class User extends Base
     public function setActiveUser(Resource\User $oUser)
     {
         $this->oActiveUser = $oUser;
-        $oDateTimeService  = Factory::service('DateTime');
+        /** @var DateTime $oDateTimeService */
+        $oDateTimeService = Factory::service('DateTime');
 
         //  Set the user's date/time formats
         $sFormatDate = $this->activeUser('pref_date_format');
@@ -343,7 +344,7 @@ class User extends Base
         $sFormatTime = $this->activeUser('pref_time_format');
         $sFormatTime = $sFormatTime ? $sFormatTime : $oDateTimeService->getTimeFormatDefaultSlug();
 
-        $oDateTimeService->setFormats($sFormatDate, $sFormatTime);
+        $oDateTimeService->setUserFormats($sFormatDate, $sFormatTime);
     }
 
     // --------------------------------------------------------------------------
@@ -1227,12 +1228,12 @@ class User extends Base
 
             if (isset($aData['datetime_format_date'])) {
                 $oDateTimeService = Factory::service('DateTime');
-                $oDateTimeService->setDateFormat($aData['datetime_format_date']);
+                $oDateTimeService->setUserDateFormat($aData['datetime_format_date']);
             }
 
             if (isset($aData['datetime_format_time'])) {
                 $oDateTimeService = Factory::service('DateTime');
-                $oDateTimeService->setTimeFormat($aData['datetime_format_time']);
+                $oDateTimeService->setUserTimeFormat($aData['datetime_format_time']);
             }
 
             // --------------------------------------------------------------------------
