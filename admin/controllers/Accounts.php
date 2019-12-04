@@ -622,20 +622,7 @@ class Accounts extends DefaultController
 
         if (activeUser('id') == $oUser->id) {
 
-            switch (strtolower(activeUser('gender'))) {
-
-                case 'male':
-                    $this->data['notice'] = lang('accounts_edit_editing_self_m');
-                    break;
-
-                case 'female':
-                    $this->data['notice'] = lang('accounts_edit_editing_self_f');
-                    break;
-
-                default:
-                    $this->data['notice'] = lang('accounts_edit_editing_self_u');
-                    break;
-            }
+            $this->data['notice'] = lang('accounts_edit_editing_self', [$oUser->first_name]);
         }
 
         //  Load views

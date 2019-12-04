@@ -41,12 +41,9 @@ $lang['accounts_edit_error_profile_img'] = '<strong>Update Failed:</strong> Ther
 $lang['accounts_edit_error_upload']      = '<strong>Update failed:</strong> The file "%s" failed to upload.';
 $lang['accounts_edit_error_noteditable'] = 'You do not have permission to perform manipulations on that user.';
 
-
-$lang['accounts_edit_ok']             = 'Updated user %s';
-$lang['accounts_edit_fail']           = 'Failed to update user: %s';
-$lang['accounts_edit_editing_self_m'] = '<strong>Hey there handsome!</strong> You are currently editing your own account.';
-$lang['accounts_edit_editing_self_f'] = '<strong>Hey there beautiful!</strong> You are currently editing your own account.';
-$lang['accounts_edit_editing_self_u'] = '<strong>Hello there!</strong> You are currently editing your own account.';
+$lang['accounts_edit_ok']           = 'Updated user %s';
+$lang['accounts_edit_fail']         = 'Failed to update user: %s';
+$lang['accounts_edit_editing_self'] = '<strong>Hey %s!</strong> You are currently editing your own account.';
 
 $lang['accounts_edit_actions_legend'] = 'Actions';
 
