@@ -1,14 +1,23 @@
 <?php
 
-$oInput       = \Nails\Factory::service('Input');
-$buttons      = [];
-$returnString = '?return_to=' . urlencode(uri_string() . '?' . $oInput->server('QUERY_STRING'));
+use Nails\Common\Service\Input;
+use Nails\Factory;
+use Nails\Auth\Resource\User;
+
+/**
+ * @var User $oUser
+ */
+
+/** @var Input $oInput */
+$oInput        = Factory::service('Input');
+$aButtons      = [];
+$sReturnString = '?return_to=' . urlencode(uri_string() . '?' . $oInput->server('QUERY_STRING'));
 
 //  Login as
-if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
+if ($oUser->id != activeUser('id') && userHasPermission('admin:auth:accounts:loginAs')) {
 
     //  Generate the return string
-    $url = uri_string();
+    $sUrl = uri_string();
 
     if ($oInput->get()) {
 
@@ -17,44 +26,42 @@ if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts
         unset($get['isModal']);
 
         if ($get) {
-
-            $url .= '?' . http_build_query($get);
+            $sUrl .= '?' . http_build_query($get);
         }
     }
 
-    $returnString = '?return_to=' . urlencode($url);
+    $sReturnString = '?return_to=' . urlencode($sUrl);
 
     // --------------------------------------------------------------------------
 
-    $url = siteUrl('auth/override/login_as/' . md5($user_edit->id) . '/' . md5($user_edit->password) . $returnString);
+    $sUrl = siteUrl('auth/override/login_as/' . md5($oUser->id) . '/' . md5($oUser->password) . $sReturnString);
 
-    $buttons[] = anchor($url, lang('admin_login_as') . ' ' . $user_edit->first_name, 'class="btn btn-primary" target="_parent"');
+    $aButtons[] = anchor($sUrl, lang('admin_login_as') . ' ' . $oUser->first_name, 'class="btn btn-primary" target="_parent"');
 }
 
 // --------------------------------------------------------------------------
 
 //  Edit
-if ($user_edit->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete')) {
+if ($oUser->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete')) {
 
-    $title = lang('admin_confirm_delete_title');
-    $body  = lang('admin_confirm_delete_body');
+    $sTitle = lang('admin_confirm_delete_title');
+    $sBody  = lang('admin_confirm_delete_body');
 
-    $buttons[] = anchor(
-        'admin/auth/accounts/delete/' . $user_edit->id . '?return_to=' . urlencode('admin/auth/accounts'),
+    $aButtons[] = anchor(
+        'admin/auth/accounts/delete/' . $oUser->id . '?return_to=' . urlencode('admin/auth/accounts'),
         lang('action_delete'),
-        'class="btn btn-danger confirm" data-title="' . $title . '" data-body="' . $body . '"'
+        'class="btn btn-danger confirm" data-title="' . $sTitle . '" data-body="' . $sBody . '"'
     );
 }
 
 // --------------------------------------------------------------------------
 
 //  Suspend
-if ($user_edit->is_suspended) {
+if ($oUser->is_suspended) {
 
-    if (activeUser('id') != $user_edit->id && userHasPermission('admin:auth:accounts:unsuspend')) {
-
-        $buttons[] = anchor(
-            'admin/auth/accounts/unsuspend/' . $user_edit->id . $returnString,
+    if (activeUser('id') != $oUser->id && userHasPermission('admin:auth:accounts:unsuspend')) {
+        $aButtons[] = anchor(
+            'admin/auth/accounts/unsuspend/' . $oUser->id . $sReturnString,
             lang('action_unsuspend'),
             'class="btn btn-primary"'
         );
@@ -62,17 +69,16 @@ if ($user_edit->is_suspended) {
 
 } else {
 
-    if (activeUser('id') != $user_edit->id && userHasPermission('admin:auth:accounts:suspend')) {
-
-        $buttons[] = anchor(
-            'admin/auth/accounts/suspend/' . $user_edit->id . $returnString,
+    if (activeUser('id') != $oUser->id && userHasPermission('admin:auth:accounts:suspend')) {
+        $aButtons[] = anchor(
+            'admin/auth/accounts/suspend/' . $oUser->id . $sReturnString,
             lang('action_suspend'),
             'class="btn btn-danger"'
         );
     }
 }
 
-if ($buttons) {
+if ($aButtons) {
 
     ?>
     <fieldset id="edit-user-actions">
@@ -82,9 +88,8 @@ if ($buttons) {
         <p>
             <?php
 
-            foreach ($buttons as $button) {
-
-                echo $button;
+            foreach ($aButtons as $sButton) {
+                echo $sButton;
             }
 
             ?>
