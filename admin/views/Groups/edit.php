@@ -1,5 +1,8 @@
 <?php
-$oInput = \Nails\Factory::service('Input');
+
+use Nails\Factory;
+
+$oInput = Factory::service('Input');
 ?>
 <div class="group-accounts groups edit">
     <div class="alert alert-warning">

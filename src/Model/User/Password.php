@@ -14,6 +14,8 @@ namespace Nails\Auth\Model\User;
 
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
@@ -55,6 +57,8 @@ class Password extends Base
      * @param bool   $bIsTemp   Whether the password is temporary
      *
      * @return boolean
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function change(int $iUserId, string $sPassword, bool $bIsTemp = false)
     {

@@ -49,7 +49,7 @@ class Login extends Base
 
         if ($sReturnTo) {
 
-            $sReturnTo = preg_match('#^https?\://#', $sReturnTo) ? $sReturnTo : siteUrl($sReturnTo);
+            $sReturnTo = preg_match('#^https?:/#', $sReturnTo) ? $sReturnTo : siteUrl($sReturnTo);
             $aReturnTo = parse_url($sReturnTo);
 
             //  urlencode the query if there is one
@@ -877,7 +877,7 @@ class Login extends Base
                                 }
                             }
 
-                        } catch (\Exception $e) {
+                        } catch (Exception $e) {
                             $oLogger->line('Failed to upload user\'s profile image');
                             $oLogger->line($e->getMessage());
                         }
@@ -885,7 +885,7 @@ class Login extends Base
 
                     // --------------------------------------------------------------------------
 
-                    //  @todo (Pablo - 2019-07-16) - Setting login data is causing a cascae of ini_set errors
+                    //  @todo (Pablo - 2019-07-16) - Setting login data is causing a cascade of ini_set errors
                     //  Aint that swell, all registered! Redirect!
                     $oUserModel->setLoginData($newUser->id);
 

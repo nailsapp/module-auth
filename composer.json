@@ -33,7 +33,8 @@
         "nails/module-cdn": "dev-develop",
         "nails/module-console": "dev-develop",
         "hybridauth/hybridauth": "~3.0",
-        "sonata-project/google-authenticator": "~2.2.0"
+        "sonata-project/google-authenticator": "~2.2.0",
+        "ext-json": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "8.*"

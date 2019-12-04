@@ -2,11 +2,13 @@
 
 namespace Nails\Auth\Console\Command\User;
 
+use Exception;
 use Nails\Auth\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\Base;
 use Nails\Environment;
 use Nails\Factory;
+use stdClass;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -62,7 +64,7 @@ class Create extends Base
      * @param OutputInterface $oOutput The Output Interface provided by Symfony
      *
      * @return int
-     * @throws \Exception
+     * @throws Exception
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
     {
@@ -203,7 +205,7 @@ class Create extends Base
      */
     private function getDefaultUser()
     {
-        $oDefault    = new \stdClass();
+        $oDefault    = new stdClass();
         $sConfigFile = $_SERVER['HOME'] . '/.nails';
         if (file_exists($sConfigFile)) {
             $sJson = file_get_contents($sConfigFile);
@@ -230,7 +232,7 @@ class Create extends Base
      * @param array   $aUser    The details to create the user with
      * @param integer $iGroupId The user's Group Id
      *
-     * @throws \Exception
+     * @throws Exception
      */
     private function createUser($aUser, $iGroupId)
     {
@@ -241,7 +243,7 @@ class Create extends Base
             if (empty($oUser)) {
                 throw new NailsException($oUserModel->lastError());
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (!empty($oUser)) {
                 $oUserModel->delete($oUser->id);
             }

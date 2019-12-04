@@ -12,12 +12,14 @@
 
 namespace Nails\Auth\Model;
 
+use DateInterval;
 use Google\Authenticator\GoogleAuthenticator;
 use Nails\Auth\Constants;
 use Nails\Common\Model\Base;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Functions;
+use stdClass;
 
 class Auth extends Base
 {
@@ -313,7 +315,7 @@ class Auth extends Base
         $sSalt    = $oPasswordModel->salt();
         $sIp      = $oInput->ipAddress();
         $sCreated = $oNow->format('Y-m-d H:i:s');
-        $sExpires = $oNow->add(new \DateInterval('PT10M'))->format('Y-m-d H:i:s');
+        $sExpires = $oNow->add(new DateInterval('PT10M'))->format('Y-m-d H:i:s');
         $aToken   = [
             'token' => sha1(sha1(APP_PRIVATE_KEY . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
             'salt'  => md5($sSalt),
@@ -405,7 +407,7 @@ class Auth extends Base
      *
      * @param int $iUserId The user's ID
      *
-     * @return boolean|\stdClass
+     * @return boolean|stdClass
      */
     public function mfaQuestionGet($iUserId)
     {
@@ -566,7 +568,7 @@ class Auth extends Base
      *
      * @param int $iUserId The user's ID
      *
-     * @return bool|\stdClass         \stdClass on success, false on failure
+     * @return bool|stdClass         \stdClass on success, false on failure
      */
     public function mfaDeviceSecretGet($iUserId)
     {

@@ -1,3 +1,8 @@
+<?php
+
+use Nails\Factory;
+
+?>
 <div class="group-accounts create">
     <?=form_open()?>
     <p>
@@ -5,7 +10,7 @@
     </p>
     <?php
 
-    $oView = \Nails\Factory::service('View');
+    $oView = Factory::service('View');
     $oView->load('Accounts/create/inc-basic');
 
     ?>

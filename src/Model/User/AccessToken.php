@@ -12,6 +12,7 @@
 
 namespace Nails\Auth\Model\User;
 
+use DateInterval;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
@@ -89,7 +90,7 @@ class AccessToken extends Base
         //  If not specified, generate an expiration date based on the defaults
         if (!isset($aData['expires']) && !empty(static::TOKEN_EXPIRE)) {
             $oNow = Factory::factory('DateTime');
-            $oNow->add(new \DateInterval(static::TOKEN_EXPIRE));
+            $oNow->add(new DateInterval(static::TOKEN_EXPIRE));
             $aData['expires'] = $oNow->format('Y-m-d H:i:s');
         }
 

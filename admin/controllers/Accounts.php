@@ -33,6 +33,7 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
+use stdClass;
 
 /**
  * Class Accounts
@@ -87,6 +88,7 @@ class Accounts extends DefaultController
      */
     public static function announce()
     {
+        /** @var Nav $oNavGroup */
         $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
         $oNavGroup->setLabel('Users');
         $oNavGroup->setIcon('fa-users');
@@ -288,7 +290,7 @@ class Accounts extends DefaultController
     /**
      * Determins whether the active user can edit the target superuser
      *
-     * @param \stdClass $oUser The user to check
+     * @param stdClass $oUser The user to check
      *
      * @return bool
      */
