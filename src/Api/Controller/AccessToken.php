@@ -14,8 +14,10 @@ namespace Nails\Auth\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
+use Nails\Api\Factory\ApiResponse;
 use Nails\Auth\Constants;
 use Nails\Auth\Model\Auth;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\HttpCodes;
 use Nails\Factory;
 
@@ -25,6 +27,8 @@ class AccessToken extends Base
      * Retrieves an access token for a user
      *
      * @return ApiResponse
+     * @throws FactoryException
+     * @throws ApiException
      */
     public function postIndex()
     {
@@ -95,11 +99,14 @@ class AccessToken extends Base
             );
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        /** @var ApiResponse $oResponse */
+        $oResponse = Factory::factory('ApiResponse', 'nails/module-api')
             ->setData([
                 'token'   => $oToken->token,
                 'expires' => $oToken->expires,
             ]);
+
+        return $oResponse;
     }
 
     // --------------------------------------------------------------------------
@@ -108,6 +115,8 @@ class AccessToken extends Base
      * Revoke an access token for the authenticated user
      *
      * @return ApiResponse
+     * @throws FactoryException
+     * @throws ApiException
      */
     public function deleteIndex()
     {
@@ -139,6 +148,9 @@ class AccessToken extends Base
             );
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api');
+        /** @var ApiResponse $oResponse */
+        $oResponse = Factory::factory('ApiResponse', 'nails/module-api');
+
+        return $oResponse;
     }
 }

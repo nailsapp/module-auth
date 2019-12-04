@@ -18,10 +18,12 @@ use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Auth\Model\User;
 use Nails\Auth\Service\Session;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Factory;
+use stdClass;
 
 /**
  * Class Merge
@@ -33,7 +35,8 @@ class Merge extends BaseAdmin
     /**
      * Announces this controller's navGroups
      *
-     * @return \stdClass
+     * @return stdClass
+     * @throws FactoryException
      */
     public static function announce()
     {
@@ -69,6 +72,7 @@ class Merge extends BaseAdmin
      * Merge users
      *
      * @return void
+     * @throws FactoryException
      */
     public function index(): void
     {

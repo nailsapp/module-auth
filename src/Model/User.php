@@ -16,6 +16,8 @@ use Nails\Auth\Constants;
 use Nails\Auth\Events;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Factory\Model\Field;
 use Nails\Common\Model\Base;
@@ -29,6 +31,8 @@ use Nails\Email;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Testing;
+use ReflectionException;
+use stdClass;
 
 /**
  * Class User
@@ -194,6 +198,8 @@ class User extends Base
      * Initialise the generic user model
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function init()
     {
@@ -227,6 +233,8 @@ class User extends Base
      * Log in a previously logged in user
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     protected function loginRememberedUser()
     {
@@ -330,6 +338,8 @@ class User extends Base
      * Set the active user
      *
      * @param Resource\User $oUser The user object to set
+     *
+     * @throws FactoryException
      */
     public function setActiveUser(Resource\User $oUser)
     {
@@ -353,6 +363,7 @@ class User extends Base
      * Clear the active user
      *
      * @return void
+     * @throws FactoryException
      */
     public function clearActiveUser()
     {
@@ -368,6 +379,10 @@ class User extends Base
      * @param bool  $bSetSessionData Whether to set the session data or not
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function setLoginData($mIdEmail, $bSetSessionData = true)
     {
@@ -443,6 +458,9 @@ class User extends Base
      * Clears the login data for a user
      *
      * @return  void
+     * @throws FactoryException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function clearLoginData()
     {
@@ -522,6 +540,8 @@ class User extends Base
      * @param mixed $user The user to check, uses activeUser if null
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function isAdmin($user = null)
     {
@@ -536,6 +556,7 @@ class User extends Base
      * way of checking if the session variable exists.
      *
      * @return bool
+     * @throws FactoryException
      */
     public function wasAdmin()
     {
@@ -550,6 +571,8 @@ class User extends Base
      *
      * @param int    $loggingInAs The ID of the user who is being imitated
      * @param string $returnTo    Where to redirect the user when they log back in
+     *
+     * @throws FactoryException
      */
     public function setAdminRecoveryData($loggingInAs, $returnTo = '')
     {
@@ -564,7 +587,7 @@ class User extends Base
         }
 
         //  Prepare the new element
-        $adminRecoveryData            = new \stdClass();
+        $adminRecoveryData            = new stdClass();
         $adminRecoveryData->oldUserId = activeUser('id');
         $adminRecoveryData->newUserId = $loggingInAs;
         $adminRecoveryData->hash      = md5(activeUser('password'));
@@ -588,7 +611,8 @@ class User extends Base
     /**
      * Returns the recovery data at the bottom of the stack, i.e the most recently added
      *
-     * @return array|\stdClass
+     * @return array|stdClass
+     * @throws FactoryException
      */
     public function getAdminRecoveryData()
     {
@@ -608,6 +632,7 @@ class User extends Base
      * Removes the most recently added recovery data from the stack
      *
      * @return void
+     * @throws FactoryException
      */
     public function unsetAdminRecoveryData()
     {
@@ -632,6 +657,8 @@ class User extends Base
      * @param mixed $user The user to check, uses activeUser if null
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function isSuperuser($user = null)
     {
@@ -643,11 +670,12 @@ class User extends Base
     /**
      * Determines whether the specified user has a certain ACL permission
      *
-     * @param string $sSearch   The permission to check for
-     * @param mixed  $mUser     The user to check for; if null uses activeUser, if numeric, fetches user, if object
-     *                          uses that object
+     * @param string $sSearch The permission to check for
+     * @param mixed  $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
      *
      * @return  bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function hasPermission($sSearch, $mUser = null)
     {
@@ -806,6 +834,8 @@ class User extends Base
      * @param string $sIdentifier The user's identifier, either an email address or a username
      *
      * @return Resource\User|null
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function getByIdentifier(string $sIdentifier): ?Resource\User
     {
@@ -828,8 +858,6 @@ class User extends Base
                 }
                 break;
         }
-
-        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -840,6 +868,8 @@ class User extends Base
      * @param string $sEmail The user's email address
      *
      * @return Resource\User|null
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function getByEmail(string $sEmail): ?Resource\User
     {
@@ -861,6 +891,7 @@ class User extends Base
      * @param string $sUsername The user's username
      *
      * @return Resource\User|null
+     * @throws ModelException
      */
     public function getByUsername(string $sUsername): ?Resource\User
     {
@@ -885,6 +916,7 @@ class User extends Base
      * @param string $md5Pw The MD5 hash of their password
      *
      * @return Resource\User|null
+     * @throws ModelException
      */
     public function getByHashes(string $md5Id, string $md5Pw): ?Resource\User
     {
@@ -916,6 +948,7 @@ class User extends Base
      * @param string $sReferralCode The user's referral code
      *
      * @return Resource\User|null
+     * @throws ModelException
      */
     public function getByReferral(string $sReferralCode): ?Resource\User
     {
@@ -939,6 +972,7 @@ class User extends Base
      * @param int $id The user's ID
      *
      * @return array
+     * @throws FactoryException
      */
     public function getEmailsForUser($id)
     {
@@ -961,6 +995,8 @@ class User extends Base
      * @param array $aData   Any data to be updated
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function update($iUserId = null, array $aData = null): bool
     {
@@ -1289,6 +1325,7 @@ class User extends Base
      * @param array $aData   The data array
      *
      * @return bool
+     * @throws ModelException
      */
     public function setCacheUser($iUserId, $aData = [])
     {
@@ -1329,12 +1366,14 @@ class User extends Base
      * @param string $email       The email address to add
      * @param int    $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
      * @param bool   $bIsPrimary  Whether or not the email address should be the primary email address for the user
-     * @param bool   $is_verified Whether ot not the email should be marked as verified
-     * @param bool   $send_email  If unverified, whether or not the verification email should be sent
+     * @param bool   $bIsVerified Whether or not the email should be marked as verified
+     * @param bool   $bSendEmail  If unverified, whether or not the verification email should be sent
      *
      * @return mixed                String containing verification code on success, false on failure
+     * @throws FactoryException
+     * @throws ModelException
      */
-    public function emailAdd($email, $iUserId = null, $bIsPrimary = false, $is_verified = false, $send_email = true)
+    public function emailAdd($email, $iUserId = null, $bIsPrimary = false, $bIsVerified = false, $bSendEmail = true)
     {
         $iUserId = empty($iUserId) ? $this->activeUser('id') : $iUserId;
         $oEmail  = trim(strtolower($email));
@@ -1380,7 +1419,7 @@ class User extends Base
                 }
 
                 //  Resend verification email?
-                if ($send_email && !$oTest->is_verified) {
+                if ($bSendEmail && !$oTest->is_verified) {
                     $this->emailAddSendVerify($oTest->id);
                 }
 
@@ -1404,10 +1443,10 @@ class User extends Base
         $oDb->set('user_id', $oUser->id);
         $oDb->set('email', $oEmail);
         $oDb->set('code', $sCode);
-        $oDb->set('is_verified', (bool) $is_verified);
+        $oDb->set('is_verified', (bool) $bIsVerified);
         $oDb->set('date_added', 'NOW()', false);
 
-        if ((bool) $is_verified) {
+        if ((bool) $bIsVerified) {
             $oDb->set('date_verified', 'NOW()', false);
         }
 
@@ -1424,7 +1463,7 @@ class User extends Base
             }
 
             //  Send off the verification email
-            if ($send_email && !$is_verified) {
+            if ($bSendEmail && !$bIsVerified) {
                 $this->emailAddSendVerify($iEmailId);
             }
 
@@ -1440,8 +1479,8 @@ class User extends Base
                 if ($bIsPrimary) {
                     $this->oActiveUser->email                   = $oEmail;
                     $this->oActiveUser->email_verification_code = $sCode;
-                    $this->oActiveUser->email_is_verified       = (bool) $is_verified;
-                    $this->oActiveUser->email_is_verified_on    = (bool) $is_verified ? $oDate->format('Y-m-d H:i:s') : null;
+                    $this->oActiveUser->email_is_verified       = (bool) $bIsVerified;
+                    $this->oActiveUser->email_is_verified_on    = (bool) $bIsVerified ? $oDate->format('Y-m-d H:i:s') : null;
                 }
             }
 
@@ -1462,6 +1501,7 @@ class User extends Base
      * @param int $iUserId  The user's ID
      *
      * @return bool
+     * @throws FactoryException
      */
     public function emailAddSendVerify($email_id, $iUserId = null)
     {
@@ -1507,10 +1547,10 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         $oEmailer                = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
-        $oEmail                  = new \stdClass();
+        $oEmail                  = new stdClass();
         $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
         $oEmail->to_id           = $oEmailRow->user_id;
-        $oEmail->data            = new \stdClass();
+        $oEmail->data            = new stdClass();
         $oEmail->data->verifyUrl = siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
 
         if (!$oEmailer->send($oEmail, true)) {
@@ -1538,6 +1578,7 @@ class User extends Base
      * @param int   $iUserId  The ID of the user to restrict to
      *
      * @return bool
+     * @throws FactoryException
      */
     public function emailDelete($mEmailId, $iUserId = null)
     {
@@ -1577,6 +1618,8 @@ class User extends Base
      * @param string $sCode    The verification code as generated by emailAdd()
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function emailVerify($mIdEmail, $sCode)
     {
@@ -1645,6 +1688,7 @@ class User extends Base
      * @param int   $iUserId  Specify the user ID which this should apply to
      *
      * @return bool
+     * @throws FactoryException
      */
     public function emailMakePrimary($mIdEmail, $iUserId = null)
     {
@@ -1710,6 +1754,8 @@ class User extends Base
      * @param int $expires How long till the block, if the threshold is reached, expires.
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function incrementFailedLogin($iUserId, $expires = 300)
     {
@@ -1730,6 +1776,8 @@ class User extends Base
      * @param int $iUserId The user ID to reset
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function resetFailedLogin($iUserId)
     {
@@ -1747,6 +1795,8 @@ class User extends Base
      * @param int $iUserId The user ID to update
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function updateLastLogin($iUserId)
     {
@@ -1766,6 +1816,7 @@ class User extends Base
      * @param string $sEmail    The user's email\
      *
      * @return bool
+     * @throws FactoryException
      */
     public function setRememberCookie($iId = null, $sPassword = null, $sEmail = null)
     {
@@ -1841,6 +1892,10 @@ class User extends Base
      * Refresh the user's session from the database
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     protected function refreshSession()
     {
@@ -1920,6 +1975,8 @@ class User extends Base
      * @param bool  $bSendWelcome Whether to send the welcome email
      *
      * @return mixed                StdClass on success, false on failure
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function create(array $data = [], $bSendWelcome = true)
     {
@@ -2149,19 +2206,19 @@ class User extends Base
                 if ($bSendWelcome) {
 
                     $oEmailer      = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
-                    $oEmail        = new \stdClass();
+                    $oEmail        = new stdClass();
                     $oEmail->type  = 'new_user_' . $oGroup->id;
                     $oEmail->to_id = $iId;
-                    $oEmail->data  = new \stdClass();
+                    $oEmail->data  = new stdClass();
 
                     //  If this user is created by an admin then take note of that.
                     if ($this->isAdmin() && $this->activeUser('id') != $iId) {
 
-                        $oEmail->data->admin              = new \stdClass();
+                        $oEmail->data->admin              = new stdClass();
                         $oEmail->data->admin->id          = $this->activeUser('id');
                         $oEmail->data->admin->first_name  = $this->activeUser('first_name');
                         $oEmail->data->admin->last_name   = $this->activeUser('last_name');
-                        $oEmail->data->admin->group       = new \stdClass();
+                        $oEmail->data->admin->group       = new stdClass();
                         $oEmail->data->admin->group->id   = $oGroup->id;
                         $oEmail->data->admin->group->name = $oGroup->label;
                     }
@@ -2223,6 +2280,8 @@ class User extends Base
      * @param int $iUserId The ID of the user to delete
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function destroy($iUserId): bool
     {
@@ -2262,6 +2321,8 @@ class User extends Base
      * @param int $iUserId The ID of the user to delete
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function delete($iUserId): bool
     {
@@ -2278,6 +2339,7 @@ class User extends Base
      * Generates a valid referral code
      *
      * @return string
+     * @throws FactoryException
      */
     protected function generateReferral()
     {
@@ -2321,6 +2383,8 @@ class User extends Base
      * @param int $iUserId The ID of the user to suspend
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function suspend($iUserId)
     {
@@ -2335,6 +2399,8 @@ class User extends Base
      * @param int $iUserId The ID of the user to unsuspend
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function unsuspend($iUserId)
     {
@@ -2351,6 +2417,7 @@ class User extends Base
      * @param int    $iIgnoreUserId The ID of a user to ignore when checking the database
      *
      * @return bool
+     * @throws FactoryException
      */
     public function isValidUsername($sUsername, $bCheckDb = false, $iIgnoreUserId = null): bool
     {
@@ -2413,6 +2480,8 @@ class User extends Base
      * @param bool  $bIsPreview Whether we're generating a preview or not
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function merge($iUserId, $aMergeIds, $bIsPreview = false)
     {
@@ -2578,6 +2647,14 @@ class User extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Describe the model's fields
+     *
+     * @param string|null $sTable
+     *
+     * @return Field[]
+     * @throws FactoryException
+     */
     public function describeFields($sTable = null)
     {
         $aFields = parent::describeFields($sTable);
