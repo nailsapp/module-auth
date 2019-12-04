@@ -109,9 +109,8 @@ class AccessToken extends Base
      *
      * @return ApiResponse
      */
-    public function postRevoke()
+    public function deleteIndex()
     {
-        //  @todo (Pablo - 2019-07-12) - Convert to a `DELETE` and revoke the access code used in the request
         /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
         /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
@@ -124,12 +123,11 @@ class AccessToken extends Base
             );
         }
 
-        $aData        = $this->getRequestData();
-        $sAccessToken = getFromArray('access_token', $aData);
+        $sAccessToken = $this->oApiRouter->getAccessToken();
 
         if (empty($sAccessToken)) {
             throw new ApiException(
-                'An access token to revoke must be provided',
+                'An access token must be provided.',
                 $oHttpCodes::STATUS_BAD_REQUEST
             );
         }
