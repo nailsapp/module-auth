@@ -366,6 +366,6 @@ class Session
     public function sess_regenerate($bDestroy = false)
     {
         deprecatedError(__METHOD__, 'Session::regenerate');
-        return $this->destroy($bDestroy);
+        return $this->destroy();
     }
 }
