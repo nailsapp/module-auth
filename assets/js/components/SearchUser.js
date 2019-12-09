@@ -3,7 +3,13 @@ class SearchUser {
     /**
      * Construct SearchUser
      */
-    constructor() {
+    constructor(adminController) {
+        adminController.onRefreshUi(() => {
+            this.init();
+        })
+    }
+
+    init() {
         //  Set up the searchers
         let searchers = [
             {
@@ -33,12 +39,24 @@ class SearchUser {
      */
     setupSearcher(config) {
 
-        $('input.' + config.class)
+        $('input.' + config.class + ':not(.processed)')
             .each((index, element) => {
 
                 let $element = $(element);
                 let isMultiple = $element.data('multiple') || false;
+
+                //  Prevent template items form being rendered
+                //  @todo (Pablo - 2019-12-09) - Remove this coupling
+                if ($element.parents('.js-admin-dynamic-table__template').length > 0) {
+                    console.log(
+                        $element,
+                        $element.parents('.js-admin-dynamic-table__template')
+                    );
+                    return;
+                }
+
                 $element
+                    .addClass('processed')
                     .select2({
                         placeholder: config.placeholder,
                         minimumInputLength: config.minimumInputLength,

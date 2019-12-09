@@ -31,6 +31,7 @@ import SearchUser from './components/SearchUser.js';
     window.NAILS.ADMIN.registerPlugin(
         'nails/module-auth',
         'SearchUser',
-        new SearchUser()
+        new SearchUser(window.NAILS.ADMIN)
     );
 })();
+
