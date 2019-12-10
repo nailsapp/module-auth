@@ -647,41 +647,34 @@ class Password extends Base
     /**
      * Sets a forgotten password token for a user
      *
-     * @param string $sIdentifier The identifier to use for setting the token (set by APP_NATIVE_LOGIN_USING)
+     * @param Resource\User|int|string $mUser The user Resource, ID, or identifier
      *
      * @return bool
      */
-    public function setToken($sIdentifier)
+    public function setToken($mUser): bool
     {
-        if (empty($sIdentifier)) {
+        $oUser = $this->getUser($mUser);
 
+        if (empty($oUser)) {
             return false;
         }
 
         // --------------------------------------------------------------------------
 
         //  Generate code
-        $sKey = sha1(sha1($this->salt()) . $this->salt() . APP_PRIVATE_KEY);
-        $iTtl = time() + 86400; // 24 hours.
+        $sCode = implode(':', [
+            //  TTL (24 hrs)
+            time() + 86400,
+            //  Key
+            sha1(sha1($this->salt()) . $this->salt() . APP_PRIVATE_KEY),
+        ]);
 
         // --------------------------------------------------------------------------
 
-        //  Update the user
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        $oUser      = $oUserModel->getByIdentifier($sIdentifier);
 
-        if ($oUser) {
-
-            $aData = [
-                'forgotten_password_code' => $iTtl . ':' . $sKey,
-            ];
-
-            return $oUserModel->update($oUser->id, $aData);
-
-        } else {
-
-            return false;
-        }
+        return $oUserModel->update($oUser->id, ['forgotten_password_code' => $sCode]);
     }
 
     // --------------------------------------------------------------------------
@@ -721,12 +714,13 @@ class Password extends Base
         // --------------------------------------------------------------------------
 
         $oUser = $oResult->row();
-        $aCode = explode(':', $oUser->forgotten_password_code);
+        [$sTTL, $sKey] = array_pad(explode(':', $oUser->forgotten_password_code), 2, null);
+        $iTTL = (int) $sTTL;
 
         // --------------------------------------------------------------------------
 
         //  Check that the link is still valid
-        if (time() > $aCode[0]) {
+        if (time() > $iTTL) {
 
             return 'EXPIRED';
 

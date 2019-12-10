@@ -13,6 +13,7 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
+use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
 use Nails\Auth\Service\Session;
@@ -21,6 +22,7 @@ use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Uri;
 use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
@@ -48,17 +50,23 @@ class PasswordForgotten extends Base
      **/
     public function index()
     {
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var FormValidation $oFormValidation */
+        $oFormValidation = Factory::service('FormValidation');
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
         /** @var Session $oSession */
         $oSession = Factory::service('Session', Constants::MODULE_SLUG);
-        if (isLoggedIn()) {
-            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
-            redirect('/');
-        }
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var Emailer $oEmailer */
+        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
-        /** @var Input $oInput */
-        $oInput = Factory::service('Input');
         if ($oInput->post() || $oInput->get('identifier')) {
 
             try {
@@ -79,88 +87,39 @@ class PasswordForgotten extends Base
 
                 // --------------------------------------------------------------------------
 
-                /**
-                 * Set rules.
-                 * The rules vary depending on what login method is enabled.
-                 */
-
-                /** @var FormValidation $oFormValidation */
-                $oFormValidation = Factory::service('FormValidation');
-
-                switch (APP_NATIVE_LOGIN_USING) {
-
-                    case 'EMAIL':
-                        $oFormValidation->set_rules('identifier', '', 'required|trim|valid_email');
-                        break;
-
-                    case 'USERNAME':
-                        $oFormValidation->set_rules('identifier', '', 'required|trim');
-                        break;
-
-                    default:
-                        $oFormValidation->set_rules('identifier', '', 'trim');
-                        break;
-                }
+                $oFormValidation
+                    ->buildValidator([
+                        'identifier' => array_filter([
+                            APP_NATIVE_LOGIN_USING === 'EMAIL' ? ['required', 'valid_email'] : null,
+                            APP_NATIVE_LOGIN_USING === 'USERNAME' ? ['required'] : null,
+                            APP_NATIVE_LOGIN_USING === 'BOTH' ? ['required'] : null,
+                        ])[0],
+                    ])
+                    ->run();
 
                 // --------------------------------------------------------------------------
 
-                //  Override default messages
-                $oFormValidation->set_message('required', lang('fv_required'));
-                $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
-
-                // --------------------------------------------------------------------------
-
-                //  Run validation
-                if (!$oFormValidation->run()) {
-                    throw new ValidationException(lang('fv_there_were_errors'));
-                }
-
-                /** @var Config $oConfig */
-                $oConfig        = Factory::service('Config');
+                /** @var \Nails\Auth\Resource\User $oUser */
+                $oUser          = $oUserModel->getByIdentifier($sIdentifier);
                 $bAlwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
 
                 //  Attempt to reset password
-                /** @var Password $oUserPasswordModel */
-                $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-                if ($oUserPasswordModel->setToken($sIdentifier)) {
+                if ($oUserPasswordModel->setToken($oUser)) {
 
-                    //  Send email to user
-                    /** @var \Nails\Auth\Model\User $oUserModel */
-                    $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-                    switch (APP_NATIVE_LOGIN_USING) {
+                    //  Refresh the User object
+                    $oUser = $oUserModel->getById($oUser->id);
 
-                        case 'EMAIL':
-                            $this->data['reset_user'] = $oUserModel->getByEmail($sIdentifier);
-                            $sSendToEmail             = $sIdentifier;
-                            break;
+                    if (!$bAlwaysSucceed && empty($oUser->email)) {
 
-                        case 'USERNAME':
-                            $this->data['reset_user'] = $oUserModel->getByUsername($sIdentifier);
-                            $sSendToId                = $this->data['reset_user']->id;
-                            break;
+                        throw new NailsException(
+                            lang('auth_forgot_email_fail_no_email')
+                        );
 
-                        default:
-                            if (valid_email($sIdentifier)) {
-                                $this->data['reset_user'] = $oUserModel->getByEmail($sIdentifier);
-                                $sSendToEmail             = $sIdentifier;
-                            } else {
-                                $this->data['reset_user'] = $oUserModel->getByUsername($sIdentifier);
-                                $sSendToId                = $this->data['reset_user']->id;
-                            }
-                            break;
-                    }
+                    } elseif (!$bAlwaysSucceed && empty($oUser)) {
 
-                    // --------------------------------------------------------------------------
-
-                    if (!$bAlwaysSucceed && isset($sSendToEmail) && !$sSendToEmail) {
-
-                        //  If we're expecting an email, and none is available then we're kinda stuck
-                        throw new NailsException(lang('auth_forgot_email_fail_no_email'));
-
-                    } elseif (!$bAlwaysSucceed && isset($sSendToId) && !$sSendToId) {
-
-                        //  If we're expecting an ID and it's empty then we're stuck again
-                        throw new NailsException(lang('auth_forgot_email_fail_no_id'));
+                        throw new NailsException(
+                            lang('auth_forgot_email_fail_no_id')
+                        );
 
                     } elseif ($bAlwaysSucceed) {
 
@@ -170,28 +129,22 @@ class PasswordForgotten extends Base
 
                         //  We've got something, go go go
                         $oEmail = (object) [
-                            'type' => 'forgotten_password',
+                            'type'  => 'forgotten_password',
+                            'to_id' => $oUser->id,
                         ];
-
-                        if (isset($sSendToEmail) && $sSendToEmail) {
-                            $oEmail->to_email = $sSendToEmail;
-                        } elseif (isset($sSendToId) && $sSendToId) {
-                            $oEmail->to_id = $sSendToId;
-                        }
 
                         // --------------------------------------------------------------------------
 
                         //  Add data for the email view
-                        $aCode        = explode(':', $this->data['reset_user']->forgotten_password_code);
+                        [$sTTL, $sKey] = array_pad(explode(':', $oUser->forgotten_password_code), 2, null);
+
                         $oEmail->data = (object) [
-                            'resetUrl'   => siteUrl('auth/password/forgotten/' . $aCode[1]),
-                            'identifier' => $sIdentifier,
+                            'resetUrl'   => siteUrl('auth/password/forgotten/' . $sKey),
+                            'identifier' => $oUser->email,
                         ];
 
                         // --------------------------------------------------------------------------
 
-                        /** @var Emailer $oEmailer */
-                        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
                         if (!$oEmailer->send($oEmail, true)) {
                             if (!$bAlwaysSucceed) {
                                 throw new NailsException(lang('auth_forgot_email_fail'));
@@ -199,24 +152,20 @@ class PasswordForgotten extends Base
                         }
                     }
 
-                } elseif ($bAlwaysSucceed) {
-
-                    $this->data['success'] = lang('auth_forgot_success');
-
                 } else {
 
                     switch (APP_NATIVE_LOGIN_USING) {
 
                         case 'EMAIL':
-                            $sError = lang('auth_forgot_code_not_set_email', $sIdentifier);
+                            $sError = lang('auth_forgot_code_not_set_email', $oUser->email);
                             break;
 
                         case 'USERNAME':
-                            $sError = lang('auth_forgot_code_not_set_username', $sIdentifier);
+                            $sError = lang('auth_forgot_code_not_set_username', $oUser->username);
                             break;
 
                         default:
-                            $sError = lang('auth_forgot_code_not_set', $sIdentifier);
+                            $sError = lang('auth_forgot_code_not_set');
                             break;
                     }
 
@@ -551,8 +500,22 @@ class PasswordForgotten extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+
         if ($sMethod == 'index') {
             $this->index();
+        } elseif ($oUri->segment(5) !== 'process') {
+
+            //  @todo (Pablo - 2019-12-10) - Remove this once https://github.com/nails/module-auth/issues/36 is resolved
+            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_interstitial.php');
+            Factory::service('View')
+                ->load([
+                    'structure/header/blank',
+                    'auth/password/forgotten_interstitial',
+                    'structure/footer/blank',
+                ]);
+            return;
         } else {
             $this->_validate($sMethod);
         }
