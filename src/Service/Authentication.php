@@ -48,7 +48,7 @@ class Authentication
      *
      * @var int
      */
-    const BRUTE_FORCE_DELAY = 1000000;
+    const BRUTE_FORCE_DELAY = 500000;
 
     /**
      * The number of failed attempts before lockout occurs
