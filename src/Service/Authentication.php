@@ -155,7 +155,7 @@ class Authentication
 
             if ($iTimeSinceChanged !== null && $iTimeChanged > $iTimeTwoWeeksAgo) {
                 throw new InvalidCredentialsException(
-                    lang('auth_login_fail_general_recent', niceTime($iTimeSinceChanged))
+                    lang('auth_login_fail_general_recent', niceTime($iTimeChanged))
                 );
             } else {
                 throw new InvalidCredentialsException(lang('auth_login_fail_general'));
