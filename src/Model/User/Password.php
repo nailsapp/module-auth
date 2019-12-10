@@ -842,20 +842,7 @@ class Password extends Base
      */
     public function timeSinceChange($mUser): ?int
     {
-        if (!$mUser instanceof Resource\User) {
-
-            /** @var User $oUserModel */
-            $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-
-            if (is_numeric($mUser)) {
-                $oUser = $oUserModel->getById($mUser);
-            } else {
-                $oUser = $oUserModel->getByIdentifier($mUser);
-            }
-
-        } else {
-            $oUser = $mUser;
-        }
+        $oUser = $this->getUser($mUser);
 
         if (!empty($oUser) && $oUser->password_changed) {
             return time() - strtotime($oUser->password_changed);
