@@ -144,7 +144,7 @@ class Authentication
                 lang('auth_login_fail_suspended')
             );
 
-        } elseif (!$this->verifyCredentials($oUser, $sPassword)) {
+        } elseif (!$oUserPasswordModel->isCorrect($oUser, $sPassword)) {
 
             $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
             $this->logLoginFailure($oUser, 'password_incorrect');
@@ -192,26 +192,6 @@ class Authentication
         $oUserModel->updateLastLogin($oUser->id);
 
         return $oUser;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Verifies a user's login credentials
-     *
-     * @param Resource\User|string|int $sIdentifier The user's Resource, ID, or identifier
-     * @param string                   $sPassword   The user's password
-     *
-     * @return bool
-     */
-    public function verifyCredentials($sIdentifier, $sPassword)
-    {
-        /** @var Password $oPasswordModel */
-        $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-
-        $oUser = $this->getUser($sIdentifier);
-
-        return !empty($oUser) ? $oPasswordModel->isCorrect($oUser->id, $sPassword) : false;
     }
 
     // --------------------------------------------------------------------------

@@ -16,6 +16,7 @@ use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
 use Nails\Api\Factory\ApiResponse;
 use Nails\Auth\Constants;
+use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\HttpCodes;
@@ -39,8 +40,8 @@ class AccessToken extends Base
     {
         /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
-        /** @var Authentication $oAuthService */
-        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
         $oAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
@@ -50,9 +51,7 @@ class AccessToken extends Base
         $sScope      = getFromArray('scope', $aData);
         $sLabel      = getFromArray('label', $aData);
 
-        $bIsValid = $oAuthService->verifyCredentials($sIdentifier, $sPassword);
-
-        if (!$bIsValid) {
+        if (!$oUserPasswordModel->isCorrect($sIdentifier, $sPassword)) {
             throw new ApiException(
                 'Invalid login credentials',
                 $oHttpCodes::STATUS_UNAUTHORIZED
