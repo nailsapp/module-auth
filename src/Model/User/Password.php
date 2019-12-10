@@ -765,12 +765,14 @@ class Password extends Base
 
                 // --------------------------------------------------------------------------
 
-                $aData['password']                = $oHash->password;
-                $aData['password_md5']            = $oHash->password_md5;
-                $aData['password_engine']         = $oHash->engine;
-                $aData['salt']                    = $oHash->salt;
-                $aData['temp_pw']                 = true;
-                $aData['forgotten_password_code'] = null;
+                $aData = [
+                    'password'                => $oHash->password,
+                    'password_md5'            => $oHash->password_md5,
+                    'password_engine'         => $oHash->engine,
+                    'salt'                    => $oHash->salt,
+                    'temp_pw'                 => true,
+                    'forgotten_password_code' => null,
+                ];
 
                 $oDb->where('forgotten_password_code', $oUser->forgotten_password_code);
                 $oDb->set($aData);
