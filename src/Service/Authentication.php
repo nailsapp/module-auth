@@ -5,232 +5,193 @@
  *
  * @package     Nails
  * @subpackage  module-auth
- * @category    model
+ * @category    service
  * @author      Nails Dev Team
  * @link
  */
 
-namespace Nails\Auth\Model;
+namespace Nails\Auth\Service;
 
+use App\Auth\Model\User;
 use DateInterval;
 use Google\Authenticator\GoogleAuthenticator;
 use Nails\Auth\Constants;
+use Nails\Auth\Exception\AuthException;
+use Nails\Auth\Exception\Login\InvalidCredentialsException;
+use Nails\Auth\Exception\Login\IsLockedOutException;
+use Nails\Auth\Exception\Login\IsSuspendedException;
+use Nails\Auth\Exception\Login\NoUserException;
+use Nails\Auth\Exception\Login\RequiresMfaException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetExpiredException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetTempException;
+use Nails\Auth\Exception\Login\RequiresSocialException;
+use Nails\Auth\Model\User\Password;
+use Nails\Auth\Resource;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Config;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Functions;
 use stdClass;
 
-class Auth extends Base
+/**
+ * Class Authentication
+ *
+ * @package Nails\Auth\Model
+ */
+class Authentication
 {
-    protected $aBruteProtection;
-
-    // --------------------------------------------------------------------------
+    /**
+     * The minimum length of time to wait between attempts, in microseconds
+     *
+     * @var int
+     */
+    const BRUTE_FORCE_DELAY = 500000;
 
     /**
-     * Constructor
+     * The number of failed attempts before lockout occurs
+     *
+     * @var int
      */
-    public function __construct()
-    {
-        parent::__construct();
+    const LOCKOUT_THRESHOLD = 5;
 
-        $this->aBruteProtection = [
-            'delay'  => 1500000,
-            'limit'  => 10,
-            'expire' => 900,
-        ];
-    }
+    /**
+     * How long the lockout should last, in seconds
+     *
+     * @var int
+     */
+    const LOCKOUT_DURATION = 300;
 
     // --------------------------------------------------------------------------
 
     /**
      * Log a user in
      *
-     * @param string  $sIdentifier The identifier to use for the user lookup
-     * @param string  $sPassword   The user's password
-     * @param boolean $bRemember   Whether to 'remember' the user or not
+     * @param Resource\User|string|int $mUser     The user's Resource, ID, or identifier
+     * @param string                   $sPassword The user's password
+     * @param bool                     $bRemember Whether to 'remember' the user or not
+     * @param bool                     $MfaCheck  Whether to check for MFA
      *
-     * @return boolean|object
+     * @return Resource\User
      */
-    public function login($sIdentifier, $sPassword, $bRemember = false)
-    {
+    public function loginWithCredentials(
+        $oUser,
+        string $sPassword,
+        bool $bRemember = false,
+        bool $bMfaCheck = true
+    ): Resource\User {
+
         //  Delay execution for a moment (reduces brute force efficiently)
         if (Environment::not(Environment::ENV_DEV)) {
-            usleep($this->aBruteProtection['delay']);
+            usleep(static::BRUTE_FORCE_DELAY);
         }
 
         // --------------------------------------------------------------------------
 
-        if (empty($sIdentifier) || empty($sPassword)) {
-            $this->setError(lang('auth_login_fail_missing_field'));
-            return false;
-        }
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User',
+            Constants::MODULE_SLUG);
+        /** @var Password $oUserPasswordModel */
+        $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
-        // --------------------------------------------------------------------------
+        $oUser = $this->getUser($oUser);
 
-        //  Look up the user, how we do so depends on the login mode that the app is using
-        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        switch (APP_NATIVE_LOGIN_USING) {
+        if (empty($oUser)) {
 
-            case 'EMAIL':
-                $oUser = $oUserModel->getByEmail($sIdentifier);
-                break;
+            throw new NoUserException(lang('auth_login_fail_general'));
 
-            case 'USERNAME':
-                $oUser = $oUserModel->getByUsername($sIdentifier);
-                break;
+        } elseif (is_null($oUser->password)) {
 
-            default:
-                if (valid_email($sIdentifier)) {
-                    $oUser = $oUserModel->getByEmail($sIdentifier);
-                } else {
-                    $oUser = $oUserModel->getByUsername($sIdentifier);
-                }
-                break;
-        }
+            $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
+            $this->logLoginFailure($oUser, 'no_password');
 
-        // --------------------------------------------------------------------------
+            switch (APP_NATIVE_LOGIN_USING) {
 
-        if ($oUser) {
+                case 'EMAIL':
+                    $sIdentifier = $oUser->email;
+                    break;
 
-            //  User was recognised; validate credentials
-            $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-            if ($oPasswordModel->isCorrect($oUser->id, $sPassword)) {
+                case 'USERNAME':
+                    $sIdentifier = $oUser->username;
+                    break;
 
-                //  Password accepted! Final checks...
+                default:
+                    $sIdentifier = $oUser->email;
+                    break;
+            }
 
-                //  Exceeded login count, temporarily blocked
-                if ($oUser->failed_login_count >= $this->aBruteProtection['limit']) {
-                    //  Check if the block has expired
-                    if (time() < strtotime($oUser->failed_login_expires)) {
-                        $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
-                        $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
-                        createUserEvent(
-                            'did_login_fail',
-                            [
-                                'reason' => 'brute_force_block_in_affect'
-                            ],
-                            null,
-                            $oUser->id
-                        );
-                        return false;
-                    }
-                }
+            throw new RequiresSocialException(
+                lang('auth_login_fail_social', siteUrl('auth/password/forgotten?identifier=' . $sIdentifier))
+            );
 
-                //  Reset user's failed login counter and allow login
-                $oUserModel->resetFailedLogin($oUser->id);
+        } elseif ($this->isLockedOut($oUser)) {
 
-                /**
-                 * If two factor auth is enabled then don't _actually_ set login data the
-                 * next process will confirm the login and set this.
-                 */
+            $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
+            $this->logLoginFailure($oUser, 'brute_force_block_in_affect');
 
-                $oConfig = Factory::service('Config');
+            throw new IsLockedOutException(
+                lang('auth_login_fail_blocked', ceil(static::LOCKOUT_DURATION / 60))
+            );
 
-                if (!$oConfig->item('authTwoFactorMode')) {
+        } elseif ($this->isSuspended($oUser)) {
 
-                    //  Set login data for this user
-                    $oUserModel->setLoginData($oUser->id);
+            $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
+            $this->logLoginFailure($oUser, 'suspended');
 
-                    //  If we're remembering this user set a cookie
-                    if ($bRemember) {
-                        $oUserModel->setRememberCookie($oUser->id, $oUser->password, $oUser->email);
-                    }
+            throw new IsSuspendedException(
+                lang('auth_login_fail_suspended')
+            );
 
-                    //  Update their last login and increment their login count
-                    $oUserModel->updateLastLogin($oUser->id);
-                }
+        } elseif (!$this->verifyCredentials($oUser, $sPassword)) {
 
-                return $oUser;
+            $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
+            $this->logLoginFailure($oUser, 'password_incorrect');
 
-                //  Is the password null? If so it means the account was created using an API of sorts
-            } elseif (is_null($oUser->password)) {
+            $iTimeSinceChanged = $oUserPasswordModel->timeSinceChange($oUser);
+            $iTimeChanged      = time() - $iTimeSinceChanged;
+            $iTimeTwoWeeksAgo  = strtotime('-2 weeks');
 
-                switch (APP_NATIVE_LOGIN_USING) {
-
-                    case 'EMAIL':
-                        $sIdentifier = $oUser->email;
-                        break;
-
-                    case 'USERNAME':
-                        $sIdentifier = $oUser->username;
-                        break;
-
-                    default:
-                        $sIdentifier = $oUser->email;
-                        break;
-                }
-
-                $error = lang('auth_login_fail_social', siteUrl('auth/password/forgotten?identifier=' . $sIdentifier));
-                $this->setError($error);
-                createUserEvent(
-                    'did_login_fail',
-                    [
-                        'reason' => 'no_password'
-                    ],
-                    null,
-                    $oUser->id
+            if ($iTimeSinceChanged !== null && $iTimeChanged > $iTimeTwoWeeksAgo) {
+                throw new InvalidCredentialsException(
+                    lang('auth_login_fail_general_recent', niceTime($iTimeSinceChanged))
                 );
-                return false;
-
             } else {
-
-                //  User was recognised but the password was wrong
-                //  Increment the user's failed login count
-                $oUserModel->incrementFailedLogin($oUser->id, $this->aBruteProtection['expire']);
-
-                //  Are we already blocked? Let them know...
-                if ($oUser->failed_login_count >= $this->aBruteProtection['limit']) {
-
-                    //  Check if the block has expired
-                    if (time() < strtotime($oUser->failed_login_expires)) {
-                        $iBlockTime = ceil($this->aBruteProtection['expire'] / 60);
-                        $this->setError(lang('auth_login_fail_blocked', $iBlockTime));
-                        createUserEvent(
-                            'did_login_fail',
-                            [
-                                'reason' => 'brute_force_block_in_affect'
-                            ],
-                            null,
-                            $oUser->id
-                        );
-                        return false;
-                    }
-
-                    //  Block has expired, reset the counter
-                    $oUserModel->resetFailedLogin($oUser->id);
-                }
-
-                //  Check if the password was changed recently
-                if ($oUser->password_changed) {
-
-                    $iChanged = strtotime($oUser->password_changed);
-                    $iRecent  = strtotime('-2 WEEKS');
-
-                    if ($iChanged > $iRecent) {
-                        $sChangedRecently = niceTime($iChanged);
-                    }
-                }
-
-                createUserEvent(
-                    'did_login_fail',
-                    [
-                        'reason' => 'password_incorrect'
-                    ],
-                    null,
-                    $oUser->id
-                );
+                throw new InvalidCredentialsException(lang('auth_login_fail_general'));
             }
         }
 
-        //  Login failed
-        if (empty($sChangedRecently)) {
-            $this->setError(lang('auth_login_fail_general'));
-        } else {
-            $this->setError(lang('auth_login_fail_general_recent', $sChangedRecently));
+        //  Successfull login means we can forget about failures
+        $oUserModel->resetFailedLogin($oUser->id);
+
+        //  Check if MFA is required
+        //  @todo (Pablo - 2019-12-10) - This should consider trusted devices
+        //  @todo (Pablo - 2019-12-10) - This should consider time since last checked (i.e a passed MFA is valid for a short valid and won't be asked for again)
+
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
+        if ($bMfaCheck && !empty($oConfig->item('authTwoFactorMode'))) {
+            throw new RequiresMfaException();
         }
 
-        return false;
+        //  Check if password needs changed
+        if ($oUserPasswordModel->isTemporary($oUser)) {
+            throw new RequiresPasswordResetTempException();
+        } elseif ($oUserPasswordModel->isExpired($oUser->id)) {
+            throw new RequiresPasswordResetExpiredException();
+        }
+
+        //  Set the remember me cookie
+        //  @todo (Pablo - 2019-12-10) - Check this is respected as part of 2FA
+        if ($bRemember) {
+            $oUserModel->setRememberCookie($oUser->id, $oUser->password, $oUser->email);
+        }
+
+        $oUserModel->setLoginData($oUser->id);
+        $oUserModel->updateLastLogin($oUser->id);
+
+        return $oUser;
     }
 
     // --------------------------------------------------------------------------
@@ -238,17 +199,17 @@ class Auth extends Base
     /**
      * Verifies a user's login credentials
      *
-     * @param string $sIdentifier The identifier to use for the lookup
-     * @param string $sPassword   The user's password
+     * @param Resource\User|string|int $sIdentifier The user's Resource, ID, or identifier
+     * @param string                   $sPassword   The user's password
      *
-     * @return boolean
+     * @return bool
      */
     public function verifyCredentials($sIdentifier, $sPassword)
     {
-        //  Look up the user, how we do so depends on the login mode that the app is using
-        $oUserModel     = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var Password $oPasswordModel */
         $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-        $oUser          = $oUserModel->getByIdentifier($sIdentifier);
+
+        $oUser = $this->getUser($sIdentifier);
 
         return !empty($oUser) ? $oPasswordModel->isCorrect($oUser->id, $sPassword) : false;
     }
@@ -256,9 +217,102 @@ class Auth extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Determiens whether a user is currently locked out
+     *
+     * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
+     *
+     * @return bool
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function isLockedOut($mUser): bool
+    {
+        $oUser = $this->getUser($mUser);
+
+        if (empty($oUser)) {
+            return false;
+        }
+
+        /** @var \DateTime $oNow */
+        $oNow     = Factory::factory('DateTime');
+        $oExpires = new \DateTime($oUser->failed_login_expires);
+
+        return $oUser->failed_login_count >= static::LOCKOUT_THRESHOLD && $oNow < $oExpires;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determiens whether a user is currently suspended
+     *
+     * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
+     *
+     * @return bool
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function isSuspended($mUser): bool
+    {
+        $oUser = $this->getUser($mUser);
+
+        if (empty($oUser)) {
+            return false;
+        }
+
+        return $oUser->is_suspended;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Logs a login failure
+     *
+     * @param Resource\User $oUser   The user to log against
+     * @param string        $sReason The reason for failure
+     */
+    protected function logLoginFailure(Resource\User $oUser, string $sReason): void
+    {
+        createUserEvent(
+            'did_login_fail',
+            ['reason' => $sReason],
+            null,
+            $oUser->id
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the user resource
+     *
+     * @param Resource\User|int|string $mUser The user's Resource, ID, or identifier
+     *
+     * @return Resource\User|null
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    protected function getUser($mUser): ?Resource\User
+    {
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+
+        if ($mUser instanceof Resource\User) {
+            return $mUser;
+        } elseif (is_numeric($mUser)) {
+            return $oUserModel->getById($mUser);
+        } else {
+            return $oUserModel->getByIdentifier($mUser);
+        }
+
+        return null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Log a user out
      *
-     * @return boolean
+     * @return bool
      */
     public function logout()
     {
@@ -349,7 +403,7 @@ class Auth extends Base
      * @param string $sToken  The token's hash
      * @param string $sIp     The user's IP address
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaTokenValidate($iUserId, $sSalt, $sToken, $sIp)
     {
@@ -390,7 +444,7 @@ class Auth extends Base
      *
      * @param int $iTokenId The token's ID
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaTokenDelete($iTokenId)
     {
@@ -407,7 +461,7 @@ class Auth extends Base
      *
      * @param int $iUserId The user's ID
      *
-     * @return boolean|stdClass
+     * @return bool|stdClass
      */
     public function mfaQuestionGet($iUserId)
     {
@@ -471,7 +525,7 @@ class Auth extends Base
      * @param int    $iUserId     The user's ID
      * @param string $answer      The user's answer
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaQuestionValidate($iQuestionId, $iUserId, $answer)
     {
@@ -495,11 +549,11 @@ class Auth extends Base
     /**
      * Sets MFA questions for a user
      *
-     * @param int     $iUserId   The user's ID
-     * @param array   $aData     An array of question and answers
-     * @param boolean $bClearOld Whether or not to clear old questions
+     * @param int   $iUserId   The user's ID
+     * @param array $aData     An array of question and answers
+     * @param bool  $bClearOld Whether or not to clear old questions
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaQuestionSet($iUserId, $aData, $bClearOld = true)
     {
@@ -597,7 +651,7 @@ class Auth extends Base
      * @param int    $iUserId         The user ID to generate for
      * @param string $sExistingSecret The existing secret to use instead of generating a new one
      *
-     * @return boolean|array
+     * @return bool|array
      */
     public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
@@ -643,7 +697,7 @@ class Auth extends Base
      * @param string $sSecret The secret being used
      * @param int    $iCode   The first code to be generate
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode)
     {
@@ -693,7 +747,7 @@ class Auth extends Base
      * @param int    $iUserId The user's ID
      * @param string $sCode   The code to validate
      *
-     * @return boolean
+     * @return bool
      */
     public function mfaDeviceCodeValidate($iUserId, $sCode)
     {

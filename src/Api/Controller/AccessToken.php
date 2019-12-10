@@ -16,11 +16,16 @@ use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
 use Nails\Api\Factory\ApiResponse;
 use Nails\Auth\Constants;
-use Nails\Auth\Model\Auth;
+use Nails\Auth\Service\Authentication;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\HttpCodes;
 use Nails\Factory;
 
+/**
+ * Class AccessToken
+ *
+ * @package Nails\Auth\Api\Controller
+ */
 class AccessToken extends Base
 {
     /**
@@ -34,8 +39,8 @@ class AccessToken extends Base
     {
         /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
-        /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User\AccessToken $oAccessTokenModel */
         $oAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
@@ -45,7 +50,7 @@ class AccessToken extends Base
         $sScope      = getFromArray('scope', $aData);
         $sLabel      = getFromArray('label', $aData);
 
-        $bIsValid = $oAuthModel->verifyCredentials($sIdentifier, $sPassword);
+        $bIsValid = $oAuthService->verifyCredentials($sIdentifier, $sPassword);
 
         if (!$bIsValid) {
             throw new ApiException(

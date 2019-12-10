@@ -13,14 +13,20 @@
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Exception\AuthException;
-use Nails\Auth\Model\Auth;
+use Nails\Auth\Exception\Login\NoUserException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetTempException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetExpiredException;
+use Nails\Auth\Exception\Login\RequiresMfaException;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
+use Nails\Auth\Resource;
+use Nails\Auth\Service\Authentication;
 use Nails\Auth\Service\Session;
 use Nails\Auth\Service\SocialSignOn;
 use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FileCache;
 use Nails\Common\Service\FormValidation;
@@ -36,7 +42,9 @@ use Nails\Factory;
 class Login extends Base
 {
     /**
-     * Construct the controller
+     * Login constructor.
+     *
+     * @throws FactoryException
      */
     public function __construct()
     {
@@ -91,13 +99,24 @@ class Login extends Base
     /**
      * Validate data and log the user in.
      *
-     * @return  void
      * @throws FactoryException
      **/
     public function index()
     {
         /** @var Session $oSession */
         $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var \App\Auth\Model\User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var FormValidation $oFormValidation */
+        $oFormValidation = Factory::service('FormValidation');
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        /** @var SocialSignOn $oSocial */
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
+
+        // --------------------------------------------------------------------------
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -110,63 +129,55 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        //  If there's POST data attempt to log user in
-        /** @var Input $oInput */
-        $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            //  Validate input
-            /** @var FormValidation $oFormValidation */
-            $oFormValidation = Factory::service('FormValidation');
+            try {
 
-            //  The rules vary depending on what login methods are enabled.
-            switch (APP_NATIVE_LOGIN_USING) {
+                $oFormValidation
+                    ->buildValidator([
+                        'identifier' => array_filter([
+                            APP_NATIVE_LOGIN_USING === 'EMAIL' ? 'required|valid_email' : null,
+                            APP_NATIVE_LOGIN_USING === 'USERNAME' ? ['required'] : null,
+                            APP_NATIVE_LOGIN_USING === 'BOTH' ? ['required'] : null,
+                        ]),
+                        'password'   => ['required'],
+                        'remember'   => [],
+                    ])
+                    ->run();
 
-                case 'EMAIL':
-                    $oFormValidation->set_rules('identifier', 'Email', 'required|trim|valid_email');
-                    break;
+                $bRemember = (bool) $oInput->post('remember');
 
-                case 'USERNAME':
-                    $oFormValidation->set_rules('identifier', 'Username', 'required|trim');
-                    break;
+                $oUser = $oUserModel->getByIdentifier(trim($oInput->post('identifier')));
 
-                default:
-                    $oFormValidation->set_rules('identifier', 'Username or Email', 'trim');
-                    break;
-            }
+                $oAuthService->loginWithCredentials(
+                    $oUser,
+                    $oInput->post('password'),
+                    $bRemember
+                );
 
-            //  Password is always required, obviously.
-            $oFormValidation->set_rules('password', 'Password', 'required');
-            $oFormValidation->set_message('required', lang('fv_required'));
-            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
+                $this->handleLogin($oUser, $bRemember);
 
-            if ($oFormValidation->run()) {
+            } catch (ValidationException $e) {
+                $this->data['error'] = $e->getMessage();
 
-                //  Attempt the log in
-                $sIdentifier = $oInput->post('identifier');
-                $sPassword   = $oInput->post('password');
-                $bRememberMe = (bool) $oInput->post('remember');
+            } catch (NoUserException $e) {
+                $this->data['error'] = $e->getMessage();
 
-                /** @var Auth $oAuthModel */
-                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+            } catch (RequiresMfaException $e) {
+                $this->handleMfa($oUser);
 
-                $oUser = $oAuthModel->login($sIdentifier, $sPassword, $bRememberMe);
+            } catch (RequiresPasswordResetTempException $e) {
+                $this->handlePasswordReset($oUser, $bRemember, 'TEMP');
 
-                if ($oUser) {
-                    $this->_login($oUser, $bRememberMe);
-                } else {
-                    $this->data['error'] = $oAuthModel->lastError();
-                }
+            } catch (RequiresPasswordResetExpiredException $e) {
+                $this->handlePasswordReset($oUser, $bRemember, 'EXPIRED');
 
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
+            } catch (AuthException $e) {
+                $this->data['error'] = $e->getMessage();
             }
         }
 
         // --------------------------------------------------------------------------
-
-        /** @var SocialSignOn $oSocial */
-        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
 
         $this->data['social_signon_enabled']   = $oSocial->isEnabled();
         $this->data['social_signon_providers'] = $oSocial->getProviders('ENABLED');
@@ -188,101 +199,32 @@ class Login extends Base
     /**
      * Handles the next stage of login after successfully authenticating
      *
-     * @param stdClass $oUser     The user object
-     * @param boolean  $bRemember Whether to set the rememberMe cookie or not
-     * @param string   $sProvider Which provider authenticated the login
+     * @param Resource\User $oUser     The user who is logging in
+     * @param bool          $bRemember Whether to set the rememberMe cookie or not
+     * @param string        $sProvider Which provider authenticated the login
      *
      * @throws FactoryException
      */
-    protected function _login($oUser, $bRemember = false, $sProvider = 'native')
+    protected function handleLogin(Resource\User $oUser, bool $bRemember = false, string $sProvider = 'native'): void
     {
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-        /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
 
-        if ($oUser->is_suspended) {
+        if (!empty($oUser->temp_pw)) {
 
-            $this->data['error'] = lang('auth_login_fail_suspended');
-            createUserEvent(
-                'did_login_fail',
-                [
-                    'reason' => 'suspended'
-                ],
-                null,
-                $oUser->id
-            );
-            return;
-
-        } elseif (!empty($oUser->temp_pw)) {
-
-            /**
-             * Temporary password detected, log user out and redirect to
-             * password reset page.
-             **/
-            $this->resetPassword($oUser->id, $oUser->salt, $bRemember, 'TEMP');
+            $this->handlePasswordReset($oUser, $bRemember, 'TEMP');
 
         } elseif ($oUserPasswordModel->isExpired($oUser->id)) {
 
-            /**
-             * Expired password detected, log user out and redirect to
-             * password reset page.
-             **/
-            $this->resetPassword($oUser->id, $oUser->salt, $bRemember, 'EXPIRED');
+            $this->handlePasswordReset($oUser, $bRemember, 'EXPIRED');
 
         } elseif ($oConfig->item('authTwoFactorMode')) {
 
-            //  Generate token
-            $aTwoFactorToken = $oAuthModel->mfaTokenGenerate($oUser->id);
-
-            if (!$aTwoFactorToken) {
-                throw new RuntimeException(
-                    'A user tried to login and the system failed to generate a two-factor auth token.'
-                );
-            }
-
-            //  Is there any query data?
-            $aQuery = [];
-
-            if ($this->data['return_to']) {
-                $aQuery['return_to'] = $this->data['return_to'];
-            }
-
-            if ($bRemember) {
-                $aQuery['remember'] = true;
-            }
-
-            $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
-
-            //  Where we sending the user?
-            switch ($oConfig->item('authTwoFactorMode')) {
-
-                case 'QUESTION':
-                    $sController = 'mfa/question';
-                    break;
-
-                case 'DEVICE':
-                    $sController = 'mfa/device';
-                    break;
-
-                default:
-                    throw new NailsException('"' . $oConfig->item('authTwoFactorMode') . '" is not a valid MFA Mode');
-                    break;
-            }
-
-            //  Compile the URL
-            $aUrl = [
-                'auth',
-                $sController,
-                $oUser->id,
-                $aTwoFactorToken['salt'],
-                $aTwoFactorToken['token'],
-            ];
-
-            //  Login was successful, redirect to the appropriate MFA page
-            redirect(implode($aUrl, '/') . $sQuery);
+            $this->handleMfa($oUser);
 
         } else {
 
@@ -327,35 +269,98 @@ class Login extends Base
 
     // --------------------------------------------------------------------------
 
-    protected function resetPassword($iUserId, $sUserSalt, $bRemember, $sReason = '')
+    /**
+     * Handle MFA redirect
+     *
+     * @param Resource\User $oUser     The user who requires MFA
+     * @param bool          $bRemember Whether to set the rememberMe cookie or not
+     *
+     * @throws AuthException
+     * @throws FactoryException
+     *
+     * @todo (Pablo - 2019-12-10) - Verify this still works
+     */
+    protected function handleMfa(Resource\User $oUser, bool $bRemember = false): void
     {
-        $aQuery = [];
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        /** @var Config $oConfig */
+        $oConfig = Factory::service('Config');
 
-        if ($this->data['return_to']) {
-            $aQuery['return_to'] = $this->data['return_to'];
+        $aTwoFactorToken = $oAuthService->mfaTokenGenerate($oUser->id);
+
+        if (!$aTwoFactorToken) {
+            throw new AuthException(
+                'A user tried to login and the system failed to generate a two-factor auth token.'
+            );
         }
 
-        if ($bRemember) {
-            $aQuery['remember'] = true;
+        //  Is there any query data?
+        $aQuery = array_filter([
+            'return_to' => $this->data['return_to'] ?: null,
+            'remember'  => $bRemember,
+        ]);
+
+        $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
+
+        //  Where we sending the user?
+        switch ($oConfig->item('authTwoFactorMode')) {
+
+            case 'QUESTION':
+                $sController = 'mfa/question';
+                break;
+
+            case 'DEVICE':
+                $sController = 'mfa/device';
+                break;
+
+            default:
+                throw new AuthException('"' . $oConfig->item('authTwoFactorMode') . '" is not a valid MFA Mode');
+                break;
         }
 
-        if ($sReason) {
-            $aQuery['reason'] = $sReason;
-        }
+        //  Compile the URL
+        $aUrl = [
+            'auth',
+            $sController,
+            $oUser->id,
+            $aTwoFactorToken['salt'],
+            $aTwoFactorToken['token'],
+        ];
+
+        //  Login was successful, redirect to the appropriate MFA page
+        redirect(implode($aUrl, '/') . $sQuery);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param Resource\User $oUser     The user who is resetting their password
+     * @param bool          $bRemember Whether to set the rememberMe cookie or not
+     * @param string        $sReason   The reason for the reset
+     *
+     * @throws FactoryException
+     */
+    protected function handlePasswordReset(Resource\User $oUser, bool $bRemember = false, string $sReason = ''): void
+    {
+        $aQuery = array_filter([
+            'return_to' => $this->data['return_to'] ?: null,
+            'remember'  => $bRemember,
+            'reason'    => $sReason,
+        ]);
 
         $aQuery = $aQuery ? '?' . http_build_query($aQuery) : '';
 
         /**
          * Log the user out and remove the 'remember me' cookie - if we don't do this
-         * then the password reset page will see a logged in user and go nuts
-         * (i.e error).
+         * then the password reset page will see a logged in user and error.
          */
 
-        /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-        $oAuthModel->logout();
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        $oAuthService->logout();
 
-        redirect('auth/password/reset/' . $iUserId . '/' . md5($sUserSalt) . $aQuery);
+        redirect('auth/password/reset/' . $oUser->id . '/' . md5($oUser->salt) . $aQuery);
     }
 
     // --------------------------------------------------------------------------
@@ -364,10 +369,9 @@ class Login extends Base
      * Log a user in using hashes of their user ID and password; easy way of
      * automatically logging a user in from the likes of an email.
      *
-     * @return  void
-     * @throws NailsException
+     * @throws AuthException
      */
-    public function with_hashes()
+    public function with_hashes(): void
     {
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
@@ -384,7 +388,7 @@ class Login extends Base
         $hash['pw'] = $oUri->segment(5);
 
         if (empty($hash['id']) || empty($hash['pw'])) {
-            throw new NailsException(lang('auth_with_hashes_incomplete_creds'), 1);
+            throw new AuthException(lang('auth_with_hashes_incomplete_creds'), 1);
         }
 
         // --------------------------------------------------------------------------
@@ -413,9 +417,9 @@ class Login extends Base
             } else {
 
                 //  We are logging in as someone else, log the current user out and try again
-                /** @var Auth $oAuthModel */
-                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-                $oAuthModel->logout();
+                /** @var Authentication $oAuthService */
+                $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+                $oAuthService->logout();
 
                 redirect(preg_replace('/^\//', '', $_SERVER['REQUEST_URI']));
             }
@@ -499,11 +503,13 @@ class Login extends Base
     /**
      * Handle login/registration via social provider
      *
-     * @param string $provider The provider to use
+     * @param string $sProvider The provider to use
      *
      * @throws FactoryException
+     *
+     * @todo (Pablo - 2019-12-10) - Verify this still works
      */
-    protected function socialSignon($provider)
+    protected function socialSignon($sProvider): void
     {
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
@@ -520,17 +526,17 @@ class Login extends Base
         try {
 
             //  Get the adapter, HybridAuth will handle the redirect
-            $adapter = $oSocial->authenticate($provider);
-            if (empty($adapter)) {
+            $oAdapter = $oSocial->authenticate($sProvider);
+            if (empty($oAdapter)) {
                 throw new AuthException('Failed to authenticate with provider. ' . $oSocial->lastError());
             }
 
-            $provider = $oSocial->getProvider($provider);
+            $provider = $oSocial->getProvider($sProvider);
             if (empty($provider)) {
                 throw new AuthException('Failed to get provider adapter. ' . $oSocial->lastError());
             }
 
-            $socialUser = $adapter->getUserProfile();
+            $socialUser = $oAdapter->getUserProfile();
 
         } catch (Exception $e) {
 
@@ -617,13 +623,30 @@ class Login extends Base
                     redirect($oUser->group_homepage);
                 }
 
+            } elseif ($oUser->is_suspended) {
+
+                $oSession->setFlashData('error', lang('auth_login_fail_suspended'));
+
+                createUserEvent(
+                    'did_login_fail',
+                    ['reason' => 'suspended'],
+                    null,
+                    $oUser->id
+                );
+
+                if ($this->data['return_to']) {
+                    redirect($this->data['return_to']);
+                } else {
+                    redirect($oUser->group_homepage);
+                }
+
             } else {
 
                 //  Fab, user exists, try to log them in
                 $oUserModel->setLoginData($oUser->id);
                 $oSocial->saveSession($oUser->id);
 
-                if (!$this->_login($oUser)) {
+                if (!$this->handleLogin($oUser)) {
 
                     $oSession->setFlashData('error', $this->data['error']);
 
@@ -723,7 +746,7 @@ class Login extends Base
                      * necessary.
                      */
 
-                    $this->requestData($aRequiredData, $provider['slug']);
+                    $this->socialSignOnRequestData($aRequiredData, $provider['slug']);
                 }
 
                 /**
@@ -738,8 +761,8 @@ class Login extends Base
                     $check = $oUserModel->getByEmail($aRequiredData['email']);
 
                     if ($check) {
-                        $aRequiredData['email'] = '';
-                        $requestData            = true;
+                        $aRequiredData['email']  = '';
+                        $socialSignOnRequestData = true;
                     }
                 }
 
@@ -757,7 +780,7 @@ class Login extends Base
 
                     if ($check) {
                         $aRequiredData['username'] = '';
-                        $requestData               = true;
+                        $socialSignOnRequestData   = true;
                     }
 
                 } else {
@@ -795,8 +818,8 @@ class Login extends Base
                 // --------------------------------------------------------------------------
 
                 //  Request data?
-                if (!empty($requestData)) {
-                    $this->requestData($aRequiredData, $provider->slug);
+                if (!empty($socialSignOnRequestData)) {
+                    $this->socialSignOnRequestData($aRequiredData, $provider->slug);
                 }
 
                 // --------------------------------------------------------------------------
@@ -948,11 +971,10 @@ class Login extends Base
      * Handles requesting of additional data from the user
      *
      * @param array  &$aRequiredData An array of fields to request
-     * @param string  $provider      The provider to use
      *
      * @throws FactoryException
      */
-    protected function requestData(&$aRequiredData, $provider)
+    protected function socialSignOnRequestData(array &$aRequiredData): void
     {
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
@@ -1018,11 +1040,11 @@ class Login extends Base
 
             } else {
                 $this->data['error'] = lang('fv_there_were_errors');
-                $this->requestDataForm($aRequiredData, $provider);
+                $this->socialSignOnRequestDataForm($aRequiredData, $provider);
             }
 
         } else {
-            $this->requestDataForm($aRequiredData, $provider);
+            $this->socialSignOnRequestDataForm($aRequiredData, $provider);
         }
     }
 
@@ -1032,17 +1054,17 @@ class Login extends Base
      * Renders the "request data" form
      *
      * @param array  &$aRequiredData An array of fields to request
-     * @param string  $provider      The provider being used
+     * @param string  $sProvider     The provider being used
      *
      * @throws FactoryException
      */
-    protected function requestDataForm(&$aRequiredData, $provider)
+    protected function socialSignOnRequestDataForm(array &$aRequiredData, string $sProvider): void
     {
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
 
         $this->data['required_data'] = $aRequiredData;
-        $this->data['form_url']      = 'auth/login/' . $provider;
+        $this->data['form_url']      = 'auth/login/' . $sProvider;
 
         if ($oUri->segment(4) == 'register') {
             $this->data['form_url'] .= '/register';
@@ -1074,7 +1096,7 @@ class Login extends Base
      *
      * @throws FactoryException
      */
-    public function _remap()
+    public function _remap(): void
     {
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');

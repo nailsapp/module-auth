@@ -1750,18 +1750,20 @@ class User extends Base
     /**
      * Increment the user's failed logins
      *
-     * @param int $iUserId The user ID to increment
-     * @param int $expires How long till the block, if the threshold is reached, expires.
+     * @param int $iUserId  The user ID to increment
+     * @param int $iExpires How long till the block, if the threshold is reached, expires.
      *
      * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function incrementFailedLogin($iUserId, $expires = 300)
+    public function incrementFailedLogin(int $iUserId, int $iExpires = 300): bool
     {
+        /** @var \DateTime $oDate */
         $oDate = Factory::factory('DateTime');
-        $oDate->add(new \DateInterval('PT' . $expires . 'S'));
+        $oDate->add(new \DateInterval('PT' . $iExpires . 'S'));
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('failed_login_count', '`failed_login_count`+1', false);
         $oDb->set('failed_login_expires', $oDate->format('Y-m-d H:i:s'));
@@ -1779,8 +1781,9 @@ class User extends Base
      * @throws FactoryException
      * @throws ModelException
      */
-    public function resetFailedLogin($iUserId)
+    public function resetFailedLogin(int $iUserId): bool
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('failed_login_count', 0);
         $oDb->set('failed_login_expires', 'null', false);
