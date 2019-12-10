@@ -864,7 +864,7 @@ class Password extends Base
             return $mUser;
         } elseif (is_numeric($mUser)) {
             return $oUserModel->getById($mUser);
-        } else {
+        } elseif (is_string($mUser)) {
             return $oUserModel->getByIdentifier($mUser);
         }
 
