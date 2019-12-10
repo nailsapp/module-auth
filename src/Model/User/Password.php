@@ -836,11 +836,11 @@ class Password extends Base
      *
      * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
      *
-     * @return bool|null
+     * @return int|null
      * @throws FactoryException
      * @throws ModelException
      */
-    public function timeSinceChange($mUser): ?bool
+    public function timeSinceChange($mUser): ?int
     {
         if (!$mUser instanceof Resource\User) {
 
