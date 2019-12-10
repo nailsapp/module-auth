@@ -12,8 +12,9 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
-use Nails\Auth\Model\Auth;
+use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Authentication;
 use Nails\Auth\Service\Session;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
@@ -21,6 +22,9 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class PasswordReset
+ */
 class PasswordReset extends Base
 {
     /**
@@ -55,10 +59,10 @@ class PasswordReset extends Base
         $oInput = Factory::service('Input');
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
-        /** @var \Nails\Auth\Model\User $oUserModel */
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
@@ -87,14 +91,14 @@ class PasswordReset extends Base
                 switch ($oConfig->item('authTwoFactorMode')) {
 
                     case 'QUESTION':
-                        $this->data['mfaQuestion'] = $oAuthModel->mfaQuestionGet($oUser->id);
+                        $this->data['mfaQuestion'] = $oAuthService->mfaQuestionGet($oUser->id);
 
                         if ($this->data['mfaQuestion']) {
 
                             if ($oInput->post()) {
 
                                 //  Validate answer
-                                $isValid = $oAuthModel->mfaQuestionValidate(
+                                $isValid = $oAuthService->mfaQuestionValidate(
                                     $this->data['mfaQuestion']->id,
                                     $oUser->id,
                                     $oInput->post('mfaAnswer')
@@ -120,14 +124,14 @@ class PasswordReset extends Base
                         break;
 
                     case 'DEVICE':
-                        $this->data['mfaDevice'] = $oAuthModel->mfaDeviceSecretGet($oUser->id);
+                        $this->data['mfaDevice'] = $oAuthService->mfaDeviceSecretGet($oUser->id);
 
                         if ($this->data['mfaDevice']) {
 
                             if ($oInput->post()) {
 
                                 //  Validate answer
-                                $isValid = $oAuthModel->mfaDeviceCodeValidate(
+                                $isValid = $oAuthService->mfaDeviceCodeValidate(
                                     $oUser->id,
                                     $oInput->post('mfaCode')
                                 );
@@ -139,7 +143,7 @@ class PasswordReset extends Base
                                 } else {
 
                                     $this->data['error'] = 'Sorry, that code could not be validated. ';
-                                    $this->data['error'] .= $oAuthModel->lastError();
+                                    $this->data['error'] .= $oAuthService->lastError();
                                 }
                             }
 
@@ -162,142 +166,116 @@ class PasswordReset extends Base
             // Only run if MFA has been passed and there's POST data
             if ($bMfaValid && $oInput->post()) {
 
-                // Validate data
-                /** @var FormValidation $oFormValidation */
-                $oFormValidation = Factory::service('FormValidation');
+                try {
 
-                /**
-                 * Define rules - I know it's not usual to give fields names, but in this case
-                 * it allows the matches message to have more context (a name, rather than a
-                 * field name)
-                 */
-                $oFormValidation->set_rules('new_password', 'Password', 'required|matches[confirm_pass]');
-                $oFormValidation->set_rules('confirm_pass', 'Confirm Password', 'required');
-
-                // --------------------------------------------------------------------------
-
-                //  Set custom messages
-                $oFormValidation->set_message('required', lang('fv_required'));
-                $oFormValidation->set_message('matches', lang('fv_matches'));
-
-                // --------------------------------------------------------------------------
-
-                //  Run validation
-                if ($oFormValidation->run()) {
+                    /** @var FormValidation $oFormValidation */
+                    $oFormValidation = Factory::service('FormValidation');
+                    $oFormValidation
+                        ->buildValidator([
+                            'new_password' => ['required', 'matches[confirm_pass]'],
+                            'confirm_pass' => ['required'],
+                        ])
+                        ->run();
 
                     //  Validated, update user and login.
+                    $bRemember = (bool) $oInput->get('remember');
                     $aData     = [
                         'forgotten_password_code' => null,
                         'temp_pw'                 => false,
                         'password'                => $oInput->post('new_password'),
                     ];
-                    $bRemember = (bool) $oInput->get('remember');
 
                     //  Reset the password
-                    if ($oUserModel->update($oUser->id, $aData)) {
+                    if (!$oUserModel->update($oUser->id, $aData)) {
+                        throw new \Nails\Auth\Exception\AuthException(
+                            lang('auth_forgot_reset_badupdate', $oUserModel->lastError())
+                        );
+                    }
 
-                        //  Log the user in
-                        switch (APP_NATIVE_LOGIN_USING) {
+                    $oUserModel->resetFailedLogin($oUser->id);
 
-                            case 'EMAIL':
-                                $oLoginUser = $oAuthModel->login(
-                                    $oUser->email,
-                                    $oInput->post('new_password'),
-                                    $bRemember
+                    //  Refresh user object
+                    $oUser      = $oUserModel->getById($oUser->id);
+                    $oLoginUser = $oAuthService->loginWithCredentials(
+                        $oUser,
+                        $oInput->post('new_password'),
+                        $bRemember,
+                        false
+                    );
+
+                    if ($oLoginUser) {
+
+                        //  Say hello
+                        if ($oLoginUser->last_login) {
+
+                            if ($oConfig->item('authShowNicetimeOnLogin')) {
+                                $sLastLogin = niceTime(strtotime($oLoginUser->last_login));
+                            } else {
+                                $sLastLogin = toUserDatetime($oLoginUser->last_login);
+                            }
+
+                            if ($oConfig->item('authShowLastIpOnLogin')) {
+
+                                $sStatus  = 'positive';
+                                $sMessage = lang(
+                                    'auth_login_ok_welcome_with_ip',
+                                    [
+                                        $oLoginUser->first_name,
+                                        $sLastLogin,
+                                        $oLoginUser->last_ip,
+                                    ]
                                 );
-                                break;
-
-                            case 'USERNAME':
-                                $oLoginUser = $oAuthModel->login(
-                                    $oUser->username,
-                                    $oInput->post('new_password'),
-                                    $bRemember
-                                );
-                                break;
-
-                            default:
-                                $oLoginUser = $oAuthModel->login(
-                                    $oUser->email,
-                                    $oInput->post('new_password'),
-                                    $bRemember
-                                );
-                                break;
-                        }
-
-                        if ($oLoginUser) {
-
-                            //  Say hello
-                            if ($oLoginUser->last_login) {
-
-                                if ($oConfig->item('authShowNicetimeOnLogin')) {
-                                    $sLastLogin = niceTime(strtotime($oLoginUser->last_login));
-                                } else {
-                                    $sLastLogin = toUserDatetime($oLoginUser->last_login);
-                                }
-
-                                if ($oConfig->item('authShowLastIpOnLogin')) {
-
-                                    $sStatus  = 'positive';
-                                    $sMessage = lang(
-                                        'auth_login_ok_welcome_with_ip',
-                                        [
-                                            $oLoginUser->first_name,
-                                            $sLastLogin,
-                                            $oLoginUser->last_ip,
-                                        ]
-                                    );
-
-                                } else {
-
-                                    $sStatus  = 'positive';
-                                    $sMessage = lang(
-                                        'auth_login_ok_welcome',
-                                        [
-                                            $oLoginUser->first_name,
-                                            $sLastLogin,
-                                        ]
-                                    );
-                                }
 
                             } else {
 
                                 $sStatus  = 'positive';
                                 $sMessage = lang(
-                                    'auth_login_ok_welcome_notime',
+                                    'auth_login_ok_welcome',
                                     [
                                         $oLoginUser->first_name,
+                                        $sLastLogin,
                                     ]
                                 );
                             }
 
-                            /** @var Session $oSession */
-                            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
-                            $oSession->setFlashData($sStatus, $sMessage);
-
-                            //  If MFA is setup then we'll need to set the user's session data
-                            if ($oConfig->item('authTwoFactorMode')) {
-                                $oUserModel->setLoginData($oUser->id);
-                            }
-
-                            //  Log user in and forward to wherever they need to go
-                            if ($oInput->get('return_to')) {
-                                redirect($oInput->get('return_to'));
-                            } elseif ($oUser->group_homepage) {
-                                redirect($oUser->group_homepage);
-                            } else {
-                                redirect('/');
-                            }
-
                         } else {
-                            $this->data['error'] = lang('auth_forgot_reset_badlogin', siteUrl('auth/login'));
+
+                            $sStatus  = 'positive';
+                            $sMessage = lang(
+                                'auth_login_ok_welcome_notime',
+                                [
+                                    $oLoginUser->first_name,
+                                ]
+                            );
+                        }
+
+                        /** @var Session $oSession */
+                        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                        $oSession->setFlashData($sStatus, $sMessage);
+
+                        //  If MFA is setup then we'll need to set the user's session data
+                        if ($oConfig->item('authTwoFactorMode')) {
+                            $oUserModel->setLoginData($oUser->id);
+                        }
+
+                        //  Log user in and forward to wherever they need to go
+                        if ($oInput->get('return_to')) {
+                            redirect($oInput->get('return_to'));
+                        } elseif ($oUser->group_homepage) {
+                            redirect($oUser->group_homepage);
+                        } else {
+                            redirect('/');
                         }
 
                     } else {
-                        $this->data['error'] = lang('auth_forgot_reset_badupdate', $oUserModel->lastError());
+                        $this->data['error'] = lang('auth_forgot_reset_badlogin', siteUrl('auth/login'));
                     }
 
-                } else {
-                    $this->data['error'] = lang('fv_there_were_errors');
+                } catch (\Nails\Common\Exception\ValidationException $e) {
+                    $this->data['error'] = $e->getMessage();
+
+                } catch (\Nails\Auth\Exception\AuthException $e) {
+                    $this->data['error'] = $e->getMessage();
                 }
             }
 

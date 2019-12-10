@@ -14,6 +14,7 @@ namespace Nails\Auth\Model\User;
 
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
+use Nails\Auth\Resource;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
@@ -24,6 +25,12 @@ use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
 
+/**
+ * Class Password
+ *
+ * @package                   Nails\Auth\Model\User
+ * @todo (Pablo - 2019-12-10) - Should be a service
+ */
 class Password extends Base
 {
     protected $aCharset;
@@ -56,7 +63,7 @@ class Password extends Base
      * @param string $sPassword The raw, unencrypted new password
      * @param bool   $bIsTemp   Whether the password is temporary
      *
-     * @return boolean
+     * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
@@ -130,14 +137,16 @@ class Password extends Base
     /**
      * Determines whether a password is correct for a particular user.
      *
-     * @param int    $iUserId   The user ID to check for
-     * @param string $sPassword The raw, unencrypted password to check
+     * @param Resource\User|int|string $mUser     The user's Resource, ID, or identifier
+     * @param string                   $sPassword The raw, unencrypted password to check
      *
-     * @return boolean
+     * @return bool
      */
-    public function isCorrect($iUserId, $sPassword)
+    public function isCorrect($mUser, $sPassword): bool
     {
-        if (empty($iUserId) || empty($sPassword)) {
+        $oUser = $this->getUser($mUser);
+
+        if (empty($oUser) || empty($sPassword)) {
             return false;
         }
 
@@ -145,7 +154,7 @@ class Password extends Base
 
         $oDb = Factory::service('Database');
         $oDb->select('u.password, u.password_engine, u.salt');
-        $oDb->where('u.id', $iUserId);
+        $oDb->where('u.id', $oUser->id);
         $oDb->limit(1);
         $oResult = $oDb->get(NAILS_DB_PREFIX . 'user u');
 
@@ -172,19 +181,21 @@ class Password extends Base
     /**
      * Determines whether a user's password has expired
      *
-     * @param integer $iUserId The user ID to check
+     * @param Resource\User|int|string $mUser The user's Resource, ID, or identifier
      *
-     * @return boolean
+     * @return bool
      */
-    public function isExpired($iUserId)
+    public function isExpired($mUser): bool
     {
-        if (empty($iUserId)) {
+        $oUser = $this->getUser($mUser);
+
+        if (empty($oUser)) {
             return false;
         }
 
         $oDb = Factory::service('Database');
         $oDb->select('u.password_changed,ug.password_rules');
-        $oDb->where('u.id', $iUserId);
+        $oDb->where('u.id', $oUser->id);
         $oDb->join(NAILS_DB_PREFIX . 'user_group ug', 'ug.id = u.group_id');
         $oDb->limit(1);
         $oResult = $oDb->get(NAILS_DB_PREFIX . 'user u');
@@ -214,6 +225,25 @@ class Password extends Base
 
             return $oInterval->days >= $oGroupPwRules->expiresAfter;
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Determines whether a user's password is temporary
+     *
+     * @param Resource\User|int|string $mUser The user's Resource, ID, or identifier
+     *
+     * @return bool
+     */
+    public function isTemporary($mUser): bool
+    {
+        $oUser = $this->getUser($mUser);
+        if (empty($oUser)) {
+            return false;
+        }
+
+        return $oUser->temp_pw;
     }
 
     // --------------------------------------------------------------------------
@@ -332,8 +362,8 @@ class Password extends Base
      * Create a password hash, checks to ensure a password is strong enough according
      * to the password rules defined by the app.
      *
-     * @param integer $iGroupId  The group who's rules to fetch
-     * @param string  $sPassword The raw, unencrypted password
+     * @param int    $iGroupId  The group who's rules to fetch
+     * @param string $sPassword The raw, unencrypted password
      *
      * @return \stdClass
      * @throws NailsException
@@ -391,7 +421,7 @@ class Password extends Base
      * @param string $sStr     The string to analyse
      * @param string $sCharset The charset to test against
      *
-     * @return boolean
+     * @return bool
      */
     private function strContainsFromCharset($sStr, $sCharset)
     {
@@ -407,7 +437,7 @@ class Password extends Base
     /**
      * Generates a password which is sufficiently secure according to the app's password rules
      *
-     * @param integer $iGroupId The group who's rules to fetch
+     * @param int $iGroupId The group who's rules to fetch
      *
      * @return string
      */
@@ -495,7 +525,7 @@ class Password extends Base
     /**
      * Returns the app's raw password rules as an array
      *
-     * @param integer $iGroupId The group who's rules to fetch
+     * @param int $iGroupId The group who's rules to fetch
      *
      * @return array
      */
@@ -535,7 +565,7 @@ class Password extends Base
     /**
      * Returns the app's password rules as a formatted string
      *
-     * @param integer $iGroupId The group who's rules to fetch
+     * @param int $iGroupId The group who's rules to fetch
      *
      * @return string
      */
@@ -556,7 +586,7 @@ class Password extends Base
     /**
      * Returns the app's password rules as an array of human friendly strings
      *
-     * @param integer $iGroupId The group who's rules to fetch
+     * @param int $iGroupId The group who's rules to fetch
      *
      * @return array
      */
@@ -619,7 +649,7 @@ class Password extends Base
      *
      * @param string $sIdentifier The identifier to use for setting the token (set by APP_NATIVE_LOGIN_USING)
      *
-     * @return boolean
+     * @return bool
      */
     public function setToken($sIdentifier)
     {
@@ -662,7 +692,7 @@ class Password extends Base
      * @param string $sCode          The token to validate
      * @param bool   $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      *
-     * @return boolean|string|array
+     * @return bool|string|array
      */
     public function validateToken($sCode, $bGenerateNewPw)
     {
@@ -803,5 +833,58 @@ class Password extends Base
         $aOut = array_filter($aOut);
 
         return empty($aOut) ? null : json_encode($aOut);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Calculates how long ago a user's pssword was changed, in seconds
+     *
+     * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
+     *
+     * @return bool|null
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function timeSinceChange($mUser): ?bool
+    {
+        if (!$mUser instanceof Resource\User) {
+
+            /** @var User $oUserModel */
+            $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+
+            if (is_numeric($mUser)) {
+                $oUser = $oUserModel->getById($mUser);
+            } else {
+                $oUser = $oUserModel->getByIdentifier($mUser);
+            }
+
+        } else {
+            $oUser = $mUser;
+        }
+
+        if (!empty($oUser) && $oUser->password_changed) {
+            return time() - strtotime($oUser->password_changed);
+        }
+
+        return null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function getUser($mUser): ?Resource\User
+    {
+        /** @var \App\Auth\Model\User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+
+        if ($mUser instanceof Resource\User) {
+            return $mUser;
+        } elseif (is_numeric($mUser)) {
+            return $oUserModel->getById($mUser);
+        } else {
+            return $oUserModel->getByIdentifier($mUser);
+        }
+
+        return null;
     }
 }

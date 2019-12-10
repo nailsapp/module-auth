@@ -10,11 +10,18 @@
  * @link
  */
 
-use Nails\Auth\Constants;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
+use Nails\Auth\Constants;
+use Nails\Auth\Service\Authentication;
+use Nails\Auth\Service\Session;
 
+/**
+ * Class MfaDevice
+ */
 class MfaDevice extends BaseMfa
 {
     /**
@@ -46,8 +53,9 @@ class MfaDevice extends BaseMfa
         // --------------------------------------------------------------------------
 
         //  Has this user already set up an MFA?
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-        $oMfaDevice = $oAuthModel->mfaDeviceSecretGet($this->mfaUser->id);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        $oMfaDevice   = $oAuthService->mfaDeviceSecretGet($this->mfaUser->id);
 
         if ($oMfaDevice) {
             $this->requestCode();
@@ -65,12 +73,16 @@ class MfaDevice extends BaseMfa
      */
     protected function setupDevice()
     {
-        $oSession   = Factory::service('Session', Constants::MODULE_SLUG);
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-        $oInput     = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
 
         if ($oInput->post()) {
 
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
 
             $oFormValidation->set_rules('mfa_secret', '', 'required');
@@ -84,7 +96,7 @@ class MfaDevice extends BaseMfa
                 $sMfaCode = $oInput->post('mfa_code');
 
                 //  Verify the inout
-                if ($oAuthModel->mfaDeviceSecretValidate($this->mfaUser->id, $sSecret, $sMfaCode)) {
+                if ($oAuthService->mfaDeviceSecretValidate($this->mfaUser->id, $sSecret, $sMfaCode)) {
 
                     //  Codes have been validated and saved to the DB, sign the user in and move on
                     $sStatus  = 'success';
@@ -106,7 +118,7 @@ class MfaDevice extends BaseMfa
         }
 
         //  Generate the secret
-        $this->data['secret'] = $oAuthModel->mfaDeviceSecretGenerate(
+        $this->data['secret'] = $oAuthService->mfaDeviceSecretGenerate(
             $this->mfaUser->id,
             $oInput->post('mfa_secret', true)
         );
@@ -115,7 +127,7 @@ class MfaDevice extends BaseMfa
 
             $sStatus  = 'error';
             $sMessage = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
-            $sMessage .= $oAuthModel->lastError();
+            $sMessage .= $oAuthService->lastError();
 
             $oSession->setFlashData($sStatus, $sMessage);
 
@@ -147,9 +159,11 @@ class MfaDevice extends BaseMfa
      */
     protected function requestCode()
     {
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
 
             $oFormValidation->set_rules('mfa_code', '', 'required');
@@ -157,15 +171,16 @@ class MfaDevice extends BaseMfa
 
             if ($oFormValidation->run()) {
 
-                $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-                $sMfaCode   = $oInput->post('mfa_code');
+                /** @var Authentication $oAuthService */
+                $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+                $sMfaCode     = $oInput->post('mfa_code');
 
                 //  Verify the inout
-                if ($oAuthModel->mfaDeviceCodeValidate($this->mfaUser->id, $sMfaCode)) {
+                if ($oAuthService->mfaDeviceCodeValidate($this->mfaUser->id, $sMfaCode)) {
                     $this->loginUser();
                 } else {
                     $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
-                    $this->data['error'] .= $oAuthModel->lastError();
+                    $this->data['error'] .= $oAuthService->lastError();
                 }
 
             } else {

@@ -13,8 +13,8 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
-use Nails\Auth\Model\Auth;
 use Nails\Auth\Model\User\Password;
+use Nails\Auth\Service\Authentication;
 use Nails\Auth\Service\Session;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Exception\ValidationException;
@@ -259,8 +259,8 @@ class PasswordForgotten extends Base
         $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
-        /** @var Auth $oAuthModel */
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
@@ -289,13 +289,13 @@ class PasswordForgotten extends Base
             if ($oConfig->item('authTwoFactorMode') == 'QUESTION') {
 
                 //  Show them a security question
-                $this->data['question'] = $oAuthModel->mfaQuestionGet($mNewPassword['user_id']);
+                $this->data['question'] = $oAuthService->mfaQuestionGet($mNewPassword['user_id']);
 
                 if ($this->data['question']) {
 
                     if ($oInput->post()) {
 
-                        $bIsValid = $oAuthModel->mfaQuestionValidate(
+                        $bIsValid = $oAuthService->mfaQuestionValidate(
                             $this->data['question']->id,
                             $mNewPassword['user_id'],
                             $oInput->post('answer')
@@ -392,7 +392,7 @@ class PasswordForgotten extends Base
 
             } elseif ($oConfig->item('authTwoFactorMode') == 'DEVICE') {
 
-                $mSecret = $oAuthModel->mfaDeviceSecretGet($mNewPassword['user_id']);
+                $mSecret = $oAuthService->mfaDeviceSecretGet($mNewPassword['user_id']);
 
                 if ($mSecret) {
 
@@ -401,7 +401,7 @@ class PasswordForgotten extends Base
                         $sMfaCode = $oInput->post('mfaCode');
 
                         //  Verify the inout
-                        if ($oAuthModel->mfaDeviceCodeValidate($mNewPassword['user_id'], $sMfaCode)) {
+                        if ($oAuthService->mfaDeviceCodeValidate($mNewPassword['user_id'], $sMfaCode)) {
 
                             //  Correct answer, reset password and render views
                             $mNewPassword = $oUserPasswordModel->validateToken($sCode, true);
@@ -440,7 +440,7 @@ class PasswordForgotten extends Base
 
                         } else {
                             $this->data['error'] = 'Sorry, that code failed to validate. Please try again. ';
-                            $this->data['error'] .= $oAuthModel->lastError();
+                            $this->data['error'] .= $oAuthService->lastError();
                         }
                     }
 

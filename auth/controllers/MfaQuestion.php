@@ -12,8 +12,11 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseMfa;
+use Nails\Auth\Service\Authentication;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
 class MfaQuestion extends BaseMfa
@@ -46,8 +49,10 @@ class MfaQuestion extends BaseMfa
 
         // --------------------------------------------------------------------------
 
-        $oInput     = Factory::service('Input');
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
 
         if ($oInput->post('answer')) {
 
@@ -56,8 +61,8 @@ class MfaQuestion extends BaseMfa
              * not then generate a new token and show errors
              */
 
-            $this->data['question'] = $oAuthModel->mfaQuestionGet($this->mfaUser->id);
-            $bIsValid               = $oAuthModel->mfaQuestionValidate(
+            $this->data['question'] = $oAuthService->mfaQuestionGet($this->mfaUser->id);
+            $bIsValid               = $oAuthService->mfaQuestionValidate(
                 $this->data['question']->id,
                 $this->mfaUser->id,
                 $oInput->post('answer')
@@ -73,7 +78,7 @@ class MfaQuestion extends BaseMfa
         } else {
 
             //  Determine whether the user has any security questions set
-            $this->data['question'] = $oAuthModel->mfaQuestionGet($this->mfaUser->id);
+            $this->data['question'] = $oAuthService->mfaQuestionGet($this->mfaUser->id);
 
             if ($this->data['question']) {
 
@@ -104,6 +109,7 @@ class MfaQuestion extends BaseMfa
 
                 if ($oInput->post()) {
 
+                    /** @var FormValidation $oFormValidation */
                     $oFormValidation = Factory::service('FormValidation');
 
                     for ($i = 0; $i < $this->data['num_questions']; $i++) {
@@ -198,7 +204,7 @@ class MfaQuestion extends BaseMfa
                                 }
                             }
 
-                            if ($oAuthModel->mfaQuestionSet($this->mfaUser->id, $aData)) {
+                            if ($oAuthService->mfaQuestionSet($this->mfaUser->id, $aData)) {
 
                                 $sStatus  = 'success';
                                 $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You ';
