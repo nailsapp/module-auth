@@ -100,11 +100,12 @@ class PasswordForgotten extends Base
                 // --------------------------------------------------------------------------
 
                 /** @var \Nails\Auth\Resource\User $oUser */
-                $oUser          = $oUserModel->getByIdentifier($sIdentifier);
-                $bAlwaysSucceed = $oConfig->item('authForgottenPassAlwaysSucceed');
+                $oUser           = $oUserModel->getByIdentifier($sIdentifier);
+                $bAlwaysSucceed  = $oConfig->item('authForgottenPassAlwaysSucceed');
+                $bGeneratedToken = $oUserPasswordModel->setToken($oUser);
 
                 //  Attempt to reset password
-                if ($oUserPasswordModel->setToken($oUser)) {
+                if ($bGeneratedToken) {
 
                     //  Refresh the User object
                     $oUser = $oUserModel->getById($oUser->id);
@@ -115,44 +116,33 @@ class PasswordForgotten extends Base
                             lang('auth_forgot_email_fail_no_email')
                         );
 
-                    } elseif (!$bAlwaysSucceed && empty($oUser)) {
+                    }
 
-                        throw new NailsException(
-                            lang('auth_forgot_email_fail_no_id')
-                        );
+                    //  We've got something, go go go
+                    $oEmail = (object) [
+                        'type'  => 'forgotten_password',
+                        'to_id' => $oUser->id,
+                    ];
 
-                    } elseif ($bAlwaysSucceed) {
+                    // --------------------------------------------------------------------------
 
-                        //  Failed, but configured to always succeed - nothing to do
+                    //  Add data for the email view
+                    [$sTTL, $sKey] = array_pad(explode(':', $oUser->forgotten_password_code), 2, null);
 
-                    } else {
+                    $oEmail->data = (object) [
+                        'resetUrl'   => siteUrl('auth/password/forgotten/' . $sKey),
+                        'identifier' => $oUser->email,
+                    ];
 
-                        //  We've got something, go go go
-                        $oEmail = (object) [
-                            'type'  => 'forgotten_password',
-                            'to_id' => $oUser->id,
-                        ];
+                    // --------------------------------------------------------------------------
 
-                        // --------------------------------------------------------------------------
-
-                        //  Add data for the email view
-                        [$sTTL, $sKey] = array_pad(explode(':', $oUser->forgotten_password_code), 2, null);
-
-                        $oEmail->data = (object) [
-                            'resetUrl'   => siteUrl('auth/password/forgotten/' . $sKey),
-                            'identifier' => $oUser->email,
-                        ];
-
-                        // --------------------------------------------------------------------------
-
-                        if (!$oEmailer->send($oEmail, true)) {
-                            if (!$bAlwaysSucceed) {
-                                throw new NailsException(lang('auth_forgot_email_fail'));
-                            }
+                    if (!$oEmailer->send($oEmail, true)) {
+                        if (!$bAlwaysSucceed) {
+                            throw new NailsException(lang('auth_forgot_email_fail'));
                         }
                     }
 
-                } else {
+                } elseif (!$bAlwaysSucceed) {
                     throw new NailsException(
                         lang('auth_forgot_code_not_set')
                     );
