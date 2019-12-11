@@ -153,23 +153,9 @@ class PasswordForgotten extends Base
                     }
 
                 } else {
-
-                    switch (APP_NATIVE_LOGIN_USING) {
-
-                        case 'EMAIL':
-                            $sError = lang('auth_forgot_code_not_set_email', $oUser->email);
-                            break;
-
-                        case 'USERNAME':
-                            $sError = lang('auth_forgot_code_not_set_username', $oUser->username);
-                            break;
-
-                        default:
-                            $sError = lang('auth_forgot_code_not_set');
-                            break;
-                    }
-
-                    throw new NailsException($sError);
+                    throw new NailsException(
+                        lang('auth_forgot_code_not_set')
+                    );
                 }
 
                 $oSession->setFlashData('success', lang('auth_forgot_success'));
