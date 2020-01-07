@@ -1961,7 +1961,9 @@ class User extends Base
             $oInput = Factory::service('Input');
 
             $oDb->set('last_seen', 'NOW()', false);
-            $oDb->set('last_ip', $oInput->ipAddress());
+            if (!defined('NAILS_AUTH_LOG_IP') || NAILS_AUTH_LOG_IP) {
+                $oDb->set('last_ip', $oInput->ipAddress());
+            }
             $oDb->where('id', $me->id);
             $oDb->update($this->table);
         }
@@ -2104,12 +2106,15 @@ class User extends Base
         $aUserData['password_md5']    = $oPassword->password_md5;
         $aUserData['password_engine'] = $oPassword->engine;
         $aUserData['salt']            = $oPassword->salt;
-        $aUserData['ip_address']      = $oInput->ipAddress();
-        $aUserData['last_ip']         = $aUserData['ip_address'];
         $aUserData['created']         = $oDate->format('Y-m-d H:i:s');
         $aUserData['last_update']     = $oDate->format('Y-m-d H:i:s');
         $aUserData['is_suspended']    = !empty($data['is_suspended']);
         $aUserData['temp_pw']         = !empty($data['temp_pw']);
+
+        if (!defined('NAILS_AUTH_LOG_IP') || NAILS_AUTH_LOG_IP) {
+            $aUserData['ip_address'] = $oInput->ipAddress();
+            $aUserData['last_ip']    = $oInput->ipAddress();
+        }
 
         //  Referral code
         $aUserData['referral']    = $this->generateReferral();
