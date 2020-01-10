@@ -31,6 +31,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Config;
+use Nails\Common\Service\Database;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Functions;
@@ -67,6 +68,27 @@ class Authentication
     // --------------------------------------------------------------------------
 
     /**
+     * Logs a user in
+     *
+     * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
+     */
+    public function login($oUser): Resource\User
+    {
+        $oUser = $this->getUser($oUser);
+
+        //  @todo (Pablo - 2020-01-10) - Move logic from user model to this method
+        //  @todo (Pablo - 2020-01-10) - Move logic from login controller to this method?
+
+        /** @var \Nails\Auth\Model\User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        $oUserModel->setLoginData($oUser);
+
+        return $oUser;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Log a user in
      *
      * @param Resource\User|string|int $mUser     The user's Resource, ID, or identifier
@@ -91,8 +113,7 @@ class Authentication
         // --------------------------------------------------------------------------
 
         /** @var User $oUserModel */
-        $oUserModel = Factory::model('User',
-            Constants::MODULE_SLUG);
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
@@ -296,12 +317,14 @@ class Authentication
      */
     public function logout()
     {
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUserModel->clearRememberCookie();
 
         // --------------------------------------------------------------------------
 
         //  null the remember_code so that auto-logins stop
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', null);
         $oDb->where('id', activeUser('id'));
@@ -315,6 +338,7 @@ class Authentication
         // --------------------------------------------------------------------------
 
         //  Destroy CI session
+        /** @var Session $oSession */
         $oSession = Factory::service('Session', Constants::MODULE_SLUG);
         $oSession->destroy();
 
