@@ -26,6 +26,7 @@ use Nails\Common\Service\Database;
 use Nails\Common\Service\DateTime;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
+use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Email;
 use Nails\Environment;
@@ -375,8 +376,8 @@ class User extends Base
     /**
      * Set the user's login data
      *
-     * @param mixed $mIdEmail        The user's ID or email address
-     * @param bool  $bSetSessionData Whether to set the session data or not
+     * @param Resource\User|string|int $mUser           The user's Resource, ID, or identifier
+     * @param bool                     $bSetSessionData Whether to set the session data or not
      *
      * @return bool
      * @throws FactoryException
@@ -384,19 +385,23 @@ class User extends Base
      * @throws NailsException
      * @throws ReflectionException
      */
-    public function setLoginData($mIdEmail, $bSetSessionData = true)
+    public function setLoginData($mUser, bool $bSetSessionData = true): bool
     {
         //  Valid user?
-        if (is_numeric($mIdEmail)) {
+        if ($mUser instanceof Resource\User) {
 
-            $oUser  = $this->getById($mIdEmail);
+            $oUser = $mUser;
+
+        } elseif (is_numeric($mUser)) {
+
+            $oUser  = $this->getById($mUser);
             $sError = 'Invalid User ID.';
 
-        } elseif (is_string($mIdEmail)) {
+        } elseif (is_string($mUser)) {
 
             Factory::helper('email');
-            if (valid_email($mIdEmail)) {
-                $oUser  = $this->getByEmail($mIdEmail);
+            if (valid_email($mUser)) {
+                $oUser  = $this->getByEmail($mUser);
                 $sError = 'Invalid User email.';
             } else {
                 $this->setError('Invalid User email.');
