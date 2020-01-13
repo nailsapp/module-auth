@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This class handles setting of notification recipients
+ * This class handles settings
  *
  * @package     Nails
  * @subpackage  module-admin
