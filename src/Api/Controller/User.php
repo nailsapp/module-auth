@@ -156,6 +156,7 @@ class User extends DefaultController
     {
         return [
             'id'         => $oObj->id,
+            'label'      => sprintf('%s - %s', trim($oObj->first_name . ' ' . $oObj->last_name), $oObj->email),
             'first_name' => $oObj->first_name,
             'last_name'  => $oObj->last_name,
             'email'      => $oObj->email,
