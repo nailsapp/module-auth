@@ -552,15 +552,12 @@ class Accounts extends DefaultController
         /** @var Component $oComponent */
         foreach (Components::available() as $oComponent) {
 
-            $sNamespace = $oComponent->namespace . 'Auth\\Admin\\User\\Tab\\';
-            $sPath      = $oComponent->path . 'src/Auth/Admin/User/Tab';
-            $aFiles     = Directory::map($sPath, null, false);
+            $aClasses = $oComponent
+                ->findClasses('Auth\\Admin\\User\\Tab')
+                ->whichImplement(Tab::class);
 
-            foreach ($aFiles as $sFile) {
-                $sClass = $sNamespace . str_replace(DIRECTORY_SEPARATOR, '\\', preg_replace('/\.php$/', '', $sFile));
-                if (class_exists($sClass) && classImplements($sClass, Tab::class)) {
-                    $aTabs[$sClass] = new $sClass();
-                }
+            foreach ($aClasses as $sClass) {
+                $aTabs[$sClass] = new $sClass();
             }
         }
 
