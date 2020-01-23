@@ -59,14 +59,13 @@ class Accounts extends DefaultController
         'Last Seen'   => 'last_seen',
     ];
     const CONFIG_SORT_OPTIONS   = [
-        'ID'            => 'id',
-        'First name'    => 'first_name',
-        'Surname'       => 'last_name',
-        'Primary Email' => 'email',
-        'Login Count'   => 'login_count',
-        'Registered'    => 'created',
-        'Last Seen'     => 'last_seen',
-        'Last Login'    => 'last_login',
+        'ID'          => 'id',
+        'First name'  => 'first_name',
+        'Surname'     => 'last_name',
+        'Login Count' => 'login_count',
+        'Registered'  => 'created',
+        'Last Seen'   => 'last_seen',
+        'Last Login'  => 'last_login',
     ];
 
     // --------------------------------------------------------------------------
