@@ -2150,6 +2150,14 @@ class User extends Base
             $aUserData['language'] = $data['language'];
         }
 
+        if (isset($data['profile_img'])) {
+            $aUserData['profile_img'] = $data['profile_img'];
+        }
+
+        if (isset($data['dob'])) {
+            $aUserData['dob'] = $data['dob'];
+        }
+
         // --------------------------------------------------------------------------
 
         //  Set Meta data
