@@ -135,11 +135,11 @@ class Login extends Base
 
                 $oFormValidation
                     ->buildValidator([
-                        'identifier' => array_filter([
+                        'identifier' => array_values(array_filter([
                             APP_NATIVE_LOGIN_USING === 'EMAIL' ? ['required', 'valid_email'] : null,
                             APP_NATIVE_LOGIN_USING === 'USERNAME' ? ['required'] : null,
                             APP_NATIVE_LOGIN_USING === 'BOTH' ? ['required'] : null,
-                        ])[0],
+                        ]))[0],
                         'password'   => ['required'],
                         'remember'   => [],
                     ])
