@@ -19,52 +19,30 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\Input;
 use Nails\Factory;
+use Symfony\Component\HttpFoundation;
 
+/**
+ * Class Session
+ *
+ * @package Nails\Auth\Service
+ */
 class Session
 {
-    /**
-     * The session object
-     *
-     * @var \CI_Session
-     */
+    /** @var HttpFoundation\Session\Session */
     protected $oSession;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Attempts to restore or set up a session
-     *
-     * @param bool $bForceSetup Whether to force session set up
+     * Session constructor.
      */
-    public function setup($bForceSetup = false)
+    public function __construct()
     {
-        if (!empty($this->oSession)) {
-            return;
-        }
-
-        /** @var Input $oInput */
-        $oInput = Factory::service('Input');
-
-        //  class_exists check in case the class is called before CI has finished instanciating
-        if (!$oInput::isCli() && class_exists('CI_Controller')) {
-            /**
-             * Look for the session cookie, if it exists, then a session exists
-             * and the whole service should be loaded up.
-             */
-            /** @var Config $oConfig */
-            $oConfig     = Factory::service('Config');
-            $sCookieName = $oConfig->item('sess_cookie_name');
-
-            if ($bForceSetup || $oInput::cookie($sCookieName)) {
-                //  @todo (Pablo - 2018-03-19) - Remove dependency on CI Sessions
-                $oCi = get_instance();
-                $oCi->load->library('session');
-                if (empty($oCi->session)) {
-                    throw new NailsException('Failed to load CodeIgniter session library.');
-                }
-                $this->oSession = $oCi->session;
-            }
-        }
+        $this->oSession = new HttpFoundation\Session\Session(
+            new HttpFoundation\Session\Storage\NativeSessionStorage(),
+            new HttpFoundation\Session\Attribute\AttributeBag(),
+            new HttpFoundation\Session\Flash\AutoExpireFlashBag()
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -72,18 +50,21 @@ class Session
     /**
      * Sets session flashdata
      *
-     * @param mixed $mKey   The key to set, or an associative array of key=>value pairs
-     * @param mixed $mValue The value to store
+     * @param string|array $mKey   The key to set, or an associative array of key=>value pairs
+     * @param mixed        $mValue The value to store
      *
      * @return $this
      */
-    public function setFlashData($mKey, $mValue = null)
+    public function setFlashData($mKey, $mValue = null): Session
     {
-        $this->setup(true);
-        if (empty($this->oSession)) {
-            return $this;
+        if (is_array($mKey)) {
+            foreach ($mKey as $sKey => $mValue) {
+                $this->oSession->getFlashBag()->set($sKey, $mValue);
+            }
+        } else {
+            $this->oSession->getFlashBag()->set($mKey, $mValue);
         }
-        $this->oSession->set_flashdata($mKey, $mValue);
+
         return $this;
     }
 
@@ -98,31 +79,33 @@ class Session
      */
     public function getFlashData($sKey = null)
     {
-        $this->setup();
-        if (empty($this->oSession)) {
-            return null;
+        if (empty($sKey)) {
+            return array_map(
+                function ($aValues) {
+                    return count($aValues) ? end($aValues) : null;
+                },
+                $this->oSession->getFlashBag()->peekAll()
+            );
+        } else {
+            $aValues = $this->oSession->getFlashBag()->peek($sKey);
+            return count($aValues) ? end($aValues) : null;
         }
-        return $this->oSession->flashdata($sKey);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Keeps existing flashdata available to next request.
-     * http://codeigniter.com/forums/viewthread/104392/#917834
      *
      * @param string|array $mKey The key to keep, null will retain all flashdata
      *
      * @return $this
      **/
-    public function keepFlashData($mKey = null)
+    public function keepFlashData($mKey = null): Session
     {
-        if (empty($this->oSession)) {
-            return $this;
-        }
-
+        //  @todo (Pablo - 2020-02-18) - Complete this
         if (is_null($mKey)) {
-            $aKeys = $this->oSession->get_flash_keys();
+            $aKeys = $this->oSession->getFlashBag()->keys();
         } elseif (is_array($mKey)) {
             $aKeys = $mKey;
         } else {
@@ -130,7 +113,7 @@ class Session
         }
 
         foreach ($aKeys as $sKey) {
-            $this->oSession->mark_as_flash($sKey);
+            $this->setFlashData($sKey, $this->getFlashData($sKey));
         }
 
         return $this;
@@ -141,19 +124,21 @@ class Session
     /**
      * Writes data to the user's session
      *
-     * @param mixed $mKey   The key to set, or an associative array of key=>value pairs
-     * @param mixed $mValue The value to store
+     * @param string|array $mKey   The key to set, or an associative array of key=>value pairs
+     * @param mixed        $mValue The value to store
      *
      * @return $this
      */
-    public function setUserData($mKey, $mValue = null)
+    public function setUserData($mKey, $mValue = null): Session
     {
-        $this->setup(true);
-        if (empty($this->oSession)) {
-            return $this;
+        if (is_array($mKey)) {
+            foreach ($mKey as $sKey => $mValue) {
+                $this->oSession->set($sKey, $mValue);
+            }
+        } else {
+            $this->oSession->set($mKey, $mValue);
         }
 
-        $this->oSession->set_userdata($mKey, $mValue);
         return $this;
     }
 
@@ -166,13 +151,13 @@ class Session
      *
      * @return mixed
      */
-    public function getUserData($sKey = null)
+    public function getUserData(string $sKey = null)
     {
-        $this->setup();
-        if (empty($this->oSession)) {
-            return null;
+        if (empty($sKey)) {
+            return $this->oSession->all();
+        } else {
+            return $this->oSession->get($sKey);
         }
-        return $this->oSession->userdata($sKey);
     }
 
     // --------------------------------------------------------------------------
@@ -180,17 +165,20 @@ class Session
     /**
      * Removes data from the session
      *
-     * @param mixed $mKey The key to set, or an associative array of key=>value pairs
+     * @param string|array $mKey The key to set, or an associative array of key=>value pairs
      *
      * @return $this
      */
-    public function unsetUserData($mKey)
+    public function unsetUserData($mKey): Session
     {
-        if (empty($this->oSession)) {
-            return $this;
+        if (is_array($mKey)) {
+            foreach ($mKey as $sKey => $mValue) {
+                $this->oSession->remove($sKey);
+            }
+        } else {
+            $this->oSession->remove($mKey);
         }
 
-        $this->oSession->unset_userdata($mKey);
         return $this;
     }
 
@@ -201,22 +189,9 @@ class Session
      *
      * @return $this
      */
-    public function destroy()
+    public function destroy(): Session
     {
-        if (empty($this->oSession)) {
-            return $this;
-        }
-
-        $oConfig     = Factory::service('Config');
-        $sCookieName = $oConfig->item('sess_cookie_name');
-
-        $this->oSession->sess_destroy();
-
-        if (isset($_COOKIE) && array_key_exists($sCookieName, $_COOKIE)) {
-            delete_cookie($sCookieName);
-            unset($_COOKIE[$sCookieName]);
-        }
-
+        $this->oSession->clear();
         return $this;
     }
 
@@ -226,146 +201,12 @@ class Session
      * Regenerate the user's session
      *
      * @param bool $bDestroy Whether to destroy the old session
+     *
+     * @return $this
      */
-    public function regenerate($bDestroy = false)
+    public function regenerate($bDestroy = false): Session
     {
-        if (empty($this->oSession)) {
-            return $this;
-        }
-
-        $this->oSession->sess_regenerate($bDestroy);
+        $this->oSession->migrate($bDestroy);
         return $this;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * ALIASES; maintained for backwards compatability with old code and CodeIgniter
-     */
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::setFlashData
-     *
-     * @see Session::setFlashData()
-     * @deprecated
-     */
-    public function set_flashdata($mKey, $mValue)
-    {
-        deprecatedError(__METHOD__, 'Session::setFlashData');
-        return $this->setFlashData($mKey, $mValue);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::getFlashData
-     *
-     * @see Session::getFlashData()
-     * @deprecated
-     */
-    public function flashdata($sKey)
-    {
-        deprecatedError(__METHOD__, 'Session::getFlashData');
-        return $this->getFlashData($sKey);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::getFlashData
-     *
-     * @see Session::getFlashData()
-     * @deprecated
-     */
-    public function get_flashdata($sKey)
-    {
-        deprecatedError(__METHOD__, 'Session::getFlashData');
-        return $this->getFlashData($sKey);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::keepFlashData()
-     *
-     * @see Session::keepFlashData()
-     * @deprecated
-     */
-    public function keep_flashdata($mKey = null)
-    {
-        deprecatedError(__METHOD__, 'Session::keepFlashData');
-        $this->keepFlashData($mKey);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::setUserData
-     *
-     * @see Session::setUserData()
-     * @deprecated
-     */
-    public function set_userdata($mKey, $mValue = null)
-    {
-        deprecatedError(__METHOD__, 'Session::setUserData');
-        return $this->setUserData($mKey, $mValue);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::getUserData
-     *
-     * @see Session::getUserData()
-     * @deprecated
-     */
-    public function userdata($sKey)
-    {
-        deprecatedError(__METHOD__, 'Session::getUserData');
-        return $this->getUserData($sKey);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::unsetUserData
-     *
-     * @see Session::unsetUserData()
-     * @deprecated
-     */
-    public function unset_userdata($mKey)
-    {
-        deprecatedError(__METHOD__, 'Session::unsetUserData');
-        return $this->unsetUserData($mKey);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::destroy
-     *
-     * @see Session::destroy()
-     * @deprecated
-     */
-    public function sess_destroy()
-    {
-        deprecatedError(__METHOD__, 'Session::destroy');
-        return $this->destroy();
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Alias of Session::regenerate
-     *
-     * @see Session::regenerate()
-     * @deprecated
-     */
-    public function sess_regenerate($bDestroy = false)
-    {
-        deprecatedError(__METHOD__, 'Session::regenerate');
-        return $this->destroy();
     }
 }

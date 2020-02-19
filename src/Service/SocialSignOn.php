@@ -72,12 +72,12 @@ class SocialSignOn
 
         /**
          * Pablo (2019-07-17):
-         * This hack forces CI Sessions to fully build, so that when HybridAuth attempts to create/join the
+         * This hack forces Sessions to fully build, so that when HybridAuth attempts to create/join the
          * session there is one to join – otherwise we get conflicts.
          */
-        $oSession->setup();
-        $oSession->setUserData('temp');
-        $oSession->unsetUserData('temp');
+        $oSession
+            ->setUserData('temp')
+            ->unsetUserData('temp');
 
         // --------------------------------------------------------------------------
 
