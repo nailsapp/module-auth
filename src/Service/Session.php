@@ -48,6 +48,18 @@ class Session
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the session ID
+     *
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->oSession->getId();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Sets session flashdata
      *
      * @param string|array $mKey   The key to set, or an associative array of key=>value pairs
