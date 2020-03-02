@@ -14,6 +14,7 @@ namespace Nails\Auth\Service;
 
 use App\Auth\Model\User;
 use DateInterval;
+use DateTime;
 use Google\Authenticator\GoogleAuthenticator;
 use Nails\Auth\Constants;
 use Nails\Auth\Exception\AuthException;
@@ -27,14 +28,21 @@ use Nails\Auth\Exception\Login\RequiresPasswordResetTempException;
 use Nails\Auth\Exception\Login\RequiresSocialException;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
+use Nails\Common\Exception\Encrypt\DecodeException;
+use Nails\Common\Exception\EnvironmentException;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\Database;
+use Nails\Common\Service\Encrypt;
+use Nails\Common\Service\Input;
+use Nails\Common\Traits\ErrorHandling;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Functions;
+use ReflectionException;
 use stdClass;
 
 /**
@@ -44,6 +52,10 @@ use stdClass;
  */
 class Authentication
 {
+    use ErrorHandling;
+
+    // --------------------------------------------------------------------------
+
     /**
      * The minimum length of time to wait between attempts, in microseconds
      *
@@ -70,7 +82,13 @@ class Authentication
     /**
      * Logs a user in
      *
-     * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
+     * @param Resource\User|string|int $oUser The user's Resource, ID, or identifier
+     *
+     * @return Resource\User
+     * @throws FactoryException
+     * @throws ModelException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function login($oUser): Resource\User
     {
@@ -91,12 +109,24 @@ class Authentication
     /**
      * Log a user in
      *
-     * @param Resource\User|string|int $mUser     The user's Resource, ID, or identifier
+     * @param Resource\User|string|int $oUser     The user's Resource, ID, or identifier
      * @param string                   $sPassword The user's password
      * @param bool                     $bRemember Whether to 'remember' the user or not
-     * @param bool                     $MfaCheck  Whether to check for MFA
+     * @param bool                     $bMfaCheck
      *
      * @return Resource\User
+     * @throws FactoryException
+     * @throws InvalidCredentialsException
+     * @throws IsLockedOutException
+     * @throws IsSuspendedException
+     * @throws ModelException
+     * @throws NailsException
+     * @throws NoUserException
+     * @throws ReflectionException
+     * @throws RequiresMfaException
+     * @throws RequiresPasswordResetExpiredException
+     * @throws RequiresPasswordResetTempException
+     * @throws RequiresSocialException
      */
     public function loginWithCredentials(
         $oUser,
@@ -112,7 +142,7 @@ class Authentication
 
         // --------------------------------------------------------------------------
 
-        /** @var User $oUserModel */
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
@@ -128,16 +158,13 @@ class Authentication
             $oUserModel->incrementFailedLogin($oUser->id, static::LOCKOUT_DURATION);
             $this->logLoginFailure($oUser, 'no_password');
 
-            switch (APP_NATIVE_LOGIN_USING) {
-
-                case 'EMAIL':
-                    $sIdentifier = $oUser->email;
-                    break;
+            switch (\Nails\Config::get('APP_NATIVE_LOGIN_USING')) {
 
                 case 'USERNAME':
                     $sIdentifier = $oUser->username;
                     break;
 
+                case 'EMAIL':
                 default:
                     $sIdentifier = $oUser->email;
                     break;
@@ -183,7 +210,7 @@ class Authentication
             }
         }
 
-        //  Successfull login means we can forget about failures
+        //  Successful login means we can forget about failures
         $oUserModel->resetFailedLogin($oUser->id);
 
         //  Check if MFA is required
@@ -218,7 +245,7 @@ class Authentication
     // --------------------------------------------------------------------------
 
     /**
-     * Determiens whether a user is currently locked out
+     * Determines whether a user is currently locked out
      *
      * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
      *
@@ -234,9 +261,9 @@ class Authentication
             return false;
         }
 
-        /** @var \DateTime $oNow */
+        /** @var DateTime $oNow */
         $oNow     = Factory::factory('DateTime');
-        $oExpires = new \DateTime($oUser->failed_login_expires);
+        $oExpires = new DateTime($oUser->failed_login_expires);
 
         return $oUser->failed_login_count >= static::LOCKOUT_THRESHOLD && $oNow < $oExpires;
     }
@@ -244,7 +271,7 @@ class Authentication
     // --------------------------------------------------------------------------
 
     /**
-     * Determiens whether a user is currently suspended
+     * Determines whether a user is currently suspended
      *
      * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
      *
@@ -294,7 +321,7 @@ class Authentication
      */
     protected function getUser($mUser): ?Resource\User
     {
-        /** @var User $oUserModel */
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         if ($mUser instanceof Resource\User) {
@@ -314,6 +341,9 @@ class Authentication
      * Log a user out
      *
      * @return bool
+     * @throws FactoryException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function logout()
     {
@@ -323,12 +353,12 @@ class Authentication
 
         // --------------------------------------------------------------------------
 
-        //  null the remember_code so that auto-logins stop
+        //  null the remember_code so that auto-login stops
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', null);
         $oDb->where('id', activeUser('id'));
-        $oDb->update(NAILS_DB_PREFIX . 'user');
+        $oDb->update(\Nails\Config::get('NAILS_DB_PREFIX') . 'user');
 
         // --------------------------------------------------------------------------
 
@@ -362,20 +392,25 @@ class Authentication
      * @param int $iUserId The user ID to generate the token for
      *
      * @return array|false
+     * @throws FactoryException
      */
     public function mfaTokenGenerate($iUserId)
     {
+        /** @var Password $oPasswordModel */
         $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-        $oNow           = Factory::factory('DateTime');
-        $oInput         = Factory::service('Input');
-        $oDb            = Factory::service('Database');
+        /** @var DateTime $oNow */
+        $oNow = Factory::factory('DateTime');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
 
         $sSalt    = $oPasswordModel->salt();
         $sIp      = $oInput->ipAddress();
         $sCreated = $oNow->format('Y-m-d H:i:s');
         $sExpires = $oNow->add(new DateInterval('PT10M'))->format('Y-m-d H:i:s');
         $aToken   = [
-            'token' => sha1(sha1(APP_PRIVATE_KEY . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
+            'token' => sha1(sha1(\Nails\Config::get('APP_PRIVATE_KEY') . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
             'salt'  => md5($sSalt),
         ];
 
@@ -387,7 +422,7 @@ class Authentication
         $oDb->set('expires', $sExpires);
         $oDb->set('ip', $sIp);
 
-        if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_token')) {
+        if ($oDb->insert(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_token')) {
             $aToken['id'] = $oDb->insert_id();
             return $aToken;
         } else {
@@ -408,15 +443,17 @@ class Authentication
      * @param string $sIp     The user's IP address
      *
      * @return bool
+     * @throws FactoryException
      */
     public function mfaTokenValidate($iUserId, $sSalt, $sToken, $sIp)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->where('user_id', $iUserId);
         $oDb->where('salt', $sSalt);
         $oDb->where('token', $sToken);
 
-        $oToken  = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_token')->row();
+        $oToken  = $oDb->get(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_token')->row();
         $bReturn = true;
 
         if (!$oToken) {
@@ -449,12 +486,14 @@ class Authentication
      * @param int $iTokenId The token's ID
      *
      * @return bool
+     * @throws FactoryException
      */
     public function mfaTokenDelete($iTokenId)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->where('id', $iTokenId);
-        $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_token');
+        $oDb->delete(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_token');
         return (bool) $oDb->affected_rows();
     }
 
@@ -466,15 +505,20 @@ class Authentication
      * @param int $iUserId The user's ID
      *
      * @return bool|stdClass
+     * @throws DecodeException
+     * @throws EnvironmentException
+     * @throws FactoryException
      */
     public function mfaQuestionGet($iUserId)
     {
-        $oDb    = Factory::service('Database');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
 
         $oDb->where('user_id', $iUserId);
         $oDb->order_by('last_requested', 'DESC');
-        $aQuestions = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->result();
+        $aQuestions = $oDb->get(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question')->result();
 
         if (!$aQuestions) {
             $this->setError('No security questions available for this user.');
@@ -508,14 +552,15 @@ class Authentication
         }
 
         //  Decode the question
+        /** @var Encrypt $oEncrypt */
         $oEncrypt       = Factory::service('Encrypt');
-        $oOut->question = $oEncrypt->decode($oOut->question, APP_PRIVATE_KEY . $oOut->salt);
+        $oOut->question = $oEncrypt->decode($oOut->question, \Nails\Config::get('APP_PRIVATE_KEY') . $oOut->salt);
 
         //  Update the last requested details
         $oDb->set('last_requested', 'NOW()', false);
         $oDb->set('last_requested_ip', $oInput->ipAddress());
         $oDb->where('id', $oOut->id);
-        $oDb->update(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
+        $oDb->update(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question');
 
         return $oOut;
     }
@@ -530,20 +575,22 @@ class Authentication
      * @param string $answer      The user's answer
      *
      * @return bool
+     * @throws FactoryException
      */
     public function mfaQuestionValidate($iQuestionId, $iUserId, $answer)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('answer, salt');
         $oDb->where('id', $iQuestionId);
         $oDb->where('user_id', $iUserId);
-        $oQuestion = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_question')->row();
+        $oQuestion = $oDb->get(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question')->row();
 
         if (!$oQuestion) {
             return false;
         }
 
-        $hash = sha1(sha1(strtolower($answer)) . APP_PRIVATE_KEY . $oQuestion->salt);
+        $hash = sha1(sha1(strtolower($answer)) . \Nails\Config::get('APP_PRIVATE_KEY') . $oQuestion->salt);
 
         return $hash === $oQuestion->answer;
     }
@@ -558,6 +605,8 @@ class Authentication
      * @param bool  $bClearOld Whether or not to clear old questions
      *
      * @return bool
+     * @throws FactoryException
+     * @throws EnvironmentException
      */
     public function mfaQuestionSet($iUserId, $aData, $bClearOld = true)
     {
@@ -570,17 +619,20 @@ class Authentication
         }
 
         //  Begin transaction
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
 
         //  Delete old questions?
         if ($bClearOld) {
             $oDb->where('user_id', $iUserId);
-            $oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question');
+            $oDb->delete(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question');
         }
 
+        /** @var Password $oPasswordModel */
         $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
-        $oEncrypt       = Factory::service('Encrypt');
+        /** @var Encrypt $oEncrypt */
+        $oEncrypt = Factory::service('Encrypt');
 
         $aQuestionData = [];
         $iCounter      = 0;
@@ -592,8 +644,8 @@ class Authentication
             $aQuestionData[$iCounter] = [
                 'user_id'        => $iUserId,
                 'salt'           => $sSalt,
-                'question'       => $oEncrypt->encode($oDatum->question, APP_PRIVATE_KEY . $sSalt),
-                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . APP_PRIVATE_KEY . $sSalt),
+                'question'       => $oEncrypt->encode($oDatum->question, \Nails\Config::get('APP_PRIVATE_KEY') . $sSalt),
+                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . \Nails\Config::get('APP_PRIVATE_KEY') . $sSalt),
                 'created'        => $sDateTime,
                 'last_requested' => null,
             ];
@@ -602,7 +654,7 @@ class Authentication
 
         if ($aQuestionData) {
 
-            $oDb->insert_batch(NAILS_DB_PREFIX . 'user_auth_two_factor_question', $aQuestionData);
+            $oDb->insert_batch(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question', $aQuestionData);
 
             if ($oDb->trans_status() !== false) {
                 $oDb->trans_commit();
@@ -627,22 +679,27 @@ class Authentication
      * @param int $iUserId The user's ID
      *
      * @return bool|stdClass         \stdClass on success, false on failure
+     * @throws EnvironmentException
+     * @throws FactoryException
+     * @throws DecodeException
      */
     public function mfaDeviceSecretGet($iUserId)
     {
-        $oDb      = Factory::service('Database');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Encrypt $oEncrypt */
         $oEncrypt = Factory::service('Encrypt');
 
         $oDb->where('user_id', $iUserId);
         $oDb->limit(1);
-        $aResult = $oDb->get(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')->result();
+        $aResult = $oDb->get(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret')->result();
 
         if (empty($aResult)) {
             return false;
         }
 
         $oReturn         = reset($aResult);
-        $oReturn->secret = $oEncrypt->decode($oReturn->secret, APP_PRIVATE_KEY);
+        $oReturn->secret = $oEncrypt->decode($oReturn->secret, \Nails\Config::get('APP_PRIVATE_KEY'));
 
         return $oReturn;
     }
@@ -656,10 +713,13 @@ class Authentication
      * @param string $sExistingSecret The existing secret to use instead of generating a new one
      *
      * @return bool|array
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function mfaDeviceSecretGenerate($iUserId, $sExistingSecret = null)
     {
         //  Get an identifier for the user
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUser      = $oUserModel->getById($iUserId);
 
@@ -678,7 +738,7 @@ class Authentication
         }
 
         //  Get the hostname
-        $sHostname = Functions::getDomainFromUrl(BASE_URL);
+        $sHostname = Functions::getDomainFromUrl(\Nails\Config::get('BASE_URL'));
 
         //  User identifier
         $sUsername = $oUser->username;
@@ -687,6 +747,7 @@ class Authentication
 
         return [
             'secret' => $sSecret,
+            //  @todo (Pablo - 2020-03-02) - Refactor deprecated functionality
             'url'    => $oGoogleAuth->getUrl($sUsername, $sHostname, $sSecret),
         ];
     }
@@ -702,6 +763,8 @@ class Authentication
      * @param int    $iCode   The first code to be generate
      *
      * @return bool
+     * @throws FactoryException
+     * @throws EnvironmentException
      */
     public function mfaDeviceSecretValidate($iUserId, $sSecret, $iCode)
     {
@@ -713,14 +776,16 @@ class Authentication
 
         if ($oGoogleAuth->checkCode($sSecret, $sCode)) {
 
-            $oDb      = Factory::service('Database');
+            /** @var Database $oDb */
+            $oDb = Factory::service('Database');
+            /** @var Encrypt $oEncrypt */
             $oEncrypt = Factory::service('Encrypt');
 
             $oDb->set('user_id', $iUserId);
-            $oDb->set('secret', $oEncrypt->encode($sSecret, APP_PRIVATE_KEY));
+            $oDb->set('secret', $oEncrypt->encode($sSecret, \Nails\Config::get('APP_PRIVATE_KEY')));
             $oDb->set('created', 'NOW()', false);
 
-            if ($oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+            if ($oDb->insert(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret')) {
 
                 $iSecretId = $oDb->insert_id();
                 $oNow      = Factory::factory('DateTime');
@@ -728,7 +793,7 @@ class Authentication
                 $oDb->set('secret_id', $iSecretId);
                 $oDb->set('code', $sCode);
                 $oDb->set('used', $oNow->format('Y-m-d H:i:s'));
-                $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
+                $oDb->insert(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_code');
 
                 return true;
 
@@ -752,6 +817,9 @@ class Authentication
      * @param string $sCode   The code to validate
      *
      * @return bool
+     * @throws DecodeException
+     * @throws EnvironmentException
+     * @throws FactoryException
      */
     public function mfaDeviceCodeValidate($iUserId, $sCode)
     {
@@ -764,11 +832,12 @@ class Authentication
         }
 
         //  Has the code been used before?
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->where('secret_id', $oSecret->id);
         $oDb->where('code', $sCode);
 
-        if ($oDb->count_all_results(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code')) {
+        if ($oDb->count_all_results(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_code')) {
             $this->setError('Code has already been used.');
             return false;
         }
@@ -787,7 +856,7 @@ class Authentication
             $oDb->set('code', $sCode);
             $oDb->set('used', 'NOW()', false);
 
-            $oDb->insert(NAILS_DB_PREFIX . 'user_auth_two_factor_device_code');
+            $oDb->insert(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_code');
 
             return true;
 
