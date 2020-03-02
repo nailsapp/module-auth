@@ -14,6 +14,12 @@ return [
             }
         },
         'Session'        => function (): Service\Session {
+            if (\Nails\Environment::is(\Nails\Environment::ENV_DEV)) {
+                trigger_error(
+                    'Loading the Sesison via nails/module-auth is deprecated. Load via nails/common instead.',
+                    E_USER_DEPRECATED
+                );
+            }
             if (class_exists('\App\Auth\Service\Session')) {
                 return new \App\Auth\Service\Session();
             } else {
