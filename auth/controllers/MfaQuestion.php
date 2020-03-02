@@ -17,6 +17,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Factory;
 
 class MfaQuestion extends BaseMfa
@@ -211,7 +212,8 @@ class MfaQuestion extends BaseMfa
                                 $sMessage .= 'successfully set your security questions. You will be asked to answer ';
                                 $sMessage .= 'one of them every time you log in.';
 
-                                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                                /** @var Session $oSession */
+                                $oSession = Factory::service('Session');
                                 $oSession->setFlashData($sStatus, $sMessage);
 
                                 $this->loginUser();

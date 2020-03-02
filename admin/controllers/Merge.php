@@ -17,11 +17,11 @@ use Nails\Admin\Helper;
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
 use Nails\Auth\Model\User;
-use Nails\Auth\Service\Session;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Factory;
 use stdClass;
 
@@ -127,7 +127,7 @@ class Merge extends BaseAdmin
 
                 } else {
                     /** @var Session $oSession */
-                    $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Users were merged successfully.');
                     redirect('admin/auth/merge');
                 }

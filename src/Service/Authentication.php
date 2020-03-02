@@ -38,6 +38,7 @@ use Nails\Common\Service\Config;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Encrypt;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Common\Traits\ErrorHandling;
 use Nails\Environment;
 use Nails\Factory;
@@ -369,7 +370,7 @@ class Authentication
 
         //  Destroy CI session
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         $oSession->destroy();
 
         // --------------------------------------------------------------------------

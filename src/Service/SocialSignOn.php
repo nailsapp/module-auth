@@ -20,6 +20,7 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Logger;
+use Nails\Common\Service\Session;
 use Nails\Common\Traits\Caching;
 use Nails\Common\Traits\ErrorHandling;
 use Nails\Environment;
@@ -62,7 +63,7 @@ class SocialSignOn
         /** @var \CI_Controller $oCi */
         $oCi = get_instance();
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Database oDb */
         $this->oDb = Factory::service('Database');
         /** @var User oUserModel */

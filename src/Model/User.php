@@ -28,6 +28,7 @@ use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Email;
 use Nails\Environment;
 use Nails\Factory;
@@ -434,7 +435,8 @@ class User extends Base
 
             //  Set session variables
             if ($bSetSessionData) {
-                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                /** @var Session $oSession */
+                $oSession = Factory::service('Session');
                 $oSession->setUserData([
                     'id'       => $oUser->id,
                     'email'    => $oUser->email,
@@ -472,7 +474,8 @@ class User extends Base
         $iUserId = $this->activeUser('id');
 
         //  Clear the session
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
         $oSession->unsetUserData('id');
         $oSession->unsetUserData('email');
         $oSession->unsetUserData('group_id');
@@ -565,7 +568,8 @@ class User extends Base
      */
     public function wasAdmin()
     {
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
         return (bool) $oSession->getUserData($this->sAdminRecoveryField);
     }
 
@@ -581,8 +585,10 @@ class User extends Base
      */
     public function setAdminRecoveryData($loggingInAs, $returnTo = '')
     {
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
-        $oInput   = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
         //  Look for existing Recovery Data
         $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
@@ -621,7 +627,8 @@ class User extends Base
      */
     public function getAdminRecoveryData()
     {
-        $oSession             = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession             = Factory::service('Session');
         $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($existingRecoveryData)) {
@@ -641,7 +648,8 @@ class User extends Base
      */
     public function unsetAdminRecoveryData()
     {
-        $oSession              = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession              = Factory::service('Session');
         $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($aExistingRecoveryData)) {
@@ -1908,7 +1916,8 @@ class User extends Base
     protected function refreshSession()
     {
         //  Get the user; be wary of admin's logged in as other people
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
         if ($this->wasAdmin()) {
 
             $recoveryData = $this->getAdminRecoveryData();

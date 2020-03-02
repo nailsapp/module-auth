@@ -14,10 +14,10 @@ use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
-use Nails\Auth\Service\Session;
 use Nails\Auth\Service\SocialSignOn;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Factory;
 
 /**
@@ -55,7 +55,7 @@ class Register extends Base
     public function index()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {

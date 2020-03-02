@@ -15,10 +15,10 @@ use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
-use Nails\Auth\Service\Session;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
@@ -37,7 +37,7 @@ class PasswordReset extends Base
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
             /** @var Session $oSession */
-            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+            $oSession = Factory::service('Session');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
@@ -250,7 +250,7 @@ class PasswordReset extends Base
                         }
 
                         /** @var Session $oSession */
-                        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                        $oSession = Factory::service('Session');
                         $oSession->setFlashData($sStatus, $sMessage);
 
                         //  If MFA is setup then we'll need to set the user's session data

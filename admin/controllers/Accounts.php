@@ -21,7 +21,6 @@ use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
-use Nails\Auth\Service\Session;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
@@ -30,6 +29,7 @@ use Nails\Common\Factory\Component;
 use Nails\Common\Helper\Directory;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
@@ -432,7 +432,7 @@ class Accounts extends DefaultController
                      */
 
                     /** @var Session $oSession */
-                    $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                    $oSession = Factory::service('Session');
 
                     if ($oUserModel->getErrors()) {
 
@@ -515,7 +515,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -649,7 +649,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -784,7 +784,7 @@ class Accounts extends DefaultController
         if ($oInput->post()) {
             if ($oUserGroupModel->changeUserGroup(arrayExtractProperty($aUsers, 'id'), (int) $oInput->post('group_id'))) {
                 /** @var Session $oSession */
-                $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+                $oSession = Factory::service('Session');
                 $oSession->setFlashData('success', 'User group was updated successfully.');
                 redirect('admin/auth/accounts');
             } else {
@@ -824,7 +824,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -909,7 +909,7 @@ class Accounts extends DefaultController
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -1058,7 +1058,7 @@ class Accounts extends DefaultController
         }
 
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         $oSession->setFlashData($sStatus, $sMessage);
         redirect($oInput->post('return'));
     }

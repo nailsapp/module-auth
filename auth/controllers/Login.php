@@ -21,7 +21,6 @@ use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
 use Nails\Auth\Service\Authentication;
-use Nails\Auth\Service\Session;
 use Nails\Auth\Service\SocialSignOn;
 use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\FactoryException;
@@ -33,6 +32,7 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Logger;
 use Nails\Common\Service\Output;
+use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
@@ -104,7 +104,7 @@ class Login extends Base
     public function index()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var \App\Auth\Model\User $oUserModel */
@@ -251,7 +251,7 @@ class Login extends Base
             }
 
             /** @var Session $oSession */
-            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+            $oSession = Factory::service('Session');
             $oSession->setFlashData($sStatus, $sMessage);
 
             $sRedirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $oUser->group_homepage;
@@ -433,7 +433,7 @@ class Login extends Base
          */
 
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUser      = $oUserModel->getByHashes($hash['id'], $hash['pw']);
@@ -516,7 +516,7 @@ class Login extends Base
         /** @var Logger $oLogger */
         $oLogger = Factory::service('Logger');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var SocialSignOn $oSocial */
         $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User $oUserModel */

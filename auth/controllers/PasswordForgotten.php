@@ -16,12 +16,12 @@ use Nails\Auth\Controller\Base;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
-use Nails\Auth\Service\Session;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Email;
 use Nails\Email\Service\Emailer;
@@ -57,7 +57,7 @@ class PasswordForgotten extends Base
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
@@ -181,7 +181,7 @@ class PasswordForgotten extends Base
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Authentication $oAuthService */
@@ -469,7 +469,7 @@ class PasswordForgotten extends Base
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
             /** @var Session $oSession */
-            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+            $oSession = Factory::service('Session');
             $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }

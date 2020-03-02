@@ -13,11 +13,11 @@
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 use Nails\Auth\Constants;
 use Nails\Auth\Service\Authentication;
-use Nails\Auth\Service\Session;
 
 /**
  * Class MfaDevice
@@ -74,7 +74,7 @@ class MfaDevice extends BaseMfa
     protected function setupDevice()
     {
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Authentication $oAuthService */
         $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var Input $oInput */

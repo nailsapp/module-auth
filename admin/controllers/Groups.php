@@ -16,13 +16,18 @@ use Nails\Admin\Controller\DefaultController;
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
-use Nails\Auth\Service\Session;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class Groups
+ *
+ * @package Nails\Admin\Auth
+ */
 class Groups extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'UserGroup';
@@ -143,7 +148,7 @@ class Groups extends DefaultController
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
         /** @var Group $oItemModel */
         $oItemModel = Factory::model(
             $this->aConfig['MODEL_NAME'],
@@ -186,7 +191,7 @@ class Groups extends DefaultController
         /** @var Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         /** @var Session $oSession */
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        $oSession = Factory::service('Session');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
             $oSession->setFlashData(

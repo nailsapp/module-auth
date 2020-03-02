@@ -11,8 +11,9 @@
  */
 
 use Nails\Auth\Constants;
-use Nails\Factory;
 use Nails\Auth\Controller\Base;
+use Nails\Common\Service\Session;
+use Nails\Factory;
 
 /**
  * Class Override
@@ -28,7 +29,8 @@ class Override extends Base
 
         //  If you're not a admin then you shouldn't be accessing this class
         if (!wasAdmin() && !isAdmin()) {
-            $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+            /** @var Session $oSession */
+            $oSession = Factory::service('Session');
             $oSession->setFlashData('error', lang('auth_no_access'));
             redirect('/');
         }
@@ -65,7 +67,8 @@ class Override extends Base
          * - Sign in as superusers (unless they are a superuser)
          */
 
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
 
         if (!wasAdmin()) {
 

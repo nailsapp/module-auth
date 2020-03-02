@@ -13,6 +13,12 @@
 namespace Nails\Auth\Controller;
 
 use Nails\Auth\Constants;
+use Nails\Auth\Model\User;
+use Nails\Auth\Service\Authentication;
+use Nails\Common\Service\Config;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\Session;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
 /**
@@ -38,6 +44,7 @@ abstract class BaseMfa extends Base
     {
         parent::__construct();
 
+        /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
 
         $this->authMfaMode   = $oConfig->item('authTwoFactorMode');
@@ -49,10 +56,14 @@ abstract class BaseMfa extends Base
 
     protected function validateToken()
     {
-        $oSession   = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        $oInput     = Factory::service('Input');
-        $oUri       = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
 
         $this->returnTo = $oInput->get('return_to', true);
         $this->remember = $oInput->get('remember', true);
@@ -88,8 +99,9 @@ abstract class BaseMfa extends Base
                 break;
         }
 
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-        if (!$oAuthModel->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
+        if (!$oAuthService->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
             $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
 
@@ -109,7 +121,7 @@ abstract class BaseMfa extends Base
         } else {
 
             //  Token is valid, generate a new one for the next request
-            $this->data['token'] = $oAuthModel->mfaTokenGenerate($this->mfaUser->id);
+            $this->data['token'] = $oAuthService->mfaTokenGenerate($this->mfaUser->id);
 
             //  Set other data for the views
             $this->data['user_id']      = $this->mfaUser->id;
@@ -127,6 +139,7 @@ abstract class BaseMfa extends Base
     protected function loginUser()
     {
         //  Set login data for this user
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUserModel->setLoginData($this->mfaUser->id);
 
@@ -152,6 +165,7 @@ abstract class BaseMfa extends Base
         //  Say hello
         if ($this->mfaUser->last_login) {
 
+            /** @var Config $oConfig */
             $oConfig = Factory::service('Config');
 
             if ($oConfig->item('authShowNicetimeOnLogin')) {
@@ -195,14 +209,16 @@ abstract class BaseMfa extends Base
             );
         }
 
-        $oSession = Factory::service('Session', Constants::MODULE_SLUG);
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
         $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
         //  Delete the token we generated, it's no needed, eh!
-        $oAuthModel = Factory::model('Auth', Constants::MODULE_SLUG);
-        $oAuthModel->mfaTokenDelete($this->data['token']['id']);
+        /** @var Authentication $oAuthService */
+        $oAuthService = Factory::model('Authentication', Constants::MODULE_SLUG);
+        $oAuthService->mfaTokenDelete($this->data['token']['id']);
 
         // --------------------------------------------------------------------------
 
