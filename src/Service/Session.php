@@ -17,7 +17,7 @@ namespace Nails\Auth\Service;
  *
  * @package Nails\Auth\Service
  */
-class Session extends \Nails\common\Service\Session
+class Session extends \Nails\Common\Service\Session
 {
     //  @todo (Pablo - 2020-03-02) - Remove this proxy when releasing Nails V1
 }
