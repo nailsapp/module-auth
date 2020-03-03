@@ -23,6 +23,7 @@ use Nails\Common\Service\Logger;
 use Nails\Common\Service\Session;
 use Nails\Common\Traits\Caching;
 use Nails\Common\Traits\ErrorHandling;
+use Nails\Config;
 use Nails\Environment;
 use Nails\Factory;
 
@@ -391,7 +392,7 @@ class SocialSignOn
         $this->oDb->where('provider', $provider);
         $this->oDb->where('identifier', $identifier);
 
-        $oUser = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->row();
+        $oUser = $this->oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_social')->row();
 
         if (empty($oUser)) {
             return false;
@@ -455,7 +456,7 @@ class SocialSignOn
          */
 
         $this->oDb->where('user_id', $user_id);
-        $aExisting = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $aExisting = $this->oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_social')->result();
         $aExists   = [];
 
         foreach ($aExisting as $existing) {
@@ -482,7 +483,7 @@ class SocialSignOn
 
                 $this->oDb->set($aData);
                 $this->oDb->where('id', $aExists[$sProvider]);
-                $this->oDb->update(NAILS_DB_PREFIX . 'user_social');
+                $this->oDb->update(Config::get('NAILS_DB_PREFIX') . 'user_social');
 
             } else {
 
@@ -497,7 +498,7 @@ class SocialSignOn
                 ];
 
                 $this->oDb->set($aData);
-                $this->oDb->insert(NAILS_DB_PREFIX . 'user_social');
+                $this->oDb->insert(Config::get('NAILS_DB_PREFIX') . 'user_social');
             }
         }
 
@@ -547,7 +548,7 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         $this->oDb->where('user_id', $oUser->id);
-        $aSessions = $this->oDb->get(NAILS_DB_PREFIX . 'user_social')->result();
+        $aSessions = $this->oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_social')->result();
         $aRestore  = [];
 
         foreach ($aSessions as $oSession) {

@@ -21,6 +21,7 @@ use Nails\Common\Resource;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
+use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -101,7 +102,7 @@ class Groups extends DefaultController
             [
                 'slug'        => array_filter([
                     'required',
-                    $this->data['item'] ? 'unique_if_diff[' . NAILS_DB_PREFIX . 'user_group.slug.' . $this->data['item']->slug . ']' : null,
+                    $this->data['item'] ? 'unique_if_diff[' . Config::get('NAILS_DB_PREFIX') . 'user_group.slug.' . $this->data['item']->slug . ']' : null,
                 ]),
                 'label'       => ['required'],
                 'description' => ['required'],

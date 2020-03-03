@@ -15,6 +15,7 @@ namespace Nails\Auth\Model\User;
 use Nails\Auth\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Config;
 use Nails\Factory;
 
 class Group extends Base
@@ -30,7 +31,7 @@ class Group extends Base
     {
         parent::__construct();
 
-        $this->table             = NAILS_DB_PREFIX . 'user_group';
+        $this->table             = Config::get('NAILS_DB_PREFIX') . 'user_group';
         $this->defaultSortColumn = 'id';
         $this->oDefaultGroup     = $this->getDefaultGroup();
     }

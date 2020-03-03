@@ -34,7 +34,6 @@ use Nails\Common\Service\Logger;
 use Nails\Common\Service\Output;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
-use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -137,9 +136,9 @@ class Login extends Base
                 $oFormValidation
                     ->buildValidator([
                         'identifier' => array_values(array_filter([
-                            Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
-                            Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
-                            Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
                         ]))[0],
                         'password'   => ['required'],
                         'remember'   => [],
@@ -185,7 +184,7 @@ class Login extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/login/form.php');
+        $this->loadStyles(\Nails\Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/login/form.php');
 
         Factory::service('View')
             ->load([
@@ -587,7 +586,7 @@ class Login extends Base
          * already logged in, if they are then silly user. If no user is recognised
          * then we need to register them, providing, of course that registration is
          * enabled and that no one else on the system has their email address.
-         * On that note, we need to respect Config::get('APP_NATIVE_LOGIN_USING'); if the provider
+         * On that note, we need to respect \Nails\Config::get('APP_NATIVE_LOGIN_USING'); if the provider
          * cannot satisfy this then we'll need to interrupt registration and ask them
          * for either a username or an email (or both).
          */
@@ -620,7 +619,7 @@ class Login extends Base
                     'error',
                     lang(
                         'auth_social_account_in_use',
-                        [$provider['label'], \Nails\Config::get('APP_NAME')]
+                        [$provider['label'], \Nails\\Nails\Config::get('APP_NAME')]
                     )
                 );
 
@@ -698,7 +697,7 @@ class Login extends Base
                 $aOptionalData = [];
 
                 //  Fetch required data
-                switch (Config::get('APP_NATIVE_LOGIN_USING')) {
+                switch (\Nails\Config::get('APP_NATIVE_LOGIN_USING')) {
 
                     case 'EMAIL':
                         $aRequiredData['email'] = trim($socialUser->email);
@@ -991,11 +990,11 @@ class Login extends Base
             $oFormValidation = Factory::service('FormValidation');
 
             if (isset($aRequiredData['email'])) {
-                $oFormValidation->set_rules('email', 'email', 'trim|required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]');
+                $oFormValidation->set_rules('email', 'email', 'trim|required|valid_email|is_unique[' . \Nails\Config::get('NAILS_DB_PREFIX') . 'user_email.email]');
             }
 
             if (isset($aRequiredData['username'])) {
-                $oFormValidation->set_rules('username', 'username', 'trim|required|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user.username]');
+                $oFormValidation->set_rules('username', 'username', 'trim|required|is_unique[' . \Nails\Config::get('NAILS_DB_PREFIX') . 'user.username]');
             }
 
             if (empty($aRequiredData['first_name'])) {
@@ -1009,12 +1008,12 @@ class Login extends Base
             $oFormValidation->set_message('required', lang('fv_required'));
             $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
-            if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
+            if (\Nails\Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
                 $oFormValidation->set_message(
                     'is_unique',
                     lang('fv_email_already_registered', siteUrl('auth/password/forgotten'))
                 );
-            } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
+            } elseif (\Nails\Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
                 $oFormValidation->set_message(
                     'is_unique',
                     lang('fv_username_already_registered', siteUrl('auth/password/forgotten'))
@@ -1081,7 +1080,7 @@ class Login extends Base
             $this->data['form_url'] .= '?return_to=' . urlencode($this->data['return_to']);
         }
 
-        $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/register/social_request_data.php');
+        $this->loadStyles(\Nails\Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/register/social_request_data.php');
 
         Factory::service('View')
             ->load([

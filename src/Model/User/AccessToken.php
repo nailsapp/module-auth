@@ -14,6 +14,7 @@ namespace Nails\Auth\Model\User;
 
 use DateInterval;
 use Nails\Common\Model\Base;
+use Nails\Config;
 use Nails\Factory;
 
 class AccessToken extends Base
@@ -56,7 +57,7 @@ class AccessToken extends Base
     public function __construct()
     {
         parent::__construct();
-        $this->table = NAILS_DB_PREFIX . 'user_auth_access_token';
+        $this->table = Config::get('NAILS_DB_PREFIX') . 'user_auth_access_token';
     }
 
     // --------------------------------------------------------------------------
