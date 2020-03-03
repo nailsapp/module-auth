@@ -68,7 +68,7 @@ $oInput = \Nails\Factory::service('Input');
                     $field            = [];
                     $field['key']     = 'user_registration_enabled';
                     $field['label']   = 'Enabled';
-                    $field['default'] = appSetting($field['key'], 'auth') ? true : false;
+                    $field['default'] = (bool) appSetting($field['key'], 'auth');
                     $field['info']    = 'If not using a custom registration flow, you may enable or disable public registrations. Admin will always be able to create users.';
 
                     echo form_field_boolean($field);
