@@ -536,7 +536,7 @@ class User extends Base
         $cookie = get_cookie($this->sRememberCookie);
         $cookie = explode('|', $cookie);
 
-        $this->bIsRemembered = count($cookie) == 2 ? true : false;
+        $this->bIsRemembered = count($cookie) == 2;
 
         return $this->bIsRemembered;
     }
@@ -2104,7 +2104,7 @@ class User extends Base
          * admin created the account, or if the system generated a new password
          */
 
-        $bInformUserPw = !empty($data['inform_user_pw']) ? true : false;
+        $bInformUserPw = !empty($data['inform_user_pw']);
 
         // --------------------------------------------------------------------------
 

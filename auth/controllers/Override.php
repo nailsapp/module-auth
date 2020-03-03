@@ -74,7 +74,7 @@ class Override extends Base
 
             $bHasPermission = userHasPermission('admin:auth:accounts:loginAs');
             $bIsCloning     = activeUser('id') == $oUser->id;
-            $bIsSuperuser   = !isSuperuser() && isSuperuser($oUser) ? true : false;
+            $bIsSuperuser   = !isSuperuser() && isSuperuser($oUser);
 
             if (!$bHasPermission || $bIsCloning || $bIsSuperuser) {
                 if (!$bHasPermission) {

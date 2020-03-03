@@ -122,7 +122,7 @@ $oInput = \Nails\Factory::service('Input');
                             $field            = [];
                             $field['key']     = 'auth_social_signon_' . $provider['slug'] . '_enabled';
                             $field['label']   = $provider['label'];
-                            $field['default'] = appSetting($field['key'], 'auth') ? true : false;
+                            $field['default'] = (bool) appSetting($field['key'], 'auth');
 
                             ?>
                             <div class="field checkbox boolean configure-provider">
