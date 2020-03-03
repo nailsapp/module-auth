@@ -1,12 +1,12 @@
 {{#admin.id}}
 <p>
-    {{admin.first_name}} {{admin.last_name}}, an administrator for <?=APP_NAME?>, has just created a
+    {{admin.first_name}} {{admin.last_name}}, an administrator for <?=\Nails\Config::get('APP_NAME')?>, has just created a
     new <em>{{admin.group.name}}</em> account for you.
 </p>
 {{/admin.id}}
 {{^admin.id}}
 <p>
-    Thank you for registering at the <?=APP_NAME?> website.
+    Thank you for registering at the <?=\Nails\Config::get('APP_NAME')?> website.
 </p>
 {{/admin.id}}
 {{#password}}

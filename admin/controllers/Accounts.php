@@ -32,6 +32,7 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Components;
+use Nails\Config;
 use Nails\Factory;
 use stdClass;
 
@@ -96,13 +97,13 @@ class Accounts extends DefaultController
 
             $oDb = Factory::service('Database');
             $oDb->where('is_suspended', false);
-            $numTotal    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
+            $numTotal    = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'user');
             $oAlertTotal = Factory::factory('NavAlert', 'nails/module-admin');
             $oAlertTotal->setValue($numTotal);
             $oAlertTotal->setLabel('Number of Users');
 
             $oDb->where('is_suspended', true);
-            $numSuspended    = $oDb->count_all_results(NAILS_DB_PREFIX . 'user');
+            $numSuspended    = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'user');
             $oAlertSuspended = Factory::factory('NavAlert', 'nails/module-admin');
             $oAlertSuspended->setValue($numSuspended);
             $oAlertSuspended->setSeverity('danger');
@@ -377,10 +378,10 @@ class Accounts extends DefaultController
             $oFormValidation->set_rules('temp_pw', '', '');
             $oFormValidation->set_rules('first_name', '', 'required|max_length[150]');
             $oFormValidation->set_rules('last_name', '', 'required|max_length[150]');
-            $oFormValidation->set_rules('email', '', 'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]|max_length[255]');
+            $oFormValidation->set_rules('email', '', 'required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]|max_length[255]');
 
-            if (in_array(APP_NATIVE_LOGIN_USING, ['BOTH', 'USERNAME'])) {
-                $oFormValidation->set_rules('username', '', 'required|max_length[150]|alpha_dash_period|is_unique[' . NAILS_DB_PREFIX . 'user.username]');
+            if (in_array(Config::get('APP_NATIVE_LOGIN_USING'), ['BOTH', 'USERNAME'])) {
+                $oFormValidation->set_rules('username', '', 'required|max_length[150]|alpha_dash_period|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user.username]');
             }
 
             //  Set messages

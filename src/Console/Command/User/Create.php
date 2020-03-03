@@ -5,6 +5,7 @@ namespace Nails\Auth\Console\Command\User;
 use Exception;
 use Nails\Auth\Constants;
 use Nails\Common\Exception\NailsException;
+use Nails\Config;
 use Nails\Console\Command\Base;
 use Nails\Environment;
 use Nails\Factory;
@@ -74,13 +75,13 @@ class Create extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!defined('APP_PRIVATE_KEY')) {
+        if (!Config::get('APP_PRIVATE_KEY')) {
             $oOutput->writeln('<error>APP_PRIVATE_KEY is not defined; does Nails need installed?</error>');
             return $this->abort();
         }
 
-        if (!defined('DEPLOY_PRIVATE_KEY')) {
-            $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined; does Nails need installed?</error>');
+        if (!Config::get('DEPLOY_PRIVATE_KEY')) {
+            $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined</error>');
             return $this->abort();
         }
 
@@ -116,7 +117,7 @@ class Create extends Base
         }
 
         $oResult = $oDb->query(
-            'SELECT id, label FROM `' . NAILS_DB_PREFIX . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
+            'SELECT id, label FROM `' . Config::get('NAILS_DB_PREFIX') . 'user_group` WHERE `acl` LIKE \'%"admin:superuser"%\' LIMIT 1'
         );
         if (!$oResult->rowCount()) {
             throw new NailsException('Could not find a group with superuser permissions.');

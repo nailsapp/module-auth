@@ -18,6 +18,7 @@ use Nails\Auth\Service\SocialSignOn;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
+use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -86,15 +87,15 @@ class Register extends Base
             $oFormValidation->set_rules('last_name', '', 'required');
             $oFormValidation->set_rules('password', '', 'required');
 
-            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
+            if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
 
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
                 );
 
-            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
+            } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
 
                 $oFormValidation->set_rules('username', '', 'required');
 
@@ -103,7 +104,7 @@ class Register extends Base
                     $oFormValidation->set_rules(
                         'email',
                         '',
-                        'valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                        'valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
                     );
                 }
 
@@ -112,7 +113,7 @@ class Register extends Base
                 $oFormValidation->set_rules(
                     'email',
                     '',
-                    'required|valid_email|is_unique[' . NAILS_DB_PREFIX . 'user_email.email]'
+                    'required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
                 );
                 $oFormValidation->set_rules(
                     'username',
@@ -127,9 +128,9 @@ class Register extends Base
             $oFormValidation->set_message('required', lang('fv_required'));
             $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
 
-            if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
+            if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
                 $sMessage = lang('auth_register_email_is_unique', siteUrl('auth/password/forgotten'));
-            } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
+            } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
                 $sMessage = lang('auth_register_username_is_unique', siteUrl('auth/password/forgotten'));
             } else {
                 $sMessage = lang('auth_register_identity_is_unique', siteUrl('auth/password/forgotten'));
@@ -219,7 +220,7 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/register/form.php');
+        $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/register/form.php');
 
         Factory::service('View')
             ->load([

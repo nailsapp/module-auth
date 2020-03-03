@@ -5,6 +5,7 @@ namespace Nails\Auth\DataExport\Source\User;
 use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
 use Nails\Auth\Constants;
+use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -90,19 +91,19 @@ class All implements Source
         $aTables = [
             $oUserModel->getTableName(),
             $oUserGroupModel->getTableName(),
-            NAILS_DB_PREFIX . 'user_email',
+            Config::get('NAILS_DB_PREFIX') . 'user_email',
         ];
 
         $aResult = $oDb->query('
             SHOW TABLES
-            FROM `' . DEPLOY_DB_DATABASE . '`
+            FROM `' . Config::get('DB_DATABASE') . '`
             WHERE
-                `Tables_in_' . DEPLOY_DB_DATABASE . '` LIKE "' . NAILS_DB_PREFIX . 'user_meta_%"
-                OR `Tables_in_' . DEPLOY_DB_DATABASE . '` LIKE "' . APP_DB_PREFIX . 'user_meta_%"
+                `Tables_in_' . Config::get('DB_DATABASE') . '` LIKE "' . Config::get('NAILS_DB_PREFIX') . 'user_meta_%"
+                OR `Tables_in_' . Config::get('DB_DATABASE') . '` LIKE "' . Config::get('APP_DB_PREFIX') . 'user_meta_%"
         ')->result();
 
         foreach ($aResult as $oTable) {
-            $aTables[] = $oTable->{'Tables_in_' . DEPLOY_DB_DATABASE};
+            $aTables[] = $oTable->{'Tables_in_' . Config::get('DB_DATABASE')};
         }
 
         $aOut = [];

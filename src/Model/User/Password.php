@@ -21,6 +21,7 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
+use Nails\Config;
 use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
@@ -156,7 +157,7 @@ class Password extends Base
         $oDb->select('u.password, u.password_engine, u.salt');
         $oDb->where('u.id', $oUser->id);
         $oDb->limit(1);
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user u');
+        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user u');
 
         // --------------------------------------------------------------------------
 
@@ -196,9 +197,9 @@ class Password extends Base
         $oDb = Factory::service('Database');
         $oDb->select('u.password_changed,ug.password_rules');
         $oDb->where('u.id', $oUser->id);
-        $oDb->join(NAILS_DB_PREFIX . 'user_group ug', 'ug.id = u.group_id');
+        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user_group ug', 'ug.id = u.group_id');
         $oDb->limit(1);
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user u');
+        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user u');
 
         if ($oResult->num_rows() !== 1) {
             return false;
@@ -344,7 +345,7 @@ class Password extends Base
         $oDb->select('password_rules');
         $oDb->where('id', $iGroupId);
         $oDb->limit(1);
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user_group');
+        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_group');
 
         if ($oResult->num_rows() !== 1) {
             return null;
@@ -540,7 +541,7 @@ class Password extends Base
         $oDb = Factory::service('Database');
         $oDb->select('password_rules');
         $oDb->where('id', $iGroupId);
-        $oResult = $oDb->get(NAILS_DB_PREFIX . 'user_group');
+        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_group');
 
         if ($oResult->num_rows() === 0) {
             return [];
@@ -639,7 +640,12 @@ class Password extends Base
      */
     public function salt($sPepper = '')
     {
-        return md5(uniqid($sPepper . rand() . DEPLOY_PRIVATE_KEY . APP_PRIVATE_KEY, true));
+        return md5(
+            uniqid(
+                $sPepper . rand() . Config::get('DEPLOY_PRIVATE_KEY') . Config::get('APP_PRIVATE_KEY'),
+                true
+            )
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -731,7 +737,7 @@ class Password extends Base
                 'user_id' => $oUser->id,
             ];
 
-            switch (APP_NATIVE_LOGIN_USING) {
+            switch (Config::get('APP_NATIVE_LOGIN_USING')) {
 
                 case 'EMAIL':
                     $aOut['user_identity'] = $oUser->email;
@@ -776,7 +782,7 @@ class Password extends Base
 
                 $oDb->where('forgotten_password_code', $oUser->forgotten_password_code);
                 $oDb->set($aData);
-                $oDb->update(NAILS_DB_PREFIX . 'user');
+                $oDb->update(Config::get('NAILS_DB_PREFIX') . 'user');
             }
         }
 

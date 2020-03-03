@@ -23,6 +23,7 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
+use Nails\Config;
 use Nails\Email;
 use Nails\Email\Service\Emailer;
 use Nails\Factory;
@@ -90,9 +91,9 @@ class PasswordForgotten extends Base
                 $oFormValidation
                     ->buildValidator([
                         'identifier' => array_filter([
-                            APP_NATIVE_LOGIN_USING === 'EMAIL' ? ['required', 'valid_email'] : null,
-                            APP_NATIVE_LOGIN_USING === 'USERNAME' ? ['required'] : null,
-                            APP_NATIVE_LOGIN_USING === 'BOTH' ? ['required'] : null,
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
                         ])[0],
                     ])
                     ->run();
@@ -157,7 +158,7 @@ class PasswordForgotten extends Base
         }
 
         //  Load the views
-        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
+        $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten.php');
 
         Factory::service('View')
             ->load([
@@ -244,7 +245,7 @@ class PasswordForgotten extends Base
 
                             //  Load the views
                             $this->loadStyles(
-                                NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                                Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_reset.php'
                             );
 
                             Factory::service('View')
@@ -269,7 +270,7 @@ class PasswordForgotten extends Base
 
                     $this->data['page']->title = lang('auth_title_forgotten_password_security_question');
 
-                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/question/ask.php');
+                    $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/mfa/question/ask.php');
 
                     Factory::service('View')
                         ->load([
@@ -297,7 +298,7 @@ class PasswordForgotten extends Base
 
                     //  Load the views
                     $this->loadStyles(
-                        NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                        Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_reset.php'
                     );
 
                     Factory::service('View')
@@ -345,7 +346,7 @@ class PasswordForgotten extends Base
 
                             //  Load the views
                             $this->loadStyles(
-                                NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php'
+                                Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_reset.php'
                             );
 
                             Factory::service('View')
@@ -371,7 +372,7 @@ class PasswordForgotten extends Base
 
                     $this->data['page']->title = 'Please enter the code from your device';
 
-                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/mfa/device/ask.php');
+                    $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/mfa/device/ask.php');
 
                     Factory::service('View')
                         ->load([
@@ -398,7 +399,7 @@ class PasswordForgotten extends Base
                     // --------------------------------------------------------------------------
 
                     //  Load the views
-                    $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
+                    $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_reset.php');
                     Factory::service('View')
                         ->setData([
                             'new_password' => $mNewPassword['password'],
@@ -426,7 +427,7 @@ class PasswordForgotten extends Base
                 // --------------------------------------------------------------------------
 
                 //  Load the views
-                $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_reset.php');
+                $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_reset.php');
                 Factory::service('View')
                     ->setData([
                         'new_password' => $mNewPassword['password'],
@@ -448,7 +449,7 @@ class PasswordForgotten extends Base
         // --------------------------------------------------------------------------
 
         //  Load the views
-        $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten.php');
+        $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten.php');
         Factory::service('View')
             ->load([
                 'structure/header/blank',
@@ -484,7 +485,7 @@ class PasswordForgotten extends Base
         } elseif ($oUri->segment(5) !== 'process') {
 
             //  @todo (Pablo - 2019-12-10) - Remove this once https://github.com/nails/module-auth/issues/36 is resolved
-            $this->loadStyles(NAILS_APP_PATH . 'application/modules/auth/views/password/forgotten_interstitial.php');
+            $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten_interstitial.php');
             Factory::service('View')
                 ->load([
                     'structure/header/blank',

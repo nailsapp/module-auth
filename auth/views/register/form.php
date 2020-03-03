@@ -36,7 +36,7 @@
                 <hr/>
                 <p class="text-center">
                     <?php
-                    switch (APP_NATIVE_LOGIN_USING) {
+                    switch (\Nails\Config::get('APP_NATIVE_LOGIN_USING')) {
                         case 'EMAIL':
                             echo 'Or register using your email address and password.';
                             break;
@@ -58,7 +58,7 @@
 
             // --------------------------------------------------------------------------
 
-            if (APP_NATIVE_LOGIN_USING === 'EMAIL' || APP_NATIVE_LOGIN_USING === 'BOTH') {
+            if (\Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' || \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH') {
 
                 $sFieldKey         = 'email';
                 $sFieldLabel       = lang('form_label_email');
@@ -76,7 +76,7 @@
 
             // --------------------------------------------------------------------------
 
-            if (APP_NATIVE_LOGIN_USING === 'USERNAME' || APP_NATIVE_LOGIN_USING === 'BOTH') {
+            if (\Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' || \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH') {
 
                 $sFieldKey         = 'username';
                 $sFieldLabel       = lang('form_label_username');

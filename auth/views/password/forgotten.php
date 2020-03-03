@@ -25,7 +25,7 @@ $oInput = \Nails\Factory::service('Input');
             </p>
             <?php
 
-            switch (APP_NATIVE_LOGIN_USING) {
+            switch (\Nails\Config::get('APP_NATIVE_LOGIN_USING')) {
 
                 case 'EMAIL':
 

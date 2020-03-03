@@ -14,6 +14,7 @@
 namespace Nails\Database\Migration\Nails\ModuleAuth;
 
 use Nails\Common\Console\Migrate\Base;
+use Nails\Config;
 
 class Migration11 extends Base
 {
@@ -49,7 +50,7 @@ class Migration11 extends Base
                 COUNT(*)
             FROM `information_schema`.`TABLES`
             WHERE
-                `TABLE_SCHEMA` = "' . DEPLOY_DB_DATABASE . '"
+                `TABLE_SCHEMA` = "' . Config::get('DB_DATABASE') . '"
                 AND `TABLE_TYPE` = "BASE TABLE"
                 AND `TABLE_NAME` = "{{NAILS_DB_PREFIX}}event";
         ');

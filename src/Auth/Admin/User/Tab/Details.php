@@ -10,6 +10,7 @@ use Nails\Common\Exception\ViewNotFoundException;
 use Nails\Common\Factory\Model\Field;
 use Nails\Common\Service\DateTime;
 use Nails\Common\Service\View;
+use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -201,7 +202,7 @@ class Details implements Tab
         $aFieldOrder = array_filter([
             'first_name',
             'last_name',
-            in_array(APP_NATIVE_LOGIN_USING, ['BOTH', 'USERNAME']) ? 'username' : null,
+            in_array(Config::get('APP_NATIVE_LOGIN_USING'), ['BOTH', 'USERNAME']) ? 'username' : null,
             'profile_img',
             'gender',
             'dob',

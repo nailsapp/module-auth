@@ -2,6 +2,7 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User\Group;
+use Nails\Config;
 use Nails\Factory;
 
 /** @var Group $oUserGroupModel */
@@ -134,12 +135,12 @@ $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
         echo form_field([
             'key'         => 'email',
             'label'       => lang('form_label_email'),
-            'required'    => APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME',
+            'required'    => Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL' || Config::get('APP_NATIVE_LOGIN_USING') != 'USERNAME',
             'placeholder' => lang('accounts_create_field_email_placeholder'),
             'max_length'  => 255,
         ]);
 
-        if (in_array(APP_NATIVE_LOGIN_USING, ['BOTH', 'USERNAME'])) {
+        if (in_array(Config::get('APP_NATIVE_LOGIN_USING'), ['BOTH', 'USERNAME'])) {
             echo form_field([
                 'key'         => 'username',
                 'label'       => lang('form_label_username'),

@@ -1,6 +1,7 @@
 <?php
 
 use Nails\Common\Service\Input;
+use Nails\Config;
 use Nails\Factory;
 
 /** @var Input $oInput */
@@ -48,7 +49,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <hr/>
                 <p class="text-center">
                     <?php
-                    switch (APP_NATIVE_LOGIN_USING) {
+                    switch (Config::get('APP_NATIVE_LOGIN_USING')) {
                         case 'EMAIL':
                             echo 'Or sign in using your email address and password.';
                             break;
@@ -66,7 +67,7 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                 <?php
             }
 
-            switch (APP_NATIVE_LOGIN_USING) {
+            switch (Config::get('APP_NATIVE_LOGIN_USING')) {
 
                 case 'EMAIL':
                     $sFieldLabel       = lang('form_label_email');

@@ -21,7 +21,7 @@
                 <?=lang('auth_register_extra_message')?>
             </p>
             <?php
-            if (APP_NATIVE_LOGIN_USING == 'EMAIL' || APP_NATIVE_LOGIN_USING != 'USERNAME') {
+            if (\Nails\Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL' || \Nails\Config::get('APP_NATIVE_LOGIN_USING') != 'USERNAME') {
                 if (isset($required_data['email'])) {
 
                     $sFieldKey         = 'email';
@@ -41,7 +41,7 @@
                 }
             }
 
-            if (APP_NATIVE_LOGIN_USING == 'USERNAME' || APP_NATIVE_LOGIN_USING != 'EMAIL') {
+            if (\Nails\Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME' || \Nails\Config::get('APP_NATIVE_LOGIN_USING') != 'EMAIL') {
 
                 if (isset($required_data['username'])) {
 

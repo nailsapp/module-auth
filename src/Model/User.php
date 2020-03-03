@@ -29,6 +29,7 @@ use Nails\Common\Service\Event;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
+use Nails\Config;
 use Nails\Email;
 use Nails\Environment;
 use Nails\Factory;
@@ -169,7 +170,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Set defaults
-        $this->table             = NAILS_DB_PREFIX . 'user';
+        $this->table             = Config::get('NAILS_DB_PREFIX') . 'user';
         $this->tableAlias        = 'u';
         $this->tableSlugColumn   = 'username';
         $this->defaultSortColumn = $this->tableIdColumn;
@@ -852,7 +853,7 @@ class User extends Base
      */
     public function getByIdentifier(string $sIdentifier): ?Resource\User
     {
-        switch (APP_NATIVE_LOGIN_USING) {
+        switch (Config::get('APP_NATIVE_LOGIN_USING')) {
 
             case 'EMAIL':
                 return $this->getByEmail($sIdentifier);
@@ -1147,7 +1148,7 @@ class User extends Base
                     if ($sTwoFactorMode == 'QUESTION' && $bResetMfaQuestion) {
 
                         $oDb->where('user_id', $iUserId);
-                        if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_question')) {
+                        if (!$oDb->delete(Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question')) {
                             $oDb->trans_rollback();
                             $this->setError('Could not reset user\'s Multi Factor Authentication questions.');
                             return false;
@@ -1156,7 +1157,7 @@ class User extends Base
                     } elseif ($sTwoFactorMode == 'DEVICE' && $bResetMfaDevice) {
 
                         $oDb->where('user_id', $iUserId);
-                        if (!$oDb->delete(NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret')) {
+                        if (!$oDb->delete(Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret')) {
                             $oDb->trans_rollback();
                             $this->setError('Could not reset user\'s Multi Factor Authentication device.');
                             return false;
@@ -1863,7 +1864,7 @@ class User extends Base
 
         //  Generate a code to remember the user by and save it to the DB
         $oEncrypt = Factory::service('Encrypt');
-        $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . APP_PRIVATE_KEY . time()));
+        $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . Config::get('APP_PRIVATE_KEY') . time()));
 
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', $sSalt);
@@ -2006,7 +2007,7 @@ class User extends Base
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         //  Has an email or a username been submitted?
-        if (APP_NATIVE_LOGIN_USING == 'EMAIL') {
+        if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
 
             //  Email defined?
             if (empty($data['email'])) {
@@ -2021,7 +2022,7 @@ class User extends Base
                 return false;
             }
 
-        } elseif (APP_NATIVE_LOGIN_USING == 'USERNAME') {
+        } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
 
             //  Username defined?
             if (empty($data['username'])) {
@@ -2556,11 +2557,11 @@ class User extends Base
         $aIgnoreTables = [
             $this->table,
             $this->tableMeta,
-            NAILS_DB_PREFIX . 'user_auth_two_factor_device_code',
-            NAILS_DB_PREFIX . 'user_auth_two_factor_device_secret',
-            NAILS_DB_PREFIX . 'user_auth_two_factor_question',
-            NAILS_DB_PREFIX . 'user_auth_two_factor_token',
-            NAILS_DB_PREFIX . 'user_social',
+            Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_code',
+            Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret',
+            Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question',
+            Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_token',
+            Config::get('NAILS_DB_PREFIX') . 'user_social',
         ];
 
         $sIgnoreTablesStr = "'" . implode("','", $aIgnoreTables) . "'";
@@ -2569,9 +2570,9 @@ class User extends Base
         $sQuery  = "SELECT COLUMN_NAME,TABLE_NAME
                     FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE COLUMN_NAME IN (" . $sUserColsStr . ")
-                    AND (TABLE_NAME LIKE '" . NAILS_DB_PREFIX . "%' OR TABLE_NAME LIKE '" . APP_DB_PREFIX . "%')
+                    AND (TABLE_NAME LIKE '" . Config::get('NAILS_DB_PREFIX') . "%' OR TABLE_NAME LIKE '" . Config::get('APP_DB_PREFIX') . "%')
                     AND TABLE_NAME NOT IN (" . $sIgnoreTablesStr . ")
-                    AND TABLE_SCHEMA='" . DEPLOY_DB_DATABASE . "';";
+                    AND TABLE_SCHEMA='" . Config::get('DB_DATABASE') . "';";
 
         /** @var CI_DB_result $result */
         $result = $oDb->query($sQuery);
