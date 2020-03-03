@@ -619,7 +619,7 @@ class Login extends Base
                     'error',
                     lang(
                         'auth_social_account_in_use',
-                        [$provider['label'], \Nails\\Nails\Config::get('APP_NAME')]
+                        [$provider['label'], \Nails\Config::get('APP_NAME')]
                     )
                 );
 
