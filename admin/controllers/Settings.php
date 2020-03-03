@@ -226,7 +226,7 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Existing settings
-        $this->data['settings'] = appSetting(null, 'auth', true);
+        $this->data['settings'] = appSetting(null, 'auth', null, true);
 
         // --------------------------------------------------------------------------
 
