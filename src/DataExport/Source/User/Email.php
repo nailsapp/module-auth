@@ -90,7 +90,7 @@ class Email implements Source
 
         $oSource = $oDb
             ->select('u.id, u.first_name, u.last_name, ue.email')
-            ->join(Config::Get('NAILS_DB_PREFIX') . 'user_email ue', 'u.id = ue.user_id AND ue.is_primary = 1', 'LEFT')
+            ->join(Config::get('NAILS_DB_PREFIX') . 'user_email ue', 'u.id = ue.user_id AND ue.is_primary = 1', 'LEFT')
             ->get($oUserModel->getTableName() . ' u');
 
         return $oResponse
