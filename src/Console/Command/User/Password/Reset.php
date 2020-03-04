@@ -25,7 +25,8 @@ class Reset extends Base
      */
     protected function configure()
     {
-        $this->setName('user:password:reset')
+        $this
+            ->setName('user:password:reset')
             ->setDescription('Resets a user\'s password')
             ->addOption(
                 'user',
@@ -66,9 +67,15 @@ class Reset extends Base
 
         // --------------------------------------------------------------------------
 
-        $sUser     = $this->oInput->getOption('user');
+        $sUser     = (string) $this->oInput->getOption('user');
         $sPassword = $this->oInput->getOption('password');
         $bIsTemp   = $this->oInput->getOption('temp');
+
+        // --------------------------------------------------------------------------
+
+        if (empty($sUser)) {
+            throw new UserNotFoundException('A user ID, email, or username is required; use option --user');
+        }
 
         // --------------------------------------------------------------------------
 
