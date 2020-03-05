@@ -12,12 +12,11 @@
 
 namespace Nails\Auth\Api\Controller;
 
-use Nails\Api\Controller\DefaultController;
-use Nails\Api\Exception\ApiException;
+use Nails\Api;
 use Nails\Auth\Constants;
 use Nails\Factory;
 
-class User extends DefaultController
+class User extends Api\Controller\DefaultController
 {
     const CONFIG_MODEL_NAME         = 'User';
     const CONFIG_MODEL_PROVIDER     = Constants::MODULE_SLUG;
@@ -66,7 +65,7 @@ class User extends DefaultController
     {
         if (!userHasPermission('admin:auth:accounts:browse')) {
             $oHttpCodes = Factory::service('HttpCodes');
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'You are not authorised to search users',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -87,7 +86,7 @@ class User extends DefaultController
         $oHttpCodes = Factory::service('HttpCodes');
 
         if (!userHasPermission('admin:auth:accounts:browse')) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'You are not authorised to browse users',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -97,7 +96,7 @@ class User extends DefaultController
         $sEmail = $oInput->get('email');
 
         if (!valid_email($sEmail)) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 '"' . $sEmail . '" is not a valid email',
                 $oHttpCodes::STATUS_BAD_REQUEST
             );
@@ -107,13 +106,13 @@ class User extends DefaultController
         $oUser      = $oUserModel->getByEmail($sEmail);
 
         if (empty($oUser)) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'No user found for email "' . $sEmail . '"',
                 $oHttpCodes::STATUS_NOT_FOUND
             );
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData($this->formatObject($oUser));
     }
 

@@ -12,9 +12,7 @@
 
 namespace Nails\Auth\Api\Controller;
 
-use Nails\Api\Controller\Base;
-use Nails\Api\Exception\ApiException;
-use Nails\Api\Factory\ApiResponse;
+use Nails\Api;
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
@@ -27,14 +25,14 @@ use Nails\Factory;
  *
  * @package Nails\Auth\Api\Controller
  */
-class AccessToken extends Base
+class AccessToken extends Api\Controller\Base
 {
     /**
      * Retrieves an access token for a user
      *
-     * @return ApiResponse
+     * @return Api\Factory\ApiResponse
      * @throws FactoryException
-     * @throws ApiException
+     * @throws Api\Exception\ApiException
      */
     public function postIndex()
     {
@@ -52,7 +50,7 @@ class AccessToken extends Base
         $sLabel      = getFromArray('label', $aData);
 
         if (!$oUserPasswordModel->isCorrect($sIdentifier, $sPassword)) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'Invalid login credentials',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -74,17 +72,17 @@ class AccessToken extends Base
         $bPwIsExpired       = $oUserPasswordModel->isExpired($oUser->id);
 
         if ($bIsSuspended) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'User account is suspended',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
         } elseif ($bPwIsTemp) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'Password is temporary',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
         } elseif ($bPwIsExpired) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'Password has expired',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -97,14 +95,14 @@ class AccessToken extends Base
         ]);
 
         if (!$oToken) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'Failed to generate access token. ' . $oAccessTokenModel->lastError(),
                 $oHttpCodes::STATUS_INTERNAL_SERVER_ERROR
             );
         }
 
-        /** @var ApiResponse $oResponse */
-        $oResponse = Factory::factory('ApiResponse', 'nails/module-api')
+        /** @var Api\Factory\ApiResponse $oResponse */
+        $oResponse = Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData([
                 'token'   => $oToken->token,
                 'expires' => $oToken->expires,
@@ -118,9 +116,9 @@ class AccessToken extends Base
     /**
      * Revoke an access token for the authenticated user
      *
-     * @return ApiResponse
+     * @return Api\Factory\ApiResponse
      * @throws FactoryException
-     * @throws ApiException
+     * @throws Api\Exception\ApiException
      */
     public function deleteIndex()
     {
@@ -130,7 +128,7 @@ class AccessToken extends Base
         $oAccessTokenModel = Factory::model('UserAccessToken', Constants::MODULE_SLUG);
 
         if (!isLoggedIn()) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'You must be logged in',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -139,21 +137,21 @@ class AccessToken extends Base
         $sAccessToken = $this->oApiRouter->getAccessToken();
 
         if (empty($sAccessToken)) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'An access token must be provided.',
                 $oHttpCodes::STATUS_BAD_REQUEST
             );
         }
 
         if (!$oAccessTokenModel->revoke(activeUser('id'), $sAccessToken)) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'Failed to revoke access token. ' . $oAccessTokenModel->lastError(),
                 $oHttpCodes::STATUS_INTERNAL_SERVER_ERROR
             );
         }
 
-        /** @var ApiResponse $oResponse */
-        $oResponse = Factory::factory('ApiResponse', 'nails/module-api');
+        /** @var Api\Factory\ApiResponse $oResponse */
+        $oResponse = Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG);
 
         return $oResponse;
     }

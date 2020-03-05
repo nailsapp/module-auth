@@ -12,10 +12,10 @@
 
 namespace Nails\Auth\Api\Controller;
 
-use Nails\Api\Controller\Base;
+use Nails\Api;
 use Nails\Factory;
 
-class Me extends Base
+class Me extends Api\Controller\Base
 {
     /**
      * Require the user be authenticated to use any endpoint
@@ -30,15 +30,15 @@ class Me extends Base
      */
     public function anyIndex()
     {
-        return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData([
-                          'id'         => (int) activeUser('id'),
-                          'first_name' => activeUser('first_name') ?: null,
-                          'last_name'  => activeUser('last_name') ?: null,
-                          'email'      => activeUser('email') ?: null,
-                          'username'   => activeUser('username') ?: null,
-                          'avatar'     => cdnAvatar() ?: null,
-                          'gender'     => activeUser('gender') ?: null,
-                      ]);
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
+            ->setData([
+                'id'         => (int) activeUser('id'),
+                'first_name' => activeUser('first_name') ?: null,
+                'last_name'  => activeUser('last_name') ?: null,
+                'email'      => activeUser('email') ?: null,
+                'username'   => activeUser('username') ?: null,
+                'avatar'     => cdnAvatar() ?: null,
+                'gender'     => activeUser('gender') ?: null,
+            ]);
     }
 }
