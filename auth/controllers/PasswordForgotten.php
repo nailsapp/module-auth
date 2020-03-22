@@ -87,13 +87,15 @@ class PasswordForgotten extends Base
 
                 // --------------------------------------------------------------------------
 
+                $aRules = array_filter([
+                    \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
+                    \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
+                    \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
+                ]);
+
                 $oFormValidation
                     ->buildValidator([
-                        'identifier' => array_filter([
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
-                        ])[0],
+                        'identifier' => reset($aRules),
                     ])
                     ->run();
 
