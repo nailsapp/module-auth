@@ -1029,6 +1029,9 @@ class User extends Base
             return false;
         }
 
+        //  Deep clone so we're sure it isn't indvertantly updated
+        $oOldUser = unserialize(serialize($oOldUser));
+
         // --------------------------------------------------------------------------
 
         //  If there's some data we'll need to know the columns of `user`
