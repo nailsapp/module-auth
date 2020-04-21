@@ -1023,8 +1023,8 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oUser = $this->getById($iUserId);
-        if (empty($oUser)) {
+        $oOldUser = $this->getById($iUserId);
+        if (empty($oOldUser)) {
             $this->setError('Invalid user ID');
             return false;
         }
@@ -1301,7 +1301,7 @@ class User extends Base
 
         $this->triggerEvent(
             Events::USER_MODIFIED,
-            [$iUserId]
+            [$iUserId, $oOldUser]
         );
 
         return true;

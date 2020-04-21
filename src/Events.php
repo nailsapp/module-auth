@@ -25,7 +25,8 @@ class Events extends Base
     /**
      * Fired when a user is modified
      *
-     * @param int $iId The ID of the user who was modified
+     * @param int                       $iId      The ID of the user who was modified
+     * @param \Nails\Auth\Resource\User $oOldUser The user object before it was updated
      */
     const USER_MODIFIED = 'AUTH:USER:MODIFIED';
 
