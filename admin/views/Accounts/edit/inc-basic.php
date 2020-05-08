@@ -10,9 +10,9 @@ use Nails\Common\Factory\Model\Field;
 
 foreach ($aFields as $oField) {
 
-    if (!property_exists($oField, 'default') || is_null($oField->default)) {
-        $oField->default = property_exists($oUser, $oField->key) ? $oUser->{$oField->key} : null;
-    }
+    $oField->default = property_exists($oUser, $oField->key)
+        ? $oUser->{$oField->key}
+        : $oField->default;
 
     if (is_callable('\Nails\Common\Helper\Form\Field::' . $oField->type)) {
         echo call_user_func('\Nails\Common\Helper\Form\Field::' . $oField->type, (array) $oField);
