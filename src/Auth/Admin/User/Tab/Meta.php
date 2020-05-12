@@ -8,6 +8,7 @@ use Nails\Auth\Resource\User;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ViewNotFoundException;
 use Nails\Common\Factory\Model\Field;
+use Nails\Common\Helper\Form;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\View;
 use Nails\Factory;
@@ -100,7 +101,7 @@ class Meta implements Tab
         $aRules    = [];
 
         foreach ($aMetaCols as $oField) {
-            $aRules[$oField->key] = $oField->validation;
+            $aRules[$oField->getKey()] = $oField->getValidation();
         }
 
         return $aRules;
@@ -124,24 +125,26 @@ class Meta implements Tab
         /** @var Field $oField */
         foreach ($aMetaCols as $oField) {
 
-            $aData[$oField->key] = getFromArray($oField->key, $aPost);
+            $sKey         = $oField->getKey();
+            $aData[$sKey] = getFromArray($sKey, $aPost);
 
-            switch ($oField->type) {
+            switch ($oField->getType()) {
 
+                //  @todo (Pablo - 2020-05-12) - Remove dependency on CDN module
                 case 'cdn_object_picker':
-                    $aData[$oField->key] = (int) $aData[$oField->key] ?: null;
+                    $aData[$sKey] = (int) $aData[$sKey] ?: null;
                     break;
 
-                case 'number':
-                    if (empty($aData[$oField->key]) && $aData[$oField->key] !== '0' && $oField->allow_null) {
-                        $aData[$oField->key] = null;
+                case Form::FIELD_NUMBER:
+                    if (empty($aData[$sKey]) && $aData[$sKey] !== '0' && $oField->isAllowNull()) {
+                        $aData[$sKey] = null;
                     } else {
-                        $aData[$oField->key] = (int) $aData[$oField->key];
+                        $aData[$sKey] = (int) $aData[$sKey];
                     }
                     break;
 
-                case 'boolean':
-                    $aData[$oField->key] = (bool) $aData[$oField->key];
+                case Form::FIELD_BOOLEAN:
+                    $aData[$sKey] = (bool) $aData[$sKey];
                     break;
             }
         }
@@ -186,7 +189,7 @@ class Meta implements Tab
             }
 
             return array_filter($aMetaCols, function (Field $oField) use ($aGroupFields) {
-                return in_array($oField->key, $aGroupFields);
+                return in_array($oField->getKey(), $aGroupFields);
             });
 
         } else {
