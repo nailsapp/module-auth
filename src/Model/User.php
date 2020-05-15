@@ -1536,6 +1536,10 @@ class User extends Base
      */
     public function emailAddSendVerify($email_id, $iUserId = null)
     {
+        if (!Config::get('NAILS_AUTH_EMAIL_VERIFY_ON_ADD', true)) {
+            return true;
+        }
+
         //  Fetch the email and the user's group
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
