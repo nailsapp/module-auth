@@ -14,6 +14,7 @@ namespace Nails\Auth\Model;
 
 use Nails\Auth\Constants;
 use Nails\Auth\Events;
+use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
 use Nails\Common\Exception\FactoryException;
@@ -24,6 +25,7 @@ use Nails\Common\Model\Base;
 use Nails\Common\Service\Cookie;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\DateTime;
+use Nails\Common\Service\Encrypt;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\FormValidation;
@@ -206,6 +208,7 @@ class User extends Base
      */
     public function init()
     {
+        /** @var Input $oInput */
         $oInput         = Factory::service('Input');
         $iTestingAsUser = $oInput->header(Testing::TEST_HEADER_USER_NAME);
 
@@ -242,6 +245,7 @@ class User extends Base
     protected function loginRememberedUser()
     {
         //  Is remember me functionality enabled?
+        /** @var \Nails\Common\Service\Config $oConfig */
         $oConfig = Factory::service('Config');
         $oConfig->load('auth/auth');
 
@@ -599,18 +603,18 @@ class User extends Base
         }
 
         //  Prepare the new element
-        $adminRecoveryData            = new stdClass();
-        $adminRecoveryData->oldUserId = activeUser('id');
-        $adminRecoveryData->newUserId = $loggingInAs;
-        $adminRecoveryData->hash      = md5(activeUser('password'));
-        $adminRecoveryData->name      = activeUser('first_name,last_name');
-        $adminRecoveryData->email     = activeUser('email');
-        $adminRecoveryData->returnTo  = empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo;
-
-        $adminRecoveryData->loginUrl = 'auth/override/login_as/';
-        $adminRecoveryData->loginUrl .= md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash;
-        $adminRecoveryData->loginUrl .= '?returningAdmin=1';
-        $adminRecoveryData->loginUrl = siteUrl($adminRecoveryData->loginUrl);
+        $adminRecoveryData = (object) [
+            'oldUserId' => activeUser('id'),
+            'newUserId' => $loggingInAs,
+            'hash'      => md5(activeUser('password')),
+            'name'      => activeUser('first_name,last_name'),
+            'email'     => activeUser('email'),
+            'returnTo'  => empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo,
+            'loginUrl'  => 'auth/override/login_as/' .
+                md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash .
+                '?returningAdmin=1' .
+                siteUrl($adminRecoveryData->loginUrl),
+        ];
 
         //  Put the new session onto the stack and save to the session
         $existingRecoveryData[] = $adminRecoveryData;
@@ -714,6 +718,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         // Super users or CLI users can do anything their heart desires
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
         if (in_array('admin:superuser', $aAcl) || $oInput::isCli()) {
             return true;
@@ -764,6 +769,7 @@ class User extends Base
     protected function getCountCommon(array $aData = []): void
     {
         //  Define the selects
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select($this->tableAlias . '.*');
         $oDb->select([
@@ -1014,6 +1020,7 @@ class User extends Base
      */
     public function update($iUserId = null, array $aData = null): bool
     {
+        /** @var \DateTime $oDate */
         $oDate   = Factory::factory('DateTime');
         $aData   = (array) $aData;
         $iUserId = $this->getUserId($iUserId);
@@ -1144,6 +1151,7 @@ class User extends Base
                 //  Resetting 2FA?
                 if ($bResetMfaQuestion || $bResetMfaDevice) {
 
+                    /** @var \Nails\Common\Service\Config $oConfig */
                     $oConfig = Factory::service('Config');
                     $oConfig->load('auth/auth');
                     $sTwoFactorMode = $oConfig->item('authTwoFactorMode');
@@ -1275,16 +1283,19 @@ class User extends Base
 
             //  Do we need to update any timezone/date/time preferences?
             if (isset($aData['timezone'])) {
+                /** @var DateTime $oDateTimeService */
                 $oDateTimeService = Factory::service('DateTime');
                 $oDateTimeService->setUserTimezone($aData['timezone']);
             }
 
             if (isset($aData['datetime_format_date'])) {
+                /** @var DateTime $oDateTimeService */
                 $oDateTimeService = Factory::service('DateTime');
                 $oDateTimeService->setUserDateFormat($aData['datetime_format_date']);
             }
 
             if (isset($aData['datetime_format_time'])) {
+                /** @var DateTime $oDateTimeService */
                 $oDateTimeService = Factory::service('DateTime');
                 $oDateTimeService->setUserTimeFormat($aData['datetime_format_time']);
             }
@@ -1417,6 +1428,7 @@ class User extends Base
          * in use by a different user then return an error.
          */
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('id, user_id, is_verified, code');
         $oDb->where('email', $oEmail);
@@ -1454,6 +1466,7 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var Password $oPasswordModel */
         $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         $sCode          = $oPasswordModel->salt();
 
@@ -1490,6 +1503,7 @@ class User extends Base
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
 
+                /** @var \DateTime $oDate */
                 $oDate                          = Factory::factory('DateTime');
                 $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
@@ -1523,6 +1537,7 @@ class User extends Base
     public function emailAddSendVerify($email_id, $iUserId = null)
     {
         //  Fetch the email and the user's group
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select(
             [
@@ -1563,12 +1578,15 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        $oEmailer                = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
-        $oEmail                  = new stdClass();
-        $oEmail->type            = 'verify_email_' . $oEmailRow->group_id;
-        $oEmail->to_id           = $oEmailRow->user_id;
-        $oEmail->data            = new stdClass();
-        $oEmail->data->verifyUrl = siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code);
+        /** @var Email\Service\Emailer $oEmailer */
+        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
+        $oEmail   = (object) [
+            'type'  => 'verify_email_' . $oEmailRow->group_id,
+            'to_id' => $oEmailRow->user_id,
+            'data'  => (object) [
+                'verifyUrl' => siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code),
+            ],
+        ];
 
         if (!$oEmailer->send($oEmail, true)) {
 
@@ -1599,6 +1617,7 @@ class User extends Base
      */
     public function emailDelete($mEmailId, $iUserId = null)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         if (is_numeric($mEmailId)) {
             $oDb->where('id', $mEmailId);
@@ -1655,6 +1674,7 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Check if email has already been verified
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->where('user_id', $oUser->id);
         $oDb->where('is_verified', true);
@@ -1683,6 +1703,7 @@ class User extends Base
             //  Update the activeUser
             if ($oUser->id == $this->activeUser('id')) {
 
+                /** @var \DateTime $oDate */
                 $oDate                          = Factory::factory('DateTime');
                 $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
@@ -1710,6 +1731,7 @@ class User extends Base
     public function emailMakePrimary($mIdEmail, $iUserId = null)
     {
         //  Fetch email
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('id,user_id,email');
 
@@ -1820,6 +1842,7 @@ class User extends Base
      */
     public function updateLastLogin($iUserId)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('last_login', 'NOW()', false);
         $oDb->set('login_count', 'login_count+1', false);
@@ -1841,6 +1864,7 @@ class User extends Base
     public function setRememberCookie($iId = null, $sPassword = null, $sEmail = null)
     {
         //  Is remember me functionality enabled?
+        /** @var \Nails\Common\Service\Config $oConfig */
         $oConfig = Factory::service('Config');
         $oConfig->load('auth/auth');
 
@@ -1866,9 +1890,11 @@ class User extends Base
         // --------------------------------------------------------------------------
 
         //  Generate a code to remember the user by and save it to the DB
+        /** @var Encrypt $oEncrypt */
         $oEncrypt = Factory::service('Encrypt');
         $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . Config::get('APP_PRIVATE_KEY') . time()));
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', $sSalt);
         $oDb->where('id', $iId);
@@ -1975,11 +2001,13 @@ class User extends Base
 
         //  Update user's `last_seen` and `last_ip` properties
         if (!wasAdmin()) {
-            $oDb    = Factory::service('Database');
+            /** @var Database $oDb */
+            $oDb = Factory::service('Database');
+            /** @var Input $oInput */
             $oInput = Factory::service('Input');
 
             $oDb->set('last_seen', 'NOW()', false);
-            if (!defined('NAILS_AUTH_LOG_IP') || NAILS_AUTH_LOG_IP) {
+            if (Config::get('NAILS_AUTH_LOG_IP', true)) {
                 $oDb->set('last_ip', $oInput->ipAddress());
             }
             $oDb->where('id', $me->id);
@@ -2003,10 +2031,15 @@ class User extends Base
      */
     public function create(array $data = [], $bSendWelcome = true)
     {
-        $oDate              = Factory::factory('DateTime');
-        $oDb                = Factory::service('Database');
-        $oInput             = Factory::service('Input');
-        $oUserGroupModel    = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        /** @var \DateTime $oDate */
+        $oDate = Factory::factory('DateTime');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Group $oUserGroupModel */
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
 
         //  Has an email or a username been submitted?
@@ -2129,7 +2162,7 @@ class User extends Base
         $aUserData['is_suspended']    = !empty($data['is_suspended']);
         $aUserData['temp_pw']         = !empty($data['temp_pw']);
 
-        if (!defined('NAILS_AUTH_LOG_IP') || NAILS_AUTH_LOG_IP) {
+        if (Config::get('NAILS_AUTH_LOG_IP', true)) {
             $aUserData['ip_address'] = $oInput->ipAddress();
             $aUserData['last_ip']    = $oInput->ipAddress();
         }
@@ -2319,6 +2352,7 @@ class User extends Base
      */
     public function destroy($iUserId): bool
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
 
         /**
@@ -2378,6 +2412,7 @@ class User extends Base
     protected function generateReferral()
     {
         Factory::helper('string');
+        /** @var Database $oDb */
         $oDb       = Factory::service('Database');
         $sReferral = '';
 
@@ -2488,6 +2523,7 @@ class User extends Base
 
         if ($bCheckDb) {
 
+            /** @var Database $oDb */
             $oDb = Factory::service('Database');
             $oDb->where('username', $sUsername);
 
@@ -2519,6 +2555,7 @@ class User extends Base
      */
     public function merge($iUserId, $aMergeIds, $bIsPreview = false)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
 
         if (!is_numeric($iUserId)) {
