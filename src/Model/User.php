@@ -606,14 +606,17 @@ class User extends Base
         $adminRecoveryData = (object) [
             'oldUserId' => activeUser('id'),
             'newUserId' => $loggingInAs,
-            'hash'      => md5(activeUser('password')),
+            'hash'      => activeUser('password_md5'),
             'name'      => activeUser('first_name,last_name'),
             'email'     => activeUser('email'),
             'returnTo'  => empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo,
-            'loginUrl'  => 'auth/override/login_as/' .
-                md5($adminRecoveryData->oldUserId) . '/' . $adminRecoveryData->hash .
-                '?returningAdmin=1' .
-                siteUrl($adminRecoveryData->loginUrl),
+            'loginUrl'  => siteUrl(
+                sprintf(
+                    'auth/override/login_as/%s/%s?retruningAdmin=1',
+                    activeUser('id_md5'),
+                    activeUser('password_md5')
+                )
+            ),
         ];
 
         //  Put the new session onto the stack and save to the session
