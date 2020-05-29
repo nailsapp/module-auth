@@ -75,18 +75,6 @@ class Create extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!Config::get('APP_PRIVATE_KEY')) {
-            $oOutput->writeln('<error>APP_PRIVATE_KEY is not defined; does Nails need installed?</error>');
-            return $this->abort();
-        }
-
-        if (!Config::get('DEPLOY_PRIVATE_KEY')) {
-            $oOutput->writeln('<error>DEPLOY_PRIVATE_KEY is not defined</error>');
-            return $this->abort();
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Check environment
         if (Environment::is(Environment::ENV_PROD)) {
 
