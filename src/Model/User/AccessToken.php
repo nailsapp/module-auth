@@ -137,7 +137,7 @@ class AccessToken extends Base
         do {
 
             $sToken         = strtoupper(generateToken(static::TOKEN_MASK));
-            $aData['token'] = hash('sha256', $sToken . APP_PRIVATE_KEY);
+            $aData['token'] = hash('sha256', $sToken . Config::get('APP_PRIVATE_KEY'));
             $oDb->where('token', $aData['token']);
 
         } while ($oDb->count_all_results($this->table));

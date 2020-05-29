@@ -672,7 +672,7 @@ class Password extends Base
             //  TTL (24 hrs)
             time() + 86400,
             //  Key
-            sha1(sha1($this->salt()) . $this->salt() . APP_PRIVATE_KEY),
+            sha1(sha1($this->salt()) . $this->salt() . Config::get('APP_PRIVATE_KEY')),
         ]);
 
         // --------------------------------------------------------------------------
