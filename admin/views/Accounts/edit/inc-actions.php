@@ -36,65 +36,44 @@ if ($oUser->id != activeUser('id') && userHasPermission('admin:auth:accounts:log
 
     $sUrl = siteUrl('auth/override/login_as/' . md5($oUser->id) . '/' . md5($oUser->password) . $sReturnString);
 
-    $aButtons[] = anchor($sUrl, lang('admin_login_as') . ' ' . $oUser->first_name, 'class="btn btn-primary" target="_parent"');
-}
-
-// --------------------------------------------------------------------------
-
-//  Edit
-if ($oUser->id != activeUser('id') && userHasPermission('admin:auth:accounts:delete')) {
-
-    $sTitle = lang('admin_confirm_delete_title');
-    $sBody  = lang('admin_confirm_delete_body');
-
     $aButtons[] = anchor(
-        'admin/auth/accounts/delete/' . $oUser->id . '?return_to=' . urlencode('admin/auth/accounts'),
-        lang('action_delete'),
-        'class="btn btn-danger confirm" data-title="' . $sTitle . '" data-body="' . $sBody . '"'
+        $sUrl,
+        lang('admin_login_as') . ' ' . $oUser->first_name,
+        'target="_parent"'
     );
 }
 
 // --------------------------------------------------------------------------
 
-//  Suspend
-if ($oUser->is_suspended) {
+//  Suspend/restore
+if ($oUser->is_suspended && activeUser('id') !== $oUser->id && userHasPermission('admin:auth:accounts:unsuspend')) {
+    $aButtons[] = anchor(
+        'admin/auth/accounts/unsuspend/' . $oUser->id . $sReturnString,
+        lang('action_unsuspend')
+    );
 
-    if (activeUser('id') != $oUser->id && userHasPermission('admin:auth:accounts:unsuspend')) {
-        $aButtons[] = anchor(
-            'admin/auth/accounts/unsuspend/' . $oUser->id . $sReturnString,
-            lang('action_unsuspend'),
-            'class="btn btn-primary"'
-        );
-    }
-
-} else {
-
-    if (activeUser('id') != $oUser->id && userHasPermission('admin:auth:accounts:suspend')) {
-        $aButtons[] = anchor(
-            'admin/auth/accounts/suspend/' . $oUser->id . $sReturnString,
-            lang('action_suspend'),
-            'class="btn btn-danger"'
-        );
-    }
+} elseif (!$oUser->is_suspended && activeUser('id') !== $oUser->id && userHasPermission('admin:auth:accounts:suspend')) {
+    $aButtons[] = anchor(
+        'admin/auth/accounts/suspend/' . $oUser->id . $sReturnString,
+        lang('action_suspend')
+    );
 }
 
+// --------------------------------------------------------------------------
+
 if ($aButtons) {
-
     ?>
-    <fieldset id="edit-user-actions">
-        <legend>
-            <?=lang('accounts_edit_actions_legend')?>
-        </legend>
-        <p>
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Actions <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
             <?php
-
             foreach ($aButtons as $sButton) {
-                echo $sButton;
+                echo '<li>' . $sButton . '</li>';
             }
-
             ?>
-        </p>
-        <div class="clear"></div>
-    </fieldset>
+        </ul>
+    </div>
     <?php
 }

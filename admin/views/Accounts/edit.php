@@ -13,10 +13,6 @@ $oView = Factory::service('View');
 
     echo form_open();
 
-    if (!empty($isModal)) {
-        echo $oView->load('Accounts/edit/inc-actions', [], true);
-    }
-
     /** @var array[] $aUserTabs */
     $aUserTabs = [];
     /** @var \Nails\Auth\Interfaces\Admin\User\Tab $oTab */
@@ -38,6 +34,7 @@ $oView = Factory::service('View');
             Save Changes
         </button>
         <?php
+        echo $oView->load('Accounts/edit/inc-actions', [], true);
         if (!empty($oUser) && $CONFIG['ENABLE_NOTES']) {
             ?>
             <button type="button"
