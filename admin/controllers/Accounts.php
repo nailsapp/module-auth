@@ -467,7 +467,11 @@ class Accounts extends DefaultController
                     $sMessage .= $oNewUser->first_name . '</strong>, update their details now.';
                     $oSession->setFlashData($sStatus, $sMessage);
 
-                    redirect('admin/auth/accounts/edit/' . $oNewUser->id);
+                    redirect(
+                        $oInput->get('isModal')
+                            ? 'admin/auth/accounts/edit/' . $oNewUser->id . '?isModal=true'
+                            : 'admin/auth/accounts/edit/' . $oNewUser->id
+                    );
 
                 } else {
                     $this->data['error'] = 'There was an error when creating the user ';
@@ -597,7 +601,11 @@ class Accounts extends DefaultController
                     sprintf('User %s updated successfully.', title_case($oUser->first_name . ' ' . $oUser->last_name))
                 );
 
-                redirect('admin/auth/accounts/edit/' . $oUser->id);
+                redirect(
+                    $oInput->get('isModal')
+                        ? 'admin/auth/accounts/edit/' . $oUser->id . '?isModal=true'
+                        : 'admin/auth/accounts/edit/' . $oUser->id
+                );
 
             } catch (ValidationException $e) {
                 $this->data['error'] = $e->getMessage();
@@ -618,7 +626,6 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         if (activeUser('id') == $oUser->id) {
-
             $this->data['notice'] = lang('accounts_edit_editing_self', [$oUser->first_name]);
         }
 
@@ -787,7 +794,7 @@ class Accounts extends DefaultController
                 /** @var Session $oSession */
                 $oSession = Factory::service('Session');
                 $oSession->setFlashData('success', 'User group was updated successfully.');
-                redirect('admin/auth/accounts');
+                $this->returnToIndex();
             } else {
                 $this->data['error'] = 'Failed to update user group. ' . $oUserGroupModel->lastError();
             }

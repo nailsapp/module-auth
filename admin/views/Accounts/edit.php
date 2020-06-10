@@ -11,7 +11,9 @@ $oView = Factory::service('View');
 <div class="group-accounts edit">
     <?php
 
-    echo form_open();
+    echo !empty($isModal)
+        ? form_open(uri_string() . '?isModal=true')
+        : form_open();
 
     /** @var array[] $aUserTabs */
     $aUserTabs = [];
