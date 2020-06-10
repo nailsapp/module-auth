@@ -1246,7 +1246,7 @@ class User extends Base
                          * Doesn't appear to be in use, add as a new email address and
                          * make it the primary one
                          */
-                        $this->emailAdd($sDataEmail, $iUserId, true);
+                        $this->emailAdd($sDataEmail, $iUserId, true, false, true, false);
                     }
                 }
 
@@ -1394,20 +1394,28 @@ class User extends Base
     /**
      * Adds a new email to the user email table. Will optionally send the verification email, too.
      *
-     * @param string $email       The email address to add
-     * @param int    $iUserId     The ID of the user to add for, defaults to $this->activeUser('id')
-     * @param bool   $bIsPrimary  Whether or not the email address should be the primary email address for the user
-     * @param bool   $bIsVerified Whether or not the email should be marked as verified
-     * @param bool   $bSendEmail  If unverified, whether or not the verification email should be sent
+     * @param string $sEmail        The email address to add
+     * @param int    $iUserId       The ID of the user to add for, defaults to $this->activeUser('id')
+     * @param bool   $bIsPrimary    Whether or not the email address should be the primary email address for the user
+     * @param bool   $bIsVerified   Whether or not the email should be marked as verified
+     * @param bool   $bSendEmail    If unverified, whether or not the verification email should be sent
+     * @param bool   $bTriggerEvent Whether to trigger the user modified event
      *
-     * @return mixed                String containing verification code on success, false on failure
+     * @return bool|string          String containing verification code on success, false on failure
      * @throws FactoryException
      * @throws ModelException
      */
-    public function emailAdd($email, $iUserId = null, $bIsPrimary = false, $bIsVerified = false, $bSendEmail = true)
-    {
+    public function emailAdd(
+        string $sEmail,
+        int $iUserId = null,
+        bool $bIsPrimary = false,
+        bool $bIsVerified = false,
+        bool $bSendEmail = true,
+        bool $bTriggerEvent = true
+    ) {
+
         $iUserId = empty($iUserId) ? $this->activeUser('id') : $iUserId;
-        $oEmail  = trim(strtolower($email));
+        $sEmail  = trim(strtolower($sEmail));
         $oUser   = $this->getById($iUserId);
 
         if (empty($oUser)) {
@@ -1419,8 +1427,8 @@ class User extends Base
 
         //  Make sure the email is valid
         Factory::helper('email');
-        if (!valid_email($oEmail)) {
-            $this->setError('"' . $oEmail . '" is not a valid email address');
+        if (!valid_email($sEmail)) {
+            $this->setError('"' . $sEmail . '" is not a valid email address');
             return false;
         }
 
@@ -1434,7 +1442,7 @@ class User extends Base
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('id, user_id, is_verified, code');
-        $oDb->where('email', $oEmail);
+        $oDb->where('email', $sEmail);
         $oTest = $oDb->get($this->tableEmail)->row();
 
         if ($oTest) {
@@ -1447,7 +1455,7 @@ class User extends Base
                  */
 
                 if ($bIsPrimary) {
-                    $this->emailMakePrimary($oTest->id);
+                    $this->emailMakePrimary($oTest->id, $oUser->id, false);
                 }
 
                 //  Resend verification email?
@@ -1456,6 +1464,13 @@ class User extends Base
                 }
 
                 $this->unsetCacheUser($oUser->id);
+
+                if ($bTriggerEvent) {
+                    $this->triggerEvent(
+                        Events::USER_MODIFIED,
+                        [$oUser->id, $oUser]
+                    );
+                }
 
                 return $oTest->code;
 
@@ -1474,7 +1489,7 @@ class User extends Base
         $sCode          = $oPasswordModel->salt();
 
         $oDb->set('user_id', $oUser->id);
-        $oDb->set('email', $oEmail);
+        $oDb->set('email', $sEmail);
         $oDb->set('code', $sCode);
         $oDb->set('is_verified', (bool) $bIsVerified);
         $oDb->set('date_added', 'NOW()', false);
@@ -1492,7 +1507,7 @@ class User extends Base
 
             //  Make it the primary email address?
             if ($bIsPrimary) {
-                $this->emailMakePrimary($iEmailId);
+                $this->emailMakePrimary($iEmailId, $oUser->id, false);
             }
 
             //  Send off the verification email
@@ -1511,14 +1526,20 @@ class User extends Base
                 $this->oActiveUser->last_update = $oDate->format('Y-m-d H:i:s');
 
                 if ($bIsPrimary) {
-                    $this->oActiveUser->email                   = $oEmail;
+                    $this->oActiveUser->email                   = $sEmail;
                     $this->oActiveUser->email_verification_code = $sCode;
                     $this->oActiveUser->email_is_verified       = (bool) $bIsVerified;
                     $this->oActiveUser->email_is_verified_on    = (bool) $bIsVerified ? $oDate->format('Y-m-d H:i:s') : null;
                 }
             }
 
-            //  Return the code
+            if ($bTriggerEvent) {
+                $this->triggerEvent(
+                    Events::USER_MODIFIED,
+                    [$oUser->id, $oUser]
+                );
+            }
+
             return $sCode;
 
         } else {
@@ -1616,16 +1637,18 @@ class User extends Base
      * Deletes a non-primary email from the user email table, optionally filtering
      * by $iUserId
      *
-     * @param mixed $mEmailId The email address, or the ID of the email address to remove
-     * @param int   $iUserId  The ID of the user to restrict to
+     * @param int|string $mEmailId      The email address, or the ID of the email address to remove
+     * @param int        $iUserId       The ID of the user to restrict to
+     * @param bool       $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool
      * @throws FactoryException
      */
-    public function emailDelete($mEmailId, $iUserId = null)
+    public function emailDelete($mEmailId, int $iUserId = null, bool $bTriggerEvent = true)
     {
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
+
         if (is_numeric($mEmailId)) {
             $oDb->where('id', $mEmailId);
         } else {
@@ -1637,13 +1660,27 @@ class User extends Base
         }
 
         $oDb->where('is_primary', false);
-        $oDb->delete($this->tableEmail);
+        $oRow = $oDb->get($this->tableEmail)->row();
+
+        if (empty($oRow)) {
+            $this->setError('"' . $mEmailId . '" is not a known email or ID');
+            return false;
+        }
+
+        $oUser = $this->getById($oRow->user_id);
+
+        $oDb->where('id', $oRow->id);
 
         if ((bool) $oDb->affected_rows()) {
 
-            if (is_numeric($iUserId)) {
-                $this->unsetCacheUser($iUserId);
+            $this->unsetCacheUser($oUser->id);
+            if ($bTriggerEvent) {
+                $this->triggerEvent(
+                    Events::USER_MODIFIED,
+                    [$oUser->id, $oUser]
+                );
             }
+
             return true;
 
         } else {
@@ -1657,14 +1694,15 @@ class User extends Base
      * Verifies whether the supplied $code is valid for the requested user ID or email
      * address. If it is then the email is marked as verified.
      *
-     * @param mixed  $mIdEmail The numeric ID of the user, or the email address
-     * @param string $sCode    The verification code as generated by emailAdd()
+     * @param int|string $mIdEmail      The numeric ID of the user, or the email address
+     * @param string     $sCode         The verification code as generated by emailAdd()
+     * @param bool       $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function emailVerify($mIdEmail, $sCode)
+    public function emailVerify($mIdEmail, string $sCode, bool $bTriggerEvent = true)
     {
         //  Check user exists
         if (is_numeric($mIdEmail)) {
@@ -1717,6 +1755,13 @@ class User extends Base
                 //  @todo: update the rest of the activeUser
             }
 
+            if ($bTriggerEvent) {
+                $this->triggerEvent(
+                    Events::USER_MODIFIED,
+                    [$oUser->id, $oUser]
+                );
+            }
+
             return true;
 
         } else {
@@ -1729,13 +1774,14 @@ class User extends Base
     /**
      * Sets an email address as the primary email address for that user.
      *
-     * @param mixed $mIdEmail The numeric  ID of the email address, or the email address itself
-     * @param int   $iUserId  Specify the user ID which this should apply to
+     * @param int|string $mIdEmail      The numeric  ID of the email address, or the email address itself
+     * @param int        $iUserId       Specify the user ID which this should apply to
+     * @param bool       $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool
      * @throws FactoryException
      */
-    public function emailMakePrimary($mIdEmail, $iUserId = null)
+    public function emailMakePrimary($mIdEmail, int $iUserId = null, bool $bTriggerEvent = true): bool
     {
         //  Fetch email
         /** @var Database $oDb */
@@ -1757,6 +1803,8 @@ class User extends Base
         if (empty($oEmail)) {
             return false;
         }
+
+        $oUser = $this->getById($oEmail->user_id);
 
         //  Update
         $oDb->trans_begin();
@@ -1781,6 +1829,14 @@ class User extends Base
             }
 
             $oDb->trans_commit();
+
+            if ($bTriggerEvent) {
+                $this->triggerEvent(
+                    Events::USER_MODIFIED,
+                    [$oUser->id, $oUser]
+                );
+            }
+
             return true;
 
         } catch (\Exception $e) {
@@ -2269,7 +2325,7 @@ class User extends Base
             //  Finally add the email address to the user email table
             if (!empty($sEmail)) {
 
-                $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false);
+                $sCode = $this->emailAdd($sEmail, $iId, true, !empty($bEmailIsVerified), false, false);
 
                 if (!$sCode) {
                     //  Error will be set by emailAdd();
@@ -2279,22 +2335,26 @@ class User extends Base
                 //  Send the user the welcome email
                 if ($bSendWelcome) {
 
-                    $oEmailer      = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
-                    $oEmail        = new stdClass();
-                    $oEmail->type  = 'new_user_' . $oGroup->id;
-                    $oEmail->to_id = $iId;
-                    $oEmail->data  = new stdClass();
+                    /** @var Email\Service\Emailer $oEmailer */
+                    $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
+
+                    $oEmail = (object) [
+                        'type'  => 'new_user_' . $oGroup->id,
+                        'to_id' => $iId,
+                        'data'  => (object) [],
+                    ];
 
                     //  If this user is created by an admin then take note of that.
                     if ($this->isAdmin() && $this->activeUser('id') != $iId) {
-
-                        $oEmail->data->admin              = new stdClass();
-                        $oEmail->data->admin->id          = $this->activeUser('id');
-                        $oEmail->data->admin->first_name  = $this->activeUser('first_name');
-                        $oEmail->data->admin->last_name   = $this->activeUser('last_name');
-                        $oEmail->data->admin->group       = new stdClass();
-                        $oEmail->data->admin->group->id   = $oGroup->id;
-                        $oEmail->data->admin->group->name = $oGroup->label;
+                        $oEmail->data->admin = (object) [
+                            'id'         => $this->activeUser('id'),
+                            'first_name' => $this->activeUser('first_name'),
+                            'last_name'  => $this->activeUser('last_name'),
+                            'group'      => (object) [
+                                'id'   => $oGroup->id,
+                                'name' => $oGroup->label,
+                            ],
+                        ];
                     }
 
                     if (!empty($data['password']) && $bInformUserPw) {
