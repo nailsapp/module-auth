@@ -212,7 +212,7 @@ class User extends Base
         $oInput         = Factory::service('Input');
         $iTestingAsUser = $oInput->header(Testing::TEST_HEADER_USER_NAME);
 
-        if (Environment::not(Environment::ENV_PROD) && $iTestingAsUser) {
+        if (Environment::is(Environment::ENV_HTTP_TEST) && $iTestingAsUser) {
 
             $oUser = $this->getById($iTestingAsUser);
             if (empty($oUser)) {
