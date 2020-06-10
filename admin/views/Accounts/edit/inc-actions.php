@@ -63,7 +63,7 @@ if ($oUser->is_suspended && activeUser('id') !== $oUser->id && userHasPermission
 
 if ($aButtons) {
     ?>
-    <div class="btn-group">
+    <div class="btn-group dropup">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Actions <span class="caret"></span>
         </button>
