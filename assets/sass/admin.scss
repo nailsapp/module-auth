@@ -39,8 +39,8 @@
                             margin-right: 10px;
                             width: 65px;
                             height: 65px;
-                            background: #CCCCCC;
-                            border: 1px solid #CCCCCC;
+                            background: #cccccc;
+                            border: 1px solid #cccccc;
                             border-radius: 2px;
                         }
 
@@ -61,12 +61,12 @@
                 }
 
                 &.profile.zero {
-                    color: #CCCCCC;
+                    color: #cccccc;
                 }
 
                 &.actions {
                     .not-editable {
-                        color: #AAAAAA;
+                        color: #aaaaaa;
                     }
                 }
 
@@ -102,7 +102,7 @@
                 float: left;
                 border: 1px solid #999999;
                 border-radius: 3px;
-                background: #F3F3F3;
+                background: #f3f3f3;
                 padding: 5px;
                 margin-right: 15px;
                 padding-left: 42px;
@@ -132,7 +132,7 @@
                         display: block;
                         position: relative;
                         min-height: 51px;
-                        background: #EFEFEF;
+                        background: #efefef;
                         background-clip: padding-box;
                         text-decoration: none;
 
@@ -149,12 +149,12 @@
                                 top: 5px;
                                 width: 35px;
                                 height: 35px;
-                                border: 1px solid #CCCCCC;
+                                border: 1px solid #cccccc;
                                 margin: 0;
                                 margin-right: 10px;
                                 vertical-align: middle;
                                 padding: 2px;
-                                background: #FFFFFF;
+                                background: #ffffff;
                                 border-radius: 2px;
                             }
                         }
@@ -175,18 +175,6 @@
                         width: 100%;
                         box-sizing: border-box;
                     }
-                }
-
-                &.is-primary,
-                &.is-verified {
-                    width: 50px;
-                    text-align: center;
-                }
-
-                &.date-added,
-                &.date-verified {
-                    width: 120px;
-                    text-align: center;
                 }
 
                 &.actions {
@@ -246,7 +234,7 @@
 
             .search {
                 border: none;
-                border-bottom: 1px solid #EFEFEF;
+                border-bottom: 1px solid #efefef;
 
                 .search-text {
                     margin: 0;

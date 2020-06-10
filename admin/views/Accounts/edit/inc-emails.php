@@ -1,5 +1,6 @@
 <?php
 
+use Nails\Admin\Helper;
 use Nails\Auth\Resource\User;
 
 /**
@@ -27,52 +28,12 @@ use Nails\Auth\Resource\User;
                 <td class="email">
                     <?=mailto($oEmail->email)?>
                 </td>
-                <?php
-
-                if ($oEmail->is_primary) {
-                    ?>
-                    <td class="is-primary success">
-                        <b class="fa fa-check-circle fa-lg"></b>
-                    </td>
-                    <?php
-                } else {
-                    ?>
-                    <td class="is-primary error">
-                        <b class="fa fa-times-circle fa-lg"></b>
-                    </td>
-                    <?php
-                }
-
-                if ($oEmail->is_verified) {
-                    ?>
-                    <td class="is-verified success">
-                        <b class="fa fa-check-circle fa-lg"></b>
-                    </td>
-                    <?php
-                } else {
-                    ?>
-                    <td class="is-verified error">
-                        <b class="fa fa-times-circle fa-lg"></b>
-                    </td>
-                    <?php
-                }
-                ?>
+                <?=Helper::loadBoolCell($oEmail->is_primary)?>
+                <?=Helper::loadBoolCell($oEmail->is_verified)?>
                 <td class="date-added">
                     <?=toUserDatetime($oEmail->date_added)?>
                 </td>
-                <td class="date-verified">
-                    <?php
-                    if ($oEmail->is_verified) {
-                        echo toUserDatetime($oEmail->date_added);
-                    } else {
-                        ?>
-                        <span class="text-muted">
-                                    <?=lang('accounts_edit_emails_td_not_verified')?>
-                                </span>
-                        <?php
-                    }
-                    ?>
-                </td>
+                <?=Helper::loadDateTimeCell($oEmail->date_verified, lang('accounts_edit_emails_td_not_verified'))?>
                 <td class="actions">
                     <?php
                     if (!$oEmail->is_primary) {
@@ -106,10 +67,10 @@ use Nails\Auth\Resource\User;
                 <input type="email" name="email" placeholder="Type an email address to add to the user here"/>
             </td>
             <td class="is-primary">
-                <input type="checkbox" name="isPrimary" value="1"/>
+                <input type="checkbox" name="is_primary" value="1"/>
             </td>
             <td class="is-verified">
-                <input type="checkbox" name="isVerified" value="1"/>
+                <input type="checkbox" name="is_verified" value="1"/>
             </td>
             <td class="date-added">
                 <span class="text-muted">&mdash;</span>

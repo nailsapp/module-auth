@@ -992,11 +992,11 @@ class Accounts extends DefaultController
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
-        $action = $oInput->post('action');
+        $sAction = $oInput->post('action');
         $sEmail = trim($oInput->post('email'));
         $iId    = (int) $oInput->post('id') ?: null;
 
-        switch ($action) {
+        switch ($sAction) {
 
             case 'add':
                 $bIsPrimary  = (bool) $oInput->post('is_primary');
@@ -1061,7 +1061,7 @@ class Accounts extends DefaultController
 
             default:
                 $sStatus  = 'error';
-                $sMessage = 'Unknown action: "' . $action . '"';
+                $sMessage = 'Unknown action: "' . $sAction . '"';
                 break;
         }
 

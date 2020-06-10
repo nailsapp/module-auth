@@ -61,13 +61,13 @@ class AccountEdit {
 
     addEmail() {
         let email = $('#add-email-form input[name=email]').val();
-        let isPrimary = $('#add-email-form input[name=isPrimary]').is(':checked') ? 1 : 0;
-        let isVerified = $('#add-email-form input[name=isVerified]').is(':checked') ? 1 : 0;
+        let isPrimary = $('#add-email-form input[name=is_primary]').is(':checked') ? 1 : 0;
+        let isVerified = $('#add-email-form input[name=is_verified]').is(':checked') ? 1 : 0;
 
         $('#email-form input[name=action]').val('add');
         $('#email-form input[name=email]').val(email);
-        $('#email-form input[name=isPrimary]').val(isPrimary);
-        $('#email-form input[name=isVerified]').val(isVerified);
+        $('#email-form input[name=is_primary]').val(isPrimary);
+        $('#email-form input[name=is_verified]').val(isVerified);
         $('#email-form').submit();
     }
 
