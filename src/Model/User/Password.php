@@ -105,6 +105,8 @@ class Password extends Base
         $oDb->set('salt', $oHash->salt);
         $oDb->set('temp_pw', $bIsTemp);
         $oDb->set('last_update', $sNow);
+        $oDb->set('failed_login_count', 0);
+        $oDb->set('failed_login_expires', null);
 
         $oDb->where('id', $oUser->id);
 
@@ -778,6 +780,8 @@ class Password extends Base
                     'salt'                    => $oHash->salt,
                     'temp_pw'                 => true,
                     'forgotten_password_code' => null,
+                    'failed_login_count'      => 0,
+                    'failed_login_expires'    => null,
                 ];
 
                 $oDb->where('forgotten_password_code', $oUser->forgotten_password_code);
