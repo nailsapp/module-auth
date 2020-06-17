@@ -57,6 +57,13 @@ return [
                 return new Model\User\AccessToken();
             }
         },
+        'UserEmail'       => function (): Model\User\Email {
+            if (class_exists('\App\Auth\Model\User\Email')) {
+                return new \App\Auth\Model\User\Email();
+            } else {
+                return new Model\User\Email();
+            }
+        },
         'UserEvent'       => function (): Model\User\Event {
             if (class_exists('\App\Auth\Model\User\Event')) {
                 return new \App\Auth\Model\User\Event();
@@ -85,6 +92,13 @@ return [
                 return new \App\Auth\Resource\User($mObj);
             } else {
                 return new Resource\User($mObj);
+            }
+        },
+        'UserEmail' => function ($mObj): Resource\User\Email {
+            if (class_exists('\App\Auth\Resource\User\Email')) {
+                return new \App\Auth\Resource\User\Email($mObj);
+            } else {
+                return new Resource\User\Email($mObj);
             }
         },
         'UserEvent' => function ($mObj): Resource\User\Event {
