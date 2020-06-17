@@ -33,7 +33,6 @@ class Group extends Base
 
         $this->table             = Config::get('NAILS_DB_PREFIX') . 'user_group';
         $this->defaultSortColumn = 'id';
-        $this->oDefaultGroup     = $this->getDefaultGroup();
     }
 
     // --------------------------------------------------------------------------
@@ -98,17 +97,20 @@ class Group extends Base
      */
     public function getDefaultGroup()
     {
-        $aGroups = $this->getAll([
-            'where' => [
-                ['is_default', true],
-            ],
-        ]);
+        if (empty($this->oDefaultGroup)) {
 
-        if (empty($aGroups)) {
-            throw new NailsException('A default user group must be defined.');
+            $aGroups = $this->getAll([
+                'where' => [
+                    ['is_default', true],
+                ],
+            ]);
+
+            if (empty($aGroups)) {
+                throw new NailsException('A default user group must be defined.');
+            }
+
+            $this->oDefaultGroup = reset($aGroups);
         }
-
-        $this->oDefaultGroup = reset($aGroups);
 
         return $this->oDefaultGroup;
     }
@@ -122,7 +124,7 @@ class Group extends Base
      */
     public function getDefaultGroupId()
     {
-        return $this->oDefaultGroup->id;
+        return $this->getDefaultGroup()->id;
     }
 
     // --------------------------------------------------------------------------
@@ -130,8 +132,8 @@ class Group extends Base
     /**
      * Change the user group of multiple users, executing any pre/post upgrade functionality as required
      *
-     * @param  array   $aUserIds    An array of User ID's to update
-     * @param  integer $iNewGroupId The ID of the new user group
+     * @param array   $aUserIds    An array of User ID's to update
+     * @param integer $iNewGroupId The ID of the new user group
      *
      * @return boolean
      */
@@ -207,7 +209,7 @@ class Group extends Base
     /**
      * Formats an array of permissions into a JSON encoded string suitable for the database
      *
-     * @param  array $aPermissions An array of permissions to set
+     * @param array $aPermissions An array of permissions to set
      *
      * @return string
      */
@@ -251,8 +253,8 @@ class Group extends Base
     /**
      * Determines whether the specified group has a certain ACL permission
      *
-     * @param   string $sSearch The permission to check for
-     * @param   mixed  $mGroup  The group to check for;  if numeric, fetches group, if object
+     * @param string $sSearch   The permission to check for
+     * @param mixed  $mGroup    The group to check for;  if numeric, fetches group, if object
      *                          uses that object
      *
      * @return  boolean
@@ -330,11 +332,11 @@ class Group extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to getCountCommon, for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     * @param object $oObj      A reference to the object being formatted.
+     * @param array  $aData     The same data array which is passed to getCountCommon, for reference if needed
+     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void
      */
