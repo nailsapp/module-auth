@@ -133,37 +133,26 @@ class User extends Base
     protected $tableMetaAlias = 'um';
 
     /**
-     * The name of the user email table
+     * The user group model
      *
-     * @var string
+     * @var Group
      */
-    protected $tableEmail = NAILS_DB_PREFIX . 'user_email';
+    protected $oGroupModel;
 
     /**
-     * The alias to give the user email table
+     * The user email model
      *
-     * @var string
+     * @var \Nails\Auth\Model\User\Email
      */
-    protected $tableEmailAlias = 'ue';
-
-    /**
-     * The name of the user group table
-     *
-     * @var string
-     */
-    protected $tableGroup = NAILS_DB_PREFIX . 'user_group';
-
-    /**
-     * The alias to give the user group table
-     *
-     * @var string
-     */
-    protected $tableGroupAlias = 'ug';
+    protected $oEmailModel;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the user model
+     * User constructor.
+     *
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function __construct()
     {
@@ -173,21 +162,25 @@ class User extends Base
 
         //  Set defaults
         $this->table             = Config::get('NAILS_DB_PREFIX') . 'user';
-        $this->tableAlias        = 'u';
         $this->tableSlugColumn   = 'username';
         $this->defaultSortColumn = $this->tableIdColumn;
         $this->defaultSortOrder  = 'DESC';
 
         // --------------------------------------------------------------------------
 
+        $this->oGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        $this->oEmailModel = Factory::model('UserEmail', Constants::MODULE_SLUG);
+
+        // --------------------------------------------------------------------------
+
         //  Define searchable fields, resetting it
         $this->searchableFields = [
-            $this->tableAlias . '.id',
-            $this->tableAlias . '.username',
-            $this->tableEmailAlias . '.email',
+            $this->getTableAlias() . '.id',
+            $this->getTableAlias() . '.username',
+            $this->oEmailModel->getTableAlias() . '.email',
             [
-                $this->tableAlias . '.first_name',
-                $this->tableAlias . '.last_name',
+                $this->getTableAlias() . '.first_name',
+                $this->getTableAlias() . '.last_name',
             ],
         ];
 
@@ -774,12 +767,12 @@ class User extends Base
         //  Define the selects
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
-        $oDb->select($this->tableAlias . '.*');
+        $oDb->select($this->getTableAlias() . '.*');
         $oDb->select([
-            $this->tableEmailAlias . '.email',
-            $this->tableEmailAlias . '.code email_verification_code',
-            $this->tableEmailAlias . '.is_verified email_is_verified',
-            $this->tableEmailAlias . '.date_verified email_is_verified_on',
+            $this->oEmailModel->getTableAlias() . '.email',
+            $this->oEmailModel->getTableAlias() . '.code email_verification_code',
+            $this->oEmailModel->getTableAlias() . '.is_verified email_is_verified',
+            $this->oEmailModel->getTableAlias() . '.date_verified email_is_verified_on',
         ]);
         $oDb->select(
             array_values(
@@ -792,30 +785,30 @@ class User extends Base
             )
         );
         $oDb->select([
-            $this->tableGroupAlias . '.slug group_slug',
-            $this->tableGroupAlias . '.label group_name',
-            $this->tableGroupAlias . '.default_homepage group_homepage',
-            $this->tableGroupAlias . '.acl group_acl',
+            $this->oGroupModel->getTableAlias() . '.slug group_slug',
+            $this->oGroupModel->getTableAlias() . '.label group_name',
+            $this->oGroupModel->getTableAlias() . '.default_homepage group_homepage',
+            $this->oGroupModel->getTableAlias() . '.acl group_acl',
         ]);
 
         // --------------------------------------------------------------------------
 
         //  Define the joins
         $oDb->join(
-            $this->tableEmail . ' ' . $this->tableEmailAlias,
-            $this->tableAlias . '.id = ' . $this->tableEmailAlias . '.user_id AND ' . $this->tableEmailAlias . '.is_primary = 1',
+            $this->oEmailModel->getTableName() . ' ' . $this->oEmailModel->getTableAlias(),
+            $this->getTableAlias() . '.id = ' . $this->oEmailModel->getTableAlias() . '.user_id AND ' . $this->oEmailModel->getTableAlias() . '.is_primary = 1',
             'LEFT'
         );
 
         $oDb->join(
             $this->tableMeta . ' ' . $this->tableMetaAlias,
-            $this->tableAlias . '.id = ' . $this->tableMetaAlias . '.user_id',
+            $this->getTableAlias() . '.id = ' . $this->tableMetaAlias . '.user_id',
             'LEFT'
         );
 
         $oDb->join(
-            $this->tableGroup . ' ' . $this->tableGroupAlias,
-            $this->tableAlias . '.group_id = ' . $this->tableGroupAlias . '.id',
+            $this->oGroupModel->getTableName() . ' ' . $this->oGroupModel->getTableAlias(),
+            $this->getTableAlias() . '.group_id = ' . $this->oGroupModel->getTableAlias() . '.id',
             'LEFT'
         );
 
@@ -901,7 +894,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select('user_id');
         $oDb->where('email', trim($sEmail));
-        $user = $oDb->get($this->tableEmail)->row();
+        $user = $oDb->get($this->oEmailModel->getTableName())->row();
 
         return $user ? $this->getById($user->user_id) : null;
     }
@@ -921,7 +914,7 @@ class User extends Base
         $aUsers = $this->getAll([
             'where' => [
                 [
-                    'column' => $this->tableAlias . '.username',
+                    'column' => $this->getTableAlias() . '.username',
                     'value'  => $sUsername,
                 ],
             ],
@@ -950,11 +943,11 @@ class User extends Base
         $aUsers = $this->getAll([
             'where' => [
                 [
-                    'column' => $this->tableAlias . '.id_md5',
+                    'column' => $this->getTableAlias() . '.id_md5',
                     'value'  => $md5Id,
                 ],
                 [
-                    'column' => $this->tableAlias . '.password_md5',
+                    'column' => $this->getTableAlias() . '.password_md5',
                     'value'  => $md5Pw,
                 ],
             ],
@@ -978,7 +971,7 @@ class User extends Base
         $aUsers = $this->getAll([
             'where' => [
                 [
-                    'column' => $this->tableAlias . '.referral',
+                    'column' => $this->getTableAlias() . '.referral',
                     'value'  => $sReferralCode,
                 ],
             ],
@@ -992,19 +985,22 @@ class User extends Base
     /**
      * Get all the email addresses which are registered to a particular user ID
      *
-     * @param int $id The user's ID
+     * @param int $iId The user's ID
      *
-     * @return array
+     * @return Resource\User\Email[]
      * @throws FactoryException
      */
-    public function getEmailsForUser($id)
+    public function getEmailsForUser($iId)
     {
-        /** @var Database $oDb */
-        $oDb = Factory::service('Database');
-        $oDb->where('user_id', $id);
-        $oDb->order_by('date_added');
-        $oDb->order_by('email', 'ASC');
-        return $oDb->get($this->tableEmail)->result();
+        return $this->oEmailModel->getAll([
+            'where' => [
+                ['user_id', $iId],
+            ],
+            'sort'  => [
+                ['date_added', 'DESC'],
+                ['email', 'ASC'],
+            ],
+        ]);
     }
 
     // --------------------------------------------------------------------------
@@ -1224,7 +1220,7 @@ class User extends Base
 
                     //  Check if the email is already being used
                     $oDb->where('email', $sDataEmail);
-                    $oEmail = $oDb->get($this->tableEmail)->row();
+                    $oEmail = $oDb->get($this->oEmailModel->getTableName())->row();
 
                     if ($oEmail) {
 
@@ -1443,7 +1439,7 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select('id, user_id, is_verified, code');
         $oDb->where('email', $sEmail);
-        $oTest = $oDb->get($this->tableEmail)->row();
+        $oTest = $oDb->get($this->oEmailModel->getTableName())->row();
 
         if ($oTest) {
 
@@ -1498,7 +1494,7 @@ class User extends Base
             $oDb->set('date_verified', 'NOW()', false);
         }
 
-        $oDb->insert($this->tableEmail);
+        $oDb->insert($this->oEmailModel->getTableName());
 
         if ($oDb->affected_rows()) {
 
@@ -1569,30 +1565,30 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->select(
             [
-                $this->tableEmailAlias . '.id',
-                $this->tableEmailAlias . '.code',
-                $this->tableEmailAlias . '.is_verified',
-                $this->tableEmailAlias . '.user_id',
-                $this->tableAlias . '.group_id',
+                $this->oEmailModel->getTableAlias() . '.id',
+                $this->oEmailModel->getTableAlias() . '.code',
+                $this->oEmailModel->getTableAlias() . '.is_verified',
+                $this->oEmailModel->getTableAlias() . '.user_id',
+                $this->getTableAlias() . '.group_id',
             ]
         );
 
         if (is_numeric($email_id)) {
-            $oDb->where($this->tableEmailAlias . '.id', $email_id);
+            $oDb->where($this->oEmailModel->getTableAlias() . '.id', $email_id);
         } else {
-            $oDb->where($this->tableEmailAlias . '.email', $email_id);
+            $oDb->where($this->oEmailModel->getTableAlias() . '.email', $email_id);
         }
 
         if (!empty($iUserId)) {
-            $oDb->where($this->tableEmailAlias . '.user_id', $iUserId);
+            $oDb->where($this->oEmailModel->getTableAlias() . '.user_id', $iUserId);
         }
 
         $oDb->join(
-            $this->table . ' ' . $this->tableAlias,
-            $this->tableAlias . '.id = ' . $this->tableEmailAlias . '.user_id'
+            $this->table . ' ' . $this->getTableAlias(),
+            $this->getTableAlias() . '.id = ' . $this->oEmailModel->getTableAlias() . '.user_id'
         );
 
-        $oEmailRow = $oDb->get($this->tableEmail . ' ' . $this->tableEmailAlias)->row();
+        $oEmailRow = $oDb->get($this->oEmailModel->getTableName() . ' ' . $this->oEmailModel->getTableAlias())->row();
 
         if (!$oEmailRow) {
             $this->setError('Invalid Email.');
@@ -1660,7 +1656,7 @@ class User extends Base
         }
 
         $oDb->where('is_primary', false);
-        $oRow = $oDb->get($this->tableEmail)->row();
+        $oRow = $oDb->get($this->oEmailModel->getTableName())->row();
 
         if (empty($oRow)) {
             $this->setError('"' . $mEmailId . '" is not a known email or ID');
@@ -1725,7 +1721,7 @@ class User extends Base
         $oDb->where('is_verified', true);
         $oDb->where('code', $sCode);
 
-        if ($oDb->count_all_results($this->tableEmail)) {
+        if ($oDb->count_all_results($this->oEmailModel->getTableName())) {
             $this->setError('Email has already been verified.');
             return false;
         }
@@ -1739,7 +1735,7 @@ class User extends Base
         $oDb->where('is_verified', false);
         $oDb->where('code', $sCode);
 
-        $oDb->update($this->tableEmail);
+        $oDb->update($this->oEmailModel->getTableName());
 
         if ((bool) $oDb->affected_rows()) {
 
@@ -1798,7 +1794,7 @@ class User extends Base
             $oDb->where('user_id', $iUserId);
         }
 
-        $oEmail = $oDb->get($this->tableEmail)->row();
+        $oEmail = $oDb->get($this->oEmailModel->getTableName())->row();
 
         if (empty($oEmail)) {
             return false;
@@ -1811,11 +1807,11 @@ class User extends Base
         try {
             $oDb->set('is_primary', false);
             $oDb->where('user_id', $oEmail->user_id);
-            $oDb->update($this->tableEmail);
+            $oDb->update($this->oEmailModel->getTableName());
 
             $oDb->set('is_primary', true);
             $oDb->where('id', $oEmail->id);
-            $oDb->update($this->tableEmail);
+            $oDb->update($this->oEmailModel->getTableName());
 
             $this->unsetCacheUser($oEmail->user_id);
 
@@ -2116,7 +2112,7 @@ class User extends Base
 
             //  Check email against DB
             $oDb->where('email', $data['email']);
-            if ($oDb->count_all_results($this->tableEmail)) {
+            if ($oDb->count_all_results($this->oEmailModel->getTableName())) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -2143,7 +2139,7 @@ class User extends Base
 
             //  Check email against DB
             $oDb->where('email', $data['email']);
-            if ($oDb->count_all_results($this->tableEmail)) {
+            if ($oDb->count_all_results($this->oEmailModel->getTableName())) {
                 $this->setError('This email is already in use.');
                 return false;
             }
@@ -2745,7 +2741,7 @@ class User extends Base
 
                     //  Additional updates for certain tables
                     switch ($aTables[$i]->name) {
-                        case $this->tableEmail:
+                        case $this->oEmailModel->getTableName():
                             $oDb->set('is_primary', false);
                             break;
                     }
@@ -2889,10 +2885,11 @@ class User extends Base
      * Returns the name of the user email table
      *
      * @return string
+     * @deprecated
      */
     public function getEmailTableName(): string
     {
-        return $this->tableEmail;
+        return $this->oEmailModel->getTableName();
     }
 
     // --------------------------------------------------------------------------
@@ -2901,10 +2898,11 @@ class User extends Base
      * Returns the name of the user group table
      *
      * @return string
+     * @deprecated
      */
     public function getGroupTableName(): string
     {
-        return $this->tableGroup;
+        return $this->oGroupModel->getTableName();
     }
 
     // --------------------------------------------------------------------------
