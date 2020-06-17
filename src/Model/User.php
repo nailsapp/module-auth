@@ -60,6 +60,19 @@ class User extends Base
      */
     const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
 
+    /**
+     * Any fields which should be considered sensitive
+     *
+     * @var string[]
+     */
+    const SENSITIVE_FIELDS = [
+        'password',
+        'password_md5',
+        'salt',
+        'forgotten_password_code',
+        'remember_code',
+    ];
+
     // --------------------------------------------------------------------------
 
     /**
