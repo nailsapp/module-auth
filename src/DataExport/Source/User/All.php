@@ -5,6 +5,11 @@ namespace Nails\Auth\DataExport\Source\User;
 use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
 use Nails\Auth\Constants;
+use Nails\Auth\Model\User;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
+use Nails\Common\Model\Base;
+use Nails\Common\Service\Database;
 use Nails\Config;
 use Nails\Factory;
 
@@ -84,14 +89,19 @@ class All implements Source
      */
     public function execute($aData = [])
     {
-        $oDb             = Factory::service('Database');
-        $oUserModel      = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var User\Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        /** @var User\Email $oUserEmailModel */
+        $oUserEmailModel = Factory::model('UserEmail', Constants::MODULE_SLUG);
 
         $aTables = [
-            $oUserModel->getTableName(),
-            $oUserGroupModel->getTableName(),
-            Config::get('NAILS_DB_PREFIX') . 'user_email',
+            $oUserModel,
+            $oUserGroupModel,
+            $oUserEmailModel,
         ];
 
         $aResult = $oDb->query('
@@ -107,17 +117,129 @@ class All implements Source
         }
 
         $aOut = [];
-        foreach ($aTables as $sTable) {
-            $oResponse = Factory::factory('DataExportSourceResponse', 'nails/module-admin');
-            $oSource   = $oDb->get($sTable);
-            $aFields   = arrayExtractProperty($oDb->query('DESCRIBE ' . $sTable)->result(), 'Field');
-            $aOut[]    = $oResponse
-                ->setLabel('Table: ' . $sTable)
-                ->setFileName($sTable)
-                ->setFields($aFields)
-                ->setSource($oSource);
+        /** @var string[]|Base[] $mTable */
+        foreach ($aTables as $mTable) {
+
+            $aOut[] = Factory::factory('DataExportSourceResponse', 'nails/module-admin')
+                ->setLabel($this->compileLabel($mTable))
+                ->setFileName($this->compileFilename($mTable))
+                ->setFields($this->compileColumns($mTable))
+                ->setSource($this->compileQuery($mTable));
         }
 
         return $aOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compiles the label for the model/table
+     *
+     * @param Base|string $mTable The table or model in question
+     *
+     * @return string
+     * @throws ModelException
+     */
+    protected function compileLabel($mTable): string
+    {
+        return sprintf(
+            'Table: %s',
+            $mTable instanceof Base
+                ? $mTable->getTableName()
+                : $mTable
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compiles the filename for the model/table
+     *
+     * @param Base|string $mTable The table or model in question
+     *
+     * @return string
+     * @throws ModelException
+     */
+    protected function compileFilename($mTable): string
+    {
+        return $mTable instanceof Base
+            ? $mTable->getTableName()
+            : $mTable;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compiles the columns for the model/table
+     *
+     * @param Base|string $mTable The table or model in question
+     *
+     * @return array
+     * @throws ModelException
+     * @throws FactoryException
+     */
+    protected function compileColumns($mTable): array
+    {
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
+        if ($mTable instanceof Base) {
+            return arrayExtractProperty(
+                $oDb->query('DESCRIBE ' . $mTable->getTableName())->result(),
+                'Field'
+            );
+
+        } else {
+            return arrayExtractProperty(
+                $oDb->query('DESCRIBE ' . $mTable)->result(),
+                'Field'
+            );
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compiles the query for the model/table
+     *
+     * @param Base|string $mTable The table or model in question
+     *
+     * @return \CI_DB_mysqli_result
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    protected function compileQuery($mTable): \CI_DB_mysqli_result
+    {
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
+        if ($mTable instanceof Base) {
+
+            /** @var Database $oDb */
+            $oDb        = Factory::service('Database');
+            $aColumns   = arrayExtractProperty(
+                $oDb->query('DESCRIBE ' . $mTable->getTableName())->result(),
+                'Field'
+            );
+            $aSensitive = $mTable->sensitiveFields();
+
+            $aSelect = array_map(function (string $sColumn) use ($aSensitive) {
+
+                return in_array($sColumn, $aSensitive)
+                    ? '"[REDACTED]" as ' . $sColumn
+                    : '`' . $sColumn . '`';
+
+            }, $aColumns);
+
+            return $oDb
+                ->select($aSelect)
+                ->from($mTable->getTableName())
+                ->get();
+
+        } else {
+            return $oDb
+                ->from($mTable)
+                ->get();
+        }
     }
 }
