@@ -47,8 +47,14 @@ class Override extends Base
     public function login_as()
     {
         //  Perform lookup of user
+        /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        $oUri       = Factory::service('Uri');
+        /** @var \Nails\Common\Service\Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+        /** @var \Nails\Common\Service\Input $oInput */
+        $oInput = Factory::service('Input');
 
         $sHashId = $oUri->segment(4);
         $sHashPw = $oUri->segment(5);
@@ -67,9 +73,6 @@ class Override extends Base
          * - Sign in as superusers (unless they are a superuser)
          */
 
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
-
         if (!wasAdmin()) {
 
             $bHasPermission = userHasPermission('admin:auth:accounts:loginAs');
@@ -80,8 +83,10 @@ class Override extends Base
                 if (!$bHasPermission) {
                     $oSession->setFlashData('error', lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
+
                 } elseif ($bIsCloning) {
                     show404();
+
                 } elseif ($bIsSuperuser) {
                     show404();
                 }
@@ -90,7 +95,6 @@ class Override extends Base
 
         // --------------------------------------------------------------------------
 
-        $oInput = Factory::service('Input');
         if (!$oInput->get('returningAdmin') && isAdmin()) {
 
             /**
@@ -99,7 +103,7 @@ class Override extends Base
              */
 
             $oUserModel->setAdminRecoveryData($oUser->id, $oInput->get('return_to'));
-            $sRedirectUrl = $oUser->group_homepage;
+            $sRedirectUrl = $oInput->get('forward_to') ?: $oUser->group_homepage;
 
             //  A bit of feedback
             $sStatus  = 'success';
@@ -108,7 +112,7 @@ class Override extends Base
         } elseif (wasAdmin()) {
 
             /**
-             * This user is a recovering adminaholic. Work out where we're sending
+             * This user is a recovering admin. Work out where we're sending
              * them back to then remove the adminRecovery data.
              */
 
@@ -128,7 +132,7 @@ class Override extends Base
              * verification.
              */
 
-            $sRedirectUrl = $oUser->group_homepage;
+            $sRedirectUrl = $oInput->get('forward_to') ?: $oUser->group_homepage;
 
             //  Some feedback
             $sStatus  = 'success';
