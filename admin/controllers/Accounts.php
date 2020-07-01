@@ -176,7 +176,7 @@ class Accounts extends DefaultController
             $this->aConfig['INDEX_ROW_BUTTONS'],
             [
                 [
-                    'url'     => siteUrl('auth/override/login_as/{{id_md5}}/{{password_md5}}') . '?return_to=' . $sReturn,
+                    'url'     => \Nails\Auth\Helper\User::compileLoginUrl('{{id_md5}}', '{{password_md5}}'),
                     'label'   => 'Login As',
                     'class'   => 'btn-warning',
                     'enabled' => function ($oUser) {
@@ -993,8 +993,8 @@ class Accounts extends DefaultController
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $sAction = $oInput->post('action');
-        $sEmail = trim($oInput->post('email'));
-        $iId    = (int) $oInput->post('id') ?: null;
+        $sEmail  = trim($oInput->post('email'));
+        $iId     = (int) $oInput->post('id') ?: null;
 
         switch ($sAction) {
 

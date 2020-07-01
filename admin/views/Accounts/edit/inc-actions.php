@@ -34,10 +34,8 @@ if ($oUser->id != activeUser('id') && userHasPermission('admin:auth:accounts:log
 
     // --------------------------------------------------------------------------
 
-    $sUrl = siteUrl('auth/override/login_as/' . md5($oUser->id) . '/' . md5($oUser->password) . $sReturnString);
-
     $aButtons[] = anchor(
-        $sUrl,
+        $oUser->getLoginUrl(),
         lang('admin_login_as') . ' ' . $oUser->first_name,
         'target="_parent"'
     );

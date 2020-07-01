@@ -2,9 +2,12 @@
 
 namespace Nails\Auth\Resource;
 
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Resource\Date;
 use Nails\Common\Resource\DateTime;
 use Nails\Common\Resource\Entity;
+use Nails\Common\Service\Input;
+use Nails\Factory;
 
 /**
  * Class User
@@ -138,4 +141,25 @@ class User extends Entity
 
     /** @var string */
     public $acl;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns a URL which an admin with permission can use to log in as the user
+     *
+     * @param string|null $sForwardTo Where to forward the user to after login
+     * @param string|null $sReturnTo  Where to return the original user to when returning
+     *
+     * @return string
+     * @throws FactoryException
+     */
+    public function getLoginUrl(string $sForwardTo = null, string $sReturnTo = null): string
+    {
+        return \Nails\Auth\Helper\User::compileLoginUrl(
+            $this->id_md5,
+            $this->password_md5,
+            $sForwardTo,
+            $sReturnTo
+        );
+    }
 }

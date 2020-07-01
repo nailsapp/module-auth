@@ -618,7 +618,7 @@ class User extends Base
             'returnTo'  => empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo,
             'loginUrl'  => siteUrl(
                 sprintf(
-                    'auth/override/login_as/%s/%s?retruningAdmin=1',
+                    'auth/override/login_as/%s/%s?returningAdmin=1',
                     activeUser('id_md5'),
                     activeUser('password_md5')
                 )
