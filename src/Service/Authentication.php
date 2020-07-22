@@ -33,6 +33,7 @@ use Nails\Common\Exception\EnvironmentException;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Helper\Url;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\Database;
@@ -41,7 +42,6 @@ use Nails\Common\Service\Input;
 use Nails\Common\Traits\ErrorHandling;
 use Nails\Environment;
 use Nails\Factory;
-use Nails\Functions;
 use ReflectionException;
 use stdClass;
 
@@ -738,7 +738,7 @@ class Authentication
         }
 
         //  Get the hostname
-        $sHostname = Functions::getDomainFromUrl(\Nails\Config::get('BASE_URL'));
+        $sHostname = Url::extractRegistrableDomain(\Nails\Config::get('BASE_URL'));
 
         //  User identifier
         $sUsername = $oUser->username;
