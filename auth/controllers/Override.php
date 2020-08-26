@@ -56,8 +56,8 @@ class Override extends Base
         /** @var \Nails\Common\Service\Input $oInput */
         $oInput = Factory::service('Input');
 
-        $sHashId = $oUri->segment(4);
-        $sHashPw = $oUri->segment(5);
+        $sHashId = (string) $oUri->segment(4);
+        $sHashPw = (string) $oUri->segment(5);
         $oUser   = $oUserModel->getByHashes($sHashId, $sHashPw);
 
         if (!$oUser) {
