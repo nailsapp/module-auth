@@ -16,8 +16,8 @@ class User
     /**
      * Compiles the "Login As" URL
      *
-     * @param string      $sIdMd5       The MD5 hash if the user's ID
-     * @param string      $sPasswordMd5 The MD5 hash of the user's password hash
+     * @param string|null $sIdMd5       The MD5 hash if the user's ID
+     * @param string|null $sPasswordMd5 The MD5 hash of the user's password hash
      * @param string|null $sForwardTo   Where to forward the user to after login
      * @param string|null $sReturnTo    Where to return the original user to when returning
      *
@@ -25,8 +25,8 @@ class User
      * @throws FactoryException
      */
     public static function compileLoginUrl(
-        string $sIdMd5,
-        string $sPasswordMd5,
+        ?string $sIdMd5,
+        ?string $sPasswordMd5,
         string $sForwardTo = null,
         string $sReturnTo = null
     ): string {
