@@ -329,7 +329,7 @@ class Login extends Base
         ];
 
         //  Login was successful, redirect to the appropriate MFA page
-        redirect(implode($aUrl, '/') . $sQuery);
+        redirect(implode('/', $aUrl) . $sQuery);
     }
 
     // --------------------------------------------------------------------------
