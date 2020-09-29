@@ -16,9 +16,11 @@ use Nails\Auth\Constants;
 use Nails\Auth\Events;
 use Nails\Auth\Factory\Email\NewUser;
 use Nails\Auth\Factory\Email\VerifyEmail;
+use Nails\Auth\Model\User\Email;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
+use Nails\Common\Exception\EnvironmentException;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
@@ -156,7 +158,7 @@ class User extends Base
     /**
      * The user email model
      *
-     * @var \Nails\Auth\Model\User\Email
+     * @var Email
      */
     protected $oEmailModel;
 
@@ -212,6 +214,8 @@ class User extends Base
      * @return void
      * @throws FactoryException
      * @throws ModelException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function init()
     {
@@ -248,6 +252,8 @@ class User extends Base
      * @return bool
      * @throws FactoryException
      * @throws ModelException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     protected function loginRememberedUser()
     {
@@ -403,7 +409,8 @@ class User extends Base
         //  Valid user?
         if ($mUser instanceof Resource\User) {
 
-            $oUser = $mUser;
+            $oUser  = $mUser;
+            $sError = null;
 
         } elseif (is_numeric($mUser)) {
 
@@ -488,9 +495,10 @@ class User extends Base
         //  Clear the session
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
-        $oSession->unsetUserData('id');
-        $oSession->unsetUserData('email');
-        $oSession->unsetUserData('group_id');
+        $oSession
+            ->unsetUserData('id')
+            ->unsetUserData('email')
+            ->unsetUserData('group_id');
 
         //  Set the flag
         $this->bIsLoggedIn = false;
@@ -775,6 +783,8 @@ class User extends Base
      * @param array $aData Data passed from the calling method
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
      */
     protected function getCountCommon(array $aData = []): void
     {
@@ -1001,8 +1011,8 @@ class User extends Base
      *
      * @param int $iId The user's ID
      *
-     * @return Resource\User\Email[]
-     * @throws FactoryException
+     * @return \Nails\Common\Resource[]
+     * @throws ModelException
      */
     public function getEmailsForUser($iId)
     {
@@ -1049,7 +1059,7 @@ class User extends Base
             return false;
         }
 
-        //  Deep clone so we're sure it isn't indvertantly updated
+        //  Deep clone so we're sure it isn't inadvertently updated
         $oOldUser = unserialize(serialize($oOldUser));
 
         // --------------------------------------------------------------------------
@@ -1339,7 +1349,7 @@ class User extends Base
     /**
      * Works out the correct user ID, falls back to activeUser()
      *
-     * @param int $iUserId The user ID to use
+     * @param int|null $iUserId The user ID to use
      *
      * @return int
      */
@@ -1404,12 +1414,12 @@ class User extends Base
     /**
      * Adds a new email to the user email table. Will optionally send the verification email, too.
      *
-     * @param string $sEmail        The email address to add
-     * @param int    $iUserId       The ID of the user to add for, defaults to $this->activeUser('id')
-     * @param bool   $bIsPrimary    Whether or not the email address should be the primary email address for the user
-     * @param bool   $bIsVerified   Whether or not the email should be marked as verified
-     * @param bool   $bSendEmail    If unverified, whether or not the verification email should be sent
-     * @param bool   $bTriggerEvent Whether to trigger the user modified event
+     * @param string   $sEmail        The email address to add
+     * @param int|null $iUserId       The ID of the user to add for, defaults to $this->activeUser('id')
+     * @param bool     $bIsPrimary    Whether or not the email address should be the primary email address for the user
+     * @param bool     $bIsVerified   Whether or not the email should be marked as verified
+     * @param bool     $bSendEmail    If unverified, whether or not the verification email should be sent
+     * @param bool     $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool|string          String containing verification code on success, false on failure
      * @throws FactoryException
@@ -1562,13 +1572,14 @@ class User extends Base
     /**
      * Send, or resend, the verify email for a particular email address
      *
-     * @param int $email_id The email's ID
-     * @param int $iUserId  The user's ID
+     * @param string|int $mEmailId The email or email  ID
+     * @param int|null   $iUserId  The user's ID
      *
      * @return bool
      * @throws FactoryException
+     * @throws ModelException
      */
-    public function emailAddSendVerify($email_id, $iUserId = null)
+    public function emailAddSendVerify($mEmailId, $iUserId = null)
     {
         if (!Config::get('NAILS_AUTH_EMAIL_VERIFY_ON_ADD', true)) {
             return true;
@@ -1587,10 +1598,10 @@ class User extends Base
             ]
         );
 
-        if (is_numeric($email_id)) {
-            $oDb->where($this->oEmailModel->getTableAlias() . '.id', $email_id);
+        if (is_numeric($mEmailId)) {
+            $oDb->where($this->oEmailModel->getTableAlias() . '.id', $mEmailId);
         } else {
-            $oDb->where($this->oEmailModel->getTableAlias() . '.email', $email_id);
+            $oDb->where($this->oEmailModel->getTableAlias() . '.email', $mEmailId);
         }
 
         if (!empty($iUserId)) {
@@ -1649,11 +1660,12 @@ class User extends Base
      * by $iUserId
      *
      * @param int|string $mEmailId      The email address, or the ID of the email address to remove
-     * @param int        $iUserId       The ID of the user to restrict to
+     * @param int|null   $iUserId       The ID of the user to restrict to
      * @param bool       $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool
      * @throws FactoryException
+     * @throws ModelException
      */
     public function emailDelete($mEmailId, int $iUserId = null, bool $bTriggerEvent = true)
     {
@@ -1786,11 +1798,12 @@ class User extends Base
      * Sets an email address as the primary email address for that user.
      *
      * @param int|string $mIdEmail      The numeric  ID of the email address, or the email address itself
-     * @param int        $iUserId       Specify the user ID which this should apply to
+     * @param int|Null   $iUserId       Specify the user ID which this should apply to
      * @param bool       $bTriggerEvent Whether to trigger the user modified event
      *
      * @return bool
      * @throws FactoryException
+     * @throws ModelException
      */
     public function emailMakePrimary($mIdEmail, int $iUserId = null, bool $bTriggerEvent = true): bool
     {
@@ -1928,12 +1941,14 @@ class User extends Base
     /**
      * Set the user's 'rememberMe' cookie, nom nom nom
      *
-     * @param int    $iId       The User's ID
-     * @param string $sPassword The user's password, hashed
-     * @param string $sEmail    The user's email\
+     * @param int|null    $iId       The User's ID
+     * @param string|null $sPassword The user's password, hashed
+     * @param string|null $sEmail    The user's email\
      *
      * @return bool
+     * @return bool
      * @throws FactoryException
+     * @throws EnvironmentException
      */
     public function setRememberCookie($iId = null, $sPassword = null, $sEmail = null)
     {
@@ -2019,7 +2034,7 @@ class User extends Base
      */
     protected function refreshSession()
     {
-        //  Get the user; be wary of admin's logged in as other people
+        //  Get the user; be wary of admins logged in as other people
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
         if ($this->wasAdmin()) {
@@ -2560,9 +2575,9 @@ class User extends Base
     /**
      * Checks whether a username is valid
      *
-     * @param string $sUsername     The username to check
-     * @param bool   $bCheckDb      Whether to test against the database
-     * @param int    $iIgnoreUserId The ID of a user to ignore when checking the database
+     * @param string   $sUsername     The username to check
+     * @param bool     $bCheckDb      Whether to test against the database
+     * @param int|null $iIgnoreUserId The ID of a user to ignore when checking the database
      *
      * @return bool
      * @throws FactoryException
@@ -2901,6 +2916,7 @@ class User extends Base
      * Returns the name of the user email table
      *
      * @return string
+     * @throws ModelException
      * @deprecated
      */
     public function getEmailTableName(): string
@@ -2914,6 +2930,7 @@ class User extends Base
      * Returns the name of the user group table
      *
      * @return string
+     * @throws ModelException
      * @deprecated
      */
     public function getGroupTableName(): string
