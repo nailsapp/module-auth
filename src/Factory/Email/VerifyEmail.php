@@ -15,9 +15,15 @@ class VerifyEmail extends Email
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns test data to use when sending test emails
+     *
+     * @return array
+     */
     public function getTestData(): array
     {
-        // TODO: Implement getTestData() method.
-        return [];
+        return [
+            'verifyUrl' => 'https://example.com',
+        ];
     }
 }

@@ -15,6 +15,7 @@ namespace Nails\Auth\Model;
 use Nails\Auth\Constants;
 use Nails\Auth\Events;
 use Nails\Auth\Factory\Email\NewUser;
+use Nails\Auth\Factory\Email\VerifyEmail;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
@@ -33,7 +34,6 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Components;
 use Nails\Config;
-use Nails\Email;
 use Nails\Environment;
 use Nails\Factory;
 use Nails\Testing;
@@ -1616,26 +1616,27 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        /** @var Email\Service\Emailer $oEmailer */
-        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
-        $oEmail   = (object) [
-            'type'  => 'verify_email_' . $oEmailRow->group_id,
-            'to_id' => $oEmailRow->user_id,
-            'data'  => (object) [
-                'verifyUrl' => siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code),
-            ],
-        ];
+        try {
+            //  Allows the app to define a group specific verify email
+            /** @var VerifyEmail $oEmail */
+            $oEmail = Factory::factory('EmailVerifyEmail' . $oEmailRow->group_id, Components::$oAppSlug);
+        } catch (FactoryException $e) {
+            /** @var VerifyEmail $oEmail */
+            $oEmail = Factory::factory('EmailVerifyEmail', Constants::MODULE_SLUG);
+        }
 
-        if (!$oEmailer->send($oEmail, true)) {
+        $oEmail
+            ->to($oEmailRow->user_id)
+            ->data('verifyUrl', siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code));
 
-            //  Failed to send using the group email, try using the generic email template
-            $oEmail->type = 'verify_email';
 
-            if (!$oEmailer->send($oEmail, true)) {
-                //  Email failed to send, for now, do nothing.
-                $this->setError('The verification email failed to send.');
-                return false;
-            }
+        try {
+
+            $oEmail->send();
+
+        } catch (\Exception $e) {
+            $this->setError('The verification email failed to send.');
+            return false;
         }
 
         return true;
