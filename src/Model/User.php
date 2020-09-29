@@ -14,6 +14,7 @@ namespace Nails\Auth\Model;
 
 use Nails\Auth\Constants;
 use Nails\Auth\Events;
+use Nails\Auth\Factory\Email\NewUser;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
@@ -28,9 +29,9 @@ use Nails\Common\Service\DateTime;
 use Nails\Common\Service\Encrypt;
 use Nails\Common\Service\ErrorHandler;
 use Nails\Common\Service\Event;
-use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
+use Nails\Components;
 use Nails\Config;
 use Nails\Email;
 use Nails\Environment;
@@ -2344,18 +2345,20 @@ class User extends Base
                 //  Send the user the welcome email
                 if ($bSendWelcome) {
 
-                    /** @var Email\Service\Emailer $oEmailer */
-                    $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
+                    try {
+                        //  Allows the app to define a group specific welcome email
+                        /** @var NewUser $oEmail */
+                        $oEmail = Factory::factory('EmailNewUser' . $oGroup->id, Components::$oAppSlug);
+                    } catch (FactoryException $e) {
+                        /** @var NewUser $oEmail */
+                        $oEmail = Factory::factory('EmailNewUser', Constants::MODULE_SLUG);
+                    }
 
-                    $oEmail = (object) [
-                        'type'  => 'new_user_' . $oGroup->id,
-                        'to_id' => $iId,
-                        'data'  => (object) [],
-                    ];
+                    $oEmail->to($iId);
 
                     //  If this user is created by an admin then take note of that.
                     if ($this->isAdmin() && $this->activeUser('id') != $iId) {
-                        $oEmail->data->admin = (object) [
+                        $oEmail->data('admin', [
                             'id'         => $this->activeUser('id'),
                             'first_name' => $this->activeUser('first_name'),
                             'last_name'  => $this->activeUser('last_name'),
@@ -2363,36 +2366,35 @@ class User extends Base
                                 'id'   => $oGroup->id,
                                 'name' => $oGroup->label,
                             ],
-                        ];
+                        ]);
                     }
 
                     if (!empty($data['password']) && $bInformUserPw) {
 
-                        $oEmail->data->password = $data['password'];
+                        $oEmail->data('password', $data['password']);
 
                         //  Is this a temp password? We should let them know that too
                         if ($aUserData['temp_pw']) {
-                            $oEmail->data->isTemp = !empty($aUserData['temp_pw']);
+                            $oEmail->data('isTemp', $data['temp_pw']);
                         }
                     }
 
                     //  If the email isn't verified we'll want to include a note asking them to do so
                     if (empty($bEmailIsVerified)) {
-                        $oEmail->data->verifyUrl = siteUrl('email/verify/' . $iId . '/' . $sCode);
+                        $oEmail->data('verifyUrl', siteUrl('email/verify/' . $iId . '/' . $sCode));
                     }
 
-                    if (!$oEmailer->send($oEmail, true)) {
+                    try {
 
-                        //  Failed to send using the group email, try using the generic email template
-                        $oEmail->type = 'new_user';
+                        $oEmail->send();
 
-                        if (!$oEmailer->send($oEmail, true)) {
-
-                            //  Email failed to send, must not exist, oh well.
-                            $sError = 'Failed to send welcome email.';
-                            $sError .= $bInformUserPw ? ' Inform the user their password is <strong>' . $data['password'] . '</strong>' : '';
-                            throw new NailsException($sError);
-                        }
+                    } catch (\Exception $e) {
+                        throw new NailsException(sprintf(
+                            'Failed to send welcome email. %s',
+                            $bInformUserPw
+                                ? 'Inform the user their password is <strong>' . $data['password'] . '</strong>'
+                                : ''
+                        ));
                     }
                 }
             }

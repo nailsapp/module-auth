@@ -15,9 +15,26 @@ class NewUser extends Email
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns test data to use when sending test emails
+     *
+     * @return array
+     */
     public function getTestData(): array
     {
-        // TODO: Implement getTestData() method.
-        return [];
+        return [
+            'admin'     => [
+                'id'         => 1,
+                'first_name' => 'Jim',
+                'last_name'  => 'Jones',
+                'group'      => [
+                    'id'    => 1,
+                    'label' => 'Administrator',
+                ],
+            ],
+            'password'  => random_string(),
+            'isTemp'    => true,
+            'verifyUrl' => 'https://example.com',
+        ];
     }
 }
