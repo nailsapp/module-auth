@@ -24,6 +24,7 @@ use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
 use Nails\Config;
 use Nails\Factory;
+use stdClass;
 
 /**
  * Class Password
@@ -155,6 +156,8 @@ class Password extends Base
      * @param string                   $sPassword The raw, unencrypted password to check
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function isCorrect($mUser, $sPassword): bool
     {
@@ -198,6 +201,8 @@ class Password extends Base
      * @param Resource\User|int|string $mUser The user's Resource, ID, or identifier
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function isExpired($mUser): bool
     {
@@ -249,6 +254,8 @@ class Password extends Base
      * @param Resource\User|int|string $mUser The user's Resource, ID, or identifier
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function isTemporary($mUser): bool
     {
@@ -269,6 +276,7 @@ class Password extends Base
      * @param string $sPassword The raw, unencrypted password
      *
      * @return bool
+     * @throws FactoryException
      */
     public function isAcceptable(int $iGroupId, string $sPassword): bool
     {
@@ -347,6 +355,7 @@ class Password extends Base
      * @param $iGroupId
      *
      * @return null
+     * @throws FactoryException
      */
     public function expiresAfter($iGroupId)
     {
@@ -379,10 +388,10 @@ class Password extends Base
      * @param int    $iGroupId  The group who's rules to fetch
      * @param string $sPassword The raw, unencrypted password
      *
-     * @return \stdClass
+     * @return stdClass
      * @throws NailsException
      */
-    public function generateHash($iGroupId, $sPassword): \stdClass
+    public function generateHash($iGroupId, $sPassword): stdClass
     {
         if (empty($sPassword)) {
             throw new NailsException('No password to hash.');
@@ -398,9 +407,9 @@ class Password extends Base
     /**
      * Generates a null password hash
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function generateNullHash(): \stdClass
+    public function generateNullHash(): stdClass
     {
         return $this->generateHashObject(null);
     }
@@ -412,9 +421,9 @@ class Password extends Base
      *
      * @param string $sPassword The password to generate the hash for
      *
-     * @return \stdClass
+     * @return stdClass
      */
-    public function generateHashObject($sPassword): \stdClass
+    public function generateHashObject($sPassword): stdClass
     {
         $sSalt = $this->salt();
         $sHash = sha1(sha1($sPassword) . $sSalt);
@@ -454,6 +463,7 @@ class Password extends Base
      * @param int $iGroupId The group who's rules to fetch
      *
      * @return string
+     * @throws FactoryException
      */
     public function generate($iGroupId)
     {
@@ -542,8 +552,9 @@ class Password extends Base
      * @param int $iGroupId The group who's rules to fetch
      *
      * @return array
+     * @throws FactoryException
      */
-    protected function getRules($iGroupId)
+    protected function getRules($iGroupId): array
     {
         $sCacheKey    = 'password-rules-' . $iGroupId;
         $aCacheResult = $this->getCache($sCacheKey);
@@ -562,12 +573,13 @@ class Password extends Base
 
         $oPwRules = json_decode($oResult->row()->password_rules);
 
-        $aOut                 = [];
-        $aOut['min']          = !empty($oPwRules->min) ? $oPwRules->min : null;
-        $aOut['max']          = !empty($oPwRules->max) ? $oPwRules->max : null;
-        $aOut['expiresAfter'] = !empty($oPwRules->expiresAfter) ? $oPwRules->expiresAfter : null;
-        $aOut['requirements'] = !empty($oPwRules->requirements) ? $oPwRules->requirements : [];
-        $aOut['banned']       = !empty($oPwRules->banned) ? $oPwRules->banned : [];
+        $aOut = [
+            'min'          => !empty($oPwRules->min) ? $oPwRules->min : null,
+            'max'          => !empty($oPwRules->max) ? $oPwRules->max : null,
+            'expiresAfter' => !empty($oPwRules->expiresAfter) ? $oPwRules->expiresAfter : null,
+            'requirements' => !empty($oPwRules->requirements) ? $oPwRules->requirements : [],
+            'banned'       => !empty($oPwRules->banned) ? $oPwRules->banned : [],
+        ];
 
         $this->setCache($sCacheKey, $aOut);
 
@@ -582,6 +594,7 @@ class Password extends Base
      * @param int $iGroupId The group who's rules to fetch
      *
      * @return string
+     * @throws FactoryException
      */
     public function getRulesAsString($iGroupId)
     {
@@ -603,8 +616,9 @@ class Password extends Base
      * @param int $iGroupId The group who's rules to fetch
      *
      * @return array
+     * @throws FactoryException
      */
-    public function getRulesAsArray($iGroupId)
+    public function getRulesAsArray($iGroupId): array
     {
         $aRules = $this->getRules($iGroupId);
         $aOut   = [];
@@ -651,7 +665,7 @@ class Password extends Base
      *
      * @return string
      */
-    public function salt($sPepper = '')
+    public function salt($sPepper = ''): string
     {
         return md5(
             uniqid(
@@ -669,6 +683,8 @@ class Password extends Base
      * @param Resource\User|int|string $mUser The user Resource, ID, or identifier
      *
      * @return bool
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function setToken($mUser): bool
     {
@@ -705,6 +721,8 @@ class Password extends Base
      * @param bool   $bGenerateNewPw Whether or not to generate a new password (only if token is valid)
      *
      * @return bool|string|array
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function validateToken($sCode, $bGenerateNewPw)
     {
@@ -855,7 +873,7 @@ class Password extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Calculates how long ago a user's pssword was changed, in seconds
+     * Calculates how long ago a user's password was changed, in seconds
      *
      * @param Resource\User|string|int $mUser The user's Resource, ID, or identifier
      *
@@ -876,15 +894,24 @@ class Password extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @param $mUser
+     *
+     * @return Resource\User|null
+     * @throws FactoryException
+     * @throws ModelException
+     */
     protected function getUser($mUser): ?Resource\User
     {
-        /** @var \App\Auth\Model\User $oUserModel */
+        /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         if ($mUser instanceof Resource\User) {
             return $mUser;
+
         } elseif (is_numeric($mUser)) {
             return $oUserModel->getById($mUser);
+
         } elseif (is_string($mUser)) {
             return $oUserModel->getByIdentifier($mUser);
         }
