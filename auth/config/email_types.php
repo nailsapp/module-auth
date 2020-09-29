@@ -10,6 +10,8 @@
  * @link
  */
 
+use Nails\Auth\Constants;
+
 $config['email_types'] = [
     (object) [
         'slug'            => 'forgotten_password',
@@ -20,7 +22,7 @@ $config['email_types'] = [
         'template_body'   => 'auth/email/forgotten_password',
         'template_footer' => '',
         'default_subject' => 'Reset your Password',
-        'factory'         => \Nails\Auth\Constants::MODULE_SLUG . '::EmailForgottenPassword',
+        'factory'         => Constants::MODULE_SLUG . '::EmailForgottenPassword',
     ],
     (object) [
         'slug'            => 'new_user',
@@ -31,7 +33,7 @@ $config['email_types'] = [
         'template_body'   => 'auth/email/new_user',
         'template_footer' => '',
         'default_subject' => 'Welcome',
-        'factory'         => \Nails\Auth\Constants::MODULE_SLUG . '::EmailNewUser',
+        'factory'         => Constants::MODULE_SLUG . '::EmailNewUser',
     ],
     (object) [
         'slug'            => 'password_updated',
@@ -42,7 +44,7 @@ $config['email_types'] = [
         'template_body'   => 'auth/email/password_updated',
         'template_footer' => '',
         'default_subject' => 'Your Password Has Been Updated',
-        'factory'         => \Nails\Auth\Constants::MODULE_SLUG . '::EmailPasswordUpdated',
+        'factory'         => Constants::MODULE_SLUG . '::EmailPasswordUpdated',
     ],
     (object) [
         'slug'            => 'verify_email',
@@ -53,6 +55,6 @@ $config['email_types'] = [
         'template_body'   => 'auth/email/verify_email',
         'template_footer' => '',
         'default_subject' => 'Please verify your email',
-        'factory'         => \Nails\Auth\Constants::MODULE_SLUG . '::EmailVerifyEmail',
+        'factory'         => Constants::MODULE_SLUG . '::EmailVerifyEmail',
     ],
 ];
