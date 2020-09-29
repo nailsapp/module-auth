@@ -13,6 +13,7 @@
 namespace Nails\Auth\Model\User;
 
 use Nails\Auth\Constants;
+use Nails\Auth\Factory\Email\PasswordUpdated;
 use Nails\Auth\Model\User;
 use Nails\Auth\Resource;
 use Nails\Common\Exception\FactoryException;
@@ -22,8 +23,6 @@ use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
 use Nails\Config;
-use Nails\Email;
-use Nails\Email\Service\Emailer;
 use Nails\Factory;
 
 /**
@@ -76,8 +75,6 @@ class Password extends Base
         $oDb = Factory::service('Database');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Emailer $oEmailer */
-        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -117,6 +114,15 @@ class Password extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var PasswordUpdated $oEmail */
+        $oEmail = Factory::factory('EmailPasswordUpdated', Constants::MODULE_SLUG);
+        $oEmail
+            ->to($iUserId)
+            ->data([
+                'ipAddress' => $oInput->ipAddress(),
+                'updatedAt' => $sNow,
+            ]);
+
         $oEmail = (object) [
             'type'  => 'password_updated',
             'to_id' => $iUserId,
@@ -127,10 +133,15 @@ class Password extends Base
         ];
 
         if (activeUser('id') && activeUser('id') !== $iUserId) {
-            $oEmail->data->updatedBy = activeUser('first_name,last_name');
+            $oEmail->data('updatedBy', activeUser('first_name,last_name'));
         }
 
-        $oEmailer->send($oEmail);
+        try {
+            $oEmail->send();
+        } catch (\Exception $e) {
+            $this->setError('Failed to send email. ' . $e->getMessage());
+            return false;
+        }
 
         return true;
     }
