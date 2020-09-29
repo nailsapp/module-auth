@@ -13,11 +13,11 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
+use Nails\Auth\Factory\Email\ForgottenPassword;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
 use Nails\Common\Exception\NailsException;
-use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
@@ -113,34 +113,30 @@ class PasswordForgotten extends Base
                     $oUser = $oUserModel->getById($oUser->id);
 
                     if (!$bAlwaysSucceed && empty($oUser->email)) {
-
                         throw new NailsException(
                             lang('auth_forgot_email_fail_no_email')
                         );
-
                     }
 
-                    //  We've got something, go go go
-                    $oEmail = (object) [
-                        'type'  => 'forgotten_password',
-                        'to_id' => $oUser->id,
-                    ];
-
-                    // --------------------------------------------------------------------------
-
-                    //  Add data for the email view
+                    //  Send forgotten password email
                     [$sTTL, $sKey] = array_pad(explode(':', $oUser->forgotten_password_code), 2, null);
 
-                    $oEmail->data = (object) [
-                        'resetUrl'   => siteUrl('auth/password/forgotten/' . $sKey),
-                        'identifier' => $oUser->email,
-                    ];
+                    /** @var ForgottenPassword $oEmail */
+                    $oEmail = Factory::factory('EmailForgottenPassword', Constants::MODULE_SLUG);
+                    $oEmail
+                        ->to($oUser)
+                        ->data([
+                            'resetUrl'   => siteUrl('auth/password/forgotten/' . $sKey),
+                            'identifier' => $oUser->email,
+                        ]);
 
-                    // --------------------------------------------------------------------------
+                    try {
 
-                    if (!$oEmailer->send($oEmail, true)) {
+                        $oEmail->send();
+
+                    } catch (\Exception $e) {
                         if (!$bAlwaysSucceed) {
-                            throw new NailsException(lang('auth_forgot_email_fail'));
+                            throw new NailsException(lang('auth_forgot_email_fail'), null, $e);
                         }
                     }
 
