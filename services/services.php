@@ -1,8 +1,9 @@
 <?php
 
+use Nails\Auth\Factory;
 use Nails\Auth\Model;
-use Nails\Auth\Service;
 use Nails\Auth\Resource;
+use Nails\Auth\Service;
 
 return [
     'services'  => [
@@ -84,6 +85,20 @@ return [
             } else {
                 return new Model\User\Password();
             }
+        },
+    ],
+    'factories' => [
+        'EmailForgottenPassword' => function (): Factory\Email\ForgottenPassword {
+            return new Factory\Email\ForgottenPassword();
+        },
+        'EmailNewUser'           => function (): Factory\Email\NewUser {
+            return new Factory\Email\NewUser();
+        },
+        'EmailPasswordUpdated'   => function (): Factory\Email\PasswordUpdated {
+            return new Factory\Email\PasswordUpdated();
+        },
+        'EmailVerifyEmail'       => function (): Factory\Email\VerifyEmail {
+            return new Factory\Email\VerifyEmail();
         },
     ],
     'resources' => [
