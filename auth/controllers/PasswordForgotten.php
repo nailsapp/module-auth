@@ -17,14 +17,15 @@ use Nails\Auth\Factory\Email\ForgottenPassword;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Service\Authentication;
+use Nails\Common\Exception\Encrypt\DecodeException;
+use Nails\Common\Exception\EnvironmentException;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
-use Nails\Email;
-use Nails\Email\Service\Emailer;
 use Nails\Factory;
 
 /**
@@ -47,7 +48,9 @@ class PasswordForgotten extends Base
      * Reset password form
      *
      * @return  void
-     **/
+     *
+     * @throws FactoryException
+     */
     public function index()
     {
         /** @var Input $oInput */
@@ -62,8 +65,6 @@ class PasswordForgotten extends Base
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        /** @var Emailer $oEmailer */
-        $oEmailer = Factory::service('Emailer', Email\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -172,7 +173,9 @@ class PasswordForgotten extends Base
      *
      * @param string $sCode The code to validate
      *
-     * @return  void
+     * @throws FactoryException
+     * @throws DecodeException
+     * @throws EnvironmentException
      */
     public function _validate($sCode)
     {
@@ -461,6 +464,10 @@ class PasswordForgotten extends Base
      * Route requests to the right method
      *
      * @param string $sMethod The method being called
+     *
+     * @throws DecodeException
+     * @throws EnvironmentException
+     * @throws FactoryException
      */
     public function _remap($sMethod)
     {
@@ -489,7 +496,7 @@ class PasswordForgotten extends Base
                     'auth/password/forgotten_interstitial',
                     'structure/footer/blank',
                 ]);
-            return;
+
         } else {
             $this->_validate($sMethod);
         }
