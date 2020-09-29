@@ -15,9 +15,16 @@ class ForgottenPassword extends Email
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns test data to use when sending test emails
+     *
+     * @return array
+     */
     public function getTestData(): array
     {
-        // TODO: Implement getTestData() method.
-        return [];
+        return [
+            'resetUrl'   => 'https://example.com',
+            'identifier' => 'user@example.com',
+        ];
     }
 }
