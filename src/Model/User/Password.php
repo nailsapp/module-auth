@@ -124,15 +124,6 @@ class Password extends Base
                 'updatedAt' => $sNow,
             ]);
 
-        $oEmail = (object) [
-            'type'  => 'password_updated',
-            'to_id' => $iUserId,
-            'data'  => (object) [
-                'ipAddress' => $oInput->ipAddress(),
-                'updatedAt' => $sNow,
-            ],
-        ];
-
         if (activeUser('id') && activeUser('id') !== $iUserId) {
             $oEmail->data('updatedBy', activeUser('first_name,last_name'));
         }
