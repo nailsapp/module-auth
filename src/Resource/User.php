@@ -6,8 +6,6 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Resource\Date;
 use Nails\Common\Resource\DateTime;
 use Nails\Common\Resource\Entity;
-use Nails\Common\Service\Input;
-use Nails\Factory;
 
 /**
  * Class User
@@ -95,6 +93,9 @@ class User extends Entity
     public $last_name;
 
     /** @var string */
+    public $name;
+
+    /** @var string */
     public $gender;
 
     /** @var Date */
@@ -141,6 +142,24 @@ class User extends Entity
 
     /** @var string */
     public $acl;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * User constructor.
+     *
+     * @param array $mObj
+     */
+    public function __construct($mObj = [])
+    {
+        parent::__construct($mObj);
+
+        $this->name = trim(sprintf(
+            '%s %s',
+            $this->first_name,
+            $this->last_name
+        ));
+    }
 
     // --------------------------------------------------------------------------
 
