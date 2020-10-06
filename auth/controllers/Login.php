@@ -138,13 +138,13 @@ class Login extends Base
                     ->buildValidator([
                         'identifier'           => array_values(array_filter([
                             \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? [
-                                'required',
-                                'valid_email',
+                                $oFormValidation::RULE_REQUIRED,
+                                $oFormValidation::RULE_VALID_EMAIL,
                             ] : null,
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? [$oFormValidation::RULE_REQUIRED] : null,
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? [$oFormValidation::RULE_REQUIRED] : null,
                         ]))[0],
-                        'password'             => ['required'],
+                        'password'             => [$oFormValidation::RULE_REQUIRED],
                         'remember'             => [],
                         'g-recaptcha-response' => [
                             function ($sToken) use ($oCaptchaService) {

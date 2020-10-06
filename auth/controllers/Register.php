@@ -57,6 +57,18 @@ class Register extends Base
     {
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
+        /** @var FormValidation $oFormValidation */
+        $oFormValidation = Factory::service('FormValidation');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var \Nails\Auth\Model\User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var \Nails\Auth\Model\User\Email $oUserEmailModel */
+        $oUserEmailModel = Factory::model('UserEmail', Constants::MODULE_SLUG);
+        /** @var \Nails\Captcha\Service\Captcha $oCaptchaService */
+        $oCaptchaService = Factory::service('Captcha', Nails\Captcha\Constants::MODULE_SLUG);
+
+        // --------------------------------------------------------------------------
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
@@ -75,90 +87,70 @@ class Register extends Base
 
         // --------------------------------------------------------------------------
 
-        //  If there's POST data attempt to log user in
-        /** @var Input $oInput */
-        $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            //  Validate input
-            /** @var FormValidation $oFormValidation */
-            $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('first_name', '', 'required');
-            $oFormValidation->set_rules('last_name', '', 'required');
-            $oFormValidation->set_rules('password', '', 'required');
+            try {
 
-            if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
-
-                $oFormValidation->set_rules(
-                    'email',
-                    '',
-                    'required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
-                );
-
-            } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
-
-                $oFormValidation->set_rules('username', '', 'required');
-
-                if ($oInput->post('email')) {
-
-                    $oFormValidation->set_rules(
-                        'email',
-                        '',
-                        'valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
-                    );
-                }
-
-            } else {
-
-                $oFormValidation->set_rules(
-                    'email',
-                    '',
-                    'required|valid_email|is_unique[' . Config::get('NAILS_DB_PREFIX') . 'user_email.email]'
-                );
-                $oFormValidation->set_rules(
-                    'username',
-                    '',
-                    'required'
-                );
-            }
-
-            // --------------------------------------------------------------------------
-
-            //  Change default messages
-            $oFormValidation->set_message('required', lang('fv_required'));
-            $oFormValidation->set_message('valid_email', lang('fv_valid_email'));
-
-            if (Config::get('APP_NATIVE_LOGIN_USING') == 'EMAIL') {
-                $sMessage = lang('auth_register_email_is_unique', siteUrl('auth/password/forgotten'));
-            } elseif (Config::get('APP_NATIVE_LOGIN_USING') == 'USERNAME') {
-                $sMessage = lang('auth_register_username_is_unique', siteUrl('auth/password/forgotten'));
-            } else {
-                $sMessage = lang('auth_register_identity_is_unique', siteUrl('auth/password/forgotten'));
-            }
-
-            $oFormValidation->set_message('is_unique', $sMessage);
-
-            // --------------------------------------------------------------------------
-
-            //  Run validation
-            if ($oFormValidation->run()) {
-
-                //  Attempt the registration
-                $aInsertData = [
-                    'email'      => trim($oInput->post('email')),
-                    'username'   => trim($oInput->post('username')),
-                    'group_id'   => $iDefaultGroupId,
-                    'password'   => $oInput->post('password'),
-                    'first_name' => trim($oInput->post('first_name')),
-                    'last_name'  => trim($oInput->post('last_name')),
-                ];
+                $oFormValidation
+                    ->buildValidator([
+                        'first_name'           => [$oFormValidation::RULE_REQUIRED],
+                        'last_name'            => [$oFormValidation::RULE_REQUIRED],
+                        'password'             => [$oFormValidation::RULE_REQUIRED],
+                        'email'                => in_array(Config::get('APP_NATIVE_LOGIN_USING'), ['EMAIL', 'BOTH']) ? [
+                            $oFormValidation::RULE_REQUIRED,
+                            $oFormValidation::RULE_VALID_EMAIL,
+                            $oFormValidation::rule(
+                                $oFormValidation::RULE_IS_UNIQUE, $oUserEmailModel->getTableName(), 'email'
+                            ),
+                        ] : [],
+                        'username'             => in_array(Config::get('APP_NATIVE_LOGIN_USING'), [
+                            'USERNAME',
+                            'BOTH',
+                        ]) ? [
+                            $oFormValidation::RULE_REQUIRED,
+                            $oFormValidation::rule(
+                                $oFormValidation::RULE_IS_UNIQUE, $oUserModel->getTableName(), 'username'
+                            ),
+                        ] : [],
+                        'g-recaptcha-response' => [
+                            function ($sToken) use ($oCaptchaService) {
+                                if (appSetting('user_registration_captcha_enabled', 'auth')) {
+                                    if (!$oCaptchaService->verify($sToken)) {
+                                        throw new \Nails\Common\Exception\ValidationException(
+                                            lang('auth_register_captcha_fail')
+                                        );
+                                    }
+                                }
+                            },
+                        ],
+                    ])
+                    ->setMessages([
+                        $oFormValidation::RULE_IS_UNIQUE => implode('', [
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL'
+                                ? lang('auth_register_email_is_unique', siteUrl('auth/password/forgotten'))
+                                : null,
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME'
+                                ? lang('auth_register_username_is_unique', siteUrl('auth/password/forgotten'))
+                                : null,
+                            Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH'
+                                ? lang('auth_register_identity_is_unique', siteUrl('auth/password/forgotten'))
+                                : null,
+                        ]),
+                    ])
+                    ->run();
 
                 // --------------------------------------------------------------------------
 
-                //  Handle referrals
-                if ($oSession->getUserData('referred_by')) {
-                    $aInsertData['referred_by'] = $oSession->getUserData('referred_by');
-                }
+                //  Attempt the registration
+                $aInsertData = [
+                    'email'       => trim(strtolower($oInput->post('email'))),
+                    'username'    => trim($oInput->post('username')),
+                    'group_id'    => $iDefaultGroupId,
+                    'password'    => $oInput->post('password'),
+                    'first_name'  => trim($oInput->post('first_name')),
+                    'last_name'   => trim($oInput->post('last_name')),
+                    'referred_by' => (int) $oSession->getUserData('referred_by') ?: null,
+                ];
 
                 // --------------------------------------------------------------------------
 
@@ -166,44 +158,48 @@ class Register extends Base
                 $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
                 $oUser      = $oUserModel->create($aInsertData);
 
-                if ($oUser) {
-
-                    //  Create an event for this event
-                    createUserEvent('did_register', ['method' => 'native'], null, $oUser->id);
-
-                    //  Log the user in
-                    if (!$oUserModel->setLoginData($oUser->id)) {
-                        //  Login failed for some reason, send them to the login page to try again
-                        redirect('auth/login');
-                    } else {
-                        $oSession->setFlashData(
-                            'success',
-                            lang('auth_register_flashdata_welcome', $oUser->first_name)
-                        );
-                    }
-
-                    // --------------------------------------------------------------------------
-
-                    //  Redirect to the group homepage
-                    //  @todo (Pablo - 2017-07-11) - Setting for forced email activation
-                    //  @todo (Pablo - 2017-07-11) - Handle setting MFA questions and/or devices
-
-                    $oGroup = $oUserGroupModel->getById($oUser->group_id);
-
-                    if ($oGroup->registration_redirect) {
-                        $sRedirectUrl = $oGroup->registration_redirect;
-                    } else {
-                        $sRedirectUrl = $oGroup->default_homepage;
-                    }
-
-                    redirect($sRedirectUrl);
-
-                } else {
-                    $this->data['error'] = 'Could not create new user account. ' . $oUserModel->lastError();
+                if (empty($oUser)) {
+                    throw new \Nails\Auth\Exception\AuthException(
+                        'Could not create new user account. ' . $oUserModel->lastError()
+                    );
                 }
 
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
+                //  Create an event for this event
+                createUserEvent('did_register', ['method' => 'native'], null, $oUser->id);
+
+                //  Log the user in
+                if (!$oUserModel->setLoginData($oUser->id)) {
+                    //  Login failed for some reason, send them to the login page to try again
+                    redirect('auth/login');
+
+                } else {
+                    $oSession->setFlashData(
+                        'success',
+                        lang('auth_register_flashdata_welcome', $oUser->first_name)
+                    );
+                }
+
+                // --------------------------------------------------------------------------
+
+                //  Redirect to the group homepage
+                //  @todo (Pablo - 2017-07-11) - Setting for forced email activation
+                //  @todo (Pablo - 2017-07-11) - Handle setting MFA questions and/or devices
+
+                $oGroup = $oUserGroupModel->getById($oUser->group_id);
+
+                if ($oGroup->registration_redirect) {
+                    $sRedirectUrl = $oGroup->registration_redirect;
+                } else {
+                    $sRedirectUrl = $oGroup->default_homepage;
+                }
+
+                redirect($sRedirectUrl);
+
+            } catch (\Nails\Common\Exception\ValidationException $e) {
+                $this->data['error'] = $e->getMessage();
+
+            } catch (AuthException $e) {
+                $this->data['error'] = $e->getMessage();
             }
         }
 
@@ -221,6 +217,13 @@ class Register extends Base
         // --------------------------------------------------------------------------
 
         $this->loadStyles(Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/register/form.php');
+
+        //  Re-boot captcha as loadStyles clears everything
+        if (appSetting('user_registration_captcha_enabled', 'auth')) {
+            $oCaptchaService->boot();
+        }
+
+        // --------------------------------------------------------------------------
 
         Factory::service('View')
             ->load([

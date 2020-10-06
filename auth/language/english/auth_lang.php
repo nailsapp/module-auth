@@ -126,6 +126,9 @@ $lang['auth_register_social_message']  = 'Or, to save time, register using your 
 $lang['auth_register_social_signin']   = 'Sign in with %s';
 $lang['auth_register_social_register'] = 'Register with %s';
 
+# Captcha
+$lang['auth_register_captcha_fail'] = 'You failed the captcha test.';
+
 //  Extra info
 $lang['auth_register_extra_message'] = 'In order to complete setting up your account we need a little more information.';
 
