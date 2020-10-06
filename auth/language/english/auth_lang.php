@@ -41,6 +41,7 @@ $lang['auth_login_social_signin']        = 'Sign in with %s';
 $lang['auth_login_ok_welcome']         = 'Welcome, %s! You last logged in %s.';
 $lang['auth_login_ok_welcome_with_ip'] = 'Welcome, %s! You last logged in %s from IP address %s.';
 $lang['auth_login_ok_welcome_notime']  = 'Welcome, %s! Nice to see you again.';
+$lang['auth_login_captcha_fail']       = 'You failed the captcha test.';
 $lang['auth_login_pw_expired']         = 'Your password has expired. You must update your password every %s days. Please choose a new password and click "Change Password &amp; Log In"';
 $lang['auth_login_pw_temp']            = 'A password reset has been requested for this account. Please choose a new password and click "Change Password &amp; Log In"';
 

@@ -12,11 +12,22 @@
 
 namespace Nails\Admin\Auth;
 
+use Nails\Admin\Factory\Nav;
 use Nails\Admin\Helper;
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\BaseAdmin;
+use Nails\Auth\Service\SocialSignOn;
+use Nails\Common\Service\AppSetting;
+use Nails\Common\Service\Asset;
+use Nails\Common\Service\Database;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
+/**
+ * Class Settings
+ *
+ * @package Nails\Admin\Auth
+ */
 class Settings extends BaseAdmin
 {
     /**
@@ -26,9 +37,11 @@ class Settings extends BaseAdmin
      */
     public static function announce()
     {
+        /** @var Nav $oNavGroup */
         $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
-        $oNavGroup->setLabel('Settings');
-        $oNavGroup->setIcon('fa-wrench');
+        $oNavGroup
+            ->setLabel('Settings')
+            ->setIcon('fa-wrench');
 
         if (userHasPermission('admin:auth:settings:update:.*')) {
             $oNavGroup->addAction('Authentication');
@@ -46,13 +59,14 @@ class Settings extends BaseAdmin
      */
     public static function permissions(): array
     {
-        $permissions = parent::permissions();
+        $aPermissions = parent::permissions();
 
-        $permissions['update:registration'] = 'Can configure registration';
-        $permissions['update:password']     = 'Can configure password';
-        $permissions['update:social']       = 'Can social integrations';
+        $aPermissions['update:registration'] = 'Can configure registration';
+        $aPermissions['update:login']        = 'Can configure login';
+        $aPermissions['update:password']     = 'Can configure password';
+        $aPermissions['update:social']       = 'Can social integrations';
 
-        return $permissions;
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -70,92 +84,109 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oSocial                 = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
-        $providers               = $oSocial->getProviders();
-        $this->data['providers'] = $providers;
+        /** @var SocialSignOn $oSocial */
+        $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Asset $oAsset */
+        $oAsset = Factory::service('Asset');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var AppSetting $oAppSettingService */
+        $oAppSettingService = Factory::service('AppSetting');
 
         // --------------------------------------------------------------------------
 
-        $oInput = Factory::service('Input');
+        $aProviders               = $oSocial->getProviders();
+        $this->data['aProviders'] = $aProviders;
+
+        // --------------------------------------------------------------------------
+
         if ($oInput->post()) {
 
-            //  Prepare update
-            $settings          = [];
-            $settingsEncrypted = [];
+            $aSettings          = [];
+            $aSettingsEncrypted = [];
+
+            // --------------------------------------------------------------------------
 
             if (userHasPermission('admin:auth:settings:update:registration')) {
-                $settings['user_registration_enabled'] = $oInput->post('user_registration_enabled');
+                $aSettings['user_registration_enabled']         = (bool) $oInput->post('user_registration_enabled');
+                $aSettings['user_registration_captcha_enabled'] = (bool) $oInput->post('user_registration_captcha_enabled');
             }
 
-            if (userHasPermission('admin:auth:settings:update:password')) {
-                //  @todo
+            // --------------------------------------------------------------------------
+
+            if (userHasPermission('admin:auth:settings:update:login')) {
+                $aSettings['user_login_captcha_enabled'] = (bool) $oInput->post('user_login_captcha_enabled');
             }
+
+            // --------------------------------------------------------------------------
 
             if (userHasPermission('admin:auth:settings:update:social')) {
 
                 /**
-                 * Disable social signon, if any providers are proeprly enabled it'll
+                 * Disable social signon, if any providers are properly enabled it'll
                  * turn itself on again.
                  */
 
-                $settings['auth_social_signon_enabled'] = false;
+                $aSettings['auth_social_signon_enabled'] = false;
 
-                foreach ($providers as $provider) {
+                foreach ($aProviders as $aProvider) {
 
-                    $settings['auth_social_signon_' . $provider['slug'] . '_enabled'] = (bool) $oInput->post('auth_social_signon_' . $provider['slug'] . '_enabled');
+                    $aSettings['auth_social_signon_' . $aProvider['slug'] . '_enabled'] = (bool) $oInput->post('auth_social_signon_' . $aProvider['slug'] . '_enabled');
 
-                    if ($settings['auth_social_signon_' . $provider['slug'] . '_enabled']) {
+                    if ($aSettings['auth_social_signon_' . $aProvider['slug'] . '_enabled']) {
 
                         //  null out each key
-                        if ($provider['fields']) {
+                        if ($aProvider['fields']) {
 
-                            foreach ($provider['fields'] as $key => $label) {
+                            foreach ($aProvider['fields'] as $key => $label) {
 
                                 if (is_array($label) && !isset($label['label'])) {
 
                                     foreach ($label as $key1 => $label1) {
 
-                                        $value = $oInput->post('auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1);
+                                        $value = $oInput->post('auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1);
 
                                         if (!empty($label1['required']) && empty($value)) {
-                                            $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
+                                            $error = 'Provider "' . $aProvider['label'] . '" was enabled, but was missing required field "' . $label1['label'] . '".';
                                             break 3;
                                         }
 
                                         if (empty($label1['encrypted'])) {
-                                            $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
+                                            $aSettings['auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1] = $value;
                                         } else {
-                                            $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = $value;
+                                            $aSettingsEncrypted['auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1] = $value;
                                         }
                                     }
 
                                 } else {
 
-                                    $value = $oInput->post('auth_social_signon_' . $provider['slug'] . '_' . $key);
+                                    $value = $oInput->post('auth_social_signon_' . $aProvider['slug'] . '_' . $key);
 
                                     if (!empty($label['required']) && empty($value)) {
-                                        $error = 'Provider "' . $provider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';
+                                        $error = 'Provider "' . $aProvider['label'] . '" was enabled, but was missing required field "' . $label['label'] . '".';
                                         break 2;
                                     }
 
                                     if (empty($label['encrypted'])) {
-                                        $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
+                                        $aSettings['auth_social_signon_' . $aProvider['slug'] . '_' . $key] = $value;
                                     } else {
-                                        $settingsEncrypted['auth_social_signon_' . $provider['slug'] . '_' . $key] = $value;
+                                        $aSettingsEncrypted['auth_social_signon_' . $aProvider['slug'] . '_' . $key] = $value;
                                     }
                                 }
                             }
                         }
 
                         //  Turn on social signon
-                        $settings['auth_social_signon_enabled'] = true;
+                        $aSettings['auth_social_signon_enabled'] = true;
 
                     } else {
 
                         //  null out each key
-                        if ($provider['fields']) {
+                        if ($aProvider['fields']) {
 
-                            foreach ($provider['fields'] as $key => $label) {
+                            foreach ($aProvider['fields'] as $key => $label) {
 
                                 /**
                                  * Secondary conditional detects an actual array fo fields rather than
@@ -165,11 +196,11 @@ class Settings extends BaseAdmin
                                 if (is_array($label) && !isset($label['label'])) {
 
                                     foreach ($label as $key1 => $label1) {
-                                        $settings['auth_social_signon_' . $provider['slug'] . '_' . $key . '_' . $key1] = null;
+                                        $aSettings['auth_social_signon_' . $aProvider['slug'] . '_' . $key . '_' . $key1] = null;
                                     }
 
                                 } else {
-                                    $settings['auth_social_signon_' . $provider['slug'] . '_' . $key] = null;
+                                    $aSettings['auth_social_signon_' . $aProvider['slug'] . '_' . $key] = null;
                                 }
                             }
                         }
@@ -177,26 +208,25 @@ class Settings extends BaseAdmin
                 }
             }
 
-            //  Save
-            if (!empty($settings)) {
+            // --------------------------------------------------------------------------
+
+            if (!empty($aSettings)) {
 
                 if (empty($error)) {
 
-                    $oDb = Factory::service('Database');
                     $oDb->trans_begin();
 
-                    $bRollback          = false;
-                    $oAppSettingService = Factory::service('AppSetting');
+                    $bRollback = false;
 
-                    if (!empty($settings)) {
-                        if (!$oAppSettingService->set($settings, 'auth')) {
+                    if (!empty($aSettings)) {
+                        if (!$oAppSettingService->set($aSettings, 'auth')) {
                             $error     = $oAppSettingService->lastError();
                             $bRollback = true;
                         }
                     }
 
-                    if (!empty($settingsEncrypted)) {
-                        if (!$oAppSettingService->set($settingsEncrypted, 'auth', null, true)) {
+                    if (!empty($aSettingsEncrypted)) {
+                        if (!$oAppSettingService->set($aSettingsEncrypted, 'auth', null, true)) {
                             $error     = $oAppSettingService->lastError();
                             $bRollback = true;
                         }
@@ -230,8 +260,6 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Load assets
-        $oAsset = Factory::service('Asset');
         $oAsset->load('nails.admin.settings.min.js', 'NAILS');
 
         // --------------------------------------------------------------------------

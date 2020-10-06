@@ -14,9 +14,9 @@ use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
 use Nails\Auth\Exception\AuthException;
 use Nails\Auth\Exception\Login\NoUserException;
-use Nails\Auth\Exception\Login\RequiresPasswordResetTempException;
-use Nails\Auth\Exception\Login\RequiresPasswordResetExpiredException;
 use Nails\Auth\Exception\Login\RequiresMfaException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetExpiredException;
+use Nails\Auth\Exception\Login\RequiresPasswordResetTempException;
 use Nails\Auth\Model\User\Group;
 use Nails\Auth\Model\User\Password;
 use Nails\Auth\Resource;
@@ -24,7 +24,6 @@ use Nails\Auth\Service\Authentication;
 use Nails\Auth\Service\SocialSignOn;
 use Nails\Cdn\Service\Cdn;
 use Nails\Common\Exception\FactoryException;
-use Nails\Common\Exception\NailsException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FileCache;
@@ -115,6 +114,8 @@ class Login extends Base
         $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var SocialSignOn $oSocial */
         $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
+        /** @var \Nails\Captcha\Service\Captcha $oCaptchaService */
+        $oCaptchaService = Factory::service('Captcha', Nails\Captcha\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -135,13 +136,27 @@ class Login extends Base
 
                 $oFormValidation
                     ->buildValidator([
-                        'identifier' => array_values(array_filter([
-                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? ['required', 'valid_email'] : null,
+                        'identifier'           => array_values(array_filter([
+                            \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'EMAIL' ? [
+                                'required',
+                                'valid_email',
+                            ] : null,
                             \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'USERNAME' ? ['required'] : null,
                             \Nails\Config::get('APP_NATIVE_LOGIN_USING') === 'BOTH' ? ['required'] : null,
                         ]))[0],
-                        'password'   => ['required'],
-                        'remember'   => [],
+                        'password'             => ['required'],
+                        'remember'             => [],
+                        'g-recaptcha-response' => [
+                            function ($sToken) use ($oCaptchaService) {
+                                if (appSetting('user_login_captcha_enabled', 'auth')) {
+                                    if (!$oCaptchaService->verify($sToken)) {
+                                        throw new ValidationException(
+                                            lang('auth_login_captcha_fail')
+                                        );
+                                    }
+                                }
+                            },
+                        ],
                     ])
                     ->run();
 
@@ -185,6 +200,11 @@ class Login extends Base
         // --------------------------------------------------------------------------
 
         $this->loadStyles(\Nails\Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/login/form.php');
+
+        //  Re-boot captcha as loadStyles clears everything
+        if (appSetting('user_login_captcha_enabled', 'auth')) {
+            $oCaptchaService->boot();
+        }
 
         Factory::service('View')
             ->load([
