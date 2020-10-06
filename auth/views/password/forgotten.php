@@ -58,6 +58,22 @@ $oInput = \Nails\Factory::service('Input');
                 <?=$sFieldType($sFieldKey, set_value($sFieldKey, $oInput->get('email')), $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
+            <?php
+
+            if (appSetting('user_password_reset_captcha_enabled', 'auth')) {
+                ?>
+                <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
+                    <?php
+                    /** @var \Nails\Captcha\Service\Captcha $oCaptchaService */
+                    $oCaptchaService = \Nails\Factory::service('Captcha', Nails\Captcha\Constants::MODULE_SLUG);
+                    echo $oCaptchaService->generate()->getHtml();
+                    echo form_error('g-recaptcha-response', '<p class="form__error">', '</p>');
+                    ?>
+                </div>
+                <?php
+            }
+
+            ?>
             <p>
                 <button type="submit" class="btn btn--block btn--primary">
                     <?=lang('auth_forgot_action_reset')?>

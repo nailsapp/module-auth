@@ -43,6 +43,18 @@ $oInput = \Nails\Factory::service('Input');
             },
         ],
 
+        !userHasPermission('admin:auth:settings:update:password') ? null : [
+            'label'   => 'Password Reset',
+            'content' => function () {
+                echo form_field_boolean([
+                    'key'     => 'user_password_reset_captcha_enabled',
+                    'label'   => 'Captcha',
+                    'default' => (bool) appSetting('user_password_reset_captcha_enabled', 'auth'),
+                    'info'    => anchor('admin/captcha/settings', 'Manage captcha settings here'),
+                ]);
+            },
+        ],
+
         !userHasPermission('admin:auth:groups:edit') ? null : [
             'label'   => 'Security',
             'content' => function () {

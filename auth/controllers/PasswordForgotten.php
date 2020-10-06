@@ -65,6 +65,8 @@ class PasswordForgotten extends Base
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var \Nails\Captcha\Service\Captcha $oCaptchaService */
+        $oCaptchaService = Factory::service('Captcha', Nails\Captcha\Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -96,7 +98,18 @@ class PasswordForgotten extends Base
 
                 $oFormValidation
                     ->buildValidator([
-                        'identifier' => reset($aRules),
+                        'identifier'           => reset($aRules),
+                        'g-recaptcha-response' => [
+                            function ($sToken) use ($oCaptchaService) {
+                                if (appSetting('user_password_reset_captcha_enabled', 'auth')) {
+                                    if (!$oCaptchaService->verify($sToken)) {
+                                        throw new \Nails\Common\Exception\ValidationException(
+                                            'You failed the captcha test.'
+                                        );
+                                    }
+                                }
+                            },
+                        ],
                     ])
                     ->run();
 
@@ -157,6 +170,11 @@ class PasswordForgotten extends Base
 
         //  Load the views
         $this->loadStyles(\Nails\Config::get('NAILS_APP_PATH') . 'application/modules/auth/views/password/forgotten.php');
+
+        //  Re-boot captcha as loadStyles clears everything
+        if (appSetting('user_password_reset_captcha_enabled', 'auth')) {
+            $oCaptchaService->boot();
+        }
 
         Factory::service('View')
             ->load([

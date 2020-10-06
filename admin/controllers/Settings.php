@@ -122,6 +122,12 @@ class Settings extends BaseAdmin
 
             // --------------------------------------------------------------------------
 
+            if (userHasPermission('admin:auth:settings:update:password')) {
+                $aSettings['user_password_reset_captcha_enabled'] = (bool) $oInput->post('user_password_reset_captcha_enabled');
+            }
+
+            // --------------------------------------------------------------------------
+
             if (userHasPermission('admin:auth:settings:update:social')) {
 
                 /**
