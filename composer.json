@@ -30,7 +30,6 @@
     "prefer-stable": true,
     "require": {
         "nails/common": "dev-develop",
-        "nails/module-email": "dev-develop",
         "nails/module-captcha": "dev-develop",
         "nails/module-console": "dev-develop",
         "hybridauth/hybridauth": "~3.0",
