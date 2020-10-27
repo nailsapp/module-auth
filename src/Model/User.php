@@ -1693,6 +1693,7 @@ class User extends Base
         $oUser = $this->getById($oRow->user_id);
 
         $oDb->where('id', $oRow->id);
+        $oDb->delete($this->oEmailModel->getTableName());
 
         if ((bool) $oDb->affected_rows()) {
 
