@@ -118,7 +118,12 @@ class Reset extends Base
         $oOutput->writeln('');
         $oOutput->writeln('OK, here\'s what\'s going to happen:');
         $oOutput->writeln('');
-        $oOutput->writeln('- The password for user #' . $oUser->id . ' will be changed.');
+        $oOutput->writeln(sprintf(
+            '- The password for user <info>#%s %s (%s)</info> will be changed.',
+            $oUser->id,
+            $oUser->name,
+            $oUser->email
+        ));
         $oOutput->writeln('- The user will be informed their password has changed, but not what it is.');
         if ($bIsTemp) {
             $oOutput->writeln('- The password is temporary and the user will be asked to change this on next log in.');
