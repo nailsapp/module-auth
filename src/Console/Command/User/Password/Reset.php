@@ -6,8 +6,8 @@ use Nails\Auth\Constants;
 use Nails\Auth\Exception\Console\PasswordNotAcceptableException;
 use Nails\Auth\Exception\Console\UserNotFoundException;
 use Nails\Auth\Model\User;
-use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\Base;
+use Nails\Email\Service\Emailer;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -141,6 +141,21 @@ class Reset extends Base
                 $oUserPasswordModel->lastError(),
             ]));
             return self::EXIT_CODE_FAILURE;
+        }
+
+        // --------------------------------------------------------------------------
+
+        //  Fetch the reset email
+        /** @var Emailer $oEmailer */
+        $oEmailer   = Factory::service('Emailer', \Nails\Email\Constants::MODULE_SLUG);
+        $oLastEmail = $oEmailer->getLastEmail();
+
+        if (!empty($oLastEmail)) {
+            $oOutput->writeln('Password reset confirmation email which was sent to user:');
+            $oOutput->writeln(sprintf(
+                '<comment>%s</comment>',
+                $oLastEmail->data->url->viewOnline
+            ));
         }
 
         // --------------------------------------------------------------------------
