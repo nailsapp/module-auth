@@ -70,6 +70,7 @@ class Events extends Base
     public function autoload(): array
     {
         return [
+            new Listener\Startup(),
             new Listener\User\Init(),
         ];
     }

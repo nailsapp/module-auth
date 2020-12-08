@@ -174,14 +174,28 @@ class Password extends Base
 
         // --------------------------------------------------------------------------
 
+        $sHash = $this->generatePasswordHash($sPassword, $oResult->row()->salt);
+
+        return $oResult->row()->password === $sHash;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generates a password hash using a password and a salt
+     *
+     * @param  string $sPassword The password to hash
+     * @param  string $sSalt     The hash salt
+     * @return string
+     */
+    protected function generatePasswordHash(string $sPassword, string $sSalt): string
+    {
         /**
          * @todo: use the appropriate driver to determine password correctness, but
          * for now, do it the old way
          */
 
-        $sHash = sha1(sha1($sPassword) . $oResult->row()->salt);
-
-        return $oResult->row()->password === $sHash;
+        return sha1(sha1($sPassword) . $sSalt);
     }
 
     // --------------------------------------------------------------------------
@@ -417,7 +431,7 @@ class Password extends Base
     public function generateHashObject($sPassword): stdClass
     {
         $sSalt = $this->salt();
-        $sHash = sha1(sha1($sPassword) . $sSalt);
+        $sHash = $this->generatePasswordHash($sPassword, $sSalt);
 
         return (object) [
             'password'     => $sHash,
@@ -660,7 +674,7 @@ class Password extends Base
     {
         return md5(
             uniqid(
-                $sPepper . rand() . Config::get('DEPLOY_PRIVATE_KEY') . Config::get('APP_PRIVATE_KEY'),
+                $sPepper . rand() . Config::get('PRIVATE_KEY'),
                 true
             )
         );
@@ -692,7 +706,7 @@ class Password extends Base
             //  TTL (24 hrs)
             time() + 86400,
             //  Key
-            sha1(sha1($this->salt()) . $this->salt() . Config::get('APP_PRIVATE_KEY')),
+            $this->generatePasswordHash($this->salt(), $this->salt() . Config::get('PRIVATE_KEY')))
         ]);
 
         // --------------------------------------------------------------------------

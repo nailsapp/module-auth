@@ -1982,7 +1982,7 @@ class User extends Base
         //  Generate a code to remember the user by and save it to the DB
         /** @var Encrypt $oEncrypt */
         $oEncrypt = Factory::service('Encrypt');
-        $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . Config::get('APP_PRIVATE_KEY') . time()));
+        $sSalt    = $oEncrypt->encode(sha1($iId . $sPassword . $sEmail . Config::get('PRIVATE_KEY') . time()));
 
         /** @var Database $oDb */
         $oDb = Factory::service('Database');

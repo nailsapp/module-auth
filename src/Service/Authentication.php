@@ -410,7 +410,7 @@ class Authentication
         $sCreated = $oNow->format('Y-m-d H:i:s');
         $sExpires = $oNow->add(new DateInterval('PT10M'))->format('Y-m-d H:i:s');
         $aToken   = [
-            'token' => sha1(sha1(\Nails\Config::get('APP_PRIVATE_KEY') . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
+            'token' => sha1(sha1(\Nails\Config::get('PRIVATE_KEY') . $iUserId . $sCreated . $sExpires . $sIp) . $sSalt),
             'salt'  => md5($sSalt),
         ];
 
@@ -554,7 +554,7 @@ class Authentication
         //  Decode the question
         /** @var Encrypt $oEncrypt */
         $oEncrypt       = Factory::service('Encrypt');
-        $oOut->question = $oEncrypt->decode($oOut->question, \Nails\Config::get('APP_PRIVATE_KEY') . $oOut->salt);
+        $oOut->question = $oEncrypt->decode($oOut->question, \Nails\Config::get('PRIVATE_KEY') . $oOut->salt);
 
         //  Update the last requested details
         $oDb->set('last_requested', 'NOW()', false);
@@ -590,7 +590,7 @@ class Authentication
             return false;
         }
 
-        $hash = sha1(sha1(strtolower($answer)) . \Nails\Config::get('APP_PRIVATE_KEY') . $oQuestion->salt);
+        $hash = sha1(sha1(strtolower($answer)) . \Nails\Config::get('PRIVATE_KEY') . $oQuestion->salt);
 
         return $hash === $oQuestion->answer;
     }
@@ -644,8 +644,8 @@ class Authentication
             $aQuestionData[$iCounter] = [
                 'user_id'        => $iUserId,
                 'salt'           => $sSalt,
-                'question'       => $oEncrypt->encode($oDatum->question, \Nails\Config::get('APP_PRIVATE_KEY') . $sSalt),
-                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . \Nails\Config::get('APP_PRIVATE_KEY') . $sSalt),
+                'question'       => $oEncrypt->encode($oDatum->question, \Nails\Config::get('PRIVATE_KEY') . $sSalt),
+                'answer'         => sha1(sha1(strtolower($oDatum->answer)) . \Nails\Config::get('PRIVATE_KEY') . $sSalt),
                 'created'        => $sDateTime,
                 'last_requested' => null,
             ];
@@ -699,7 +699,7 @@ class Authentication
         }
 
         $oReturn         = reset($aResult);
-        $oReturn->secret = $oEncrypt->decode($oReturn->secret, \Nails\Config::get('APP_PRIVATE_KEY'));
+        $oReturn->secret = $oEncrypt->decode($oReturn->secret, \Nails\Config::get('PRIVATE_KEY'));
 
         return $oReturn;
     }
@@ -782,7 +782,7 @@ class Authentication
             $oEncrypt = Factory::service('Encrypt');
 
             $oDb->set('user_id', $iUserId);
-            $oDb->set('secret', $oEncrypt->encode($sSecret, \Nails\Config::get('APP_PRIVATE_KEY')));
+            $oDb->set('secret', $oEncrypt->encode($sSecret, \Nails\Config::get('PRIVATE_KEY')));
             $oDb->set('created', 'NOW()', false);
 
             if ($oDb->insert(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret')) {
