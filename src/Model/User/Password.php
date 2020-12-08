@@ -184,8 +184,9 @@ class Password extends Base
     /**
      * Generates a password hash using a password and a salt
      *
-     * @param  string $sPassword The password to hash
-     * @param  string $sSalt     The hash salt
+     * @param string $sPassword The password to hash
+     * @param string $sSalt     The hash salt
+     *
      * @return string
      */
     protected function generatePasswordHash(string $sPassword, string $sSalt): string
@@ -706,7 +707,7 @@ class Password extends Base
             //  TTL (24 hrs)
             time() + 86400,
             //  Key
-            $this->generatePasswordHash($this->salt(), $this->salt() . Config::get('PRIVATE_KEY')))
+            $this->generatePasswordHash($this->salt(), $this->salt() . Config::get('PRIVATE_KEY')),
         ]);
 
         // --------------------------------------------------------------------------
