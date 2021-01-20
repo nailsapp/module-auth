@@ -1637,7 +1637,7 @@ class User extends Base
         }
 
         $oEmail
-            ->to($oEmailRow->user_id)
+            ->to((int) $oEmailRow->user_id)
             ->data('verifyUrl', siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code));
 
 
