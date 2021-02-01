@@ -162,6 +162,13 @@ class User extends Base
      */
     protected $oEmailModel;
 
+    /**
+     * The name of the "slug" column
+     *
+     * @var string
+     */
+    protected $tableSlugColumn = 'username';
+
     // --------------------------------------------------------------------------
 
     /**
@@ -178,8 +185,7 @@ class User extends Base
 
         //  Set defaults
         $this->table             = Config::get('NAILS_DB_PREFIX') . 'user';
-        $this->tableSlugColumn   = 'username';
-        $this->defaultSortColumn = $this->tableIdColumn;
+        $this->defaultSortColumn = $this->getColumn('id');
         $this->defaultSortOrder  = 'DESC';
 
         // --------------------------------------------------------------------------
@@ -1388,7 +1394,7 @@ class User extends Base
         }
 
         $this->setCache(
-            $this->prepareCacheKey($this->tableIdColumn, $oUser->id, $aData),
+            $this->prepareCacheKey($this->getColumn('id'), $oUser->id, $aData),
             $oUser
         );
 
@@ -1405,7 +1411,7 @@ class User extends Base
     protected function unsetCacheUser($iUserId)
     {
         $this->unsetCachePrefix(
-            $this->prepareCacheKey($this->tableIdColumn, $iUserId)
+            $this->prepareCacheKey($this->getColumn('id'), $iUserId)
         );
     }
 
