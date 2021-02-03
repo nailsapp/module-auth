@@ -144,13 +144,13 @@ class Password extends Base
      * Determines whether a password is correct for a particular user.
      *
      * @param Resource\User|int|string $mUser     The user's Resource, ID, or identifier
-     * @param string                   $sPassword The raw, unencrypted password to check
+     * @param string|null              $sPassword The raw, unencrypted password to check
      *
      * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function isCorrect($mUser, $sPassword): bool
+    public function isCorrect($mUser, ?string $sPassword): bool
     {
         $oUser = $this->getUser($mUser);
 
@@ -184,12 +184,12 @@ class Password extends Base
     /**
      * Generates a password hash using a password and a salt
      *
-     * @param string $sPassword The password to hash
-     * @param string $sSalt     The hash salt
+     * @param string|null $sPassword The password to hash
+     * @param string|null $sSalt     The hash salt
      *
      * @return string
      */
-    protected function generatePasswordHash(string $sPassword, string $sSalt): string
+    protected function generatePasswordHash(?string $sPassword, ?string $sSalt): string
     {
         /**
          * @todo: use the appropriate driver to determine password correctness, but
@@ -425,11 +425,11 @@ class Password extends Base
     /**
      * Generates a password hash, no strength checks
      *
-     * @param string $sPassword The password to generate the hash for
+     * @param string|null $sPassword The password to generate the hash for
      *
      * @return stdClass
      */
-    public function generateHashObject($sPassword): stdClass
+    public function generateHashObject(?string $sPassword): stdClass
     {
         $sSalt = $this->salt();
         $sHash = $this->generatePasswordHash($sPassword, $sSalt);
