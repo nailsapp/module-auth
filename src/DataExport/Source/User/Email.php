@@ -86,7 +86,7 @@ class Email implements Source
     {
         $oDb        = Factory::service('Database');
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        $oResponse  = Factory::factory('DataExportSourceResponse', 'nails/module-admin');
+        $oResponse  = Factory::factory('DataExportSourceResponse', \Nails\Admin\Constants::MODULE_SLUG);
 
         $oSource = $oDb
             ->select('u.id, u.first_name, u.last_name, ue.email')

@@ -89,7 +89,7 @@ class Accounts extends DefaultController
     public static function announce()
     {
         /** @var Nav $oNavGroup */
-        $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
+        $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
         $oNavGroup->setLabel('Users');
         $oNavGroup->setIcon('fa-users');
 
@@ -98,13 +98,13 @@ class Accounts extends DefaultController
             $oDb = Factory::service('Database');
             $oDb->where('is_suspended', false);
             $numTotal    = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'user');
-            $oAlertTotal = Factory::factory('NavAlert', 'nails/module-admin');
+            $oAlertTotal = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);
             $oAlertTotal->setValue($numTotal);
             $oAlertTotal->setLabel('Number of Users');
 
             $oDb->where('is_suspended', true);
             $numSuspended    = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'user');
-            $oAlertSuspended = Factory::factory('NavAlert', 'nails/module-admin');
+            $oAlertSuspended = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);
             $oAlertSuspended->setValue($numSuspended);
             $oAlertSuspended->setSeverity('danger');
             $oAlertSuspended->setLabel('Number of Suspended Users');
@@ -282,7 +282,7 @@ class Accounts extends DefaultController
 
         get_instance()->lang->load('admin_accounts');
         /** @var ChangeLog oChangeLogModel */
-        $this->oChangeLogModel = Factory::model('ChangeLog', 'nails/module-admin');
+        $this->oChangeLogModel = Factory::model('ChangeLog', \Nails\Admin\Constants::MODULE_SLUG);
     }
 
     // --------------------------------------------------------------------------
@@ -316,23 +316,23 @@ class Accounts extends DefaultController
         return array_merge(
             parent::indexCheckboxFilters(),
             [
-                Factory::factory('IndexFilter', 'nails/module-admin')
+                Factory::factory('IndexFilter', \Nails\Admin\Constants::MODULE_SLUG)
                     ->setLabel('Group')
                     ->setColumn('group_id')
                     ->addOptions(array_map(function ($oGroup) {
-                        return Factory::factory('IndexFilterOption', 'nails/module-admin')
+                        return Factory::factory('IndexFilterOption', \Nails\Admin\Constants::MODULE_SLUG)
                             ->setLabel($oGroup->label)
                             ->setValue($oGroup->id)
                             ->setIsSelected(true);
                     }, $aGroups)),
-                Factory::factory('IndexFilter', 'nails/module-admin')
+                Factory::factory('IndexFilter', \Nails\Admin\Constants::MODULE_SLUG)
                     ->setLabel('Suspended')
                     ->setColumn('is_suspended')
                     ->addOptions([
-                        Factory::factory('IndexFilterOption', 'nails/module-admin')
+                        Factory::factory('IndexFilterOption', \Nails\Admin\Constants::MODULE_SLUG)
                             ->setLabel('Yes')
                             ->setValue(true),
-                        Factory::factory('IndexFilterOption', 'nails/module-admin')
+                        Factory::factory('IndexFilterOption', \Nails\Admin\Constants::MODULE_SLUG)
                             ->setLabel('No')
                             ->setValue(false)
                             ->setIsSelected(true),

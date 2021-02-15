@@ -38,7 +38,7 @@ class Settings extends BaseAdmin
     public static function announce()
     {
         /** @var Nav $oNavGroup */
-        $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
+        $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
         $oNavGroup
             ->setLabel('Settings')
             ->setIcon('fa-wrench');

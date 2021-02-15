@@ -120,7 +120,7 @@ class All implements Source
         /** @var string[]|Base[] $mTable */
         foreach ($aTables as $mTable) {
 
-            $aOut[] = Factory::factory('DataExportSourceResponse', 'nails/module-admin')
+            $aOut[] = Factory::factory('DataExportSourceResponse', \Nails\Admin\Constants::MODULE_SLUG)
                 ->setLabel($this->compileLabel($mTable))
                 ->setFileName($this->compileFilename($mTable))
                 ->setFields($this->compileColumns($mTable))
