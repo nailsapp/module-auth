@@ -12,9 +12,9 @@ $oInput = Factory::service('Input');
         the effect of changing the permissions of a group other than your own, check that your changes
         have worked before considering the job done!
     </div>
-    <hr/>
+    <hr />
     <?=form_open()?>
-    <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab"/>
+    <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab" />
     <ul class="tabs">
         <li class="tab <?=$oInput->post('activeTab') == 'tab-basic' || !$oInput->post('activeTab') ? 'active' : ''?>">
             <a href="#" data-tab="tab-basic">Basic Details</a>
@@ -89,7 +89,7 @@ $oInput = Factory::service('Input');
                     'default'     => isset($item->password_rules->min) ? $item->password_rules->min : '',
                     'required'    => false,
                     'placeholder' => 'The minimum number of characters a password must contain.',
-                    'info'        => 'If this is undefined, or set to 0 then there is no minimum length',
+                    'info'        => 'If this is undefined, or set to 0, then there is no minimum length',
                 ]);
 
                 echo form_field([
@@ -98,7 +98,7 @@ $oInput = Factory::service('Input');
                     'default'     => isset($item->password_rules->max) ? $item->password_rules->max : '',
                     'required'    => false,
                     'placeholder' => 'The maximum number of characters a password must contain.',
-                    'info'        => 'If this is undefined, or set to 0 then there is no maximum length',
+                    'info'        => 'If this is undefined, or set to 0, then there is no maximum length',
                 ]);
 
                 echo form_field_number([
@@ -107,7 +107,7 @@ $oInput = Factory::service('Input');
                     'default'     => isset($item->password_rules->expiresAfter) ? $item->password_rules->expiresAfter : '',
                     'required'    => false,
                     'placeholder' => 'The expiration policy for passwords, expressed in days',
-                    'info'        => 'If this is undefined, or set to 0 then there is no expiration policy',
+                    'info'        => 'If this is undefined, or set to 0, then there is no expiration policy',
                 ]);
 
                 echo form_field_checkbox([
@@ -219,29 +219,29 @@ $oInput = Factory::service('Input');
                                 <tbody>
                                     <?php
 
-                                    foreach ($aPermissions[$i]->permissions as $permission => $label) {
+                                    foreach ($aPermissions[$i]->permissions as $sPermission => $sLabel) {
 
-                                        $key       = 'acl[admin][' . $sPermissionSlug . '][' . $permission . ']';
-                                        $sCheckKey = 'admin:' . $sPermissionSlug . ':' . $permission;
+                                        $sKey        = 'acl[admin][' . $sPermissionSlug . '][' . $sPermission . ']';
+                                        $sCheckKey   = 'admin:' . $sPermissionSlug . ':' . $sPermission;
 
                                         if (!empty($_POST)) {
-                                            $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$permission]);
+                                            $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$sPermission]);
                                         } elseif (!empty($item->acl)) {
                                             $bIsChecked = in_array($sCheckKey, $item->acl);
                                         } else {
                                             $bIsChecked = false;
                                         }
 
-                                        $contextColor = $bIsChecked ? 'success' : 'error';
+                                        $sContextColor = $bIsChecked ? 'success' : 'error';
 
                                         ?>
                                         <tr>
-                                            <td class="enabled text-center <?=$contextColor?>">
+                                            <td class="enabled text-center <?=$sContextColor?>">
                                                 <label>
-                                                    <?=form_checkbox($key, true, $bIsChecked)?>
+                                                    <?=form_checkbox($sKey, true, $bIsChecked)?>
                                                 </label>
                                             </td>
-                                            <td class="permission"><?=$label?></td>
+                                            <td class="permission"><?=$sLabel?></td>
                                         </tr>
                                         <?php
 
@@ -259,8 +259,23 @@ $oInput = Factory::service('Input');
             </div>
         </div>
     </section>
-    <p>
-        <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
-    </p>
+    <div class="admin-floating-controls">
+        <button type="submit" class="btn btn-primary">
+            Save Changes
+        </button>
+        <?php
+        if (!empty($item) && $CONFIG['ENABLE_NOTES']) {
+            ?>
+            <button type="button"
+                    class="btn btn-default pull-right js-admin-notes"
+                    data-model-name="<?=$CONFIG['MODEL_NAME']?>"
+                    data-model-provider="<?=$CONFIG['MODEL_PROVIDER']?>"
+                    data-id="<?=$item->id?>">
+                Notes
+            </button>
+            <?php
+        }
+        ?>
+    </div>
     <?=form_close()?>
 </div>
