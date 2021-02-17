@@ -151,24 +151,26 @@ class Groups extends DefaultController
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
         /** @var Group $oItemModel */
-        $oItemModel = Factory::model(
-            $this->aConfig['MODEL_NAME'],
-            $this->aConfig['MODEL_PROVIDER']
-        );
-        $iItemId    = (int) $oUri->segment(5);
-        $oItem      = $oItemModel->getById($iItemId);
+        $oItemModel = static::getModel();
+
+        $iItemId = (int) $oUri->segment(5);
+        $oItem   = $oItemModel->getById($iItemId);
 
         if (empty($oItem)) {
             show404();
+
         } elseif ($oItem->id === activeUser('group_id')) {
             $oSession->setFlashData('error', 'You cannot delete your own user group.');
             redirect('admin/auth/groups');
+
         } elseif (!isSuperuser() && groupHasPermission('admin:superuser', $oItem)) {
             $oSession->setFlashData('error', 'You cannot delete a group which has super user permissions.');
             redirect('admin/auth/groups');
+
         } elseif ($oItem->id === $oItemModel->getDefaultGroupId()) {
             $oSession->setFlashData('error', 'You cannot delete the default user group.');
             redirect('admin/auth/groups');
+
         } else {
             parent::delete();
         }
