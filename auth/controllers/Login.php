@@ -1111,7 +1111,7 @@ class Login extends Base
 
         /** @var Output $oOutput */
         $oOutput = Factory::service('Output');
-        echo $oOutput->get_output();
+        echo $oOutput->getOutput();
         exit();
     }
 
