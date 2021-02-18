@@ -1636,7 +1636,7 @@ class User extends Base
         try {
             //  Allows the app to define a group specific verify email
             /** @var VerifyEmail $oEmail */
-            $oEmail = Factory::factory('EmailVerifyEmail' . $oEmailRow->group_id, Components::$oAppSlug);
+            $oEmail = Factory::factory('EmailVerifyEmail' . $oEmailRow->group_id, Components::$sAppSlug);
         } catch (FactoryException $e) {
             /** @var VerifyEmail $oEmail */
             $oEmail = Factory::factory('EmailVerifyEmail', Constants::MODULE_SLUG);
@@ -2371,7 +2371,7 @@ class User extends Base
                     try {
                         //  Allows the app to define a group specific welcome email
                         /** @var NewUser $oEmail */
-                        $oEmail = Factory::factory('EmailNewUser' . $oGroup->id, Components::$oAppSlug);
+                        $oEmail = Factory::factory('EmailNewUser' . $oGroup->id, Components::$sAppSlug);
                     } catch (FactoryException $e) {
                         /** @var NewUser $oEmail */
                         $oEmail = Factory::factory('EmailNewUser', Constants::MODULE_SLUG);
