@@ -13,15 +13,39 @@
 namespace Nails\Auth\Model\User;
 
 use DateInterval;
+use Nails\Auth\Constants;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Database;
 use Nails\Config;
 use Nails\Factory;
 
 class AccessToken extends Base
 {
     /**
+     * The table this model represents
+     *
+     * @var string
+     */
+    const TABLE = NAILS_DB_PREFIX . 'user_auth_access_token';
+
+    /**
+     * The name of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_NAME = 'UserAccessToken';
+
+    /**
+     * The provider of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
+
+    /**
      * Define how long the default expiration should be for access tokens; this should
      * be a value accepted by the DateInterval constructor.
+     *
      * @var string
      */
     const TOKEN_EXPIRE = 'P6M';
@@ -29,15 +53,10 @@ class AccessToken extends Base
     /**
      * Token template, defines the structure of the token, in a way acceptable to the
      * generateToken() function
+     *
      * @var string
      */
     const TOKEN_MASK = 'AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA/AAA-AAAA-AAA';
-
-    /**
-     * The characters which will make up the token; replace the X's in authAccessTokenTemplate.
-     * @var string
-     */
-    const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
     // --------------------------------------------------------------------------
 
@@ -52,21 +71,10 @@ class AccessToken extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the model
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->table = Config::get('NAILS_DB_PREFIX') . 'user_auth_access_token';
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Creates a new access token
      *
-     * @param  array  $aData         The data to create the access token with
-     * @param boolean $bReturnObject Whether to return the object, or the ID
+     * @param array $aData         The data to create the access token with
+     * @param bool  $bReturnObject Whether to return the object, or the token
      *
      * @return mixed false on failure, stdClass on success
      */
@@ -90,6 +98,7 @@ class AccessToken extends Base
 
         //  If not specified, generate an expiration date based on the defaults
         if (!isset($aData['expires']) && !empty(static::TOKEN_EXPIRE)) {
+            /** @var \DateTime $oNow */
             $oNow = Factory::factory('DateTime');
             $oNow->add(new DateInterval(static::TOKEN_EXPIRE));
             $aData['expires'] = $oNow->format('Y-m-d H:i:s');
@@ -112,17 +121,26 @@ class AccessToken extends Base
 
                 if (empty($this->aScopeHandler[$sScope])) {
 
-                    $this->setError('"' . $sScope . '" is not a valid token scope.');
+                    $this->setError(sprintf(
+                        '"%s" is not a valid token scope.',
+                        $sScope
+                    ));
                     return false;
 
                 } elseif (!s_callable($this->aScopeHandler[$sScope])) {
 
-                    $this->setError('Handler for "' . $sScope . '" is not a valid token scope callback.');
+                    $this->setError(sprintf(
+                        'Handler for "%s" is not a valid token scope callback.',
+                        $sScope
+                    ));
                     return false;
 
                 } elseif (!call_user_func($this->aScopeHandler[$sScope], $aData['user_id'], $sScope)) {
 
-                    $this->setError('No permission to request a token with scope "' . $sScope . '".');
+                    $this->setError(sprintf(
+                        'No permission to request a token with scope "%s".',
+                        $sScope
+                    ));
                     return false;
                 }
             }
@@ -133,25 +151,42 @@ class AccessToken extends Base
         // --------------------------------------------------------------------------
 
         //  Generate a new token
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         do {
 
             $sToken         = strtoupper(generateToken(static::TOKEN_MASK));
-            $aData['token'] = hash('sha256', $sToken . Config::get('PRIVATE_KEY'));
+            $aData['token'] = $this->hashToken($sToken);
             $oDb->where('token', $aData['token']);
 
         } while ($oDb->count_all_results($this->table));
 
         // --------------------------------------------------------------------------
 
-        if (parent::create($aData)) {
-            return (object) [
-                'token'   => $sToken,
-                'expires' => $aData['expires'],
-            ];
-        } else {
+        $mResult = parent::create($aData);
+        if (!$mResult) {
             return false;
+
+        } elseif ($bReturnObject) {
+            //  Overwrite the encoded token with the unencoded version
+            $mResult->token = $sToken;
         }
+
+        return $mResult;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Hashes the token string
+     *
+     * @param string $sToken The token to hash
+     *
+     * @return string
+     */
+    protected function hashToken(string $sToken): string
+    {
+        return hash('sha256', $sToken . Config::get('PRIVATE_KEY'));
     }
 
     // --------------------------------------------------------------------------
@@ -159,10 +194,10 @@ class AccessToken extends Base
     /**
      * Revoke an access token for a user
      *
-     * @param  integer $iUserId The ID of the user the token belongs to
-     * @param  mixed   $mToken  The token object, or a token ID
+     * @param integer $iUserId The ID of the user the token belongs to
+     * @param mixed   $mToken  The token object, or a token ID
      *
-     * @return boolean
+     * @return bool
      */
     public function revoke($iUserId, $mToken)
     {
@@ -191,10 +226,10 @@ class AccessToken extends Base
     /**
      * Prevent update of access tokens
      *
-     * @param  int   $iId   The accessToken's ID
-     * @param  array $aData Data to update the access token with
+     * @param int   $iId   The accessToken's ID
+     * @param array $aData Data to update the access token with
      *
-     * @return boolean
+     * @return bool
      */
     public function update($iId, array $aData = []): bool
     {
@@ -207,14 +242,14 @@ class AccessToken extends Base
     /**
      * Returns a token by it's token
      *
-     * @param  string $sToken The token to return
-     * @param  array  $aData  Data to pass to getAll()
+     * @param string $sToken The token to return
+     * @param array  $aData  Data to pass to getAll()
      *
      * @return mixed         false on failure, stdClass on success
      */
     public function getByToken($sToken, array $aData = [])
     {
-        return parent::getByToken(hash('sha256', $sToken . PRIVATE_KEY), $aData);
+        return parent::getByToken($this->hashToken($sToken), $aData);
     }
 
     // --------------------------------------------------------------------------
@@ -222,7 +257,7 @@ class AccessToken extends Base
     /**
      * Returns a token by it's token, but only if valid (i.e not expired)
      *
-     * @param  string $sToken The token to return
+     * @param string $sToken The token to return
      *
      * @return mixed         false on failure, stdClass on success
      */
@@ -242,50 +277,23 @@ class AccessToken extends Base
     /**
      * Determines whether a token has a given scope
      *
-     * @param  mixed  $mToken The token object, or a token ID
-     * @param  string $sScope The scope(s) to check for
+     * @param mixed  $mToken The token object, or a token ID
+     * @param string $sScope The scope to check
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasScope($mToken, $sScope)
+    public function hasScope($mToken, $sScope): bool
     {
         if (is_numeric($mToken)) {
             $oToken = $this->getById($mToken);
-        } else {
-            $oToken = $mToken;
-        }
 
-        if ($oToken) {
-            return in_array($sScope, $oToken->scope);
+        } elseif ($mToken instanceof \Nails\Auth\Resource\User\AccessToken) {
+            $oToken = $mToken;
+
         } else {
             return false;
         }
-    }
 
-    // --------------------------------------------------------------------------
-
-    /**
-     * Formats a single object
-     *
-     * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
-     *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
-     *
-     * @return void
-     */
-    protected function formatObject(
-        &$oObj,
-        array $aData = [],
-        array $aIntegers = [],
-        array $aBools = [],
-        array $aFloats = []
-    ) {
-        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
-        $oObj->scope = explode(',', $oObj->scope);
+        return $oToken->hasScope($sScope);
     }
 }
