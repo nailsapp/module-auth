@@ -51,6 +51,6 @@ class AccessToken extends Entity
      */
     public function hasScope(string $sScope)
     {
-        return in_array($sScope, $thois->scope);
+        return in_array($sScope, $this->scope);
     }
 }
