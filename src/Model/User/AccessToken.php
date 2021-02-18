@@ -285,6 +285,7 @@ class AccessToken extends Base
     public function hasScope($mToken, $sScope): bool
     {
         if (is_numeric($mToken)) {
+            /** @var \Nails\Auth\Resource\User\AccessToken $oToken */
             $oToken = $this->getById($mToken);
 
         } elseif ($mToken instanceof \Nails\Auth\Resource\User\AccessToken) {
