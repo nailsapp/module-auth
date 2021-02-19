@@ -477,7 +477,7 @@ class User extends Base
             $oEventService->trigger(
                 Events::USER_LOG_IN,
                 Events::getEventNamespace(),
-                [$oUser->id]
+                [$oUser, $bSetSessionData]
             );
 
             return true;

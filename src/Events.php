@@ -49,7 +49,8 @@ class Events extends Base
     /**
      * Fired when a user logs in
      *
-     * @param int $iId The ID of the user who logged in
+     * @param \Nails\Auth\Resource\User $oUser           The user who logged in
+     * @param bool                      $bSetSessionData Whether session data was set
      */
     const USER_LOG_IN = 'AUTH:USER:LOGGED_IN';
 
