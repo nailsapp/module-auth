@@ -159,11 +159,11 @@ class AccessToken extends Base
             $aData['token'] = $this->hashToken($sToken);
             $oDb->where('token', $aData['token']);
 
-        } while ($oDb->count_all_results($this->table));
+        } while ($oDb->count_all_results($this->getTableName()));
 
         // --------------------------------------------------------------------------
 
-        $mResult = parent::create($aData);
+        $mResult = parent::create($aData, $bReturnObject);
         if (!$mResult) {
             return false;
 

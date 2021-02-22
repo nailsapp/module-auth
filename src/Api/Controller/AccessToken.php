@@ -92,7 +92,7 @@ class AccessToken extends Api\Controller\Base
             'user_id' => $oUser->id,
             'label'   => $sLabel,
             'scope'   => $sScope,
-        ]);
+        ], true);
 
         if (!$oToken) {
             throw new Api\Exception\ApiException(
@@ -105,7 +105,7 @@ class AccessToken extends Api\Controller\Base
         $oResponse = Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData([
                 'token'   => $oToken->token,
-                'expires' => $oToken->expires,
+                'expires' => $oToken->expires->raw,
             ]);
 
         return $oResponse;
