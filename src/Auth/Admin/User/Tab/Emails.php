@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Auth\Admin\User\Tab;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Resource\User;
 use Nails\Common\Exception\FactoryException;
@@ -55,7 +56,7 @@ class Emails implements Tab
         /** @var View $oView */
         $oView = Factory::service('View');
         /** @var \Nails\Auth\Model\User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         return $oView
             ->load(

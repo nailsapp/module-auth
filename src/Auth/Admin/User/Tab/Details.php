@@ -2,6 +2,7 @@
 
 namespace Nails\Auth\Auth\Admin\User\Tab;
 
+use Nails\Auth\Constants;
 use Nails\Auth\Interfaces\Admin\User\Tab;
 use Nails\Auth\Resource\User;
 use Nails\Common\Exception\FactoryException;
@@ -103,7 +104,7 @@ class Details implements Tab
     public function getValidationRules(User $oUser): array
     {
         /** @var \Nails\Auth\Model\User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $aFields  = $this->getFields($oUser);
         $aRules   = [];
@@ -193,7 +194,7 @@ class Details implements Tab
     protected function getFields(User $oUser): array
     {
         /** @var \Nails\Auth\Model\User $oUserModel */
-        $oUserModel = Factory::model('User', 'nails/module-auth');
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
         $aFieldsDescribed = $oUserModel->describeFields();
         $aFields          = [];
