@@ -89,7 +89,7 @@ class User extends Base
      *
      * @var string
      */
-    const DEFAULT_SORT_ORDER = self::SPRT_DESC;
+    const DEFAULT_SORT_ORDER = self::SORT_DESC;
 
     /**
      * Any fields which should be considered sensitive
