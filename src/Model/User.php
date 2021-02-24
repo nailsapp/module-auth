@@ -61,7 +61,7 @@ class User extends Base
      *
      * @var string
      */
-    const TABLE_META = NAILS_DB_PREFIX . 'user_meta';
+    const TABLE_META = NAILS_DB_PREFIX . 'user_meta_app';
 
     /**
      * The name of the resource to use (as passed to \Nails\Factory::resource())
@@ -1636,7 +1636,6 @@ class User extends Base
             ->to((int) $oEmailRow->user_id)
             ->data('verifyUrl', siteUrl('email/verify/' . $oEmailRow->user_id . '/' . $oEmailRow->code));
 
-
         try {
 
             $oEmail->send();
@@ -2912,6 +2911,7 @@ class User extends Base
      * Returns the meta table alias
      *
      * @param bool $bIncludeSeparator Whether to include the separator
+     *
      * @return
      */
     public function getMetaTableAlias($bIncludeSeparator = false)
