@@ -2921,6 +2921,7 @@ class User extends Base
         $sTable = preg_replace('/_/', ' ', $sTable);
         $aTable = explode(' ', $sTable);
 
+        $sOut = '';
         foreach ($aTable as $sWord) {
             $sOut .= $sWord[0];
         }
