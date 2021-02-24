@@ -20,20 +20,23 @@ use Nails\Factory;
 
 class Group extends Base
 {
-    protected $oDefaultGroup;
+    /**
+     * The table this model represents
+     *
+     * @var string
+     */
+    const TABLE = NAILS_DB_PREFIX . 'user_group';
+
+    /**
+     * The default column to sort on
+     *
+     * @var string|null
+     */
+    const DEFAULT_SORT_COLUMN = 'id';
 
     // --------------------------------------------------------------------------
 
-    /**
-     * Group constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->table             = Config::get('NAILS_DB_PREFIX') . 'user_group';
-        $this->defaultSortColumn = 'id';
-    }
+    protected $oDefaultGroup;
 
     // --------------------------------------------------------------------------
 

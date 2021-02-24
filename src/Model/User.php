@@ -50,6 +50,20 @@ use stdClass;
 class User extends Base
 {
     /**
+     * The table this model represents
+     *
+     * @var string
+     */
+    const TABLE = NAILS_DB_PREFIX . 'user';
+
+    /**
+     * The user meta table
+     *
+     * @var string
+     */
+    const TABLE_META = NAILS_DB_PREFIX . 'user_meta';
+
+    /**
      * The name of the resource to use (as passed to \Nails\Factory::resource())
      *
      * @var string
@@ -64,6 +78,20 @@ class User extends Base
     const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
 
     /**
+     * The default column to sort on
+     *
+     * @var string|null
+     */
+    const DEFAULT_SORT_COLUMN = 'id';
+
+    /**
+     * The default sort order
+     *
+     * @var string
+     */
+    const DEFAULT_SORT_ORDER = self::SPRT_DESC;
+
+    /**
      * Any fields which should be considered sensitive
      *
      * @var string[]
@@ -75,6 +103,13 @@ class User extends Base
         'forgotten_password_code',
         'remember_code',
     ];
+
+    /**
+     * The name of the "remember me" cookie
+     *
+     * @var string
+     */
+    const REMEMBER_ME_COOKIE = 'nailsrememberme';
 
     // --------------------------------------------------------------------------
 
@@ -91,13 +126,6 @@ class User extends Base
      * @var Resource\User
      */
     protected $oActiveUser;
-
-    /**
-     * The name of the "Remember me" cookie
-     *
-     * @var string
-     */
-    protected $sRememberCookie = 'nailsrememberme';
 
     /**
      * Whether the active user is to be remembered
@@ -135,20 +163,6 @@ class User extends Base
     protected $aMetaColumns = null;
 
     /**
-     * The name of the user meta table
-     *
-     * @var string
-     */
-    protected $tableMeta = NAILS_DB_PREFIX . 'user_meta_app';
-
-    /**
-     * The alias to give the user meta table
-     *
-     * @var string
-     */
-    protected $tableMetaAlias = 'um';
-
-    /**
      * The user group model
      *
      * @var Group
@@ -180,13 +194,6 @@ class User extends Base
     public function __construct()
     {
         parent::__construct();
-
-        // --------------------------------------------------------------------------
-
-        //  Set defaults
-        $this->table             = Config::get('NAILS_DB_PREFIX') . 'user';
-        $this->defaultSortColumn = $this->getColumn('id');
-        $this->defaultSortOrder  = 'DESC';
 
         // --------------------------------------------------------------------------
 
@@ -277,7 +284,7 @@ class User extends Base
         //  Get the credentials from the cookie set earlier
         /** @var Cookie $oCookie */
         $oCookie  = Factory::service('Cookie');
-        $remember = $oCookie->read($this->sRememberCookie);
+        $remember = $oCookie->read(static::REMEMBER_ME_COOKIE);
 
         if ($remember) {
 
@@ -558,7 +565,7 @@ class User extends Base
          * is, obviously, not gonna detect a spoof.
          */
 
-        $cookie = get_cookie($this->sRememberCookie);
+        $cookie = get_cookie(static::REMEMBER_ME_COOKIE);
         $cookie = explode('|', $cookie);
 
         $this->bIsRemembered = count($cookie) == 2;
@@ -808,7 +815,7 @@ class User extends Base
             array_values(
                 array_map(
                     function (Field $oField) {
-                        return $this->tableMetaAlias . '.' . $oField->key;
+                        return $this->getMetaTableAlias(true) . $oField->key;
                     },
                     $this->describeMetaFields()
                 )
@@ -831,8 +838,8 @@ class User extends Base
         );
 
         $oDb->join(
-            $this->tableMeta . ' ' . $this->tableMetaAlias,
-            $this->getTableAlias() . '.id = ' . $this->tableMetaAlias . '.user_id',
+            $this->getMetaTableName(true),
+            $this->getTableAlias() . '.id = ' . $this->getMetaTableAlias() . '.user_id',
             'LEFT'
         );
 
@@ -878,29 +885,30 @@ class User extends Base
      * Look up a user by their identifier
      *
      * @param string $sIdentifier The user's identifier, either an email address or a username
+     * @param array  $aData       Any additional data to pass in
      *
      * @return Resource\User|null
      * @throws FactoryException
      * @throws ModelException
      */
-    public function getByIdentifier(string $sIdentifier): ?Resource\User
+    public function getByIdentifier(string $sIdentifier, array $aData = []): ?Resource\User
     {
         switch (Config::get('APP_NATIVE_LOGIN_USING')) {
 
             case 'EMAIL':
-                return $this->getByEmail($sIdentifier);
+                return $this->getByEmail($sIdentifier, $aData);
                 break;
 
             case 'USERNAME':
-                return $this->getByUsername($sIdentifier);
+                return $this->getByUsername($sIdentifier, $aData);
                 break;
 
             default:
                 Factory::helper('email');
                 if (valid_email($sIdentifier)) {
-                    return $this->getByEmail($sIdentifier);
+                    return $this->getByEmail($sIdentifier, $aData);
                 } else {
-                    return $this->getByUsername($sIdentifier);
+                    return $this->getByUsername($sIdentifier, $aData);
                 }
                 break;
         }
@@ -912,21 +920,22 @@ class User extends Base
      * Get a user by their email address
      *
      * @param string $sEmail The user's email address
+     * @param array  $aData  Any additional data to pass in
      *
      * @return Resource\User|null
      * @throws FactoryException
      * @throws ModelException
      */
-    public function getByEmail(string $sEmail): ?Resource\User
+    public function getByEmail(string $sEmail, array $aData = []): ?Resource\User
     {
         //  Look up the email, and if we find an ID then fetch that user
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('user_id');
         $oDb->where('email', trim($sEmail));
-        $user = $oDb->get($this->oEmailModel->getTableName())->row();
+        $oUser = $oDb->get($this->oEmailModel->getTableName())->row();
 
-        return $user ? $this->getById($user->user_id) : null;
+        return $oUser ? $this->getById($oUser->user_id, $aData) : null;
     }
 
     // --------------------------------------------------------------------------
@@ -935,22 +944,14 @@ class User extends Base
      * Get a user by their username
      *
      * @param string $sUsername The user's username
+     * @param array  $aData     Any additional data to pass in
      *
      * @return Resource\User|null
      * @throws ModelException
      */
-    public function getByUsername(string $sUsername): ?Resource\User
+    public function getByUsername(string $sUsername, array $aData = []): ?Resource\User
     {
-        $aUsers = $this->getAll([
-            'where' => [
-                [
-                    'column' => $this->getTableAlias() . '.username',
-                    'value'  => $sUsername,
-                ],
-            ],
-        ]);
-
-        return empty($aUsers) ? null : reset($aUsers);
+        return $this->getByColumn($this->getColumn('slug'), $sUsername, $aData, false);
     }
 
     // --------------------------------------------------------------------------
@@ -958,32 +959,29 @@ class User extends Base
     /**
      * Get a specific user by a MD5 hash of their ID and password
      *
-     * @param string $md5Id The MD5 hash of their ID
-     * @param string $md5Pw The MD5 hash of their password
+     * @param string $sMd5Id The MD5 hash of their ID
+     * @param string $sMd5Pw The MD5 hash of their password
+     * @param array  $aData  Any additional data to pass in
      *
      * @return Resource\User|null
      * @throws ModelException
      */
-    public function getByHashes(string $md5Id, string $md5Pw): ?Resource\User
+    public function getByHashes(string $sMd5Id, string $sMd5Pw, array $aData = []): ?Resource\User
     {
-        if (empty($md5Id) || empty($md5Pw)) {
+        if (empty($sMd5Id) || empty($sMd5Pw)) {
             return null;
         }
 
-        $aUsers = $this->getAll([
-            'where' => [
-                [
-                    'column' => $this->getTableAlias() . '.id_md5',
-                    'value'  => $md5Id,
-                ],
-                [
-                    'column' => $this->getTableAlias() . '.password_md5',
-                    'value'  => $md5Pw,
-                ],
-            ],
-        ]);
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        $oDb->select('id');
+        $oDb->where('id_md5', $sMd5Id);
+        $oDb->where('password_md5', $sMd5Pw);
+        $oUser = $oDb->get($this->getTableName())->row();
 
-        return empty($aUsers) ? null : reset($aUsers);
+        return $oUser
+            ? $this->getById($oUser->id, $aData)
+            : null;
     }
 
     // --------------------------------------------------------------------------
@@ -992,22 +990,14 @@ class User extends Base
      * Get a user by their referral code
      *
      * @param string $sReferralCode The user's referral code
+     * @param array  $aData         Any additional data to pass in
      *
      * @return Resource\User|null
      * @throws ModelException
      */
-    public function getByReferral(string $sReferralCode): ?Resource\User
+    public function getByReferral(string $sReferralCode, array $aData = []): ?Resource\User
     {
-        $aUsers = $this->getAll([
-            'where' => [
-                [
-                    'column' => $this->getTableAlias() . '.referral',
-                    'value'  => $sReferralCode,
-                ],
-            ],
-        ]);
-
-        return empty($aUsers) ? null : reset($aUsers);
+        return $this->getByColumn($this->getColumn('referral'), $sReferralCode, $aData, false);
     }
 
     // --------------------------------------------------------------------------
@@ -1215,7 +1205,7 @@ class User extends Base
                     $oDb->set($aDataUser);
                 }
 
-                if (!$oDb->update($this->table)) {
+                if (!$oDb->update($this->getTableName())) {
                     throw new NailsException('Failed to update user table.');
                 }
 
@@ -1225,7 +1215,7 @@ class User extends Base
                 if ($aDataMeta) {
                     $oDb->where('user_id', $iUserId);
                     $oDb->set($aDataMeta);
-                    if (!$oDb->update($this->tableMeta)) {
+                    if (!$oDb->update($this->getMetaTableName())) {
                         throw new NailsException('Failed to update user meta table.');
                     }
                 }
@@ -1294,7 +1284,7 @@ class User extends Base
 
             $oDb->set('last_update', 'NOW()', false);
             $oDb->where('id', $iUserId);
-            $oDb->update($this->table);
+            $oDb->update($this->getTableName());
         }
 
         // --------------------------------------------------------------------------
@@ -1615,7 +1605,7 @@ class User extends Base
         }
 
         $oDb->join(
-            $this->table . ' ' . $this->getTableAlias(),
+            $this->getTableName(true),
             $this->getTableAlias() . '.id = ' . $this->oEmailModel->getTableAlias() . '.user_id'
         );
 
@@ -1994,20 +1984,19 @@ class User extends Base
         $oDb = Factory::service('Database');
         $oDb->set('remember_code', $sSalt);
         $oDb->where('id', $iId);
-        $oDb->update($this->table);
+        $oDb->update($this->getTableName());
 
         // --------------------------------------------------------------------------
 
         //  Set the cookie
         set_cookie([
-            'name'   => $this->sRememberCookie,
+            'name'   => static::REMEMBER_ME_COOKIE,
             'value'  => $sEmail . '|' . $sSalt,
             'expire' => 1209600, //   2 weeks
         ]);
 
         // --------------------------------------------------------------------------
 
-        //  Update the flag
         $this->bIsRemembered = true;
 
         return true;
@@ -2022,9 +2011,7 @@ class User extends Base
      */
     public function clearRememberCookie()
     {
-        delete_cookie($this->sRememberCookie);
-
-        //  Update the flag
+        delete_cookie(static::REMEMBER_ME_COOKIE);
         $this->bIsRemembered = false;
     }
 
@@ -2107,7 +2094,7 @@ class User extends Base
                 $oDb->set('last_ip', $oInput->ipAddress());
             }
             $oDb->where('id', $me->id);
-            $oDb->update($this->table);
+            $oDb->update($this->getTableName());
         }
 
         return true;
@@ -2320,7 +2307,7 @@ class User extends Base
 
             $oDb->set($aUserData);
 
-            if (!$oDb->insert($this->table)) {
+            if (!$oDb->insert($this->getTableName())) {
                 throw new NailsException('Failed to create base user object.');
             }
 
@@ -2336,7 +2323,7 @@ class User extends Base
             $oDb->set('id_md5', md5($iId));
             $oDb->where('id', $iId);
 
-            if (!$oDb->update($this->table)) {
+            if (!$oDb->update($this->getTableName())) {
                 throw new NailsException('Failed to update base user object.');
             }
 
@@ -2349,7 +2336,7 @@ class User extends Base
                 $oDb->set($aMetaData);
             }
 
-            if (!$oDb->insert($this->tableMeta)) {
+            if (!$oDb->insert($this->getMetaTableName())) {
                 throw new NailsException('Failed to create user meta data object.');
             }
 
@@ -2462,12 +2449,12 @@ class User extends Base
          */
 
         $oDb->where('user_id', $iUserId);
-        $oDb->delete($this->tableMeta);
+        $oDb->delete($this->getMetaTableName());
 
         if ((bool) $oDb->affected_rows()) {
 
             $oDb->where('id', $iUserId);
-            $oDb->delete($this->table);
+            $oDb->delete($this->getTableName());
 
             if ((bool) $oDb->affected_rows()) {
                 $this->unsetCacheUser($iUserId);
@@ -2520,7 +2507,7 @@ class User extends Base
         while (1 > 0) {
 
             $sReferral = random_string('alnum', 8);
-            $oQuery    = $oDb->get_where($this->table, ['referral' => $sReferral]);
+            $oQuery    = $oDb->get_where($this->getTableName(), ['referral' => $sReferral]);
 
             if ($oQuery->num_rows() == 0) {
                 break;
@@ -2632,7 +2619,7 @@ class User extends Base
                 $oDb->where('id !=', $iIgnoreUserId);
             }
 
-            if ($oDb->count_all_results($this->table)) {
+            if ($oDb->count_all_results($this->getTableName())) {
                 $this->setError('Username is already in use.');
                 return false;
             }
@@ -2696,8 +2683,8 @@ class User extends Base
         $sUserColsStr = "'" . implode("','", $aUserCols) . "'";
 
         $aIgnoreTables = [
-            $this->table,
-            $this->tableMeta,
+            $this->getTableName(),
+            $this->getMetaTableName(),
             Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_code',
             Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret',
             Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question',
@@ -2900,7 +2887,7 @@ class User extends Base
      */
     public function describeMetaFields(): array
     {
-        $aFields = parent::describeFields($this->tableMeta);
+        $aFields = parent::describeFields($this->getMetaTableName());
         unset($aFields['user_id']);
         return $aFields;
     }
@@ -2912,9 +2899,35 @@ class User extends Base
      *
      * @return string
      */
-    public function getMetaTableName(): string
+    public function getMetaTableName($bIncludeAlias = false): string
     {
-        return $this->tableMeta;
+        return $bIncludeAlias
+            ? trim(static::TABLE_META . ' as `' . $this->getMetaTableAlias() . '`')
+            : static::TABLE_META;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the meta table alias
+     *
+     * @param bool $bIncludeSeparator Whether to include the separator
+     * @return
+     */
+    public function getMetaTableAlias($bIncludeSeparator = false)
+    {
+        $sTable = strtolower($this->getMetaTableName());
+        $sTable = preg_replace('/[^a-z_]/', '', $sTable);
+        $sTable = preg_replace('/_/', ' ', $sTable);
+        $aTable = explode(' ', $sTable);
+
+        foreach ($aTable as $sWord) {
+            $sOut .= $sWord[0];
+        }
+
+        return !empty($sOut) && $bIncludeSeparator
+            ? $sOut . '.'
+            : $sOut;
     }
 
     // --------------------------------------------------------------------------
