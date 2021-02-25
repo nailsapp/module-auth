@@ -1163,7 +1163,7 @@ class User extends Base
             //  Begin transaction
             try {
 
-                $oDb->trans_begin();
+                $oDb->transaction()->start();
 
                 // --------------------------------------------------------------------------
 
@@ -1179,7 +1179,7 @@ class User extends Base
 
                         $oDb->where('user_id', $iUserId);
                         if (!$oDb->delete(Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question')) {
-                            $oDb->trans_rollback();
+                            $oDb->transaction()->rollback();
                             $this->setError('Could not reset user\'s Multi Factor Authentication questions.');
                             return false;
                         }
@@ -1188,7 +1188,7 @@ class User extends Base
 
                         $oDb->where('user_id', $iUserId);
                         if (!$oDb->delete(Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_device_secret')) {
-                            $oDb->trans_rollback();
+                            $oDb->transaction()->rollback();
                             $this->setError('Could not reset user\'s Multi Factor Authentication device.');
                             return false;
                         }
@@ -1266,10 +1266,10 @@ class User extends Base
                     }
                 }
 
-                $oDb->trans_commit();
+                $oDb->transaction()->commit();
 
             } catch (\Exception $e) {
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
                 $this->setError($e->getMessage());
                 return false;
             }
@@ -1827,7 +1827,7 @@ class User extends Base
         $oUser = $this->getById($oEmail->user_id);
 
         //  Update
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
         try {
             $oDb->set('is_primary', false);
             $oDb->where('user_id', $oEmail->user_id);
@@ -1848,7 +1848,7 @@ class User extends Base
                 //  @todo: update the rest of the activeUser
             }
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
             if ($bTriggerEvent) {
                 $this->triggerEvent(
@@ -1861,7 +1861,7 @@ class User extends Base
 
         } catch (\Exception $e) {
             $this->setError('Failed to set primary email. ' . $e->getMessage());
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
         }
 
@@ -2302,7 +2302,7 @@ class User extends Base
 
         try {
 
-            $oDb->trans_begin();
+            $oDb->transaction()->start();
 
             $oDb->set($aUserData);
 
@@ -2410,7 +2410,7 @@ class User extends Base
 
             // --------------------------------------------------------------------------
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
             $this->triggerEvent(
                 Events::USER_CREATED,
@@ -2420,7 +2420,7 @@ class User extends Base
             return $this->getById($iId);
 
         } catch (\Exception $e) {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             $this->setError($e->getMessage());
             return false;
         }
@@ -2756,7 +2756,7 @@ class User extends Base
 
         } else {
 
-            $oDb->trans_begin();
+            $oDb->transaction()->start();
 
             //  For each table update the user columns
             for ($i = 0; $i < count($aTables); $i++) {
@@ -2776,7 +2776,7 @@ class User extends Base
                         $this->setError(
                             'Failed to migrate column "' . $column . '" in table "' . $aTables[$i]->name . '"'
                         );
-                        $oDb->trans_rollback();
+                        $oDb->transaction()->rollback();
                         return false;
                     }
                 }
@@ -2786,16 +2786,16 @@ class User extends Base
             for ($i = 0; $i < count($aMergeIds); $i++) {
                 if (!$this->destroy($aMergeIds[$i])) {
                     $this->setError('Failed to delete user "' . $aMergeIds[$i] . '" ');
-                    $oDb->trans_rollback();
+                    $oDb->transaction()->rollback();
                     return false;
                 }
             }
 
-            if ($oDb->trans_status() === false) {
-                $oDb->trans_rollback();
+            if ($oDb->transaction()->status() === false) {
+                $oDb->transaction()->rollback();
                 $out = false;
             } else {
-                $oDb->trans_commit();
+                $oDb->transaction()->commit();
                 $out = true;
             }
         }

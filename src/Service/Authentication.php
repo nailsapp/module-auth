@@ -621,7 +621,7 @@ class Authentication
         //  Begin transaction
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         //  Delete old questions?
         if ($bClearOld) {
@@ -656,16 +656,16 @@ class Authentication
 
             $oDb->insert_batch(\Nails\Config::get('NAILS_DB_PREFIX') . 'user_auth_two_factor_question', $aQuestionData);
 
-            if ($oDb->trans_status() !== false) {
-                $oDb->trans_commit();
+            if ($oDb->transaction()->status() !== false) {
+                $oDb->transaction()->commit();
                 return true;
             } else {
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
                 return false;
             }
 
         } else {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             $this->setError('No data to save.');
             return false;
         }

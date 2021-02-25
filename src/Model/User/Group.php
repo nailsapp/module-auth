@@ -58,7 +58,7 @@ class Group extends Base
         // --------------------------------------------------------------------------
 
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         //  Unset old default
         $oDb->set('is_default', false);
@@ -78,14 +78,14 @@ class Group extends Base
         $oDb->where('id', $oGroup->id);
         $oDb->update($this->getTableName());
 
-        if ($oDb->trans_status() === false) {
+        if ($oDb->transaction()->status() === false) {
 
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
 
         } else {
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
             $this->getDefaultGroup();
             return true;
         }
@@ -159,7 +159,7 @@ class Group extends Base
 
         try {
 
-            $oDb->trans_begin();
+            $oDb->transaction()->start();
             foreach ($aUsers as $oUser) {
 
                 //  Permission check
@@ -196,12 +196,12 @@ class Group extends Base
                     }
                 }
             }
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
             return true;
 
         } catch (\Exception $e) {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             $this->setError($e->getMessage());
             return false;
         }

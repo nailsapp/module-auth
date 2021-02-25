@@ -152,7 +152,7 @@ class Meta
 
             $aTouchedIds = [];
 
-            $oDb->trans_begin();
+            $oDb->transaction()->start();
             foreach ($aData as $aRow) {
 
                 if (empty($aRow['id'])) {
@@ -194,14 +194,14 @@ class Meta
                 }
             }
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
             $this->unsetCache('user-meta-many-' . $sTable . '-' . $iUserId);
             return true;
 
         } catch (\Exception $e) {
 
             $this->setError($e->getMessage());
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
         }
     }

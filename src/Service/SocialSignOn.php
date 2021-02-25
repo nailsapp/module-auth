@@ -466,7 +466,7 @@ class SocialSignOn
         // --------------------------------------------------------------------------
 
         //  Save data
-        $this->oDb->trans_begin();
+        $this->oDb->transaction()->start();
 
         $oNow = Factory::factory('DateTime');
 
@@ -504,11 +504,11 @@ class SocialSignOn
 
         // --------------------------------------------------------------------------
 
-        if ($this->oDb->trans_status() === false) {
-            $this->oDb->trans_rollback();
+        if ($this->oDb->transaction()->status() === false) {
+            $this->oDb->transaction()->rollback();
             return false;
         } else {
-            $this->oDb->trans_commit();
+            $this->oDb->transaction()->commit();
             return true;
         }
     }

@@ -220,7 +220,7 @@ class Settings extends BaseAdmin
 
                 if (empty($error)) {
 
-                    $oDb->trans_begin();
+                    $oDb->transaction()->start();
 
                     $bRollback = false;
 
@@ -240,12 +240,12 @@ class Settings extends BaseAdmin
 
                     if ($bRollback) {
 
-                        $oDb->trans_rollback();
+                        $oDb->transaction()->rollback();
                         $this->data['error'] = 'There was a problem saving authentication settings.';
 
                     } else {
 
-                        $oDb->trans_commit();
+                        $oDb->transaction()->commit();
                         $this->data['success'] = 'Authentication settings were saved.';
 
                     }
