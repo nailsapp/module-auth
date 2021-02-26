@@ -57,10 +57,10 @@ class Users extends Base
                 <<<EOT
                 <tr>
                     <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
+                    <td style="text-align: center;">%s</td>
+                    <td style="text-align: center;">%s</td>
+                    <td style="text-align: center;">%s</td>
+                    <td style="text-align: center;">%s</td>
                 </tr>
                 EOT,
                 sprintf(
