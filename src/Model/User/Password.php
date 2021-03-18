@@ -12,8 +12,11 @@
 
 namespace Nails\Auth\Model\User;
 
+use Nails\Auth\Auth\PasswordEngine\Sha1;
 use Nails\Auth\Constants;
+use Nails\Auth\Exception\AuthException;
 use Nails\Auth\Factory\Email\PasswordUpdated;
+use Nails\Auth\Interfaces\PasswordEngine;
 use Nails\Auth\Model\User;
 use Nails\Auth\Resource;
 use Nails\Common\Exception\FactoryException;
@@ -22,6 +25,7 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
+use Nails\Components;
 use Nails\Config;
 use Nails\Factory;
 use stdClass;
@@ -34,25 +38,61 @@ use stdClass;
  */
 class Password extends Base
 {
-    protected $aCharset;
+    const DEFAULT_PASSWORD_ENGINE = Sha1::class;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Constructs the model
+     * The supported PasswordEngines
+     *
+     * @var PasswordEngine[]
+     */
+    protected $aPasswordEngines = [];
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * the supported charsets
+     *
+     * @var array|string[]
+     */
+    protected $aCharset = [
+        'symbol'      => '!@$^&*(){}":?<>~-=[];\'\\/.,',
+        'number'      => '0123456789',
+        'lower_alpha' => 'abcdefghijklmnopqrstuvwxyz',
+        'upper_alpha' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    ];
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Password constructor.
      */
     public function __construct()
     {
         parent::__construct();
+        foreach (Components::available() as $oComponent) {
 
-        // --------------------------------------------------------------------------
+            $aClasses = $oComponent
+                ->findClasses('Auth\\PasswordEngine')
+                ->whichImplement(PasswordEngine::class);
 
-        //  Set defaults
-        $this->aCharset                = [];
-        $this->aCharset['symbol']      = '!@$^&*(){}":?<>~-=[];\'\\/.,';
-        $this->aCharset['number']      = '0123456789';
-        $this->aCharset['lower_alpha'] = 'abcdefghijklmnopqrstuvwxyz';
-        $this->aCharset['upper_alpha'] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            foreach ($aClasses as $sClass) {
+                //  $sClass will have a leading slash, whereas ::class will not
+                $oEngine                                     = new $sClass();
+                $this->aPasswordEngines[get_class($oEngine)] = $oEngine;
+            }
+
+        }
+
+        if (!array_key_exists(static::DEFAULT_PASSWORD_ENGINE, $this->aPasswordEngines)) {
+            throw new AuthException(
+                sprintf(
+                    '"%s" is not a valid default password engine',
+                    static::DEFAULT_PASSWORD_ENGINE
+                )
+            );
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -152,6 +192,11 @@ class Password extends Base
      */
     public function isCorrect($mUser, ?string $sPassword): bool
     {
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
         $oUser = $this->getUser($mUser);
 
         if (empty($oUser) || empty($sPassword)) {
@@ -160,11 +205,10 @@ class Password extends Base
 
         // --------------------------------------------------------------------------
 
-        $oDb = Factory::service('Database');
-        $oDb->select('u.password, u.password_engine, u.salt');
-        $oDb->where('u.id', $oUser->id);
+        $oDb->select('password, password_engine, salt');
+        $oDb->where('id', $oUser->id);
         $oDb->limit(1);
-        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user u');
+        $oResult = $oDb->get($oUserModel->getTableName());
 
         // --------------------------------------------------------------------------
 
@@ -174,9 +218,38 @@ class Password extends Base
 
         // --------------------------------------------------------------------------
 
-        $sHash = $this->generatePasswordHash($sPassword, $oResult->row()->salt);
+        $oUserEngine = $this->aPasswordEngines[$oUser->password_engine] ?? null;
+        if (empty($oUserEngine)) {
+            throw new AuthException(sprintf(
+                '"%s" is not a valid PasswordEngine',
+                $oUser->password_engine
+            ));
+        }
 
-        return $oResult->row()->password === $sHash;
+        $sHash = $this->generatePasswordHash(
+            $sPassword,
+            $oResult->row()->salt,
+            $oUserEngine
+        );
+
+        $bResult = $oResult->row()->password === $sHash;
+
+        if ($bResult && $oUser->password_engine !== static::DEFAULT_PASSWORD_ENGINE) {
+
+            $oHash = $this->generateHashObject($sPassword);
+            $sNow  = Factory::factory('DateTime')->format('Y-m-d H:i:s');
+
+            $oDb->set('password', $oHash->password);
+            $oDb->set('password_md5', $oHash->password_md5);
+            $oDb->set('password_engine', $oHash->engine);
+            $oDb->set('salt', $oHash->salt);
+            $oDb->set('last_update', $sNow);
+
+            $oDb->where('id', $oUser->id);
+            $oDb->update($oUserModel->getTableName());
+        }
+
+        return $bResult;
     }
 
     // --------------------------------------------------------------------------
@@ -184,19 +257,19 @@ class Password extends Base
     /**
      * Generates a password hash using a password and a salt
      *
-     * @param string|null $sPassword The password to hash
-     * @param string|null $sSalt     The hash salt
+     * @param string|null         $sPassword       The password to hash
+     * @param string|null         $sSalt           The salt
+     * @param PasswordEngine|null $oPasswordEngine The engine to use
      *
      * @return string
      */
-    protected function generatePasswordHash(?string $sPassword, ?string $sSalt): string
-    {
-        /**
-         * @todo: use the appropriate driver to determine password correctness, but
-         * for now, do it the old way
-         */
-
-        return sha1(sha1($sPassword) . $sSalt);
+    protected function generatePasswordHash(
+        ?string $sPassword,
+        ?string $sSalt,
+        PasswordEngine $oPasswordEngine = null
+    ): string {
+        $oPasswordEngine = $oPasswordEngine ?? $this->aPasswordEngines[static::DEFAULT_PASSWORD_ENGINE];
+        return $oPasswordEngine->hash($sPassword, $sSalt);
     }
 
     // --------------------------------------------------------------------------
@@ -212,18 +285,24 @@ class Password extends Base
      */
     public function isExpired($mUser): bool
     {
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var User\Group $oUserModel */
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
         $oUser = $this->getUser($mUser);
 
         if (empty($oUser)) {
             return false;
         }
 
-        $oDb = Factory::service('Database');
         $oDb->select('u.password_changed,ug.password_rules');
         $oDb->where('u.id', $oUser->id);
-        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user_group ug', 'ug.id = u.group_id');
+        $oDb->join($oUserGroupModel->getTableName() . ' ug', 'ug.id = u.group_id');
         $oDb->limit(1);
-        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user u');
+        $oResult = $oDb->get($oUserModel->getTableName() . ' u');
 
         if ($oResult->num_rows() !== 1) {
             return false;
@@ -365,15 +444,19 @@ class Password extends Base
      */
     public function expiresAfter($iGroupId)
     {
+        /** @var User\Group $oUserModel */
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+
         if (empty($iGroupId)) {
             return null;
         }
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select('password_rules');
         $oDb->where('id', $iGroupId);
         $oDb->limit(1);
-        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_group');
+        $oResult = $oDb->get($oUserGroupModel->getTableName());
 
         if ($oResult->num_rows() !== 1) {
             return null;
@@ -401,8 +484,10 @@ class Password extends Base
     {
         if (empty($sPassword)) {
             throw new NailsException('No password to hash.');
+
         } elseif (!$this->isAcceptable($iGroupId, $sPassword)) {
             throw new NailsException('Password does not meet requirements.');
+
         } else {
             return $this->generateHashObject($sPassword);
         }
@@ -438,7 +523,7 @@ class Password extends Base
             'password'     => $sHash,
             'password_md5' => md5($sHash),
             'salt'         => $sSalt,
-            'engine'       => 'NAILS_1',
+            'engine'       => static::DEFAULT_PASSWORD_ENGINE,
         ];
     }
 
@@ -480,7 +565,7 @@ class Password extends Base
 
         /**
          * We're generating a password, define all the charsets to use, at the very
-         * ;east have the lower_alpha charset.
+         * least have the lower_alpha charset.
          */
 
         $aCharsets   = [];
@@ -562,16 +647,20 @@ class Password extends Base
      */
     protected function getRules($iGroupId): array
     {
+        /** @var User\Group $oUserModel */
+        $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
         $sCacheKey    = 'password-rules-' . $iGroupId;
         $aCacheResult = $this->getCache($sCacheKey);
         if (!empty($aCacheResult)) {
             return $aCacheResult;
         }
 
-        $oDb = Factory::service('Database');
         $oDb->select('password_rules');
         $oDb->where('id', $iGroupId);
-        $oResult = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'user_group');
+        $oResult = $oDb->get($oUserGroupModel->getTableName());
 
         if ($oResult->num_rows() === 0) {
             return [];
@@ -742,9 +831,11 @@ class Password extends Base
         $oDb = Factory::service('Database');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        /** @var User\Email $oUserModel */
+        $oUserEmailModel = Factory::model('UserEmail', Constants::MODULE_SLUG);
 
         $oDb->select('u.id, u.group_id, u.forgotten_password_code, e.email, u.username');
-        $oDb->join($oUserModel->getEmailTableName() . ' e', 'e.user_id = u.id AND e.is_primary = 1');
+        $oDb->join($oUserEmailModel->getTableName() . ' e', 'e.user_id = u.id AND e.is_primary = 1');
         $oDb->like('forgotten_password_code', ':' . $sCode, 'before');
         $oResult = $oDb->get($oUserModel->getTableName() . ' u');
 
