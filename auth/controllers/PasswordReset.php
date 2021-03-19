@@ -71,7 +71,7 @@ class PasswordReset extends Base
 
         // --------------------------------------------------------------------------
 
-        if ($oUser && isset($oUser->salt) && $sHash == md5($oUser->salt)) {
+        if ($oUser && isset($oUser->salt) && $sHash == $oUserPasswordModel::resetHash($oUser)) {
 
             //  Valid combination, is there MFA on the account?
             if ($oConfig->item('authTwoFactorMode')) {
@@ -283,10 +283,7 @@ class PasswordReset extends Base
 
             //  Set data
             $this->data['page']->title   = lang('auth_title_reset');
-            $this->data['auth']          = (object) [
-                'id'   => $oUser->id,
-                'hash' => $sHash,
-            ];
+            $this->data['resetUrl']      = $oUserPasswordModel::resetUrl($oUser);
             $this->data['passwordRules'] = $oUserPasswordModel->getRulesAsString($oUser->group_id);
             $this->data['return_to']     = $oInput->get('return_to');
             $this->data['remember']      = $oInput->get('remember');

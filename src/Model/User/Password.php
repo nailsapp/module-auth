@@ -1023,4 +1023,36 @@ class Password extends Base
 
         return null;
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generates the reset URL for a user
+     *
+     * @param Resource\User $oUser
+     *
+     * @return string
+     */
+    public static function resetUrl(Resource\User $oUser): string
+    {
+        return siteUrl(sprintf(
+            'auth/password/reset/%s/%s',
+            $oUser->id,
+            static::resetHash($oUser)
+        ));
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generates the reset hash for a given user
+     *
+     * @param Resource\User $oUser
+     *
+     * @return string
+     */
+    public static function resetHash(Resource\User $oUser): string
+    {
+        return md5($oUser->salt . Config::get('PRIVATE_KEY'));
+    }
 }

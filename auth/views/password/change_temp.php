@@ -18,7 +18,7 @@
         $sQuery = $aQuery ? '?' . http_build_query($aQuery) : '';
 
         echo form_open(
-            'auth/password/reset/' . $auth->id . '/' . $auth->hash . $sQuery,
+            $resetUrl . $sQuery,
             'class="form form-horizontal"'
         );
 
@@ -28,7 +28,7 @@
 
             if (!empty($mfaQuestion)) {
 
-                $sFieldKey            = 'mfaAnswer';
+                $sFieldKey         = 'mfaAnswer';
                 $sFieldLabel       = 'Security Question';
                 $sFieldPlaceholder = 'Type your answer';
                 $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
@@ -51,7 +51,7 @@
 
             if (!empty($mfaDevice)) {
 
-                $sFieldKey            = 'mfaCode';
+                $sFieldKey         = 'mfaCode';
                 $sFieldLabel       = 'Security Code';
                 $sFieldPlaceholder = 'Type your code';
                 $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
@@ -72,7 +72,7 @@
 
             // --------------------------------------------------------------------------
 
-            $sFieldKey            = 'new_password';
+            $sFieldKey         = 'new_password';
             $sFieldLabel       = lang('form_label_password');
             $sFieldPlaceholder = lang('auth_forgot_new_pass_placeholder');
             $sFieldAttr        = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';

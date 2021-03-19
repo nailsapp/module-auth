@@ -380,7 +380,10 @@ class Login extends Base
         $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         $oAuthService->logout();
 
-        redirect('auth/password/reset/' . $oUser->id . '/' . md5($oUser->salt) . $aQuery);
+        /** @var Password $oPasswordModel */
+        $oPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
+
+        redirect($oPasswordModel::resetUrl($oUser) . $aQuery);
     }
 
     // --------------------------------------------------------------------------
