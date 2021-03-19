@@ -26,6 +26,6 @@ class Migration13 extends Base
     public function execute()
     {
         $this->query('ALTER TABLE `{{NAILS_DB_PREFIX}}user` CHANGE `password_engine` `password_engine` VARCHAR(255) DEFAULT NULL;');
-        $this->query('UPDATE `{{NAILS_DB_PREFIX}}user` SET `password_engine` = "' . Sha1::class . '" WHERE `password_engine` = "NAILS_1";');
+        $this->query('UPDATE `{{NAILS_DB_PREFIX}}user` SET `password_engine` = "' . str_replace('\\', '\\\\', Sha1::class) . '" WHERE `password_engine` = "NAILS_1";');
     }
 }
