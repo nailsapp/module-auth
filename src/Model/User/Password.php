@@ -247,6 +247,14 @@ class Password extends Base
 
             $oDb->where('id', $oUser->id);
             $oDb->update($oUserModel->getTableName());
+
+            //  Clear caches and update passed user object
+            $oUserModel->unsetCacheUser($oUser->id);
+            $oUser->password        = $oHash->password;
+            $oUser->password_md5    = $oHash->password_md5;
+            $oUser->password_engine = $oHash->engine;
+            $oUser->salt            = $oHash->salt;
+            $oUser->last_update     = $sNow;
         }
 
         return $bResult;

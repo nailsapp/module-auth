@@ -1398,7 +1398,7 @@ class User extends Base
      *
      * @param int $iUserId The User ID to remove
      */
-    protected function unsetCacheUser($iUserId)
+    public function unsetCacheUser($iUserId)
     {
         $this->unsetCachePrefix(
             $this->prepareCacheKey($this->getColumn('id'), $iUserId)
