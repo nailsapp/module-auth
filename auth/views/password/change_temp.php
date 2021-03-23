@@ -24,6 +24,18 @@
 
         ?>
         <div class="panel__body">
+            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
+                <?=$error?>
+            </p>
+            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
+                <?=$success?>
+            </p>
+            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
+                <?=$message?>
+            </p>
+            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
+                <?=$info?>
+            </p>
             <?php
 
             if (!empty($mfaQuestion)) {
