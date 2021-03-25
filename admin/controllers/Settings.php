@@ -266,10 +266,6 @@ class Settings extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oAsset->load('nails.admin.settings.min.js', 'NAILS');
-
-        // --------------------------------------------------------------------------
-
         //  Set page title
         $this->data['page']->title = 'Settings &rsaquo; Authentication';
 
