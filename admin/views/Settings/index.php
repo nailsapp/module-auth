@@ -8,7 +8,7 @@ $oInput = \Nails\Factory::service('Input');
     <p>
         Configure how the site handles authentication.
     </p>
-    <hr/>
+    <hr />
     <?php
 
     echo form_open();
@@ -90,22 +90,22 @@ $oInput = \Nails\Factory::service('Input');
                         $aField['default'] = (bool) appSetting($aField['key'], 'auth');
 
                         ?>
-                        <div class="field checkbox boolean configure-provider">
-                                <span class="label">
-                                    <?=$aField['label']?>
-                                </span>
+                        <div class="field boolean configure-provider">
+                            <span class="label">
+                                <?=$aField['label']?>
+                            </span>
                             <span class="input">
-                                    <?php
+                                <?php
 
-                                    $sSelected = set_value($aField['key'], (bool) $aField['default']);
+                                $sSelected = set_value($aField['key'], (bool) $aField['default']);
 
-                                    echo '<div class="toggle toggle-modern"></div>';
-                                    echo form_checkbox($aField['key'], true, $sSelected);
-                                    echo $aProvider['fields'] ? '<a href="#configure-provider-' . $aProvider['slug'] . '" class="btn btn-xs btn-primary pull-right fancybox">Configure</a>' : '';
-                                    echo form_error($aField['key'], '<span class="error">', '</span>');
+                                echo '<div class="form-bool toggle toggle-modern"></div>';
+                                echo form_checkbox($aField['key'], true, $sSelected);
+                                echo $aProvider['fields'] ? '<a href="#configure-provider-' . $aProvider['slug'] . '" class="btn btn-xs btn-primary pull-right fancybox">Configure</a>' : '';
+                                echo form_error($aField['key'], '<span class="error">', '</span>');
 
-                                    ?>
-                                </span>
+                                ?>
+                            </span>
                             <div id="configure-provider-<?=$aProvider['slug']?>" class="configure-provider-fancybox" style="min-width:500px;display:none;">
                                 <p style="text-align:center;">
                                     Please provide the following information. Fields marked with a * are required.
