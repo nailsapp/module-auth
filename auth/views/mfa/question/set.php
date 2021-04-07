@@ -1,5 +1,11 @@
 <?php
 
+use Nails\Common\Service\View;
+use Nails\Factory;
+
+/** @var View $oView */
+$oView = Factory::service('View');
+
 $aQuery = array_filter([
     'return_to' => $return_to,
     'remember'  => $remember,
@@ -14,20 +20,12 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
             Set up Two Factor Authentication
         </h1>
         <div class="panel__body">
-            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
-                <?=$error?>
-            </p>
-            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
-                <?=$success?>
-            </p>
-            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
-                <?=$message?>
-            </p>
-            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
-                <?=$info?>
-            </p>
-            <?=form_open('auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery)?>
             <?php
+
+            $oView->load('auth/_components/alerts');
+
+            echo form_open('auth/mfa/question/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery);
+
             if ($num_questions) {
                 ?>
                 <p>

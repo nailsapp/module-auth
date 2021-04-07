@@ -1,3 +1,12 @@
+<?php
+
+use Nails\Common\Service\View;
+use Nails\Factory;
+
+/** @var View $oView */
+$oView = Factory::service('View');
+
+?>
 <div class="nails-auth forgotten-password u-center-screen">
     <div class="panel">
         <h1 class="panel__header text-center">
@@ -5,18 +14,11 @@
         </h1>
         <?=form_open('auth/password/forgotten')?>
         <div class="panel__body">
-            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
-                <?=$error?>
-            </p>
-            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
-                <?=$success?>
-            </p>
-            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
-                <?=$message?>
-            </p>
-            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
-                <?=$info?>
-            </p>
+            <?php
+
+            $oView->load('auth/_components/alerts');
+
+            ?>
             <p>
                 <?=lang('auth_forgot_reset_ok')?>
             </p>

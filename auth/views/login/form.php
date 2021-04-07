@@ -1,11 +1,14 @@
 <?php
 
 use Nails\Common\Service\Input;
+use Nails\Common\Service\View;
 use Nails\Config;
 use Nails\Factory;
 
 /** @var Input $oInput */
 $oInput = Factory::service('Input');
+/** @var View $oView */
+$oView = Factory::service('View');
 
 $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
 
@@ -17,19 +20,10 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
         </h1>
         <?=form_open(siteUrl('auth/login' . $sReturnTo))?>
         <div class="panel__body">
-            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
-                <?=$error?>
-            </p>
-            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
-                <?=$success?>
-            </p>
-            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
-                <?=$message?>
-            </p>
-            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
-                <?=$info?>
-            </p>
             <?php
+
+            $oView->load('auth/_components/alerts');
+
             if ($social_signon_enabled) {
                 ?>
                 <p class="text-center">

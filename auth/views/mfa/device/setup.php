@@ -1,5 +1,11 @@
 <?php
 
+use Nails\Common\Service\View;
+use Nails\Factory;
+
+/** @var View $oView */
+$oView = Factory::service('View');
+
 $aQuery = array_filter([
     'return_to' => $return_to,
     'remember'  => $remember,
@@ -14,20 +20,14 @@ $sQuery = !empty($aQuery) ? '?' . http_build_query($aQuery) : '';
             Set up Two Factor Authentication
         </h1>
         <div class="panel__body">
-            <p class="alert alert--danger <?=empty($error) ? 'hidden' : ''?>">
-                <?=$error?>
-            </p>
-            <p class="alert alert--success <?=empty($success) ? 'hidden' : ''?>">
-                <?=$success?>
-            </p>
-            <p class="alert alert--warning <?=empty($message) ? 'hidden' : ''?>">
-                <?=$message?>
-            </p>
-            <p class="alert alert--info <?=empty($info) ? 'hidden' : ''?>">
-                <?=$info?>
-            </p>
-            <?=form_open('auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery)?>
-            <?=form_hidden('mfa_secret', $secret['secret'])?>
+            <?php
+
+            $oView->load('auth/_components/alerts');
+
+            echo form_open('auth/mfa/device/' . $user_id . '/' . $token['salt'] . '/' . $token['token'] . $sQuery);
+            echo form_hidden('mfa_secret', $secret['secret']);
+
+            ?>
             <p>
                 This site requires that you use Two Factor Authentication when logging in. To set up, please scan the QR
                 code with your device, then enter a valid code.
