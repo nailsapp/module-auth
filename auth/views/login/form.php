@@ -82,13 +82,14 @@ $sReturnTo = $return_to ? '?return_to=' . urlencode($return_to) : '';
                     break;
             }
 
-            $sFieldKey  = 'identifier';
-            $sFieldAttr = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
+            $sFieldKey   = 'identifier';
+            $sFieldAttr  = 'id="input-' . $sFieldKey . '" placeholder="' . $sFieldPlaceholder . '"';
+            $sFieldValue = set_value($sFieldKey, $oInput->get('identity'), false);
 
             ?>
             <div class="form__group <?=form_error($sFieldKey) ? 'has-error' : ''?>">
                 <label for="input-<?=$sFieldKey?>"><?=$sFieldLabel?></label>
-                <?=$FieldType($sFieldKey, set_value($sFieldKey, $oInput->get('identity')), $sFieldAttr)?>
+                <?=$FieldType($sFieldKey, $sFieldValue, $sFieldAttr)?>
                 <?=form_error($sFieldKey, '<p class="form__error">', '</p>')?>
             </div>
             <?php
