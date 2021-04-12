@@ -60,19 +60,4 @@ class Events extends Base
      * @param int $iId The ID of the user who logged out
      */
     const USER_LOG_OUT = 'AUTH:USER:LOGGED_OUT';
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Subscribe to events
-     *
-     * @return Subscription[]
-     */
-    public function autoload(): array
-    {
-        return [
-            new Listener\Startup(),
-            new Listener\User\Init(),
-        ];
-    }
 }
