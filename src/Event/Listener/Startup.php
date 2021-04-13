@@ -24,7 +24,8 @@ class Startup extends Subscription
      */
     public function __construct()
     {
-        $this->setEvent(Events::SYSTEM_STARTUP)
+        $this
+            ->setEvent(Events::SYSTEM_STARTUP)
             ->setNamespace(Events::getEventNamespace())
             ->setCallback([$this, 'execute']);
     }
