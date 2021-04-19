@@ -17,11 +17,6 @@ use Nails\Factory;
 class Users extends Base
 {
     /**
-     * Defines the default size for the widget when it's added to the UI
-     */
-    const DEFAULT_SIZE = Service\Dashboard\Widget::SIZE_MEDIUM;
-
-    /**
      * Whether to pad the body or not
      */
     const PAD_BODY = false;
@@ -34,6 +29,26 @@ class Users extends Base
     public function getTitle(): string
     {
         return 'Users';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @inheritDoc
+     */
+    public function getDescription(): string
+    {
+        return 'Renders a table of the site\'s user groups with top-line numbers about the users they contain.';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @inheritDoc
+     */
+    public function getImage(): ?string
+    {
+        return null;
     }
 
     // --------------------------------------------------------------------------
