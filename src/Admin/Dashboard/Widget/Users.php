@@ -2,8 +2,10 @@
 
 namespace Nails\Auth\Admin\Dashboard\Widget;
 
-use Nails\Admin\Service;
 use Nails\Admin\Admin\Dashboard\Widget\Base;
+use Nails\Admin\Interfaces;
+use Nails\Admin\Service;
+use Nails\Admin\Traits;
 use Nails\Auth\Constants;
 use Nails\Auth\Model\User;
 use Nails\Auth\Model\User\Group;
@@ -14,12 +16,9 @@ use Nails\Factory;
  *
  * @package Nails\Auth\Admin\Dashboard\Widget
  */
-class Users extends Base
+class Users implements Interfaces\Dashboard\Widget
 {
-    /**
-     * Whether to pad the body or not
-     */
-    const PAD_BODY = false;
+    use Traits\Dashboard\Widget;
 
     // --------------------------------------------------------------------------
 
@@ -46,9 +45,9 @@ class Users extends Base
     /**
      * @inheritDoc
      */
-    public function getImage(): ?string
+    public function isPadded(): bool
     {
-        return null;
+        return false;
     }
 
     // --------------------------------------------------------------------------
