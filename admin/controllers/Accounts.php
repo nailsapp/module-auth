@@ -43,14 +43,15 @@ use stdClass;
  */
 class Accounts extends DefaultController
 {
-    const CONFIG_MODEL_NAME     = 'User';
-    const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION     = 'auth:accounts';
-    const CONFIG_SORT_DIRECTION = 'desc';
-    const CONFIG_INDEX_DATA     = [
+    const CONFIG_MODEL_NAME          = 'User';
+    const CONFIG_MODEL_PROVIDER      = Constants::MODULE_SLUG;
+    const CONFIG_PERMISSION          = 'auth:accounts';
+    const CONFIG_SORT_DIRECTION      = 'desc';
+    const EDIT_ENABLE_MODIFIED_CHECK = false;
+    const CONFIG_INDEX_DATA          = [
         'expand' => ['group'],
     ];
-    const CONFIG_INDEX_FIELDS   = [
+    const CONFIG_INDEX_FIELDS        = [
         'ID'          => 'id',
         'User'        => 'id',
         'Group'       => 'group_name',
@@ -59,7 +60,7 @@ class Accounts extends DefaultController
         'Last Login'  => 'last_login',
         'Last Seen'   => 'last_seen',
     ];
-    const CONFIG_SORT_OPTIONS   = [
+    const CONFIG_SORT_OPTIONS        = [
         'ID'          => 'id',
         'First name'  => 'first_name',
         'Surname'     => 'last_name',
@@ -616,6 +617,7 @@ class Accounts extends DefaultController
 
         $this->data['aTabs'] = $aTabs;
         $this->data['oUser'] = $oUser;
+        $this->data['oItem'] = $oUser;
 
         //  Page Title
         $this->data['page']->title = lang(

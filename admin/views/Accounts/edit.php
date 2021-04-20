@@ -29,13 +29,14 @@ $oView = Factory::service('View');
     arraySortMulti($aUserTabs, 'order');
 
     echo Helper::tabs($aUserTabs);
-    echo \Nails\Admin\Helper::floatingControls([
-        'item' => $oUser,
-        'html' => [
-            'center' => $oView->load('Accounts/edit/inc-actions', [], true),
+    echo \Nails\Admin\Helper::floatingControls(array_merge(
+        $CONFIG['FLOATING_CONFIG'],
+        [
+            'html' => [
+                'center' => $oView->load('Accounts/edit/inc-actions', [], true),
+            ],
         ]
-    ]);
-
+    ));
     echo form_close();
 
     foreach ($aTabs as $oTab) {
