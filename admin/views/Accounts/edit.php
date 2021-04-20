@@ -29,31 +29,18 @@ $oView = Factory::service('View');
     arraySortMulti($aUserTabs, 'order');
 
     echo Helper::tabs($aUserTabs);
+    echo \Nails\Admin\Helper::floatingControls([
+        'item' => $oUser,
+        'html' => [
+            'center' => $oView->load('Accounts/edit/inc-actions', [], true),
+        ]
+    ]);
 
-    ?>
-    <div class="admin-floating-controls">
-        <button type="submit" class="btn btn-primary">
-            Save Changes
-        </button>
-        <?php
-        echo $oView->load('Accounts/edit/inc-actions', [], true);
-        if (!empty($oUser) && $CONFIG['ENABLE_NOTES']) {
-            ?>
-            <button type="button"
-                    class="btn btn-default pull-right js-admin-notes"
-                    data-model-name="<?=$CONFIG['MODEL_NAME']?>"
-                    data-model-provider="<?=$CONFIG['MODEL_PROVIDER']?>"
-                    data-id="<?=$oUser->id?>">
-                Notes
-            </button>
-            <?php
-        }
-        ?>
-    </div>
-    <?=form_close()?>
-    <?php
+    echo form_close();
+
     foreach ($aTabs as $oTab) {
         echo $oTab->getAdditionalMarkup($oUser);
     }
+
     ?>
 </div>

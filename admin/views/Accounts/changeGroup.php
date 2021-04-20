@@ -41,12 +41,20 @@
             <legend>New Group</legend>
             <?=form_dropdown('group_id', $aUserGroups, null, 'class=select2')?>
         </fieldset>
-        <div class="admin-floating-controls">
-            <button type="submit" class="btn btn-primary">
-                Update User Groups
-            </button>
-        </div>
         <?php
+        echo \Nails\Admin\Helper::floatingControls([
+            'save' => [
+                'text' => 'Update User Groups'
+            ]
+        ]);
+        echo \Nails\Factory::service('View')
+            ->load(
+                'admin/_components/floating-controls',
+                [
+                    ''
+                ],
+                true
+            );
     }
     ?>
 </div>
