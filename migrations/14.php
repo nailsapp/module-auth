@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Migration:   13
- * Started:     19/02/2020
+ * Migration:   14
+ * Started:     21/04/2021
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -16,7 +16,7 @@ namespace Nails\Database\Migration\Nails\ModuleAuth;
 use Nails\Auth\Auth\PasswordEngine\Sha1;
 use Nails\Common\Console\Migrate\Base;
 
-class Migration13 extends Base
+class Migration14 extends Base
 {
     /**
      * Execute the migration
