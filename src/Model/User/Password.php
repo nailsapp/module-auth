@@ -29,6 +29,7 @@ use Nails\Components;
 use Nails\Config;
 use Nails\Factory;
 use stdClass;
+use Wikimedia\CommonPasswords\CommonPasswords;
 
 /**
  * Class Password
@@ -422,7 +423,7 @@ class Password extends Base
 
         if (!empty($aFailedRequirements)) {
             $sError = 'Password must contain ' . implode(', ', $aFailedRequirements) . '.';
-            $sError = str_lreplace(', ', ' and ', $sError);
+            $sError = replaceLastOccurrence(', ', ' and ', $sError);
             $this->setError($sError);
             return false;
         }
@@ -431,9 +432,17 @@ class Password extends Base
         if (!empty($aPwRules['banned'])) {
             foreach ($aPwRules['banned'] as $sStr) {
                 if (trim(strtolower($sPassword)) == strtolower($sStr)) {
-                    $this->setError('Password cannot be "' . $sStr . '"');
+                    $this->setError('Cannot use this password.');
                     return false;
                 }
+            }
+        }
+
+        //  Not a common password
+        if (!empty($aPwRules['block_common'])) {
+            if (CommonPasswords::isCommon($sPassword)) {
+                $this->setError('Password is common and cannot be used.');
+                return false;
             }
         }
 
@@ -682,6 +691,7 @@ class Password extends Base
             'expiresAfter' => !empty($oPwRules->expiresAfter) ? $oPwRules->expiresAfter : null,
             'requirements' => !empty($oPwRules->requirements) ? $oPwRules->requirements : [],
             'banned'       => !empty($oPwRules->banned) ? $oPwRules->banned : [],
+            'block_common' => !empty($oPwRules->block_common),
         ];
 
         $this->setCache($sCacheKey, $aOut);
@@ -970,6 +980,10 @@ class Password extends Base
             $aOut['banned']   = array_map('strtolower', $aOut['banned']);
             $aOut['banned']   = array_filter($aOut['banned']);
         }
+
+        //  Block common passwords
+        $aOut['block_common'] = stringToBoolean($aRules['block_common'] ?? '');
+
         $aOut = array_filter($aOut);
 
         return empty($aOut) ? null : json_encode($aOut);

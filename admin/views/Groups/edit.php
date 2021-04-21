@@ -12,9 +12,9 @@ $oInput = Factory::service('Input');
         the effect of changing the permissions of a group other than your own, check that your changes
         have worked before considering the job done!
     </div>
-    <hr />
+    <hr/>
     <?=form_open()?>
-    <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab" />
+    <input type="hidden" name="activeTab" value="<?=set_value('activeTab')?>" id="activeTab"/>
     <ul class="tabs">
         <li class="tab <?=$oInput->post('activeTab') == 'tab-basic' || !$oInput->post('activeTab') ? 'active' : ''?>">
             <a href="#" data-tab="tab-basic">Basic Details</a>
@@ -147,6 +147,13 @@ $oInput = Factory::service('Input');
                     'placeholder' => 'A comma separated list of words which cannot be used as a password',
                 ]);
 
+                echo form_field_boolean([
+                    'key'     => 'pw[block_common]',
+                    'label'   => 'Disallow common passwords',
+                    'default' => $item->password_rules->block_common ?? false,
+                    'info'    => 'When enabled, common passwords will be rejected.',
+                ]);
+
                 ?>
             </div>
         </div>
@@ -221,8 +228,8 @@ $oInput = Factory::service('Input');
 
                                     foreach ($aPermissions[$i]->permissions as $sPermission => $sLabel) {
 
-                                        $sKey        = 'acl[admin][' . $sPermissionSlug . '][' . $sPermission . ']';
-                                        $sCheckKey   = 'admin:' . $sPermissionSlug . ':' . $sPermission;
+                                        $sKey      = 'acl[admin][' . $sPermissionSlug . '][' . $sPermission . ']';
+                                        $sCheckKey = 'admin:' . $sPermissionSlug . ':' . $sPermission;
 
                                         if (!empty($_POST)) {
                                             $bIsChecked = !empty($_POST['acl']['admin'][$sPermissionSlug][$sPermission]);
