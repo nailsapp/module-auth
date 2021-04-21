@@ -102,28 +102,35 @@ return [
         },
     ],
     'resources' => [
-        'User'            => function ($mObj): Resource\User {
+        'User'              => function ($mObj): Resource\User {
             if (class_exists('\App\Auth\Resource\User')) {
                 return new \App\Auth\Resource\User($mObj);
             } else {
                 return new Resource\User($mObj);
             }
         },
-        'UserAccessToken' => function ($mObj): Resource\User\AccessToken {
+        'UserAccessToken'   => function ($mObj): Resource\User\AccessToken {
             if (class_exists('\App\Auth\Resource\User\AccessToken')) {
                 return new \App\Auth\Resource\User\AccessToken($mObj);
             } else {
                 return new Resource\User\AccessToken($mObj);
             }
         },
-        'UserEmail'       => function ($mObj): Resource\User\Email {
+        'UserAdminRecovery' => function ($mObj): Resource\User\AdminRecovery {
+            if (class_exists('\App\Auth\Resource\User\AdminRecovery')) {
+                return new \App\Auth\Resource\User\AdminRecovery($mObj);
+            } else {
+                return new Resource\User\AdminRecovery($mObj);
+            }
+        },
+        'UserEmail'         => function ($mObj): Resource\User\Email {
             if (class_exists('\App\Auth\Resource\User\Email')) {
                 return new \App\Auth\Resource\User\Email($mObj);
             } else {
                 return new Resource\User\Email($mObj);
             }
         },
-        'UserEvent'       => function ($mObj): Resource\User\Event {
+        'UserEvent'         => function ($mObj): Resource\User\Event {
             if (class_exists('\App\Auth\Resource\User\Event')) {
                 return new \App\Auth\Resource\User\Event($mObj);
             } else {

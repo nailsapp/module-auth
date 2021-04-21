@@ -1,6 +1,7 @@
 <?php
 
 use Nails\Auth\Constants;
+use Nails\Auth\Model;
 use Nails\Factory;
 
 /**
@@ -14,161 +15,95 @@ use Nails\Factory;
  */
 
 if (!function_exists('activeUser')) {
-
-    /**
-     * Alias to UserModel->activeUser(); method
-     *
-     * @param bool|string $mKeys      The key to look up in activeUser
-     * @param string      $sDelimiter If multiple fields are requested they'll be joined by this string
-     *
-     * @return mixed
-     */
-    function activeUser($mKeys = false, $sDelimiter = ' ')
+    function activeUser(string $sKeys = '', string $sDelimiter = ' ')
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        return $oUserModel ? $oUserModel->activeUser($mKeys, $sDelimiter) : false;
+        return $oUserModel->activeUser($sKeys, $sDelimiter);
     }
 }
-
-// --------------------------------------------------------------------------
 
 if (!function_exists('userHasPermission')) {
-
-    /**
-     * Alias to UserModel->hasPermission(); method
-     *
-     * @param string $sPermission The permission to check for
-     * @param mixed  $mUser       The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
-     *
-     * @return  bool
-     */
-    function userHasPermission($sPermission, $mUser = null)
+    function userHasPermission(string $sSearch, $mUser = null): bool
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        return $oUserModel ? $oUserModel->hasPermission($sPermission, $mUser) : false;
+        return $oUserModel->hasPermission($sSearch, $mUser);
     }
 }
-
-// --------------------------------------------------------------------------
 
 if (!function_exists('groupHasPermission')) {
 
-    /**
-     * Alias to user_model->groupHasPermission(); method
-     *
-     * @param string $sPermission The permission to check for
-     * @param mixed  $mGroup      The group to check for; if numeric, fetches group, if object uses that object
-     *
-     * @return  bool
-     */
-    function groupHasPermission($sPermission, $mGroup)
+    function groupHasPermission(string $sSearch, $mGroup): bool
     {
+        /** @var Model\User\Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
-        return $oUserGroupModel ? $oUserGroupModel->hasPermission($sPermission, $mGroup) : false;
+        return $oUserGroupModel->hasPermission($sSearch, $mGroup);
     }
 }
 
-// --------------------------------------------------------------------------
-
 if (!function_exists('isLoggedIn')) {
-
-    /**
-     * Alias to UserModel->isLoggedIn()
-     *
-     * @return bool
-     */
-    function isLoggedIn()
+    function isLoggedIn(): bool
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         return $oUserModel->isLoggedIn();
     }
 }
 
-// --------------------------------------------------------------------------
-
 if (!function_exists('isAdmin')) {
-
-    /**
-     * Alias to UserModel->isAdmin()
-     *
-     * @param mixed $mUser The user to check, uses activeUser if null
-     *
-     * @return bool
-     */
-    function isAdmin($mUser = null)
+    function isAdmin($mUser = null): bool
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        return $oUserModel ? $oUserModel->isAdmin($mUser) : false;
+        return $oUserModel->isAdmin($mUser);
     }
 }
 
-// --------------------------------------------------------------------------
-
 if (!function_exists('wasAdmin')) {
-
-    /**
-     * Alias to UserModel->wasAdmin()
-     *
-     * @return bool
-     */
-    function wasAdmin()
+    function wasAdmin(): bool
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         return $oUserModel->wasAdmin();
     }
 }
 
-// --------------------------------------------------------------------------
-
 if (!function_exists('isSuperuser')) {
-
-    /**
-     * Alias to UserModel->isSuperuser()
-     *
-     * @param mixed $mUser The user to check, uses activeUser if null
-     *
-     * @return bool
-     */
     function isSuperuser($mUser = null)
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        return $oUserModel ? $oUserModel->isSuperuser($mUser) : false;
+        return $oUserModel->isSuperuser($mUser);
     }
 }
 
-// --------------------------------------------------------------------------
-
 if (!function_exists('getAdminRecoveryData')) {
-
-    /**
-     * Alias to UserModel->getAdminRecoveryData()
-     *
-     * @return bool
-     */
-    function getAdminRecoveryData()
+    function getAdminRecoveryData(): ?\Nails\Auth\Resource\User\AdminRecovery
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         return $oUserModel->getAdminRecoveryData();
     }
 }
 
-// --------------------------------------------------------------------------
-
-if (!function_exists('unsetAdminRecoveryData')) {
-
-    /**
-     * Alias to UserModel->unsetAdminRecoveryData()
-     *
-     * @return bool
-     */
-    function unsetAdminRecoveryData()
+if (!function_exists('getAdminRecoveryUrl')) {
+    function getAdminRecoveryUrl(): ?string
     {
+        /** @var Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
-        return $oUserModel ? $oUserModel->unsetAdminRecoveryData() : false;
+        return $oUserModel->getAdminRecoveryUrl();
     }
 }
 
-// --------------------------------------------------------------------------
+if (!function_exists('unsetAdminRecoveryData')) {
+    function unsetAdminRecoveryData(): Model\User
+    {
+        /** @var Model\User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+        return $oUserModel->unsetAdminRecoveryData();
+    }
+}
 
 if (!function_exists('createUserEvent')) {
     function createUserEvent(

@@ -18,6 +18,11 @@ use Nails\Common\Model\Base;
 use Nails\Config;
 use Nails\Factory;
 
+/**
+ * Class Group
+ *
+ * @package Nails\Auth\Model\User
+ */
 class Group extends Base
 {
     /**
@@ -45,7 +50,7 @@ class Group extends Base
      *
      * @param mixed $mGroupIdOrSlug The group's ID or slug
      *
-     * @return boolean
+     * @return bool
      */
     public function setAsDefault($mGroupIdOrSlug)
     {
@@ -138,7 +143,7 @@ class Group extends Base
      * @param array   $aUserIds    An array of User ID's to update
      * @param integer $iNewGroupId The ID of the new user group
      *
-     * @return boolean
+     * @return bool
      */
     public function changeUserGroup(array $aUserIds, $iNewGroupId)
     {
@@ -256,13 +261,12 @@ class Group extends Base
     /**
      * Determines whether the specified group has a certain ACL permission
      *
-     * @param string $sSearch   The permission to check for
-     * @param mixed  $mGroup    The group to check for;  if numeric, fetches group, if object
-     *                          uses that object
+     * @param string $sSearch The permission to check for
+     * @param mixed  $mGroup  The group to check for;  if numeric, fetches group, if object uses that object
      *
-     * @return  boolean
+     * @return bool
      */
-    public function hasPermission($sSearch, $mGroup)
+    public function hasPermission(string $sSearch, $mGroup): bool
     {
         //  Fetch the correct ACL
         if (is_numeric($mGroup)) {
@@ -272,12 +276,14 @@ class Group extends Base
             if (isset($oGroup->acl)) {
                 $aAcl = $oGroup->acl;
                 unset($oGroup);
+
             } else {
                 return false;
             }
 
         } elseif (isset($mGroup->acl)) {
             $aAcl = $mGroup->acl;
+
         } else {
             return false;
         }
@@ -303,8 +309,6 @@ class Group extends Base
          * access to any of admin.
          */
 
-        $bHasPermission = false;
-
         /**
          * Replace :* with :.* - this is a common mistake when using the permission
          * system (i.e., assuming that star on it's own will match)
@@ -318,12 +322,11 @@ class Group extends Base
             $bMatch   = preg_match($sPattern, $sPermission);
 
             if ($bMatch) {
-                $bHasPermission = true;
-                break;
+                return true;
             }
         }
 
-        return $bHasPermission;
+        return false;
     }
 
 
@@ -333,12 +336,12 @@ class Group extends Base
      * Formats a single object
      *
      * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     * correctly format the output. Use this to cast integers and bools and/or organise data into objects.
      *
      * @param object $oObj      A reference to the object being formatted.
      * @param array  $aData     The same data array which is passed to getCountCommon, for reference if needed
      * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aBools    Fields which should be cast as bools if not null
      * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void

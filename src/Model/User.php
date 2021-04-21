@@ -318,7 +318,7 @@ class User extends Base
      *
      * @return mixed
      */
-    public function activeUser($sKeys = '', $sDelimiter = ' ')
+    public function activeUser(string $sKeys = '', string $sDelimiter = ' ')
     {
         //  Only look for a value if we're logged in
         if (!$this->isLoggedIn()) {
@@ -536,7 +536,7 @@ class User extends Base
     /**
      * Determines whether the active user is logged in or not.
      *
-     * @return  bool
+     * @return bool
      */
     public function isLoggedIn(): bool
     {
@@ -548,7 +548,7 @@ class User extends Base
     /**
      * Determines whether the active user is to be remembered
      *
-     * @return  bool
+     * @return bool
      */
     public function bIsRemembered(): bool
     {
@@ -578,15 +578,15 @@ class User extends Base
     /**
      * Determines whether the active user group has admin permissions.
      *
-     * @param mixed $user The user to check, uses activeUser if null
+     * @param mixed $mUser The user to check, uses activeUser if null
      *
      * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function isAdmin($user = null)
+    public function isAdmin($mUser = null): bool
     {
-        return $this->hasPermission('admin:.+', $user);
+        return $this->hasPermission('admin:.+', $mUser);
     }
 
     // --------------------------------------------------------------------------
@@ -599,7 +599,7 @@ class User extends Base
      * @return bool
      * @throws FactoryException
      */
-    public function wasAdmin()
+    public function wasAdmin(): bool
     {
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
@@ -611,33 +611,32 @@ class User extends Base
     /**
      * Adds to the admin recovery array, allowing suers to login as other users multiple times, and come back
      *
-     * @param int    $loggingInAs The ID of the user who is being imitated
-     * @param string $returnTo    Where to redirect the user when they log back in
+     * @param int    $iloggingInAs The ID of the user who is being imitated
+     * @param string $sReturnTo    Where to redirect the user when they log back in
      *
+     * @return $this
      * @throws FactoryException
      */
-    public function setAdminRecoveryData($loggingInAs, $returnTo = '')
+    public function setAdminRecoveryData(int $iloggingInAs, string $sReturnTo = ''): self
     {
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        //  Look for existing Recovery Data
-        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
-        if (empty($existingRecoveryData)) {
-
-            $existingRecoveryData = [];
+        $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
+        if (empty($aExistingRecoveryData)) {
+            $aExistingRecoveryData = [];
         }
 
-        //  Prepare the new element
-        $adminRecoveryData = (object) [
+        /** @var Resource\User\AdminRecovery $oAdminRecoveryData */
+        $oAdminRecoveryData = Factory::resource('UserAdminRecovery', Constants::MODULE_SLUG, [
             'oldUserId' => activeUser('id'),
-            'newUserId' => $loggingInAs,
+            'newUserId' => $iloggingInAs,
             'hash'      => activeUser('password_md5'),
-            'name'      => activeUser('first_name,last_name'),
+            'name'      => activeUser('name'),
             'email'     => activeUser('email'),
-            'returnTo'  => empty($returnTo) ? $oInput->server('REQUEST_URI') : $returnTo,
+            'returnTo'  => empty($sReturnTo) ? $oInput->server('REQUEST_URI') : $sReturnTo,
             'loginUrl'  => siteUrl(
                 sprintf(
                     'auth/override/login_as/%s/%s?returningAdmin=1',
@@ -645,12 +644,14 @@ class User extends Base
                     activeUser('password_md5')
                 )
             ),
-        ];
+        ]);
 
         //  Put the new session onto the stack and save to the session
-        $existingRecoveryData[] = $adminRecoveryData;
+        $aExistingRecoveryData[] = $oAdminRecoveryData;
 
-        $oSession->setUserData($this->sAdminRecoveryField, $existingRecoveryData);
+        $oSession->setUserData($this->sAdminRecoveryField, $aExistingRecoveryData);
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -658,20 +659,33 @@ class User extends Base
     /**
      * Returns the recovery data at the bottom of the stack, i.e the most recently added
      *
-     * @return array|stdClass
+     * @return Resource\User\AdminRecovery|null
      * @throws FactoryException
      */
-    public function getAdminRecoveryData()
+    public function getAdminRecoveryData(): ?Resource\User\AdminRecovery
     {
         /** @var Session $oSession */
-        $oSession             = Factory::service('Session');
-        $existingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
+        $oSession              = Factory::service('Session');
+        $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
-        if (empty($existingRecoveryData)) {
-            return [];
-        } else {
-            return end($existingRecoveryData);
+        if (empty($aExistingRecoveryData)) {
+            return null;
         }
+        return end($aExistingRecoveryData) ?: null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the admin recovery URL
+     *
+     * @return string|null
+     * @throws FactoryException
+     */
+    public function getAdminRecoveryUrl(): ?string
+    {
+        $oData = $this->getAdminRecoveryData();
+        return $oData->loginUrl ?? null;
     }
 
     // --------------------------------------------------------------------------
@@ -679,13 +693,14 @@ class User extends Base
     /**
      * Removes the most recently added recovery data from the stack
      *
-     * @return void
+     * @return $this
      * @throws FactoryException
      */
-    public function unsetAdminRecoveryData()
+    public function unsetAdminRecoveryData(): self
     {
         /** @var Session $oSession */
-        $oSession              = Factory::service('Session');
+        $oSession = Factory::service('Session');
+
         $aExistingRecoveryData = $oSession->getUserData($this->sAdminRecoveryField);
 
         if (empty($aExistingRecoveryData)) {
@@ -695,6 +710,8 @@ class User extends Base
         }
 
         $oSession->setUserData($this->sAdminRecoveryField, $aExistingRecoveryData);
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -703,15 +720,15 @@ class User extends Base
      * Determines whether the active user is a superuser. Extend this method to
      * alter it's response.
      *
-     * @param mixed $user The user to check, uses activeUser if null
+     * @param mixed $mUser The user to check, uses activeUser if null
      *
      * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function isSuperuser($user = null)
+    public function isSuperuser($mUser = null): bool
     {
-        return $this->hasPermission('admin:superuser', $user);
+        return $this->hasPermission('admin:superuser', $mUser);
     }
 
     // --------------------------------------------------------------------------
@@ -722,11 +739,11 @@ class User extends Base
      * @param string $sSearch The permission to check for
      * @param mixed  $mUser   The user to check for; if null uses activeUser, if numeric, fetches user, if object uses that object
      *
-     * @return  bool
+     * @return bool
      * @throws FactoryException
      * @throws ModelException
      */
-    public function hasPermission($sSearch, $mUser = null)
+    public function hasPermission(string $sSearch, $mUser = null): bool
     {
         //  Fetch the correct ACL
         if (is_numeric($mUser)) {
@@ -736,12 +753,14 @@ class User extends Base
             if (isset($oUser->acl)) {
                 $aAcl = $oUser->acl;
                 unset($oUser);
+
             } else {
                 return false;
             }
 
         } elseif (isset($mUser->acl)) {
             $aAcl = $mUser->acl;
+
         } else {
             $aAcl = (array) $this->activeUser('acl');
         }
@@ -764,8 +783,6 @@ class User extends Base
          * access to any of admin.
          */
 
-        $bHasPermission = false;
-
         /**
          * Replace :* with :.* - this is a common mistake when using the permission
          * system (i.e., assuming that star on it's own will match)
@@ -779,12 +796,11 @@ class User extends Base
             $bMatch   = preg_match($sPattern, $sPermission);
 
             if ($bMatch) {
-                $bHasPermission = true;
-                break;
+                return true;
             }
         }
 
-        return $bHasPermission;
+        return false;
     }
 
     // --------------------------------------------------------------------------
@@ -2998,22 +3014,12 @@ class User extends Base
             $oObj->acl      = array_unique($oObj->acl);
 
         } else {
-
             $oObj->acl = $oObj->group_acl;
         }
 
         // --------------------------------------------------------------------------
 
-        //  Ints
-        $oObj->id                 = (int) $oObj->id;
-        $oObj->group_id           = (int) $oObj->group_id;
-        $oObj->login_count        = (int) $oObj->login_count;
-        $oObj->referred_by        = (int) $oObj->referred_by;
-        $oObj->failed_login_count = (int) $oObj->failed_login_count;
-
         //  Bools
-        $oObj->temp_pw           = (bool) $oObj->temp_pw;
-        $oObj->is_suspended      = (bool) $oObj->is_suspended;
         $oObj->email_is_verified = (bool) $oObj->email_is_verified;
 
         // --------------------------------------------------------------------------
