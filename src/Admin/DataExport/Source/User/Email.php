@@ -11,7 +11,7 @@ use Nails\Factory;
 /**
  * Class Email
  *
- * @package Nails\Auth\DataExport\Source\User
+ * @package Nails\Auth\Admin\DataExport\Source\User
  */
 class Email implements Source
 {

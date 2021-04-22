@@ -16,7 +16,7 @@ use Nails\Factory;
 /**
  * Class All
  *
- * @package Nails\Auth\DataExport\Source\User
+ * @package Nails\Auth\Admin\DataExport\Source\User
  */
 class All implements Source
 {
