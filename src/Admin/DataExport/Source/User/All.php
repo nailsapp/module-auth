@@ -1,6 +1,6 @@
 <?php
 
-namespace Nails\Auth\DataExport\Source\User;
+namespace Nails\Auth\Admin\DataExport\Source\User;
 
 use Nails\Admin\DataExport\SourceResponse;
 use Nails\Admin\Interfaces\DataExport\Source;
