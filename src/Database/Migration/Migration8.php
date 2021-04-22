@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Migration:   10
- * Started:     01/02/2019
- * Finalised:   01/02/2019
+ * Migration:   8
+ * Started:     11/10/2019
+ * Finalised:   11/10/2019
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -12,11 +12,11 @@
  * @link
  */
 
-namespace Nails\Database\Migration\Nails\ModuleAuth;
+namespace Nails\Auth\Database\Migration;
 
 use Nails\Common\Console\Migrate\Base;
 
-class Migration10 extends Base
+class Migration8 extends Base
 {
     /**
      * Execute the migration
@@ -25,6 +25,6 @@ class Migration10 extends Base
      */
     public function execute()
     {
-        $this->query('ALTER TABLE `{{NAILS_DB_PREFIX}}user_auth_two_factor_question` CHANGE `last_requested` `last_requested` DATETIME NULL;');
+        $this->query('ALTER TABLE `{{NAILS_DB_PREFIX}}user_email` ADD UNIQUE INDEX (`email`);');
     }
 }

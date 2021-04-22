@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Migration:   6
- * Started:     06/11/2015
- * Finalised:   06/11/2015
+ * Migration:   3
+ * Started:     23/09/2015
+ * Finalised:   23/09/2015
  *
  * @package     Nails
  * @subpackage  module-auth
@@ -12,11 +12,11 @@
  * @link
  */
 
-namespace Nails\Database\Migration\Nails\ModuleAuth;
+namespace Nails\Auth\Database\Migration;
 
 use Nails\Common\Console\Migrate\Base;
 
-class Migration6 extends Base
+class Migration3 extends Base
 {
     /**
      * Execute the migration
@@ -24,6 +24,6 @@ class Migration6 extends Base
      */
     public function execute()
     {
-        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}user` DROP `admin_data`;");
+        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}user_group` ADD `password_rules` TEXT  NULL  AFTER `acl`;");
     }
 }

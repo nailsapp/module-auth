@@ -11,7 +11,7 @@
  * @link
  */
 
-namespace Nails\Database\Migration\Nails\ModuleAuth;
+namespace Nails\Auth\Database\Migration;
 
 use Nails\Common\Console\Migrate\Base;
 

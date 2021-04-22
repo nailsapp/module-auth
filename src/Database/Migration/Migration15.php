@@ -11,7 +11,7 @@
  * @link
  */
 
-namespace Nails\Database\Migration\Nails\ModuleAuth;
+namespace Nails\Auth\Database\Migration;
 
 use Nails\Auth\Auth\PasswordEngine\Sha1;
 use Nails\Common\Console\Migrate\Base;
