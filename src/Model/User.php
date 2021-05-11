@@ -202,8 +202,20 @@ class User extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Define searchable fields, resetting it
-        $this->searchableFields = [
+        //  Clear the activeUser
+        $this->clearActiveUser();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the searchable columns for this module
+     *
+     * @return string[]
+     */
+    public function getSearchableColumns(): array
+    {
+        return [
             $this->getTableAlias() . '.id',
             $this->getTableAlias() . '.username',
             $this->oEmailModel->getTableAlias() . '.email',
@@ -212,12 +224,8 @@ class User extends Base
                 $this->getTableAlias() . '.last_name',
             ],
         ];
-
-        // --------------------------------------------------------------------------
-
-        //  Clear the activeUser
-        $this->clearActiveUser();
     }
+
 
     // --------------------------------------------------------------------------
 

@@ -46,14 +46,15 @@ class Event extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Event constructor.
+     * Returns the searchable columns for this module
+     *
+     * @return string[]
      */
-    public function __construct()
+    public function getSearchableColumns(): array
     {
-        parent::__construct();
-        $this->searchableFields = [
+        return [
             'type',
-            'data',
+            'data'
         ];
     }
 }
