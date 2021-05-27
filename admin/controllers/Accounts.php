@@ -628,7 +628,7 @@ class Accounts extends DefaultController
         // --------------------------------------------------------------------------
 
         if (activeUser('id') == $oUser->id) {
-            $this->data['notice'] = lang('accounts_edit_editing_self', [$oUser->first_name]);
+            $this->data['info'] = lang('accounts_edit_editing_self', [$oUser->first_name]);
         }
 
         //  Load views

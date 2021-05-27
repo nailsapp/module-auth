@@ -282,12 +282,12 @@ class PasswordReset extends Base
             $this->data['return_to']     = $oInput->get('return_to');
             $this->data['remember']      = $oInput->get('remember');
 
-            if (empty($this->data['message'])) {
+            if (empty($this->data['warning'])) {
 
                 switch ($oInput->get('reason')) {
 
                     case 'EXPIRED':
-                        $this->data['message'] = lang(
+                        $this->data['warning'] = lang(
                             'auth_login_pw_expired',
                             $oUserPasswordModel->expiresAfter($oUser->group_id)
                         );
@@ -295,7 +295,7 @@ class PasswordReset extends Base
 
                     case 'TEMP':
                     default:
-                        $this->data['message'] = lang('auth_login_pw_temp');
+                        $this->data['warning'] = lang('auth_login_pw_temp');
                         break;
                 }
             }

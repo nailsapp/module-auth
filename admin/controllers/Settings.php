@@ -255,7 +255,7 @@ class Settings extends BaseAdmin
                 }
 
             } else {
-                $this->data['message'] = 'No settings to save.';
+                $this->data['warning'] = 'No settings to save.';
             }
         }
 
