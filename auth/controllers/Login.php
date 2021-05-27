@@ -676,7 +676,7 @@ class Login extends Base
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($oSocial->saveUserFeedback(activeUser('id'), [$provider])) {
+            if ($oSocial->saveSession(activeUser('id'), [$provider])) {
 
                 createUserEvent('did_link_provider', ['provider' => $provider]);
                 $oUserFeedback->success(lang('auth_social_linked_ok', $provider['label']));
@@ -856,7 +856,7 @@ class Login extends Base
                      * - Upload profile image if available
                      */
 
-                    $oSocial->saveUserFeedback($newUser->id, [$provider]);
+                    $oSocial->saveSession($newUser->id, [$provider]);
 
                     if (!empty($socialUser->photoURL)) {
 
