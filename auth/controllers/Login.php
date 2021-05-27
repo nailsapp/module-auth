@@ -528,6 +528,8 @@ class Login extends Base
         $oLogger = Factory::service('Logger');
         /** @var UserFeedback $oUserFeedback */
         $oUserFeedback = Factory::service('UserFeedback');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
         /** @var SocialSignOn $oSocial */
         $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User $oUserModel */
@@ -651,7 +653,7 @@ class Login extends Base
 
                 //  Fab, user exists, try to log them in
                 $oUserModel->setLoginData($oUser->id);
-                $oSocial->saveUserFeedback($oUser->id);
+                $oSocial->saveSession($oUser->id);
 
                 if (!$this->handleLogin($oUser)) {
 
@@ -832,8 +834,8 @@ class Login extends Base
                 // --------------------------------------------------------------------------
 
                 //  Handle referrals
-                if ($oUserFeedback->getUserData('referred_by')) {
-                    $aOptionalData['referred_by'] = $oUserFeedback->getUserData('referred_by');
+                if ($oSession->getUserData('referred_by')) {
+                    $aOptionalData['referred_by'] = $oSession->getUserData('referred_by');
                 }
 
                 // --------------------------------------------------------------------------
