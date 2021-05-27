@@ -18,6 +18,7 @@ use Nails\Auth\Service\SocialSignOn;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Config;
 use Nails\Factory;
 
@@ -57,6 +58,8 @@ class Register extends Base
     {
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var FormValidation $oFormValidation */
         $oFormValidation = Factory::service('FormValidation');
         /** @var Input $oInput */
@@ -72,10 +75,7 @@ class Register extends Base
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-            $oSession->setFlashData(
-                'error',
-                lang('auth_no_access_already_logged_in', activeUser('email'))
-            );
+            $oUserFeedback->error(lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 
@@ -173,10 +173,7 @@ class Register extends Base
                     redirect('auth/login');
 
                 } else {
-                    $oSession->setFlashData(
-                        'success',
-                        lang('auth_register_flashdata_welcome', $oUser->first_name)
-                    );
+                    $oUserFeedback->success(lang('auth_register_flashdata_welcome', $oUser->first_name));
                 }
 
                 // --------------------------------------------------------------------------

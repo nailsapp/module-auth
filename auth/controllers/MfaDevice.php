@@ -13,7 +13,7 @@
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Factory;
 use Nails\Auth\Controller\BaseMfa;
 use Nails\Auth\Constants;
@@ -73,8 +73,8 @@ class MfaDevice extends BaseMfa
      */
     protected function setupDevice()
     {
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var Authentication $oAuthService */
         $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         /** @var Input $oInput */
@@ -99,12 +99,11 @@ class MfaDevice extends BaseMfa
                 if ($oAuthService->mfaDeviceSecretValidate($this->mfaUser->id, $sSecret, $sMfaCode)) {
 
                     //  Codes have been validated and saved to the DB, sign the user in and move on
-                    $sStatus  = 'success';
-                    $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You successfully ';
-                    $sMessage .= 'associated an MFA device with your account. You will be required to use it ';
-                    $sMessage .= 'the next time you log in.';
-
-                    $oSession->setFlashData($sStatus, $sMessage);
+                    $oUserFeedback->success(
+                        '<strong>Multi Factor Authentication Enabled!</strong><br />You successfully ' .
+                        'associated an MFA device with your account. You will be required to use it ' .
+                        'the next time you log in.'
+                    );
 
                     $this->loginUser();
 
@@ -125,11 +124,7 @@ class MfaDevice extends BaseMfa
 
         if (!$this->data['secret']) {
 
-            $sStatus  = 'error';
-            $sMessage = '<Strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ';
-            $sMessage .= $oAuthService->lastError();
-
-            $oSession->setFlashData($sStatus, $sMessage);
+            $oUserFeedback->error('<strong>Sorry,</strong> it has not been possible to get an MFA device set up for this user. ' . $oAuthService->lastError());
 
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);

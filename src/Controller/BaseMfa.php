@@ -71,7 +71,7 @@ abstract class BaseMfa extends Base
         $this->mfaUser  = $oUserModel->getById($iUserId);
 
         if (!$this->mfaUser) {
-            $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
+            $oSession->error(lang('auth_twofactor_token_unverified'));
             if ($this->returnTo) {
                 redirect('auth/login?return_to=' . $this->returnTo);
             } else {
@@ -103,7 +103,7 @@ abstract class BaseMfa extends Base
         $oAuthService = Factory::service('Authentication', Constants::MODULE_SLUG);
         if (!$oAuthService->mfaTokenValidate($this->mfaUser->id, $sSalt, $sToken, $sIpAddress)) {
 
-            $oSession->setFlashData('error', lang('auth_twofactor_token_unverified'));
+            $oSession->error(lang('auth_twofactor_token_unverified'));
 
             $aQuery = array_filter([
                 'return_to' => $this->returnTo,
@@ -163,55 +163,46 @@ abstract class BaseMfa extends Base
         // --------------------------------------------------------------------------
 
         //  Say hello
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+
         if ($this->mfaUser->last_login) {
 
             /** @var Config $oConfig */
             $oConfig = Factory::service('Config');
 
-            if ($oConfig->item('authShowNicetimeOnLogin')) {
-                $sLastLogin = niceTime(strtotime($this->mfaUser->last_login));
-            } else {
-                $sLastLogin = toUserDatetime($this->mfaUser->last_login);
-            }
+            $sLastLogin = $oConfig->item('authShowNicetimeOnLogin')
+                ? niceTime(strtotime($this->mfaUser->last_login))
+                : toUserDatetime($this->mfaUser->last_login);
 
             if ($oConfig->item('authShowLastIpOnLogin')) {
-
-                $sStatus  = 'positive';
-                $sMessage = lang(
+                $oSession->success(lang(
                     'auth_login_ok_welcome_with_ip',
                     [
                         $this->mfaUser->first_name,
                         $sLastLogin,
                         $this->mfaUser->last_ip,
                     ]
-                );
+                ));
 
             } else {
-
-                $sStatus  = 'positive';
-                $sMessage = lang(
+                $oSession->success(lang(
                     'auth_login_ok_welcome',
                     [
                         $this->mfaUser->first_name,
                         $sLastLogin,
                     ]
-                );
+                ));
             }
 
         } else {
-
-            $sStatus  = 'positive';
-            $sMessage = lang(
+            $oSession->success(lang(
                 'auth_login_ok_welcome_notime',
                 [
                     $this->mfaUser->first_name,
                 ]
-            );
+            ));
         }
-
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
-        $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 

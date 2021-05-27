@@ -19,7 +19,7 @@ use Nails\Auth\Model\User\Password;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Config;
 use Nails\Factory;
@@ -148,8 +148,8 @@ class Groups extends DefaultController
     {
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var Group $oItemModel */
         $oItemModel = static::getModel();
 
@@ -160,15 +160,15 @@ class Groups extends DefaultController
             show404();
 
         } elseif ($oItem->id === activeUser('group_id')) {
-            $oSession->setFlashData('error', 'You cannot delete your own user group.');
+            $oUserFeedback->error('You cannot delete your own user group.');
             redirect('admin/auth/groups');
 
         } elseif (!isSuperuser() && groupHasPermission('admin:superuser', $oItem)) {
-            $oSession->setFlashData('error', 'You cannot delete a group which has super user permissions.');
+            $oUserFeedback->error('You cannot delete a group which has super user permissions.');
             redirect('admin/auth/groups');
 
         } elseif ($oItem->id === $oItemModel->getDefaultGroupId()) {
-            $oSession->setFlashData('error', 'You cannot delete the default user group.');
+            $oUserFeedback->error('You cannot delete the default user group.');
             redirect('admin/auth/groups');
 
         } else {
@@ -193,17 +193,15 @@ class Groups extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Group $oUserGroupModel */
         $oUserGroupModel = Factory::model('UserGroup', Constants::MODULE_SLUG);
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
 
         if ($oUserGroupModel->setAsDefault($oUri->segment(5))) {
-            $oSession->setFlashData(
-                'success',
+            $oUserFeedback->success(
                 'Group set as default successfully.'
             );
         } else {
-            $oSession->setFlashData(
-                'error',
+            $oUserFeedback->error(
                 'Failed to set default user group. ' . $oUserGroupModel->lastError()
             );
         }

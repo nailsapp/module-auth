@@ -18,7 +18,7 @@ use Nails\Auth\Service\Authentication;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
@@ -36,9 +36,9 @@ class PasswordReset extends Base
 
         //  If user is logged in they shouldn't be accessing this method
         if (isLoggedIn()) {
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            /** @var UserFeedback $oUserFeedback */
+            $oUserFeedback = Factory::service('UserFeedback');
+            $oUserFeedback->error(lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
     }
@@ -206,6 +206,9 @@ class PasswordReset extends Base
                     if ($oLoginUser) {
 
                         //  Say hello
+                        /** @var UserFeedback $oUserFeedback */
+                        $oUserFeedback = Factory::service('UserFeedback');
+
                         if ($oLoginUser->last_login) {
 
                             if ($oConfig->item('authShowNicetimeOnLogin')) {
@@ -216,42 +219,33 @@ class PasswordReset extends Base
 
                             if ($oConfig->item('authShowLastIpOnLogin')) {
 
-                                $sStatus  = 'positive';
-                                $sMessage = lang(
+                                $oUserFeedback->success(lang(
                                     'auth_login_ok_welcome_with_ip',
                                     [
                                         $oLoginUser->first_name,
                                         $sLastLogin,
                                         $oLoginUser->last_ip,
                                     ]
-                                );
+                                ));
 
                             } else {
-
-                                $sStatus  = 'positive';
-                                $sMessage = lang(
+                                $oUserFeedback->success(lang(
                                     'auth_login_ok_welcome',
                                     [
                                         $oLoginUser->first_name,
                                         $sLastLogin,
                                     ]
-                                );
+                                ));
                             }
 
                         } else {
-
-                            $sStatus  = 'positive';
-                            $sMessage = lang(
+                            $oUserFeedback->success(lang(
                                 'auth_login_ok_welcome_notime',
                                 [
                                     $oLoginUser->first_name,
                                 ]
-                            );
+                            ));
                         }
-
-                        /** @var Session $oSession */
-                        $oSession = Factory::service('Session');
-                        $oSession->setFlashData($sStatus, $sMessage);
 
                         //  If MFA is setup then we'll need to set the user's session data
                         if ($oConfig->item('authTwoFactorMode')) {

@@ -31,7 +31,7 @@ use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Logger;
 use Nails\Common\Service\Output;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
@@ -102,8 +102,8 @@ class Login extends Base
      **/
     public function index()
     {
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var \App\Auth\Model\User $oUserModel */
@@ -121,10 +121,7 @@ class Login extends Base
 
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-            $oSession->setFlashData(
-                'error',
-                lang('auth_no_access_already_logged_in', activeUser('email'))
-            );
+            $oUserFeedback->error(lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect($this->data['return_to']);
         }
 
@@ -249,30 +246,26 @@ class Login extends Base
         } else {
 
             //  Finally! Send this user on their merry way...
+            /** @var UserFeedback $oUserFeedback */
+            $oUserFeedback = Factory::service('UserFeedback');
+
             if ($oUser->last_login) {
 
                 $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($oUser->last_login)) : toUserDatetime($oUser->last_login);
 
                 if ($oConfig->item('authShowLastIpOnLogin')) {
-                    $sStatus  = 'positive';
-                    $sMessage = lang('auth_login_ok_welcome_with_ip', [
+                    $oUserFeedback->success(lang('auth_login_ok_welcome_with_ip', [
                         $oUser->first_name,
                         $lastLogin,
                         $oUser->last_ip,
-                    ]);
+                    ]));
                 } else {
-                    $sStatus  = 'positive';
-                    $sMessage = lang('auth_login_ok_welcome', [$oUser->first_name, $lastLogin]);
+                    $oUserFeedback->success(lang('auth_login_ok_welcome', [$oUser->first_name, $lastLogin]));
                 }
 
             } else {
-                $sStatus  = 'positive';
-                $sMessage = lang('auth_login_ok_welcome_notime', [$oUser->first_name]);
+                $oUserFeedback->success(lang('auth_login_ok_welcome_notime', [$oUser->first_name]));
             }
-
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData($sStatus, $sMessage);
 
             $sRedirectUrl = $this->data['return_to'] ? $this->data['return_to'] : $oUser->group_homepage;
 
@@ -455,8 +448,8 @@ class Login extends Base
          * if all is ok otherwise we report an error.
          */
 
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var \Nails\Auth\Model\User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         $oUser      = $oUserModel->getByHashes($hash['id'], $hash['pw']);
@@ -476,23 +469,18 @@ class Login extends Base
                 $lastLogin = $oConfig->item('authShowNicetimeOnLogin') ? niceTime(strtotime($oUser->last_login)) : toUserDatetime($oUser->last_login);
 
                 if ($oConfig->item('authShowLastIpOnLogin')) {
-                    $sStatus  = 'positive';
-                    $sMessage = lang('auth_login_ok_welcome_with_ip', [
+                    $oUserFeedback->success(lang('auth_login_ok_welcome_with_ip', [
                         $oUser->first_name,
                         $lastLogin,
                         $oUser->last_ip,
-                    ]);
+                    ]));
                 } else {
-                    $sStatus  = 'positive';
-                    $sMessage = lang('auth_login_ok_welcome', [$oUser->first_name, $oUser->last_login]);
+                    $oUserFeedback->success(lang('auth_login_ok_welcome', [$oUser->first_name, $oUser->last_login]));
                 }
 
             } else {
-                $sStatus  = 'positive';
-                $sMessage = lang('auth_login_ok_welcome_notime', [$oUser->first_name]);
+                $oUserFeedback->success(lang('auth_login_ok_welcome_notime', [$oUser->first_name]));
             }
-
-            $oSession->setFlashData($sStatus, $sMessage);
 
             // --------------------------------------------------------------------------
 
@@ -516,7 +504,7 @@ class Login extends Base
         } else {
 
             //  Bad lookup, invalid hash.
-            $oSession->setFlashData('error', lang('auth_with_hashes_autologin_fail'));
+            $oUserFeedback->error(lang('auth_with_hashes_autologin_fail'));
             redirect($this->data['return_to']);
         }
     }
@@ -538,8 +526,8 @@ class Login extends Base
         $oUri = Factory::service('Uri');
         /** @var Logger $oLogger */
         $oLogger = Factory::service('Logger');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var SocialSignOn $oSocial */
         $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var \Nails\Auth\Model\User $oUserModel */
@@ -569,20 +557,13 @@ class Login extends Base
             $oLogger->line('Error Message: ' . $e->getMessage());
 
             if (empty($provider)) {
-                $oSession->setFlashData(
-                    'error',
-                    'Sorry, there was a problem communicating with the network.'
-                );
+                $oUserFeedback->error('Sorry, there was a problem communicating with the network.');
+
             } elseif (is_array($provider)) {
-                $oSession->setFlashData(
-                    'error',
-                    'Sorry, there was a problem communicating with ' . $provider['label'] . '.'
-                );
+                $oUserFeedback->error('Sorry, there was a problem communicating with ' . $provider['label'] . '.');
+
             } else {
-                $oSession->setFlashData(
-                    'error',
-                    'Sorry, there was a problem communicating with ' . $provider . '.'
-                );
+                $oUserFeedback->error('Sorry, there was a problem communicating with ' . $provider . '.');
             }
 
             if ($oUri->segment(4) == 'register') {
@@ -623,7 +604,7 @@ class Login extends Base
                  * Silly user, just redirect them to where they need to go.
                  */
 
-                $oSession->setFlashData('message', lang('auth_social_already_linked', $provider['label']));
+                $oUserFeedback->warning(lang('auth_social_already_linked', $provider['label']));
 
                 if ($this->data['return_to']) {
                     redirect($this->data['return_to']);
@@ -638,13 +619,10 @@ class Login extends Base
                  * in user. This means that this provider account is already registered.
                  */
 
-                $oSession->setFlashData(
-                    'error',
-                    lang(
-                        'auth_social_account_in_use',
-                        [$provider['label'], \Nails\Config::get('APP_NAME')]
-                    )
-                );
+                $oUserFeedback->error(lang(
+                    'auth_social_account_in_use',
+                    [$provider['label'], \Nails\Config::get('APP_NAME')]
+                ));
 
                 if ($this->data['return_to']) {
                     redirect($this->data['return_to']);
@@ -654,7 +632,7 @@ class Login extends Base
 
             } elseif ($oUser->is_suspended) {
 
-                $oSession->setFlashData('error', lang('auth_login_fail_suspended'));
+                $oUserFeedback->error(lang('auth_login_fail_suspended'));
 
                 createUserEvent(
                     'did_login_fail',
@@ -673,11 +651,11 @@ class Login extends Base
 
                 //  Fab, user exists, try to log them in
                 $oUserModel->setLoginData($oUser->id);
-                $oSocial->saveSession($oUser->id);
+                $oSocial->saveUserFeedback($oUser->id);
 
                 if (!$this->handleLogin($oUser)) {
 
-                    $oSession->setFlashData('error', $this->data['error']);
+                    $oUserFeedback->error($this->data['error']);
 
                     $sRedirectUrl = 'auth/login';
 
@@ -696,13 +674,13 @@ class Login extends Base
              * anyone else. Go ahead and link the two accounts together.
              */
 
-            if ($oSocial->saveSession(activeUser('id'), [$provider])) {
+            if ($oSocial->saveUserFeedback(activeUser('id'), [$provider])) {
 
                 createUserEvent('did_link_provider', ['provider' => $provider]);
-                $oSession->setFlashData('success', lang('auth_social_linked_ok', $provider['label']));
+                $oUserFeedback->success(lang('auth_social_linked_ok', $provider['label']));
 
             } else {
-                $oSession->setFlashData('error', lang('auth_social_linked_fail', $provider['label']));
+                $oUserFeedback->error(lang('auth_social_linked_fail', $provider['label']));
             }
 
             redirect($this->data['return_to']);
@@ -854,8 +832,8 @@ class Login extends Base
                 // --------------------------------------------------------------------------
 
                 //  Handle referrals
-                if ($oSession->getUserData('referred_by')) {
-                    $aOptionalData['referred_by'] = $oSession->getUserData('referred_by');
+                if ($oUserFeedback->getUserData('referred_by')) {
+                    $aOptionalData['referred_by'] = $oUserFeedback->getUserData('referred_by');
                 }
 
                 // --------------------------------------------------------------------------
@@ -876,7 +854,7 @@ class Login extends Base
                      * - Upload profile image if available
                      */
 
-                    $oSocial->saveSession($newUser->id, [$provider]);
+                    $oSocial->saveUserFeedback($newUser->id, [$provider]);
 
                     if (!empty($socialUser->photoURL)) {
 
@@ -949,7 +927,7 @@ class Login extends Base
                     // --------------------------------------------------------------------------
 
                     //  Redirect
-                    $oSession->setFlashData('success', lang('auth_social_register_ok', $newUser->first_name));
+                    $oUserFeedback->success(lang('auth_social_register_ok', $newUser->first_name));
 
                     if (empty($this->data['return_to'])) {
                         /** @var Group $oUserGroupModel */
@@ -965,9 +943,7 @@ class Login extends Base
                 } else {
 
                     //  Oh dear, something went wrong
-                    $sStatus  = 'error';
-                    $sMessage = 'Sorry, something went wrong and your account could not be created.';
-                    $oSession->setFlashData($sStatus, $sMessage);
+                    $oUserFeedback->error('Sorry, something went wrong and your account could not be created.');
 
                     $sRedirectUrl = 'auth/login';
 
@@ -981,7 +957,7 @@ class Login extends Base
             } else {
 
                 //  How unfortunate, registration is disabled. Redirect back to the login page
-                $oSession->setFlashData('error', lang('auth_social_register_disabled'));
+                $oUserFeedback->error(lang('auth_social_register_disabled'));
 
                 $sRedirectUrl = 'auth/login';
 

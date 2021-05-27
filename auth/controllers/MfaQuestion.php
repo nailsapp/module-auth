@@ -17,7 +17,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Factory;
 
 class MfaQuestion extends BaseMfa
@@ -207,14 +207,13 @@ class MfaQuestion extends BaseMfa
 
                             if ($oAuthService->mfaQuestionSet($this->mfaUser->id, $aData)) {
 
-                                $sStatus  = 'success';
-                                $sMessage = '<strong>Multi Factor Authentication Enabled!</strong><br />You ';
-                                $sMessage .= 'successfully set your security questions. You will be asked to answer ';
-                                $sMessage .= 'one of them every time you log in.';
-
-                                /** @var Session $oSession */
-                                $oSession = Factory::service('Session');
-                                $oSession->setFlashData($sStatus, $sMessage);
+                                /** @var UserFeedback $oUserFeedback */
+                                $oUserFeedback = Factory::service('UserFeedback');
+                                $oUserFeedback->success(
+                                    '<strong>Multi Factor Authentication Enabled!</strong><br />You successfully ' .
+                                    'set your security questions. You will be asked to answer one of them every time ' .
+                                    'you log in.'
+                                );
 
                                 $this->loginUser();
 

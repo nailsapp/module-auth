@@ -24,7 +24,7 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Config;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
@@ -59,8 +59,8 @@ class PasswordForgotten extends Base
         $oFormValidation = Factory::service('FormValidation');
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var Password $oUserPasswordModel */
         $oUserPasswordModel = Factory::model('UserPassword', Constants::MODULE_SLUG);
         /** @var User $oUserModel */
@@ -160,7 +160,7 @@ class PasswordForgotten extends Base
                     );
                 }
 
-                $oSession->setFlashData('success', lang('auth_forgot_success'));
+                $oUserFeedback->success(lang('auth_forgot_success'));
                 redirect('auth/login');
 
             } catch (Exception $e) {
@@ -199,8 +199,8 @@ class PasswordForgotten extends Base
     {
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var Config $oConfig */
         $oConfig = Factory::service('Config');
         /** @var Authentication $oAuthService */
@@ -255,9 +255,7 @@ class PasswordForgotten extends Base
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $sStatus  = 'notice';
-                            $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
-                            $oSession->setFlashData($sStatus, $sMessage);
+                            $oUserFeedback->warning(lang('auth_forgot_reminder', htmlentities($mNewPassword['password'])));
 
                             // --------------------------------------------------------------------------
 
@@ -307,10 +305,7 @@ class PasswordForgotten extends Base
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $sStatus  = 'notice';
-                    $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
-
-                    $oSession->setFlashData($sStatus, $sMessage);
+                    $oUserFeedback->warning(lang('auth_forgot_reminder', htmlentities($mNewPassword['password'])));
 
                     // --------------------------------------------------------------------------
 
@@ -355,10 +350,7 @@ class PasswordForgotten extends Base
                             // --------------------------------------------------------------------------
 
                             //  Set some flashdata for the login page when they go to it; just a little reminder
-                            $sStatus  = 'notice';
-                            $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
-
-                            $oSession->setFlashData($sStatus, $sMessage);
+                            $oUserFeedback->warning(lang('auth_forgot_reminder', htmlentities($mNewPassword['password'])));
 
                             // --------------------------------------------------------------------------
 
@@ -409,10 +401,7 @@ class PasswordForgotten extends Base
                     // --------------------------------------------------------------------------
 
                     //  Set some flashdata for the login page when they go to it; just a little reminder
-                    $sStatus  = 'notice';
-                    $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
-
-                    $oSession->setFlashData($sStatus, $sMessage);
+                    $oUserFeedback->warning(lang('auth_forgot_reminder', htmlentities($mNewPassword['password'])));
 
                     // --------------------------------------------------------------------------
 
@@ -437,10 +426,7 @@ class PasswordForgotten extends Base
 
                 //  Everything worked!
                 //  Set some flashdata for the login page when they go to it; just a little reminder
-                $sStatus  = 'notice';
-                $sMessage = lang('auth_forgot_reminder', htmlentities($mNewPassword['password']));
-
-                $oSession->setFlashData($sStatus, $sMessage);
+                $oUserFeedback->warning(lang('auth_forgot_reminder', htmlentities($mNewPassword['password'])));
 
                 // --------------------------------------------------------------------------
 
@@ -491,9 +477,9 @@ class PasswordForgotten extends Base
     {
         //  If you're logged in you shouldn't be accessing this method
         if (isLoggedIn()) {
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', lang('auth_no_access_already_logged_in', activeUser('email')));
+            /** @var UserFeedback $oUserFeedback */
+            $oUserFeedback = Factory::service('UserFeedback');
+            $oUserFeedback->error(lang('auth_no_access_already_logged_in', activeUser('email')));
             redirect('/');
         }
 

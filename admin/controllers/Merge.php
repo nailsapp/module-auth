@@ -21,7 +21,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Factory;
 use stdClass;
 
@@ -126,9 +126,9 @@ class Merge extends BaseAdmin
                     return;
 
                 } else {
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
-                    $oSession->setFlashData('success', 'Users were merged successfully.');
+                    /** @var UserFeedback $oUserFeedback */
+                    $oUserFeedback = Factory::service('UserFeedback');
+                    $oUserFeedback->success('Users were merged successfully.');
                     redirect('admin/auth/merge');
                 }
 

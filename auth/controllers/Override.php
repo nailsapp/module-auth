@@ -12,7 +12,7 @@
 
 use Nails\Auth\Constants;
 use Nails\Auth\Controller\Base;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Factory;
 
 /**
@@ -29,10 +29,7 @@ class Override extends Base
 
         //  If you're not a admin then you shouldn't be accessing this class
         if (!wasAdmin() && !isAdmin()) {
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', lang('auth_no_access'));
-            redirect('/');
+            unauthorised();
         }
     }
 
@@ -51,8 +48,8 @@ class Override extends Base
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
         /** @var \Nails\Common\Service\Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var \Nails\Common\Service\Input $oInput */
         $oInput = Factory::service('Input');
 
@@ -81,7 +78,7 @@ class Override extends Base
 
             if (!$bHasPermission || $bIsCloning || $bIsSuperuser) {
                 if (!$bHasPermission) {
-                    $oSession->setFlashData('error', lang('auth_override_fail_nopermission'));
+                    $oUserFeedback->error(lang('auth_override_fail_nopermission'));
                     redirect('admin/dashboard');
 
                 } elseif ($bIsCloning) {
@@ -105,9 +102,7 @@ class Override extends Base
             $oUserModel->setAdminRecoveryData($oUser->id, $oInput->get('return_to'));
             $sRedirectUrl = $oInput->get('forward_to') ?: $oUser->group_homepage;
 
-            //  A bit of feedback
-            $sStatus  = 'success';
-            $sMessage = lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name);
+            $oUserFeedback->success(lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name));
 
         } elseif (wasAdmin()) {
 
@@ -121,9 +116,7 @@ class Override extends Base
 
             unsetAdminRecoveryData();
 
-            //  Some feedback
-            $sStatus  = 'success';
-            $sMessage = lang('auth_override_return', $oUser->first_name . ' ' . $oUser->last_name);
+            $oUserFeedback->success(lang('auth_override_return', $oUser->first_name . ' ' . $oUser->last_name));
 
         } else {
 
@@ -134,9 +127,7 @@ class Override extends Base
 
             $sRedirectUrl = $oInput->get('forward_to') ?: $oUser->group_homepage;
 
-            //  Some feedback
-            $sStatus  = 'success';
-            $sMessage = lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name);
+            $oUserFeedback->success(lang('auth_override_ok', $oUser->first_name . ' ' . $oUser->last_name));
         }
 
         // --------------------------------------------------------------------------
@@ -156,13 +147,6 @@ class Override extends Base
 
         //  Replace current user's session data
         $oUserModel->setLoginData($oUser->id);
-
-        // --------------------------------------------------------------------------
-
-        //  Any feedback?
-        if (!empty($sMessage)) {
-            $oSession->setFlashData($sStatus, $sMessage);
-        }
 
         // --------------------------------------------------------------------------
 

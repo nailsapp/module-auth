@@ -29,7 +29,7 @@ use Nails\Common\Factory\Component;
 use Nails\Common\Helper\Directory;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Config;
@@ -433,23 +433,23 @@ class Accounts extends DefaultController
                      * might happen along the way
                      */
 
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
+                    /** @var UserFeedback $oUserFeedback */
+                    $oUserFeedback = Factory::service('UserFeedback');
 
                     if ($oUserModel->getErrors()) {
 
-                        $sMessage = '<strong>Please Note,</strong> while the user was created successfully, the ';
+                        $sMessage = '<strong>Please note:</strong> while the user was created successfully, the ';
                         $sMessage .= 'following issues were encountered:';
                         $sMessage .= '<ul><li>' . implode('</li><li>', $oUserModel->getErrors()) . '</li></ul>';
 
-                        $oSession->setFlashData('message', $sMessage);
+                        $oUserFeedback->warning($sMessage);
                     }
 
                     // --------------------------------------------------------------------------
 
                     //  Add item to admin changelog
                     $sName = '#' . number_format($oNewUser->id);
-                    $sName .= trim($oNewUser->first_name . ' ' . $oNewUser->last_name);
+                    $sName .= trim($oNewUser->name);
                     $sName = trim($sName);
 
                     $this->oChangeLogModel->add(
@@ -463,10 +463,10 @@ class Accounts extends DefaultController
 
                     // --------------------------------------------------------------------------
 
-                    $sStatus  = 'success';
-                    $sMessage = 'A user account was created for <strong>';
-                    $sMessage .= $oNewUser->first_name . '</strong>, update their details now.';
-                    $oSession->setFlashData($sStatus, $sMessage);
+                    $oUserFeedback->success(sprintf(
+                        'A user account was created for <strong>%s</strong>, update their details now.',
+                        $oNewUser->first_name
+                    ));
 
                     redirect(
                         $oInput->get('isModal')
@@ -520,8 +520,8 @@ class Accounts extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -535,19 +535,19 @@ class Accounts extends DefaultController
 
         if (empty($oUser)) {
 
-            $oSession->setFlashData('error', lang('accounts_edit_error_unknown_id'));
+            $oUserFeedback->error(lang('accounts_edit_error_unknown_id'));
             $this->returnToIndex();
 
         } elseif (!$oUserModel->isSuperuser() && userHasPermission('superuser', $oUser)) {
 
             //  Non-superusers editing superusers is not cool
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $oUserFeedback->error(lang('accounts_edit_error_noteditable'));
             $this->returnToIndex();
 
         } elseif (activeUser('id') != $oUser->id && !userHasPermission('admin:auth:accounts:editOthers')) {
 
             //  Is this user editing someone other than themselves? If so, do they have permission?
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $oUserFeedback->error(lang('accounts_edit_error_noteditable'));
             $this->returnToIndex();
         }
 
@@ -597,10 +597,10 @@ class Accounts extends DefaultController
                     $oUserModel->getById($oUser->id)
                 );
 
-                $oSession->setFlashData(
-                    'success',
-                    sprintf('User %s updated successfully.', title_case($oUser->first_name . ' ' . $oUser->last_name))
-                );
+                $oUserFeedback->success(sprintf(
+                    'User %s updated successfully.',
+                    $oUser->name
+                ));
 
                 redirect(
                     $oInput->get('isModal')
@@ -622,7 +622,7 @@ class Accounts extends DefaultController
         //  Page Title
         $this->data['page']->title = lang(
             'accounts_edit_title',
-            title_case($oUser->first_name . ' ' . $oUser->last_name)
+            $oUser->name
         );
 
         // --------------------------------------------------------------------------
@@ -658,8 +658,8 @@ class Accounts extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -670,7 +670,7 @@ class Accounts extends DefaultController
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $oUserFeedback->error(lang('accounts_edit_error_noteditable'));
             $this->returnToIndex();
         }
 
@@ -682,7 +682,7 @@ class Accounts extends DefaultController
         if (!$oUser) {
             show404();
         } elseif ($oUser->id == activeUser('id')) {
-            $oSession->setFlashData('error', lang('accounts_delete_error_selfie'));
+            $oUserFeedback->error(lang('accounts_delete_error_selfie'));
             $this->returnToIndex();
         }
 
@@ -691,8 +691,7 @@ class Accounts extends DefaultController
         //  Define messages
         if ($oUserModel->destroy($iUserId)) {
 
-            $sStatus  = 'success';
-            $sMessage = lang('accounts_delete_success', title_case($oUser->first_name . ' ' . $oUser->last_name));
+            $oUserFeedback->success(lang('accounts_delete_success', $oUser->name));
 
             //  Update admin changelog
             $this->oChangeLogModel->add(
@@ -700,15 +699,12 @@ class Accounts extends DefaultController
                 'a',
                 'user',
                 $iUserId,
-                '#' . number_format($iUserId) . ' ' . $oUser->first_name . ' ' . $oUser->last_name
+                '#' . number_format($iUserId) . ' ' . $oUser->name
             );
 
         } else {
-            $sStatus  = 'error';
-            $sMessage = lang('accounts_delete_error', title_case($oUser->first_name . ' ' . $oUser->last_name));
+            $oUserFeedback->error(lang('accounts_delete_error', $oUser->name));
         }
-
-        $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
@@ -760,7 +756,7 @@ class Accounts extends DefaultController
         if (!empty($aRemovedUsers)) {
             $this->data['warning'] = 'You do not have permission to change the group of the following users: ' .
                 implode(', ', array_map(function ($oUser) {
-                    return '<br><strong>#' . $oUser->id . ' ' . $oUser->first_name . ' ' . $oUser->last_name . '</strong>';
+                    return '<br><strong>#' . $oUser->id . ' ' . $oUser->name . '</strong>';
                 }, $aRemovedUsers));
         }
 
@@ -793,9 +789,9 @@ class Accounts extends DefaultController
 
         if ($oInput->post()) {
             if ($oUserGroupModel->changeUserGroup(arrayExtractProperty($aUsers, 'id'), (int) $oInput->post('group_id'))) {
-                /** @var Session $oSession */
-                $oSession = Factory::service('Session');
-                $oSession->setFlashData('success', 'User group was updated successfully.');
+                /** @var UserFeedback $oUserFeedback */
+                $oUserFeedback = Factory::service('UserFeedback');
+                $oUserFeedback->success('User group was updated successfully.');
                 $this->returnToIndex();
             } else {
                 $this->data['error'] = 'Failed to update user group. ' . $oUserGroupModel->lastError();
@@ -833,8 +829,8 @@ class Accounts extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -846,7 +842,7 @@ class Accounts extends DefaultController
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $oUserFeedback->error(lang('accounts_edit_error_noteditable'));
             $this->returnToIndex();
         }
 
@@ -865,14 +861,12 @@ class Accounts extends DefaultController
 
         //  Define messages
         if (!$oUser->is_suspended) {
-            $oSession->setFlashData(
-                'error',
-                lang('accounts_suspend_error', title_case($oUser->first_name . ' ' . $oUser->last_name))
+            $oUserFeedback->error(
+                lang('accounts_suspend_error', $oUser->name)
             );
         } else {
-            $oSession->setFlashData(
-                'success',
-                lang('accounts_suspend_success', title_case($oUser->first_name . ' ' . $oUser->last_name))
+            $oUserFeedback->success(
+                lang('accounts_suspend_success', $oUser->name)
             );
         }
 
@@ -884,7 +878,7 @@ class Accounts extends DefaultController
             'a',
             'user',
             $iUserId,
-            '#' . number_format($iUserId) . ' ' . $oUser->first_name . ' ' . $oUser->last_name,
+            '#' . number_format($iUserId) . ' ' . $oUser->name,
             'admin/auth/accounts/edit/' . $iUserId,
             'is_suspended',
             $bOldValue,
@@ -918,8 +912,8 @@ class Accounts extends DefaultController
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -931,7 +925,7 @@ class Accounts extends DefaultController
 
         //  Non-superusers editing superusers is not cool
         if (!isSuperuser() && userHasPermission('superuser', $oUser)) {
-            $oSession->setFlashData('error', lang('accounts_edit_error_noteditable'));
+            $oUserFeedback->error(lang('accounts_edit_error_noteditable'));
             $this->returnToIndex();
         }
 
@@ -950,14 +944,10 @@ class Accounts extends DefaultController
 
         //  Define messages
         if ($oUser->is_suspended) {
-            $sStatus  = 'error';
-            $sMessage = lang('accounts_unsuspend_error', title_case($oUser->first_name . ' ' . $oUser->last_name));
+            $oUserFeedback->error(lang('accounts_unsuspend_error', $oUser->name));
         } else {
-            $sStatus  = 'success';
-            $sMessage = lang('accounts_unsuspend_success', title_case($oUser->first_name . ' ' . $oUser->last_name));
+            $oUserFeedback->success(lang('accounts_unsuspend_success', $oUser->name));
         }
-
-        $oSession->setFlashData($sStatus, $sMessage);
 
         // --------------------------------------------------------------------------
 
@@ -967,7 +957,7 @@ class Accounts extends DefaultController
             'a',
             'user',
             $iUserId,
-            '#' . number_format($iUserId) . ' ' . $oUser->first_name . ' ' . $oUser->last_name,
+            '#' . number_format($iUserId) . ' ' . $oUser->name,
             'admin/auth/accounts/edit/' . $iUserId,
             'is_suspended',
             $bOldValue,
@@ -991,6 +981,8 @@ class Accounts extends DefaultController
     {
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
 
@@ -1005,34 +997,25 @@ class Accounts extends DefaultController
                 $bIsVerified = (bool) $oInput->post('is_verified');
 
                 if ($oUserModel->emailAdd($sEmail, $iId, $bIsPrimary, $bIsVerified)) {
-                    $sStatus  = 'success';
-                    $sMessage = '"' . $sEmail . '" was added successfully. ';
+                    $oUserFeedback->success('"' . $sEmail . '" was added successfully. ');
                 } else {
-                    $sStatus  = 'error';
-                    $sMessage = 'Failed to add email. ';
-                    $sMessage .= $oUserModel->lastError();
+                    $oUserFeedback->error('Failed to add email. ' . $oUserModel->lastError());
                 }
                 break;
 
             case 'delete':
                 if ($oUserModel->emailDelete($sEmail, $iId)) {
-                    $sStatus  = 'success';
-                    $sMessage = '"' . $sEmail . '" was deleted successfully. ';
+                    $oUserFeedback->success('"' . $sEmail . '" was deleted successfully. ');
                 } else {
-                    $sStatus  = 'error';
-                    $sMessage = 'Failed to delete email "' . $sEmail . '". ';
-                    $sMessage .= $oUserModel->lastError();
+                    $oUserFeedback->error('Failed to delete email "' . $sEmail . '". ' . $oUserModel->lastError());
                 }
                 break;
 
             case 'makePrimary':
                 if ($oUserModel->emailMakePrimary($sEmail, $iId)) {
-                    $sStatus  = 'success';
-                    $sMessage = '"' . $sEmail . '" was set as the primary email.';
+                    $oUserFeedback->success('"' . $sEmail . '" was set as the primary email.');
                 } else {
-                    $sStatus  = 'error';
-                    $sMessage = 'Failed to mark "' . $sEmail . '" as the primary address. ';
-                    $sMessage .= $oUserModel->lastError();
+                    $oUserFeedback->error('Failed to mark "' . $sEmail . '" as the primary address. ' . $oUserModel->lastError());
                 }
                 break;
 
@@ -1048,28 +1031,19 @@ class Accounts extends DefaultController
                 }
 
                 if (!empty($sCode) && $oUserModel->emailVerify($iId, $sCode)) {
-                    $sStatus  = 'success';
-                    $sMessage = '"' . $sEmail . '" was verified successfully.';
+                    $oUserFeedback->success('"' . $sEmail . '" was verified successfully.');
                 } elseif (empty($sCode)) {
-                    $sStatus  = 'error';
-                    $sMessage = 'Failed to mark "' . $sEmail . '" as verified. ';
-                    $sMessage .= 'Could not determine email\'s security code.';
+                    $oUserFeedback->error('Failed to mark "' . $sEmail . '" as verified. Could not determine email\'s security code.');
                 } else {
-                    $sStatus  = 'error';
-                    $sMessage = 'Failed to mark "' . $sEmail . '" as verified. ';
-                    $sMessage .= $oUserModel->lastError();
+                    $oUserFeedback->error('Failed to mark "' . $sEmail . '" as verified. ' . $oUserModel->lastError());
                 }
                 break;
 
             default:
-                $sStatus  = 'error';
-                $sMessage = 'Unknown action: "' . $sAction . '"';
+                $oUserFeedback->error('Unknown action: "' . $sAction . '"');
                 break;
         }
 
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
-        $oSession->setFlashData($sStatus, $sMessage);
         redirect($oInput->post('return'));
     }
 }

@@ -11,7 +11,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\DateTime;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Factory;
 use ReflectionException;
 
@@ -152,9 +152,9 @@ class Init extends Subscription
 
             $oAuthService->logout();
 
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', lang('auth_login_fail_suspended'));
+            /** @var UserFeedback $oUserFeedback */
+            $oUserFeedback = Factory::service('UserFeedback');
+            $oUserFeedback->error(lang('auth_login_fail_suspended'));
             redirect('/');
         }
 
