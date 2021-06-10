@@ -111,6 +111,17 @@ class User extends Base
      */
     const REMEMBER_ME_COOKIE = 'nailsrememberme';
 
+    /**
+     * Supported genders
+     *
+     * @var string
+     */
+    const GENDER_UNDISCLOSED = 'UNDISCLOSED';
+    const GENDER_MALE        = 'MALE';
+    const GENDER_FEMALE      = 'FEMALE';
+    const GENDER_TRANSGENDER = 'TRANSGENDER';
+    const GENDER_OTHER       = 'OTHER';
+
     // --------------------------------------------------------------------------
 
     /**
@@ -2981,6 +2992,24 @@ class User extends Base
     public function getGroupTableName(): string
     {
         return $this->oGroupModel->getTableName();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the supported genders
+     *
+     * @return string[]
+     */
+    public function getGenders(): array
+    {
+        return [
+            static::GENDER_UNDISCLOSED => 'Undisclosed',
+            static::GENDER_MALE        => 'Male',
+            static::GENDER_FEMALE      => 'Female',
+            static::GENDER_TRANSGENDER => 'Transgender',
+            static::GENDER_OTHER       => 'Other',
+        ];
     }
 
     // --------------------------------------------------------------------------
