@@ -281,6 +281,15 @@ class Accounts extends DefaultController
 
         // --------------------------------------------------------------------------
 
+        if (userHasPermission('admin:auth:accounts:create')) {
+            $this->aConfig['INDEX_HEADER_BUTTONS'][] = [
+                'label' => 'Import',
+                'url'   => 'admin/auth/import',
+            ];
+        }
+
+        // --------------------------------------------------------------------------
+
         get_instance()->lang->load('admin_accounts');
         /** @var ChangeLog oChangeLogModel */
         $this->oChangeLogModel = Factory::model('ChangeLog', \Nails\Admin\Constants::MODULE_SLUG);
