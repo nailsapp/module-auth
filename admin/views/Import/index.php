@@ -15,10 +15,12 @@
         <strong>Please note:</strong> The CSV you supply should be in the correct format, as per the template which you
         can download above. Remember to include the header rows describing each column.
     </p>
-    <p>
-        <button type="submit" name="action" value="preview" class="btn btn-primary">
-            Preview
-        </button>
-    </p>
+    <?=\Nails\Admin\Helper::floatingControls([
+        'save' => [
+            'text'  => 'Preview',
+            'name'  => 'action',
+            'value' => 'preview',
+        ],
+    ])?>
     <?=form_close()?>
 </div>

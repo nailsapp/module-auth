@@ -298,7 +298,7 @@ class Accounts extends DefaultController
     // --------------------------------------------------------------------------
 
     /**
-     * Determins whether the active user can edit the target superuser
+     * Determines whether the active user can edit the target superuser
      *
      * @param stdClass $oUser The user to check
      *
