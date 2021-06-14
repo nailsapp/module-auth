@@ -60,13 +60,18 @@ class Import extends BaseAdmin
                 if ($oInput->post('action') === 'preview') {
                     $this
                         ->validateUpload()
-                        ->renderPreview($this->uploadCsv());
+                        ->renderPreview(
+                            $this->uploadCsv(),
+                            (bool) $oInput::post('skip_existing')
+                        );
                     return;
 
                 } elseif ($oInput->post('action') === 'import') {
                     $this
                         ->validateObject()
-                        ->processImport();
+                        ->processImport(
+                            (bool) $oInput::post('skip_existing')
+                        );
 
                 } else {
                     throw new \Exception('Unrecognised action');
@@ -194,7 +199,8 @@ class Import extends BaseAdmin
         }
 
         $this->validateData(
-            $this->parseCsv($aFile['tmp_name'])
+            $this->parseCsv($aFile['tmp_name']),
+            (bool) $oInput::post('skip_existing')
         );
 
         return $this;
@@ -231,7 +237,8 @@ class Import extends BaseAdmin
         }
 
         $this->validateData(
-            $this->parseCsv($sPath)
+            $this->parseCsv($sPath),
+            (bool) $oInput::post('skip_existing')
         );
 
         return $this;
@@ -242,14 +249,15 @@ class Import extends BaseAdmin
     /**
      * Validates the CSV data
      *
-     * @param array $aData The data to validate
+     * @param array $aData         The data to validate
+     * @param bool  $bskipExisting Whether to skip existing users, or to error
      *
      * @return $this
      * @throws FactoryException
      * @throws ValidationException
      * @throws \Nails\Common\Exception\ModelException
      */
-    protected function validateData(array $aData): self
+    protected function validateData(array $aData, bool $bSkipExisting): self
     {
         /** @var User $oUserModel */
         $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
@@ -281,9 +289,13 @@ class Import extends BaseAdmin
             ));
         }
 
+        $aEmails    = [];
+        $aUsernames = [];
+
         foreach ($aData as $iIndex => $aDatum) {
 
             $aDatum = array_combine($aHeader, $aDatum);
+            $aDatum = array_map('trim', $aDatum);
 
             try {
 
@@ -306,7 +318,17 @@ class Import extends BaseAdmin
                         ));
                     }
 
-                    if ($oUserModel->getByEmail($aDatum['email'])) {
+                    if (array_key_exists($aDatum['email'], $aEmails)) {
+                        throw new ValidationException(sprintf(
+                            'Email "%s" is a duplicate item in this list, first seen on line %s.',
+                            $aDatum['email'],
+                            $aEmails[$aDatum['email']]
+                        ));
+                    } else {
+                        $aEmails[$aDatum['email']] = $iIndex + 2;
+                    }
+
+                    if (!$bSkipExisting && $oUserModel->getByEmail($aDatum['email'])) {
                         throw new ValidationException(sprintf(
                             '"%s" is already a registered email.',
                             $aDatum['email']
@@ -315,11 +337,28 @@ class Import extends BaseAdmin
                 }
 
                 if (!empty($aDatum['username'])) {
-                    if (!$oUserModel->isValidUsername($aDatum['username'], true)) {
+                    if (!$oUserModel->isValidUsername($aDatum['username'])) {
                         throw new ValidationException(sprintf(
                             '"%s" is not a valid username; %s',
                             $aDatum['username'],
                             $oUserModel->lastError()
+                        ));
+                    }
+
+                    if (array_key_exists($aDatum['username'], $aUsernames)) {
+                        throw new ValidationException(sprintf(
+                            'Username "%s" is a duplicate item in this list, first seen on line %s.',
+                            $aDatum['username'],
+                            $aUsernames[$aDatum['username']]
+                        ));
+                    } else {
+                        $aUsernames[$aDatum['username']] = $iIndex + 2;
+                    }
+
+                    if (!$bSkipExisting && $oUserModel->getByUsername($aDatum['username'])) {
+                        throw new ValidationException(sprintf(
+                            '"%s" is already a registered username.',
+                            $aDatum['email']
                         ));
                     }
                 }
@@ -394,8 +433,8 @@ class Import extends BaseAdmin
             } catch (\Exception $e) {
                 throw new ValidationException(
                     sprintf(
-                        'Error at row %s: %s <pre style="padding: 1rem;margin-top:0.5rem;">%s</pre>',
-                        $iIndex + 1,
+                        'Error at line %s: %s <pre style="padding: 1rem;margin-top:0.5rem;">%s</pre>',
+                        $iIndex + 2,
                         $e->getMessage(),
                         implode(', ', $aDatum)
                     )
@@ -456,7 +495,7 @@ class Import extends BaseAdmin
 
     // --------------------------------------------------------------------------
 
-    protected function renderPreview(Cdn\Resource\CdnObject $oObject): void
+    protected function renderPreview(Cdn\Resource\CdnObject $oObject, bool $bSkipExisting): void
     {
         /** @var Cdn\Service\Cdn $oCdn */
         $oCdn = Factory::service('Cdn', Cdn\Constants::MODULE_SLUG);
@@ -474,11 +513,36 @@ class Import extends BaseAdmin
         $aHeader = array_splice($aData, 0, 1);
         $aHeader = reset($aHeader);
 
-        $this->data['aFields']     = array_keys($aFields);
-        $this->data['aHeader']     = $aHeader;
-        $this->data['aData']       = $aData;
-        $this->data['oObject']     = $oObject;
-        $this->data['page']->title = 'Import Users: Preview';
+        //  Highlight items which will be skipped
+        foreach ($aData as &$aDatum) {
+
+            $aDatum = array_combine($aHeader, $aDatum);
+
+            if ($bSkipExisting && $this->shouldSkip($aDatum)) {
+
+                $aIdentifiers = array_filter([
+                    array_key_exists('email', $aDatum)
+                        ? 'email "' . $aDatum['email'] . '"'
+                        : null,
+                    array_key_exists('username', $aDatum)
+                        ? 'username "' . $aDatum['username'] . '"'
+                        : null,
+                ]);
+
+                $aDatum = sprintf(
+                    'Item with %s is already registered and will be skipped',
+                    implode(' and ', $aIdentifiers)
+                );
+                continue;
+            }
+        }
+
+        $this->data['aFields']       = array_keys($aFields);
+        $this->data['aHeader']       = $aHeader;
+        $this->data['aData']         = $aData;
+        $this->data['oObject']       = $oObject;
+        $this->data['bSkipExisting'] = $bSkipExisting;
+        $this->data['page']->title   = 'Import Users: Preview (' . count($aData) . ')';
 
         Helper::loadView('preview');
     }
@@ -490,7 +554,7 @@ class Import extends BaseAdmin
      *
      * @throws FactoryException
      */
-    protected function processImport(): void
+    protected function processImport(bool $bSkipExisting): void
     {
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
@@ -513,72 +577,184 @@ class Import extends BaseAdmin
         $aHeader  = array_splice($aData, 0, 1);
         $aHeader  = reset($aHeader);
         $iSuccess = 0;
-        $aError   = [];
+        $iSkipped = 0;
+        $iError   = 0;
+        $aLog     = [];
 
         foreach ($aData as $iIndex => $aDatum) {
 
-            $aDatum     = array_combine($aHeader, $aDatum);
+            $aDatum = array_combine($aHeader, $aDatum);
+
+            if ($bSkipExisting && $this->shouldSkip($aDatum)) {
+                $iSkipped++;
+                $aLog[] = array_merge(
+                    $aDatum,
+                    [
+                        'id'      => null,
+                        'status'  => 'SKIPPED',
+                        'message' => 'This item is already registered and was skipped',
+                    ]
+                );
+                continue;
+            }
+
             $bSendEmail = (bool) $aDatum['send_email'];
             $aUserData  = array_filter([
                 'group_id'   => ($aDatum['group_id'] ?? null) ?: $oGroupModel->getDefaultGroupId(),
-                'email'      => trim($aDatum['email']) ?: null,
-                'username'   => trim($aDatum['username']) ?: null,
-                'temp_pw'    => (bool) $aDatum['temp_pw'],
-                'salutation' => trim($aDatum['salutation']) ?: null,
-                'first_name' => trim($aDatum['first_name']) ?: null,
-                'last_name'  => trim($aDatum['last_name']) ?: null,
-                'gender'     => trim($aDatum['gender']) ?: null,
-                'dob'        => trim($aDatum['dob']) ?: null,
-                'timezone'   => trim($aDatum['timezone']) ?: null,
+                'email'      => trim(($aDatum['email'] ?? null)) ?: null,
+                'username'   => trim(($aDatum['username'] ?? null)) ?: null,
+                'temp_pw'    => (bool) ($aDatum['temp_pw'] ?? true),
+                'salutation' => trim(($aDatum['salutation'] ?? null)) ?: null,
+                'first_name' => trim(($aDatum['first_name'] ?? null)) ?: null,
+                'last_name'  => trim(($aDatum['last_name'] ?? null)) ?: null,
+                'gender'     => trim(($aDatum['gender'] ?? null)) ?: null,
+                'dob'        => trim(($aDatum['dob'] ?? null)) ?: null,
+                'timezone'   => trim(($aDatum['timezone'] ?? null)) ?: null,
             ]);
 
             try {
 
-                if ($oUserModel->create($aUserData, $bSendEmail)) {
+                $oUser = $oUserModel->create($aUserData, $bSendEmail);
+                if ($oUser) {
                     $iSuccess++;
+                    $aLog[] = array_merge(
+                        $aDatum,
+                        [
+                            'id'      => $oUser->id,
+                            'status'  => 'SUCCESS',
+                            'message' => '',
+                        ]
+                    );
                 } else {
-                    $aError[] = sprintf(
-                        'Row at index %s: %s',
-                        $iIndex + 1,
-                        $oUserModel->lastError()
+                    $iError++;
+                    $aLog[] = array_merge(
+                        $aDatum,
+                        [
+                            'id'      => null,
+                            'status'  => 'ERROR',
+                            'message' => $oUserModel->lastError(),
+                        ]
                     );
                 }
 
             } catch (\Exception $e) {
-                $aError[] = sprintf(
-                    'Row at index %s: %s',
-                    $iIndex + 1,
-                    $e->getMessage()
+                $iError++;
+                $aLog[] = array_merge(
+                    $aDatum,
+                    [
+                        'id'      => null,
+                        'status'  => 'ERROR',
+                        'message' => $e->getMessage(),
+                    ]
                 );
             } catch (\Error $e) {
-                $aError[] = sprintf(
-                    'Row at index %s: %s',
-                    $iIndex + 1,
-                    $e->getMessage()
+                $iError++;
+                $aLog[] = array_merge(
+                    $aDatum,
+                    [
+                        'id'      => null,
+                        'status'  => 'ERROR',
+                        'message' => $e->getMessage(),
+                    ]
                 );
             }
         }
+
+        array_unshift($aLog, array_merge(
+            $aHeader,
+            [
+                'id',
+                'status',
+                'message',
+            ]
+
+        ));
+
+        $aLog = array_map(function ($aItem) {
+
+            $aFields = array_map(function ($sItem) {
+                return str_replace('"', '""', trim($sItem));
+            }, $aItem);
+
+            return '"' . implode('","', $aFields) . '"';
+
+        }, $aLog);
+
+        /** @var \DateTime $oNow */
+        $oNow = Factory::factory('DateTime');
+        $oLog = $oCdn->objectCreate(
+            implode(PHP_EOL, $aLog),
+            [
+                'slug'      => 'import-user',
+                'is_hidden' => true,
+            ],
+            [
+                'no-md5-check'     => true,
+                'Content-Type'     => 'text/csv',
+                'filename_display' => sprintf(
+                    'user-import-log-%s.csv',
+                    $oNow->format('Y-m-d_H-i-s')
+                ),
+            ],
+            true
+        );
 
         /** @var UserFeedback $oUserFeedback */
         $oUserFeedback = Factory::service('UserFeedback');
 
         if (!empty($iSuccess)) {
             $oUserFeedback->success(sprintf(
-                '%s user accounts created successfully.',
-                $iSuccess
+                '%s user accounts created successfully. <a href="%s" style="text-decoration: underline">See log for details.</a>',
+                $iSuccess,
+                cdnServe($oLog->id, true)
             ));
         }
 
-        if (!empty($aError)) {
-            $oUserFeedback->success(sprintf(
-                '%s user accounts failed to create: <br>&mdash;%s',
-                count($aError),
-                implode('<br>&mdash; ', $aError)
+        if (!empty($iSkipped)) {
+            $oUserFeedback->warning(sprintf(
+                '%s user accounts skipped. <a href="%s" style="text-decoration: underline">See log for details.</a>',
+                $iSkipped,
+                cdnServe($oLog->id, true)
+            ));
+        }
+
+        if (!empty($iError)) {
+            $oUserFeedback->error(sprintf(
+                '%s user accounts encountered errors. <a href="%s" style="text-decoration: underline">See log for details.</a>',
+                $iError,
+                cdnServe($oLog->id, true)
             ));
         }
 
         $oCdn->objectDestroy($iObjectId);
 
         redirect('admin/auth/import');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns whether the item should be skipped because it already exists
+     *
+     * @param array $aDatum The datum to check
+     *
+     * @return bool
+     * @throws FactoryException
+     * @throws \Nails\Common\Exception\ModelException
+     */
+    protected function shouldSkip(array $aDatum): bool
+    {
+        /** @var User $oUserModel */
+        $oUserModel = Factory::model('User', Constants::MODULE_SLUG);
+
+        if (array_key_exists('email', $aDatum) && $oUserModel->getByEmail($aDatum['email'])) {
+            return true;
+        }
+
+        if (array_key_exists('username', $aDatum) && $oUserModel->getByEmail($aDatum['username'])) {
+            return truel;
+        }
+
+        return false;
     }
 }

@@ -11,6 +11,16 @@
         ]);
         ?>
     </fieldset>
+    <fieldset>
+        <legend>Options</legend>
+        <?php
+        echo form_field_boolean([
+            'key'   => 'skip_existing',
+            'label' => 'Skip Existing',
+            'info'  => 'If a user is already registered, then skip rather than error',
+        ]);
+        ?>
+    </fieldset>
     <p class="alert alert-warning">
         <strong>Please note:</strong> The CSV you supply should be in the correct format, as per the template which you
         can download above. Remember to include the header rows describing each column.

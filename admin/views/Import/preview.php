@@ -6,6 +6,7 @@
     </div>
     <?=form_open()?>
     <?=form_hidden('object_id', $oObject->id)?>
+    <?=form_hidden('skip_existing', $bSkipExisting)?>
     <table>
         <thead>
             <tr>
@@ -23,18 +24,23 @@
             <?php
 
             foreach ($aData as $aDatum) {
-                $aDatum = array_combine($aHeader, $aDatum);
-                ?>
-                <tr>
+                if (is_string($aDatum)) {
+                    ?>
+                    <tr class="danger">
+                        <td colspan="10000">
+                            <?=$aDatum?>
+                        </td>
+                    </tr>
                     <?php
+                } else {
+                    echo '<tr>';
                     foreach ($aFields as $sField) {
                         ?>
                         <td><?=$aDatum[$sField] ?? '-'?></td>
                         <?php
                     }
-                    ?>
-                </tr>
-                <?php
+                    echo '</tr>';
+                }
             }
             ?>
         </tbody>
