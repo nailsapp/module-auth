@@ -122,7 +122,7 @@ class Import extends BaseAdmin
                         'Optional',
                         'Optional',
                         'Optional',
-                        'Optional: Blank, or one of: ' . array_keys($oUserModel->getGenders()),
+                        'Optional: Blank, or one of: ' . implode(', ', array_keys($oUserModel->getGenders())),
                         'Optional: Blank, or date in format YYYY-MM-DD',
                         'Optional: Blank, or PHP timezone (as documented https://www.php.net/manual/en/timezones.php)',
                     ]
