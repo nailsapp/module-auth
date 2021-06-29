@@ -129,13 +129,5 @@ $lang['accounts_unsuspend_error']   = 'There was a problem unsuspending %s.';
 
 //  Deleting
 $lang['accounts_delete_error_selfie'] = 'You can\'t delete yourself.';
-$lang['accounts_delete_success']      = '<strong>See ya!</strong> User %s was deleted successfully.';
+$lang['accounts_delete_success']      = 'User %s was deleted successfully.';
 $lang['accounts_delete_error']        = 'There was a problem deleting %s.';
-
-// --------------------------------------------------------------------------
-
-//  Deleting profile image
-$lang['accounts_delete_img_success']     = 'Profile image was deleted.';
-$lang['accounts_delete_img_error']       = 'I was unable delete this user\'s profile image. The server said: "%s"';
-$lang['accounts_delete_img_error_noid']  = 'I was unable to find a user by that ID.';
-$lang['accounts_delete_img_error_noimg'] = '<strong>Hey!</strong> This user doesn\'t have a profile image to delete.';
