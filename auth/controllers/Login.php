@@ -103,7 +103,7 @@ class Login extends Base
     public function index()
     {
         if (isLoggedIn()) {
-            redirect($this->data['return_to']);
+            redirect($this->data['return_to'] ?: activeUser('group_homepage'));
         }
 
         // --------------------------------------------------------------------------
