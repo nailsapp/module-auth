@@ -102,6 +102,12 @@ class Login extends Base
      **/
     public function index()
     {
+        if (isLoggedIn()) {
+            redirect($this->data['return_to']);
+        }
+
+        // --------------------------------------------------------------------------
+        
         /** @var UserFeedback $oUserFeedback */
         $oUserFeedback = Factory::service('UserFeedback');
         /** @var Input $oInput */
@@ -116,14 +122,6 @@ class Login extends Base
         $oSocial = Factory::service('SocialSignOn', Constants::MODULE_SLUG);
         /** @var \Nails\Captcha\Service\Captcha $oCaptchaService */
         $oCaptchaService = Factory::service('Captcha', Nails\Captcha\Constants::MODULE_SLUG);
-
-        // --------------------------------------------------------------------------
-
-        //  If you're logged in you shouldn't be accessing this method
-        if (isLoggedIn()) {
-            $oUserFeedback->error(lang('auth_no_access_already_logged_in', activeUser('email')));
-            redirect($this->data['return_to']);
-        }
 
         // --------------------------------------------------------------------------
 
